@@ -1,0 +1,26 @@
+{
+  "name": "stormy-v13",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.26.1",
+    "canvas": "^2.9.1",
+    "coingecko-api": "^1.0.10",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0",
+    "languagedetect": "^2.0.0",
+    "pg": "^8.7.3",
+    "translate": "^1.4.1",
+    "unofficial-valorant-api": "^1.0.4",
+    "wokcommands": "^1.5.3",
+    "xml-js": "^1.6.11"
+  }
+}
