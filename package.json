@@ -1,6 +1,6 @@
 {
-  "name": "stormy-v13",
-  "version": "1.0.0",
+  "name": "stormy",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {

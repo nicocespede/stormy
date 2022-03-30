@@ -1,1 +1,0 @@
-{ guild, member, user, message, channel, args, text, client, prefix, instance, interaction }

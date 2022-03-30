@@ -1,6 +1,6 @@
 const { executeQuery } = require('./postgres');
 
-const prefix = '+';
+const prefix = '-';
 
 const categorySettings = [
     {
@@ -36,7 +36,7 @@ const categorySettings = [
 
 const ids = {
     users: {
-        bot: "955888796602335252",
+        bot: "853113828501225502",
         stormer: "334409923389554699",
         darkness: "479521831267598336",
         sombra: '662237023540609044',
