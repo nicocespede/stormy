@@ -37,8 +37,8 @@ module.exports = {
         messageOrInteraction.reply({
             embeds: [new MessageEmbed()
                 .setTitle(`**Usuarios baneados**`)
-                .setDescription(`Hola <@${user.id}>, los usuarios actualmente baneados son:\n\n`)
-                .addFields([usersField, responsiblesField, reasonsField])
+                .setDescription(`Hola <@${user.id}>, los usuarios actualmente baneados son:\n\n${usersField.value.length != 0 ? '_No hay usuarios baneados actualmente._' : ''}`)
+                .addFields(usersField.value.length != 0 ? [usersField, responsiblesField, reasonsField] : [])
                 .setColor(instance.color)
                 .setThumbnail(client.user.avatarURL())],
             ephemeral: true

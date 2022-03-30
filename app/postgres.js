@@ -140,6 +140,24 @@ function updateAvatarString(value) {
     });
 }
 
+function addPlaylist(array) {
+    return new Promise(function (resolve, reject) {
+        dbClient.query(`INSERT INTO "playlists" VALUES('${array[0]}', '${array[1]}');`, (err, res) => {
+            if (err) throw err;
+        });
+        setTimeout(function () { resolve(); }, 1000);
+    });
+}
+
+function deletePlaylist(name) {
+    return new Promise(function (resolve, reject) {
+        dbClient.query(`DELETE FROM "playlists" WHERE "playlists_name" = '${name}';`, (err, res) => {
+            if (err) throw err;
+        });
+        setTimeout(function () { resolve(); }, 1000);
+    });
+}
+
 module.exports = {
     executeQuery,
     addBday, updateBday, deleteBday,
@@ -147,5 +165,6 @@ module.exports = {
     addSombraBan,
     updateCollectorMessage,
     updateAnniversary,
-    updateAvatarString
+    updateAvatarString,
+    addPlaylist, deletePlaylist
 };

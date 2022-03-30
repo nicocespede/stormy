@@ -47,6 +47,7 @@ async function setUpCache() {
     await cache.updateReactionCollectorInfo();
     await cache.updateAnniversaries();
     await cache.updateAvatar();
+    await cache.updatePlaylists();
 }
 
 function periodicFunction(client) {

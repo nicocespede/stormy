@@ -22,7 +22,7 @@ module.exports = {
         {
             name: 'fecha',
             description: 'La fecha (DD/MM) del cumpleaños.',
-            required: false,
+            required: true,
             type: 'STRING'
         }
     ],

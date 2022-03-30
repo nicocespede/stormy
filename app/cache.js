@@ -12,6 +12,10 @@ const categorySettings = [
         emoji: '🎮'
     },
     {
+        name: 'Música',
+        emoji: '🎵'
+    },
+    {
         name: 'Moderación',
         emoji: '👮'
     },
@@ -423,24 +427,6 @@ const unbanned = [
     "Liberaron a **%USERNAME%**."
 ];
 
-var mcuMovies;
-
-const getMcuMovies = () => mcuMovies;
-
-const updateMcuMovies = (filters) => {
-    if (filters.includes('all'))
-        mcuMovies = mcu;
-    else {
-        var newArray = [];
-        mcu.forEach(movie => {
-            if (filters.includes(movie.type))
-                newArray.push(movie);
-        });
-        mcuMovies = newArray;
-    }
-    console.log('> Caché de UCM actualizado');
-};
-
 const texts = {
     movies: {
         description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%ucm` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas JDownloader 2 (https://jdownloader.org/jdownloader2).\n\nLas películas (en orden cronológico) disponibles para descargar son:\n\n",
@@ -501,17 +487,6 @@ const currencies = {
             47
         ]
     }
-};
-
-var birthdays;
-
-const getBirthdays = () => birthdays;
-
-const updateBirthdays = async () => {
-    await executeQuery('SELECT * FROM "bdays" ORDER BY substring("bdays_date", 4, 5), substring("bdays_date", 1, 2);').then(async json => {
-        birthdays = json;
-        console.log('> Caché de cumpleaños actualizado');
-    }).catch(console.error);
 };
 
 const smurf = {
@@ -587,6 +562,42 @@ const smurf = {
     ]
 };
 
+const musicActions = {
+    adding: 'ADDING',
+    addingNext: 'ADDING_NEXT',
+    moving: 'MOVING_SONG',
+    stopping: 'STOPPING'
+}
+
+var mcuMovies;
+
+const getMcuMovies = () => mcuMovies;
+
+const updateMcuMovies = (filters) => {
+    if (filters.includes('all'))
+        mcuMovies = mcu;
+    else {
+        var newArray = [];
+        mcu.forEach(movie => {
+            if (filters.includes(movie.type))
+                newArray.push(movie);
+        });
+        mcuMovies = newArray;
+    }
+    console.log('> Caché de UCM actualizado');
+};
+
+var birthdays;
+
+const getBirthdays = () => birthdays;
+
+const updateBirthdays = async () => {
+    await executeQuery('SELECT * FROM "bdays" ORDER BY substring("bdays_date", 4, 5), substring("bdays_date", 1, 2);').then(async json => {
+        birthdays = json;
+        console.log('> Caché de cumpleaños actualizado');
+    }).catch(console.error);
+};
+
 var banned;
 
 const getBanned = () => banned;
@@ -613,10 +624,7 @@ var lastDateChecked;
 
 const getLastDateChecked = () => lastDateChecked;
 
-const updateLastDateChecked = (newDate) => {
-    lastDateChecked = newDate;
-    console.log('> Caché de última fecha actualizado');
-};
+const updateLastDateChecked = (newDate) => (lastDateChecked = newDate);
 
 var reactionCollectorInfo;
 
@@ -651,10 +659,34 @@ const updateAvatar = async () => {
     }).catch(console.error);
 }
 
+var lastAction;
+
+const getLastAction = () => lastAction;
+
+const updateLastAction = (action) => (lastAction = action);
+
+var playlists = { names: [], urls: [] };
+
+const getPlaylists = () => playlists;
+
+const updatePlaylists = async () => {
+    await executeQuery('SELECT * FROM "playlists";').then(async json => {
+        var newNames = [];
+        var newUrls = [];
+        json.forEach(pl => {
+            newNames.push(pl['playlists_name']);
+            newUrls.push(pl['playlists_url']);
+        });
+        playlists.names = newNames;
+        playlists.urls = newUrls;
+        console.log('> Caché de playlists actualizado');
+    }).catch(console.error);
+};
+
 module.exports = {
     prefix, categorySettings, ids, reminders, mcu, texts, currencies, smurf, welcome, goodbye,
-    bannedWithReason, bannedWithoutReason, unbanned,
+    bannedWithReason, bannedWithoutReason, unbanned, musicActions,
     getMcuMovies, updateMcuMovies, getBirthdays, updateBirthdays, getBanned, updateBanned, getSombraBans, updateSombraBans,
     getLastDateChecked, updateLastDateChecked, getReactionCollectorInfo, updateReactionCollectorInfo,
-    getAnniversaries, updateAnniversaries, getAvatar, updateAvatar
+    getAnniversaries, updateAnniversaries, getAvatar, updateAvatar, getLastAction, updateLastAction, getPlaylists, updatePlaylists
 }
