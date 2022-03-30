@@ -41,7 +41,7 @@ module.exports = {
         if (!Object.keys(currencies).includes(args[0]) && args[0] != 'dolar' && args[0] != 'usd') {
             messageOrInteraction.reply({ content: `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _usd, ${Object.keys(currencies).join(', ')}_.`, ephemeral: true });
             return;
-        } else if (isNaN(quantity)) {
+        } else if (isNaN(quantity) || quantity < 0) {
             messageOrInteraction.reply({ content: `¡Uso incorrecto! La cantidad ingresada es inválida.`, ephemeral: true });
             return;
         } else {
