@@ -79,7 +79,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [new MessageEmbed()
                     .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
-                    .setDescription(`Hola <@${user.id}>, la conversión de **${args[1]} ${currency}** a Pesos Argentinos es: **ARS$ ${finalPrice}**.\n\nValores tomados en cuenta:\n\n${coinID ? '**• ' + currency + ':** USD$ ' + coinPrice + '\n' : ''}**• Dólar blue:** ARS$ ${usdPrice}`)
+                    .setDescription(`Hola <@${user.id}>, la conversión de **${args[1]} ${currency}** a Pesos Argentinos es: **ARS$ ${finalPrice}**.\n\nValores tomados en cuenta:\n\n${coinID ? '**• ' + currency + ':** USD$ ' + coinPrice + '\n' : ''}**• Dólar blue (venta):** ARS$ ${usdPrice}`)
                     .setColor(color)
                     .setImage('attachment://image.png')
                     .setThumbnail(client.user.avatarURL())],
