@@ -566,7 +566,11 @@ const musicActions = {
     adding: 'ADDING',
     addingNext: 'ADDING_NEXT',
     moving: 'MOVING_SONG',
-    stopping: 'STOPPING'
+    stopping: 'STOPPING',
+    changingChannel: 'CHANGING_CHANNEL',
+    leavingEmptyChannel: 'LEAVING_EMPTY_CHANNEL',
+    beingKicked: 'BEING_KICKED',
+    ending: 'ENDING'
 }
 
 var mcuMovies;

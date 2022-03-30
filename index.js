@@ -9,6 +9,7 @@ const cache = require('./app/cache');
 const { needsTranslation, getNextMessage, setUpCache, convertTZ, initiateReactionCollector, generateWelcomeImage,
     isListed, periodicFunction } = require('./app/general');
 const { addBan, addSombraBan, deleteBan } = require('./app/postgres');
+const { setNewVoiceChannel, setKicked } = require('./app/music');
 
 const client = new Client({
     intents: [
@@ -36,20 +37,23 @@ client.on('ready', async () => {
     var musicEmbed = new MessageEmbed().setColor([195, 36, 255]);
     client.player = new Player(client, {
         leaveOnEnd: false,
+        leaveOnStop: true,
+        leaveOnEmpty: true,
         leaveOnEmptyCooldown: 60000,
         ytdlOptions: {
             quality: 'highestaudio',
             highWaterMark: 1 << 25
         }
     }).on('trackStart', (queue, track) => {
-        queue.metadata.send({
-            embeds: [new MessageEmbed().setColor([195, 36, 255])
-                .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}](${track.url}) - **${track.duration}**`)
-                .setImage(track.thumbnail)
-                .setThumbnail(`attachment://icons8-circled-play-64.png`)
-                .setFooter({ text: `Agregada por ${track.requestedBy.tag}` })],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-circled-play-64.png`)]
-        });
+        if (cache.getLastAction() != cache.musicActions.changingChannel)
+            queue.metadata.send({
+                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                    .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}](${track.url}) - **${track.duration}**`)
+                    .setImage(track.thumbnail)
+                    .setThumbnail(`attachment://icons8-circled-play-64.png`)
+                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}` })],
+                files: [new MessageAttachment(`./assets/thumbs/music/icons8-circled-play-64.png`)]
+            });
     }).on('trackAdd', async (queue, track) => {
         var lastAction = cache.getLastAction();
         if (queue.tracks.length - 1 > 0 && lastAction != cache.musicActions.moving && lastAction != cache.musicActions.addingNext)
@@ -65,25 +69,24 @@ client.on('ready', async () => {
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [new MessageAttachment(`./assets/thumbs/music/icons8-add-song-64.png`)]
             });
-    }).on('botDisconnect', (queue) => {
-        queue.metadata.send({
-            embeds: [musicEmbed.setDescription("⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!")
-                .setThumbnail(`attachment://icons8-disconnected-64.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-disconnected-64.png`)]
-        });
     }).on('channelEmpty', (queue) => {
+        cache.updateLastAction(cache.musicActions.leavingEmptyChannel);
         queue.metadata.send({
             embeds: [musicEmbed.setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
                 .setThumbnail(`attachment://icons8-no-audio-64.png`)],
             files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-audio-64.png`)]
         });
     }).on('queueEnd', (queue) => {
-        if (cache.getLastAction() != cache.musicActions.stopping)
-        queue.metadata.send({
-            embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
-                .setThumbnail(`attachment://icons8-so-so-64.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-so-so-64.png`)]
-        });
+        if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
+            && cache.getLastAction() != cache.musicActions.stopping
+            && cache.getLastAction() != cache.musicActions.beingKicked) {
+            cache.updateLastAction(cache.musicActions.ending);
+            queue.metadata.send({
+                embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
+                    .setThumbnail(`attachment://icons8-so-so-64.png`)],
+                files: [new MessageAttachment(`./assets/thumbs/music/icons8-so-so-64.png`)]
+            });
+        }
     });
 
     console.log(`¡Loggeado como ${client.user.tag}!`);
@@ -173,6 +176,28 @@ client.on('guildBanRemove', async ban => {
         var random = Math.floor(Math.random() * (cache.unbanned.length));
         channel.send(cache.unbanned[random].replace(/%USERNAME%/g, `${ban.user.tag}`));
     }).catch(console.error);
+});
+
+client.on('voiceStateUpdate', (oldState, newState) => {
+    // ignore if someone connects
+    if (oldState.channelId === null) return;
+    // ignore if mute/deafen update
+    if (oldState.channelId === newState.channelId) return;
+    // ignore if a user disconnects
+    if (newState.id !== client.user.id) return;
+    // send message if the bot is moved to another channel
+    if (oldState.channelId !== newState.channelId && newState.channelId != null) {
+        client.channels.fetch(newState.channelId).then(channel => {
+            setNewVoiceChannel(client, newState.guild, channel);
+        }).catch(console.error);
+        return;
+    }
+    // clear the queue if was kicked
+    if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
+        && cache.getLastAction() != cache.musicActions.stopping
+        && cache.getLastAction() != cache.musicActions.ending)
+        setKicked(client, oldState.guild);
+    return;
 });
 
 client.login(process.env.TOKEN);
