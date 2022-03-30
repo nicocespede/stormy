@@ -20,7 +20,7 @@ module.exports = {
     expectedArgs: '<URL ó canción>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, args, client, interaction, text }) => {
+    callback: async ({ guild, member, user, message, channel, client, interaction, text }) => {
         var embed = new MessageEmbed().setColor([195, 36, 255]);
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
@@ -49,9 +49,9 @@ module.exports = {
 
         var playlists = getPlaylists();
         if (playlists.names.includes(text.toLowerCase()))
-            args = playlists.urls[playlists.names.indexOf(text.toLowerCase())];
+            text = playlists.urls[playlists.names.indexOf(text.toLowerCase())];
 
-        const res = await client.player.search(args.join(' '), {
+        const res = await client.player.search(text, {
             requestedBy: member,
             searchEngine: QueryType.AUTO
         });

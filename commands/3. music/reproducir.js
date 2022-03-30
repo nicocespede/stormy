@@ -70,9 +70,9 @@ module.exports = {
         } else {
             var playlists = getPlaylists();
             if (playlists.names.includes(text.toLowerCase()))
-                args = playlists.urls[playlists.names.indexOf(text.toLowerCase())];
+                text = playlists.urls[playlists.names.indexOf(text.toLowerCase())];
 
-            const res = await client.player.search(args.join(' '), {
+            const res = await client.player.search(text, {
                 requestedBy: member,
                 searchEngine: QueryType.AUTO
             });
