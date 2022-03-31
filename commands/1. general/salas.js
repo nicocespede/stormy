@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 
 module.exports = {
     category: 'General',
@@ -8,16 +8,16 @@ module.exports = {
     slash: 'both',
 
     callback: ({ message, interaction }) => {
-        const file = new MessageAttachment('./assets/thumbs/rooms.png');
-        const embed = new MessageEmbed()
-            .setTitle(`**Salas**`)
-            .setDescription(`Sync Video: https://www.sync-video.com/r/stormersroom\n\n\nWatch 2gether: https://www.watch2gether.com/rooms/nckg-le03mozzfc19nz7uuf?lang=es`)
-            .setColor([0, 143, 197])
-            .setThumbnail(`attachment://rooms.png`);
+        const row = new MessageActionRow()
+            .addComponents(new MessageButton()
+                .setLabel('Watch 2gether')
+                .setStyle('LINK')
+                .setURL('https://www.watch2gether.com/rooms/nckg-le03mozzfc19nz7uuf?lang=es'));
+
         if (message)
-            message.reply({ embeds: [embed], files: [file] });
+            message.reply({ content: 'Presione el botón para dirigirse a la sala:', components: [row] });
         if (interaction)
-            interaction.reply({ embeds: [embed], files: [file] });
+            interaction.reply({ content: 'Presione el botón para dirigirse a la sala:', components: [row] });
         return;
     }
 }

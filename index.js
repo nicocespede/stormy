@@ -150,7 +150,7 @@ client.on('guildMemberRemove', member => {
 });
 
 client.on('guildBanAdd', async ban => {
-    await new Promise(res => setTimeout(res, 2500));
+    await new Promise(res => setTimeout(res, 3000));
     if (!isListed(ban.user.id, cache.getBanned()))
         await addBan([ban.user.id, ban.user.tag, ban.reason, "Desconocido"]).then(async () => {
             await cache.updateBanned();

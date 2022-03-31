@@ -1,5 +1,5 @@
-const { ids, prefix, updateBanned, getBanned } = require('../../app/cache');
-const { deleteBan } = require('../../app/postgres');
+const { MessageButton, MessageActionRow } = require('discord.js');
+const { ids, prefix, getBanned } = require('../../app/cache');
 
 module.exports = {
     category: 'Moderación',
@@ -20,7 +20,7 @@ module.exports = {
     minArgs: 1,
     maxArgs: 1,
 
-    callback: async ({ guild, user, message, args, interaction }) => {
+    callback: async ({ guild, user, message, args, interaction, channel }) => {
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
         guild.roles.fetch(ids.roles.banear).then(async role => {
@@ -35,9 +35,47 @@ module.exports = {
                 if (user.id != ban['bans_responsible'] && ban['bans_responsible'] != "Desconocido")
                     messageOrInteraction.reply({ content: `Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`, ephemeral: true });
                 else {
-                    await guild.members.unban(ban['bans_id']).then(async () => {
-                        messageOrInteraction.reply({ content: `Hola <@${user.id}>, el usuario fue desbaneado correctamente.` });
-                    }).catch(console.error);
+                    const row = new MessageActionRow()
+                        .addComponents(new MessageButton().setCustomId('unban_yes')
+                            .setEmoji('✔️')
+                            .setLabel('Confirmar')
+                            .setStyle('SUCCESS'))
+                        .addComponents(new MessageButton().setCustomId('unban_no')
+                            .setEmoji('❌')
+                            .setLabel('Cancelar')
+                            .setStyle('DANGER'));
+                    var reply = await messageOrInteraction.reply({
+                        content: `¿Estás seguro de querer desbanear a **${ban['bans_user']}**?`,
+                        components: [row],
+                        ephemeral: true
+                    });
+
+                    const filter = (btnInt) => {
+                        return user.id === btnInt.user.id;
+                    }
+
+                    const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
+
+                    collector.on('end', async collection => {
+                        if (!collection.first()) {
+                            if (message)
+                                await reply.edit({ content: 'La acción expiró.', components: [], ephemeral: true });
+                            else if (interaction)
+                                await interaction.editReply({ content: 'La acción expiró.', components: [], ephemeral: true });
+                        } else if (collection.first().customId === 'unban_yes')
+                            await guild.members.unban(ban['bans_id']).then(async () => {
+                                if (message)
+                                    await reply.edit({ content: 'La acción fue completada.', components: [], ephemeral: true });
+                                else if (interaction)
+                                    await interaction.editReply({ content: 'La acción fue completada.', components: [], ephemeral: true });
+                                await channel.send({ content: `Hola <@${user.id}>, el usuario fue desbaneado correctamente.`, components: [] });
+                            }).catch(console.error);
+                        else
+                            if (message)
+                                await reply.edit({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
+                            else if (interaction)
+                                await interaction.editReply({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
+                    });
                 }
             }
         }).catch(console.error);

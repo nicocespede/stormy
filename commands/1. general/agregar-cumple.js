@@ -1,6 +1,7 @@
 const { getBirthdays, prefix, updateBirthdays } = require('../../app/cache');
 const { addBday } = require('../../app/postgres');
 const { isAMention, sendBdayAlert } = require('../../app/general');
+const { MessageActionRow, MessageButton } = require('discord.js');
 var validDate = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))$/g;
 
 module.exports = {
@@ -28,7 +29,7 @@ module.exports = {
     ],
     guildOnly: true,
 
-    callback: async ({ guild, message, args, interaction, client }) => {
+    callback: async ({ guild, message, args, interaction, client, channel, user }) => {
         var mention;
         var bdays = [];
         if (message) {
@@ -46,13 +47,51 @@ module.exports = {
         else if (bdays.includes(mention.user.id))
             messageOrInteraction.reply({ content: `Este usuario ya tiene registrado su cumpleaños.`, ephemeral: true });
         else {
-            var newArray = [mention.user.id, mention.user.username, args[1], false];
-            addBday(newArray).then(() => {
-                messageOrInteraction.reply({ content: `Se agregó el cumpleaños de ${args[0]} en la fecha ${args[1]}.` }).then(async () => {
-                    await updateBirthdays();
-                    sendBdayAlert(client);
-                });
-            }).catch(console.error);
+            const row = new MessageActionRow()
+                .addComponents(new MessageButton().setCustomId('add_yes')
+                    .setEmoji('✔️')
+                    .setLabel('Confirmar')
+                    .setStyle('SUCCESS'))
+                .addComponents(new MessageButton().setCustomId('add_no')
+                    .setEmoji('❌')
+                    .setLabel('Cancelar')
+                    .setStyle('DANGER'));
+            var reply = await messageOrInteraction.reply({
+                content: `¿Estás seguro de querer agregar el cumpleaños de **${mention.user.tag}** en la fecha **${args[1]}**?`,
+                components: [row],
+                ephemeral: true
+            });
+
+            const filter = (btnInt) => {
+                return user.id === btnInt.user.id;
+            }
+
+            const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
+
+            collector.on('end', async collection => {
+                if (!collection.first()) {
+                    if (message)
+                        await reply.edit({ content: 'La acción expiró.', components: [], ephemeral: true });
+                    else if (interaction)
+                        await interaction.editReply({ content: 'La acción expiró.', components: [], ephemeral: true });
+                } else if (collection.first().customId === 'add_yes') {
+                    var newArray = [mention.user.id, mention.user.username, args[1], false];
+                    addBday(newArray).then(async () => {
+                        if (message)
+                            await reply.edit({ content: 'La acción fue completada.', components: [], ephemeral: true });
+                        else if (interaction)
+                            await interaction.editReply({ content: 'La acción fue completada.', components: [], ephemeral: true });
+                        await channel.send({ content: `Se agregó el cumpleaños de **${mention.user.tag}** en la fecha ${args[1]}.`, components: [] });
+                        await updateBirthdays();
+                        sendBdayAlert(client);
+                    }).catch(console.error);
+                } else
+                    if (message)
+                        await reply.edit({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
+                    else if (interaction)
+                        await interaction.editReply({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
+
+            });
         }
         return;
     }
