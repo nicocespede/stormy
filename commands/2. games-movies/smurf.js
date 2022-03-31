@@ -79,7 +79,7 @@ module.exports = {
                     files: [new MessageAttachment(`./assets/thumbs/smurf.png`)]
                 }).then(() => {
                     if (message) deferringMessage.delete().then(channel.send({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!` }));
-                    else if (interaction) interaction.reply({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!`, ephemeral: true });
+                    else if (interaction) interaction.editReply({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!`, ephemeral: true });
                 }).catch(() => {
                     messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`, ephemeral: true });
                 });

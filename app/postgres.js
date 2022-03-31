@@ -146,6 +146,7 @@ function addPlaylist(array) {
             if (err) throw err;
         });
         setTimeout(function () { resolve(); }, 1000);
+        console.log('> Lista de reproducción agregada a la base de datos');
     });
 }
 
@@ -155,6 +156,17 @@ function deletePlaylist(name) {
             if (err) throw err;
         });
         setTimeout(function () { resolve(); }, 1000);
+        console.log('> Lista de reproducción eliminada de la base de datos');
+    });
+}
+
+function updateMcuFilters(value) {
+    return new Promise(function (resolve, reject) {
+        dbClient.query(`UPDATE "mcuFilters" SET "mcuFilters_filters" = '{"${value.join('","')}"}';`, (err, res) => {
+            if (err) throw err;
+        });
+        setTimeout(function () { resolve(); }, 1000);
+        console.log('> Filtros del UCM actualizados en la base de datos');
     });
 }
 
@@ -166,5 +178,6 @@ module.exports = {
     updateCollectorMessage,
     updateAnniversary,
     updateAvatarString,
-    addPlaylist, deletePlaylist
+    addPlaylist, deletePlaylist,
+    updateMcuFilters
 };

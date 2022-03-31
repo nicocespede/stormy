@@ -577,18 +577,21 @@ var mcuMovies;
 
 const getMcuMovies = () => mcuMovies;
 
-const updateMcuMovies = (filters) => {
-    if (filters.includes('all'))
-        mcuMovies = mcu;
-    else {
-        var newArray = [];
-        mcu.forEach(movie => {
-            if (filters.includes(movie.type))
-                newArray.push(movie);
-        });
-        mcuMovies = newArray;
-    }
-    console.log('> Caché de UCM actualizado');
+const updateMcuMovies = async () => {
+    await executeQuery('SELECT * FROM "mcuFilters";').then(async json => {
+        var filters = json[0];
+        if (filters['mcuFilters_filters'].includes('all'))
+            mcuMovies = mcu;
+        else {
+            var newArray = [];
+            mcu.forEach(movie => {
+                if (filters['mcuFilters_filters'].includes(movie.type))
+                    newArray.push(movie);
+            });
+            mcuMovies = newArray;
+        }
+        console.log('> Caché de UCM actualizado');
+    }).catch(console.error);
 };
 
 var birthdays;

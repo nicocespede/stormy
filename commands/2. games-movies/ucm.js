@@ -2,6 +2,7 @@ const { createCanvas } = require('canvas');
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const fs = require('fs');
 const { prefix, texts, getMcuMovies, updateMcuMovies } = require('../../app/cache');
+const { updateMcuFilters } = require('../../app/postgres');
 const validFilters = ['all', 'p', 'peliculas', 'pelis', 'películas', 'c', 'cortos', 'cortometrajes', 's', 'series'];
 
 async function getMovieInfo(path) {
@@ -155,7 +156,8 @@ module.exports = {
             var moviesField = { name: 'Nombre', value: '', inline: true };
             var typesField = { name: 'Tipo', value: ``, inline: true };
             var attachment = new MessageAttachment(`assets/thumbs/mcu-logo.png`);
-            updateMcuMovies(getFilters(args));
+            await updateMcuFilters(getFilters(args));
+            await updateMcuMovies();
             mcuMovies = getMcuMovies();
             for (var i = 0; i < mcuMovies.length; i++) {
                 var name = mcuMovies[i].name;

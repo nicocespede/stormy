@@ -39,7 +39,7 @@ function getNextMessage(id, collection) {
 }
 
 async function setUpCache() {
-    cache.updateMcuMovies(['all']);
+    cache.updateMcuMovies();
     await cache.updateBirthdays();
     await cache.updateBanned();
     await cache.updateSombraBans();
