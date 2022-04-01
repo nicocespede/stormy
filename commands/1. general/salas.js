@@ -15,9 +15,9 @@ module.exports = {
                 .setURL('https://www.watch2gether.com/rooms/nckg-le03mozzfc19nz7uuf?lang=es'));
 
         if (message)
-            message.reply({ content: 'Presione el botón para dirigirse a la sala:', components: [row] });
+            message.reply({ content: 'Presioná el botón para dirigirte a la sala:', components: [row] });
         if (interaction)
-            interaction.reply({ content: 'Presione el botón para dirigirse a la sala:', components: [row] });
+            interaction.reply({ content: 'Presioná el botón para dirigirte a la sala:', components: [row] });
         return;
     }
 }
