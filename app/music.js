@@ -37,8 +37,8 @@ function containsAuthor(track) {
     const author = track.author.split(' ');
     var ret = false;
     for (let i = 0; i < author.length; i++) {
-        const element = author[i];
-        if (track.title.includes(element)) {
+        const element = author[i].toLowerCase();
+        if (track.title.toLowerCase().includes(element)) {
             ret = true;
             break;
         }
