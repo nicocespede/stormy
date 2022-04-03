@@ -60,7 +60,7 @@ module.exports = {
 
         const songs = queue.tracks.length;
 
-        var description = `**▶️ Ahora reproduciendo:**\n\n${queue.current.title} - **${queue.current.duration}**\n\n**📄 Cola de reproducción:**\n\n`
+        var description = `**▶️ Ahora reproduciendo:**\n\n${queue.current.title}${!queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` | ${queue.current.author}` : ''} - **${queue.current.duration}**\n\n**📄 Cola de reproducción:**\n\n`
         var songsShown;
         for (let i = 0; i < tracks.length; i++) {
             const track = tracks[i];
