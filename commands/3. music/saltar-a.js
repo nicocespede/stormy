@@ -72,7 +72,7 @@ module.exports = {
             return;
         }
 
-        queue.jump(index);
+        queue.skipTo(index);
         messageOrInteraction.reply({
             embeds: [embed.setDescription(`⏭️ **${index + 1} canciones** salteadas.`)
                 .setThumbnail(`attachment://icons8-end-64.png`)],

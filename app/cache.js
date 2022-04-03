@@ -570,7 +570,8 @@ const musicActions = {
     changingChannel: 'CHANGING_CHANNEL',
     leavingEmptyChannel: 'LEAVING_EMPTY_CHANNEL',
     beingKicked: 'BEING_KICKED',
-    ending: 'ENDING'
+    ending: 'ENDING',
+    startingTrack: 'STARTING_TRACK'
 }
 
 var mcuMovies;

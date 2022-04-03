@@ -45,7 +45,8 @@ client.on('ready', async () => {
             highWaterMark: 1 << 25
         }
     }).on('trackStart', (queue, track) => {
-        if (cache.getLastAction() != cache.musicActions.changingChannel)
+        if (cache.getLastAction() != cache.musicActions.changingChannel){
+            cache.updateLastAction(cache.musicActions.startingTrack);
             queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
                     .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}](${track.url}) - **${track.duration}**`)
@@ -54,6 +55,7 @@ client.on('ready', async () => {
                     .setFooter({ text: `Agregada por ${track.requestedBy.tag}` })],
                 files: [new MessageAttachment(`./assets/thumbs/music/icons8-circled-play-64.png`)]
             });
+        }
     }).on('trackAdd', async (queue, track) => {
         var lastAction = cache.getLastAction();
         if (queue.tracks.length - 1 > 0 && lastAction != cache.musicActions.moving && lastAction != cache.musicActions.addingNext)
