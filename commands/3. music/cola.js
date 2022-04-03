@@ -71,9 +71,9 @@ module.exports = {
 
         const tracks = queue.tracks.map((track, i) => {
             if (track.url.includes('youtube') && containsAuthor(track))
-                `**${i + 1}**. ${track.title} - **${track.duration}**`;
+                return `**${i + 1}**. ${track.title} - **${track.duration}**`;
             else
-                `**${i + 1}**. ${track.title} | ${track.author} - **${track.duration}**`;
+                return `**${i + 1}**. ${track.title} | ${track.author} - **${track.duration}**`;
         });
 
         const songs = queue.tracks.length;
