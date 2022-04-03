@@ -9,7 +9,7 @@ const cache = require('./app/cache');
 const { needsTranslation, getNextMessage, setUpCache, convertTZ, initiateReactionCollector, generateWelcomeImage,
     isListed, periodicFunction } = require('./app/general');
 const { addBan, addSombraBan, deleteBan } = require('./app/postgres');
-const { setNewVoiceChannel, setKicked } = require('./app/music');
+const { setNewVoiceChannel, setKicked, containsAuthor } = require('./app/music');
 
 const client = new Client({
     intents: [
@@ -45,11 +45,11 @@ client.on('ready', async () => {
             highWaterMark: 1 << 25
         }
     }).on('trackStart', (queue, track) => {
-        if (cache.getLastAction() != cache.musicActions.changingChannel){
+        if (cache.getLastAction() != cache.musicActions.changingChannel) {
             cache.updateLastAction(cache.musicActions.startingTrack);
             queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
-                    .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}](${track.url}) - **${track.duration}**`)
+                    .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
                     .setThumbnail(`attachment://icons8-circled-play-64.png`)
                     .setFooter({ text: `Agregada por ${track.requestedBy.tag}` })],
@@ -60,7 +60,7 @@ client.on('ready', async () => {
         var lastAction = cache.getLastAction();
         if (queue.tracks.length - 1 > 0 && lastAction != cache.musicActions.moving && lastAction != cache.musicActions.addingNext)
             queue.metadata.send({
-                embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${track.title}](${track.url}) - **${track.duration}**`)
+                embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [new MessageAttachment(`./assets/thumbs/music/icons8-add-song-64.png`)]
             });

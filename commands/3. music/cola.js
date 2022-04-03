@@ -1,18 +1,5 @@
 const { MessageEmbed, MessageAttachment } = require("discord.js");
-const { isAMusicChannel } = require("../../app/music");
-
-function containsAuthor(track) {
-    const author = track.author.split(' ');
-    var ret = false;
-    for (let i = 0; i < author.length; i++) {
-        const element = author[i];
-        if (track.title.includes(element)) {
-            ret = true;
-            break;
-        }
-    }
-    return ret;
-}
+const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -69,12 +56,7 @@ module.exports = {
         embed.setColor([195, 36, 255]);
         embed.setThumbnail(`attachment://icons8-playlist-64.png`);
 
-        const tracks = queue.tracks.map((track, i) => {
-            if (track.url.includes('youtube') && containsAuthor(track))
-                return `**${i + 1}**. ${track.title} - **${track.duration}**`;
-            else
-                return `**${i + 1}**. ${track.title} | ${track.author} - **${track.duration}**`;
-        });
+        const tracks = queue.tracks.map((track, i) => `**${i + 1}**. ${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''} - ** ${track.duration} ** `);
 
         const songs = queue.tracks.length;
 

@@ -1,7 +1,7 @@
 const { QueryType } = require('discord-player');
 const { MessageEmbed, MessageAttachment } = require('discord.js');
 const { updateLastAction, musicActions, getPlaylists } = require('../../app/cache');
-const { isAMusicChannel } = require("../../app/music");
+const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -111,7 +111,7 @@ module.exports = {
             } else {
                 var track = res.tracks[0];
                 queue.insert(track, 0);
-                description = `☑️ Agregado a la cola como siguiente:\n\n[${track.title}](${track.url}) - **${track.duration}**`;
+                description = `☑️ Agregado a la cola como siguiente:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''}](${track.url}) - **${track.duration}**`;
             }
             await messageOrInteraction.reply({
                 embeds: [embed.setDescription(description)

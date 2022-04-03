@@ -42,7 +42,7 @@ module.exports = {
 
         if (!queue || !queue.playing) {
             messageOrInteraction.reply({
-                embeds: [embed.setDescription("🛑 ¡No hay ninguna cola de reproducción para aleatorizar!")
+                embeds: [embed.setDescription("🛑 ¡No hay ninguna cola de reproducción para barajar!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
                 files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
                 ephemeral: true
@@ -63,7 +63,7 @@ module.exports = {
         const success = queue.shuffle();
 
         messageOrInteraction.reply({
-            embeds: [embed.setDescription(success ? "🔀 Cola de reproducción aleatorizada." : `🛑 ¡Ocurrió un error!`)
+            embeds: [embed.setDescription(success ? "🔀 Cola de reproducción barajada." : `🛑 ¡Ocurrió un error!`)
                 .setThumbnail(success ? `attachment://icons8-shuffle-64.png` : `attachment://icons8-no-entry-64.png`)],
             files: [new MessageAttachment(success ? `./assets/thumbs/music/icons8-shuffle-64.png` : `./assets/thumbs/music/icons8-no-entry-64.png`)]
         });

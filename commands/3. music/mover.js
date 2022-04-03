@@ -1,6 +1,6 @@
 const { MessageEmbed, MessageAttachment } = require("discord.js");
 const { updateLastAction, musicActions } = require("../../app/cache");
-const { isAMusicChannel } = require("../../app/music");
+const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -114,7 +114,7 @@ module.exports = {
         queue.insert(song, positionIndex);
 
         messageOrInteraction.reply({
-            embeds: [embed.setDescription(`🔁 **${song.title}** movida ${auxString}.`)
+            embeds: [embed.setDescription(`🔁 **${song.title}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
                 .setThumbnail(`attachment://icons8-repeat-64.png`)],
             files: [new MessageAttachment(`./assets/thumbs/music/icons8-repeat-64.png`)]
         });

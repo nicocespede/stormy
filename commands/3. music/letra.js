@@ -1,6 +1,6 @@
 const { MessageEmbed, MessageAttachment, Util } = require('discord.js');
 const { prefix } = require('../../app/cache');
-const { isAMusicChannel } = require("../../app/music");
+const { isAMusicChannel, containsAuthor } = require("../../app/music");
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 
@@ -43,7 +43,7 @@ module.exports = {
                 return;
             }
 
-            const searches = await Client.songs.search(queue.current.title);
+            const searches = await Client.songs.search(queue.current.title + !queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` - ${queue.current.author}` : ``);
             const firstSong = searches[0];
             var lyrics = await firstSong.lyrics();
             lyrics = lyrics.replace(/[[]/g, '**[');

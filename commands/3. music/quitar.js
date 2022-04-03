@@ -1,5 +1,5 @@
 const { MessageEmbed, MessageAttachment } = require("discord.js");
-const { isAMusicChannel } = require("../../app/music");
+const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 function orderArgs(array) {
     var uniqueArray = array.filter(function (item, pos, self) {
@@ -96,7 +96,7 @@ module.exports = {
         var description = [];
         for (let i = 0; i < ordered.length; i++) {
             const track = queue.remove(ordered[i]);
-            description.push(`[${track.title}](${track.url}) - **${track.duration}**\n`);
+                description.push(`[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**\n`);
         }
 
         messageOrInteraction.reply({
