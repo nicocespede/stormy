@@ -374,6 +374,10 @@ const mcu = [
     {
         name: "Hawkeye Season 1 (2021)",
         type: "Serie"
+    },
+    {
+        name: "Moon Knight Season 1 (2022)",
+        type: "Serie"
     }
 ];
 
