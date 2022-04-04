@@ -115,8 +115,8 @@ module.exports = {
             }
             await messageOrInteraction.reply({
                 embeds: [embed.setDescription(description)
-                    .setThumbnail(`attachment://icons8-sand-timer-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-sand-timer-64.png`)]
+                    .setThumbnail(`attachment://icons8-add-song-64.png`)],
+                files: [new MessageAttachment(`./assets/thumbs/music/icons8-add-song-64.png`)]
             }).then(() => m.delete());
             return;
         } else {

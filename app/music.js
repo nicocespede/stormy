@@ -1,5 +1,5 @@
 const { MessageAttachment, MessageEmbed } = require("discord.js");
-const { ids, updateLastAction, musicActions, getLastAction } = require("./cache");
+const { ids, updateLastAction, musicActions } = require("./cache");
 
 function isAMusicChannel(id) {
     var ret = false;
