@@ -1,11 +1,10 @@
 const { MessageEmbed } = require("discord.js");
-const { updateLastAction, musicActions } = require("../../app/cache");
-const { isAMusicChannel } = require("../../app/music");
+const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
-    description: 'Para la reproducción (hace que el bot se desconecte del canal).',
-    aliases: ['stop'],
+    description: 'Muestra la canción actual en reproducción.',
+    aliases: ['current'],
 
     slash: 'both',
 
@@ -13,7 +12,7 @@ module.exports = {
     guildOnly: true,
 
     callback: ({ guild, member, user, message, channel, client, interaction }) => {
-        var embed = new MessageEmbed().setColor([195, 36, 255]);
+        var errorEmbed = new MessageEmbed().setColor([195, 36, 255]);
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
         if (!isAMusicChannel(channel.id)) {
@@ -22,16 +21,7 @@ module.exports = {
         }
         if (!member.voice.channel) {
             messageOrInteraction.reply({
-                embeds: [embed.setDescription("🛑 ¡Debes estar en un canal de voz para parar música!")
-                    .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
-                ephemeral: true
-            });
-            return;
-        }
-        if (guild.me.voice.channel && member.voice.channel.id !== guild.me.voice.channel.id) {
-            messageOrInteraction.reply({
-                embeds: [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para parar la reproducción!")
+                embeds: [errorEmbed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
                 files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
@@ -43,7 +33,7 @@ module.exports = {
 
         if (!queue || !queue.playing) {
             messageOrInteraction.reply({
-                embeds: [embed.setDescription("🛑 ¡No hay ninguna canción para parar!")
+                embeds: [errorEmbed.setDescription("🛑 No hay música reproduciéndose.")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
                 files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
@@ -51,13 +41,19 @@ module.exports = {
             return;
         }
 
-        updateLastAction(musicActions.stopping);
-        queue.destroy();
+        const track = queue.current;
+
+        const progress = queue.createProgressBar();
+        const timestamp = queue.getPlayerTimestamp();
 
         messageOrInteraction.reply({
-            embeds: [embed.setDescription("⏹️ Música parada, 👋 ¡adiós!")
-                .setThumbnail(`attachment://icons8-stop-64.png`)],
-            files: [`./assets/thumbs/music/icons8-stop-64.png`]
+            embeds: [new MessageEmbed()
+                .setColor([195, 36, 255])
+                .setDescription(`**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}\n\n${progress}`)
+                .setImage(track.thumbnail)
+                .setThumbnail(`attachment://icons8-musical-notes-64.png`)
+                .setTitle(track.title + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))],
+            files: ['./assets/thumbs/music/icons8-musical-notes-64.png']
         });
         return;
     }

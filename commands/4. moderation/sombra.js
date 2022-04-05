@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const { getSombraBans } = require('../../app/cache');
 
 module.exports = {
@@ -27,7 +27,7 @@ module.exports = {
                 .setDescription(description)
                 .setColor(instance.color)
                 .setThumbnail(`attachment://sombra.jpeg`)],
-            files: [new MessageAttachment('assets/thumbs/sombra.jpeg')],
+            files: ['assets/thumbs/sombra.jpeg'],
             ephemeral: true
         });
         return;

@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { isAMusicChannel } = require("../../app/music");
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [errorEmbed.setDescription("🛑 ¡Debes estar en un canal de voz para limpiar la cola!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -32,7 +32,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para limpiar la cola!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -44,7 +44,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡No hay canciones en la cola!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -54,7 +54,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡No hay más canciones luego de la actual!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -67,7 +67,7 @@ module.exports = {
                 .setDescription(`❌ La cola de reproducción fue limpiada.`)
                 .setColor([195, 36, 255])
                 .setThumbnail(`attachment://icons8-delete-64.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-delete-64.png`)]
+            files: [`./assets/thumbs/music/icons8-delete-64.png`]
         });
         return;
     }

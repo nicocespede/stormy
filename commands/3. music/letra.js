@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment, Util } = require('discord.js');
+const { MessageEmbed, Util } = require('discord.js');
 const { prefix } = require('../../app/cache');
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 const Genius = require("genius-lyrics");
@@ -37,13 +37,13 @@ module.exports = {
                 messageOrInteraction.reply({
                     embeds: [embed.setDescription(`🛑 ¡No hay ninguna canción de la cual mostrar la letra! Podés usar el comando ${prefix}letra seguido del nombre de la canción que buscás.`)
                         .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                    files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                    files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                     ephemeral: true
                 });
                 return;
             }
 
-            const searches = await Client.songs.search(queue.current.title + !queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` - ${queue.current.author}` : ``);
+            const searches = await Client.songs.search(queue.current.title + (!queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` - ${queue.current.author}` : ``));
             const firstSong = searches[0];
             var lyrics = await firstSong.lyrics();
             lyrics = lyrics.replace(/[[]/g, '**[');

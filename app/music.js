@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { ids, updateLastAction, musicActions } = require("./cache");
 
 function isAMusicChannel(id) {
@@ -17,7 +17,7 @@ function setNewVoiceChannel(client, guild, channel) {
         embeds: [new MessageEmbed().setColor([195, 36, 255])
             .setDescription(`🔃 Fui movido al canal de voz **${channel.name}**.`)
             .setThumbnail(`attachment://icons8-change-64.png`)],
-        files: [new MessageAttachment(`./assets/thumbs/music/icons8-change-64.png`)]
+        files: [`./assets/thumbs/music/icons8-change-64.png`]
     });
 }
 
@@ -28,7 +28,7 @@ function setKicked(client, guild) {
         embeds: [new MessageEmbed().setColor([195, 36, 255])
             .setDescription("⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!")
             .setThumbnail(`attachment://icons8-disconnected-64.png`)],
-        files: [new MessageAttachment(`./assets/thumbs/music/icons8-disconnected-64.png`)]
+        files: [`./assets/thumbs/music/icons8-disconnected-64.png`]
     });
     queue.destroy();
 }

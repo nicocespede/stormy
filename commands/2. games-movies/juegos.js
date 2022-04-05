@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const fs = require('fs');
 const { texts, prefix } = require('../../app/cache');
 
@@ -76,7 +76,6 @@ module.exports = {
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
         getAvailableFilesNames('./games').then(games => {
-            var attachment = new MessageAttachment(`assets/thumbs/games.png`);
             var color = [234, 61, 78];
             if (args.length == 0) {
                 var gamesField = { name: 'Juego', value: '', inline: true };
@@ -94,7 +93,7 @@ module.exports = {
                         .addFields([gamesField, updatesField])
                         .setFooter({ text: texts.games.footer })
                         .setThumbnail(`attachment://games.png`)],
-                    files: [attachment],
+                    files: [`assets/thumbs/games.png`],
                     ephemeral: true
                 });
             } else {

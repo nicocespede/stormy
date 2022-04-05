@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
 const { ids, smurf, prefix } = require('../../app/cache');
 
@@ -76,7 +76,7 @@ module.exports = {
                         .setColor([7, 130, 169])
                         .addFields([accountsField, commandsField, ranksField])
                         .setThumbnail(`attachment://smurf.png`)],
-                    files: [new MessageAttachment(`./assets/thumbs/smurf.png`)]
+                    files: [`./assets/thumbs/smurf.png`]
                 }).then(() => {
                     if (message) deferringMessage.delete().then(channel.send({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!` }));
                     else if (interaction) interaction.editReply({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!`, ephemeral: true });

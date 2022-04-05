@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { updateLastAction, musicActions } = require("../../app/cache");
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
@@ -40,7 +40,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -49,7 +49,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -61,7 +61,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡No hay ninguna canción para mover!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -71,7 +71,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡No hay suficientes canciones en la cola para mover!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -84,7 +84,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 El número de canción ingresado es inválido.")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -94,7 +94,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 El número de posición ingresado es inválido.")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -116,7 +116,7 @@ module.exports = {
         messageOrInteraction.reply({
             embeds: [embed.setDescription(`🔁 **${song.title}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
                 .setThumbnail(`attachment://icons8-repeat-64.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-repeat-64.png`)]
+            files: [`./assets/thumbs/music/icons8-repeat-64.png`]
         });
         return;
     }

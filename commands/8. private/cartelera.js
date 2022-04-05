@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
 const fs = require('fs');
 
@@ -38,7 +38,7 @@ module.exports = {
                     .setColor([255, 0, 6])
                     .setThumbnail(`attachment://${fileName}`)
                     .setImage(url)],
-                files: [new MessageAttachment(`./assets/thumbs/movies/${fileName}`)]
+                files: [`./assets/thumbs/movies/${fileName}`]
             };
             initiateReactionCollector(client, msg);
             message.delete();

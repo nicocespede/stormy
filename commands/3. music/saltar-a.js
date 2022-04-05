@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { isAMusicChannel } = require("../../app/music");
 
 module.exports = {
@@ -33,7 +33,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -42,7 +42,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -54,7 +54,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡No hay ninguna canción para saltear!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -66,7 +66,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription(`🛑 El número ingresado es inválido.`)
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -76,7 +76,7 @@ module.exports = {
         messageOrInteraction.reply({
             embeds: [embed.setDescription(`⏭️ **${index + 1} canciones** salteadas.`)
                 .setThumbnail(`attachment://icons8-end-64.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-end-64.png`)]
+            files: [`./assets/thumbs/music/icons8-end-64.png`]
         });
         return;
     }

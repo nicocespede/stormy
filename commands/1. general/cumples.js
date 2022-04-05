@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../app/cache');
 const { deleteBday } = require('../../app/postgres');
 
@@ -42,7 +42,7 @@ module.exports = {
                 .setColor([237, 0, 0])
                 .addFields([usersField, datesField])
                 .setThumbnail(`attachment://bday.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/bday.png`)],
+            files: [`./assets/thumbs/bday.png`],
             ephemeral: true
         });
         return;

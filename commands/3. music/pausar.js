@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { isAMusicChannel } = require("../../app/music");
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en un canal de voz para pausar la música!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -32,7 +32,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para pausar la reproducción!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -45,7 +45,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription("🛑 ¡No hay ninguna canción para pausar!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -56,7 +56,7 @@ module.exports = {
         messageOrInteraction.reply({
             embeds: [embed.setDescription(success ? "⏸ Música pausada." : `🛑 ¡La música ya está pausada!`)
                 .setThumbnail(success ? `attachment://icons8-pause-button-64.png` : `attachment://icons8-no-entry-64.png`)],
-            files: [new MessageAttachment(success ? `./assets/thumbs/music/icons8-pause-button-64.png` : `./assets/thumbs/music/icons8-no-entry-64.png`)]
+            files: [success ? `./assets/thumbs/music/icons8-pause-button-64.png` : `./assets/thumbs/music/icons8-no-entry-64.png`]
         });
         return;
     }

@@ -1,5 +1,5 @@
 const { QueryType } = require('discord-player');
-const { MessageEmbed, MessageAttachment } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const { musicActions, updateLastAction, getPlaylists } = require('../../app/cache');
 const { isAMusicChannel } = require("../../app/music");
 
@@ -32,7 +32,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription(`🛑 ¡Debes estar en un canal de voz para usar este comando!`)
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -41,7 +41,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription(`🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!`)
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -53,7 +53,7 @@ module.exports = {
                 messageOrInteraction.reply({
                     embeds: [embed.setDescription("🛑 ¡No hay ninguna canción para reanudar!")
                         .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                    files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                    files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                     ephemeral: true
                 });
                 return;
@@ -64,7 +64,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [embed.setDescription(success ? "▶️ Música reanudada." : `🛑 ¡Ocurrió un error!`)
                     .setThumbnail(success ? `attachment://icons8-resume-button-64.png` : `attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(success ? `./assets/thumbs/music/icons8-resume-button-64.png` : `./assets/thumbs/music/icons8-no-entry-64.png`)]
+                files: [success ? `./assets/thumbs/music/icons8-resume-button-64.png` : `./assets/thumbs/music/icons8-no-entry-64.png`]
             });
             return;
         } else {
@@ -81,7 +81,7 @@ module.exports = {
                 messageOrInteraction.reply({
                     embeds: [embed.setDescription(`🛑 ¡${user}, no se encontraron resultados! `)
                         .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                    files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                    files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                     ephemeral: true
                 });
                 return;
@@ -98,7 +98,7 @@ module.exports = {
                 messageOrInteraction.reply({
                     embeds: [embed.setDescription(`🛑 ${user}, no me puedo unir al canal de voz.`)
                         .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                    files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                    files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                     ephemeral: true
                 });
                 return;
@@ -107,7 +107,7 @@ module.exports = {
             const m = await messageOrInteraction.reply({
                 embeds: [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
                     .setThumbnail(`attachment://icons8-sand-timer-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-sand-timer-64.png`)],
+                files: [`./assets/thumbs/music/icons8-sand-timer-64.png`],
                 ephemeral: true
             });
 

@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const convert = require('xml-js');
 const axios = require('axios');
 
@@ -39,7 +39,7 @@ module.exports = {
                     .setColor([76, 175, 80])
                     .addFields(fields)
                     .setThumbnail(`attachment://dolar.png`)],
-                files: [new MessageAttachment(`assets/thumbs/dolar.png`)],
+                files: [`assets/thumbs/dolar.png`],
                 ephemeral: true
             });
         } catch (e) {

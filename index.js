@@ -1,4 +1,4 @@
-const { Client, Intents, MessageEmbed, MessageAttachment, Util } = require('discord.js');
+const { Client, Intents, MessageEmbed, Util } = require('discord.js');
 const WOKCommands = require('wokcommands');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -53,30 +53,30 @@ client.on('ready', async () => {
                     .setImage(track.thumbnail)
                     .setThumbnail(`attachment://icons8-circled-play-64.png`)
                     .setFooter({ text: `Agregada por ${track.requestedBy.tag}` })],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-circled-play-64.png`)]
+                files: [`./assets/thumbs/music/icons8-circled-play-64.png`]
             });
         }
     }).on('trackAdd', async (queue, track) => {
         var lastAction = cache.getLastAction();
-        if (queue.tracks.length - 1 > 0 && lastAction != cache.musicActions.moving && lastAction != cache.musicActions.addingNext)
+        if (queue.playing && lastAction != cache.musicActions.moving && lastAction != cache.musicActions.addingNext)
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-add-song-64.png`)]
+                files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
     }).on('tracksAdd', async (queue, tracks) => {
         if (cache.getLastAction() != cache.musicActions.addingNext)
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription(`☑️ **${tracks.length} canciones** agregadas a la cola.`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-add-song-64.png`)]
+                files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
     }).on('channelEmpty', (queue) => {
         cache.updateLastAction(cache.musicActions.leavingEmptyChannel);
         queue.metadata.send({
             embeds: [musicEmbed.setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
                 .setThumbnail(`attachment://icons8-no-audio-64.png`)],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-audio-64.png`)]
+            files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
         });
     }).on('queueEnd', (queue) => {
         if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
@@ -86,7 +86,7 @@ client.on('ready', async () => {
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
                     .setThumbnail(`attachment://icons8-so-so-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-so-so-64.png`)]
+                files: [`./assets/thumbs/music/icons8-so-so-64.png`]
             });
         }
     });

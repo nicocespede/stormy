@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [errorEmbed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -35,7 +35,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [errorEmbed.setDescription("🛑 No hay música reproduciéndose.")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -45,7 +45,7 @@ module.exports = {
             messageOrInteraction.reply({
                 embeds: [errorEmbed.setDescription("🛑 ¡No hay más canciones en la cola!")
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [new MessageAttachment(`./assets/thumbs/music/icons8-no-entry-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
                 ephemeral: true
             });
             return;
@@ -79,7 +79,7 @@ module.exports = {
 
         messageOrInteraction.reply({
             embeds: [embed],
-            files: [new MessageAttachment(`./assets/thumbs/music/icons8-playlist-64.png`)]
+            files: [`./assets/thumbs/music/icons8-playlist-64.png`]
         });
         return;
     }

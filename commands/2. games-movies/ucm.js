@@ -1,5 +1,5 @@
 const { createCanvas } = require('canvas');
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const fs = require('fs');
 const { prefix, texts, getMcuMovies, updateMcuMovies } = require('../../app/cache');
 const { updateMcuFilters } = require('../../app/postgres');
@@ -114,8 +114,6 @@ module.exports = {
                 var name = mcuMovies[index].name;
                 getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(info => {
                     var messages = [];
-                    var attachment = new MessageAttachment(`./assets/thumbs/mcu/${info.thumbURL}`);
-                    var imageAttachment = new MessageAttachment(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`);
                     for (const ver in info) {
                         if (Object.hasOwnProperty.call(info, ver) && ver != 'thumbURL' && ver != 'lastUpdate') {
                             const element = info[ver];
@@ -144,7 +142,7 @@ module.exports = {
                         }
                     }
                     messages[messages.length - 1].setImage(`attachment://image.jpg`);
-                    messageOrInteraction.reply({ embeds: messages, files: [attachment, imageAttachment], ephemeral: true });
+                    messageOrInteraction.reply({ embeds: messages, files: [`./assets/thumbs/mcu/${info.thumbURL}`, `./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`], ephemeral: true });
                 }).catch(console.error);
             }
         } else if (!validateFilters(args))
@@ -155,7 +153,6 @@ module.exports = {
             var messages = [];
             var moviesField = { name: 'Nombre', value: '', inline: true };
             var typesField = { name: 'Tipo', value: ``, inline: true };
-            var attachment = new MessageAttachment(`assets/thumbs/mcu-logo.png`);
             await updateMcuFilters(getFilters(args));
             await updateMcuMovies();
             mcuMovies = getMcuMovies();
@@ -192,7 +189,7 @@ module.exports = {
                 if (i === messages.length - 1)
                     msg.setFooter({ text: texts.movies.footer });
             }
-            messageOrInteraction.reply({ embeds: messages, files: [attachment], ephemeral: true });
+            messageOrInteraction.reply({ embeds: messages, files: [`assets/thumbs/mcu-logo.png`], ephemeral: true });
         }
         return;
     }

@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const { isAMusicChannel } = require('../../app/music');
 const { prefix, getPlaylists } = require('../../app/cache');
 
@@ -30,7 +30,7 @@ module.exports = {
                 .setDescription(description)
                 .setColor([195, 36, 255])
                 .setThumbnail(`attachment://icons8-playlist-64.png`)],
-            files: [new MessageAttachment('./assets/thumbs/music/icons8-playlist-64.png')],
+            files: ['./assets/thumbs/music/icons8-playlist-64.png'],
             ephemeral: true
         });
         return;
