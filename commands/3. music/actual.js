@@ -50,7 +50,7 @@ module.exports = {
             embeds: [new MessageEmbed()
                 .setColor([195, 36, 255])
                 .setDescription(`${progress}\n\n**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}`)
-                .setThumbnail(track.thumbnail)
+                .setImage(track.thumbnail)
                 .setTitle(track.title + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))]
         });
         return;
