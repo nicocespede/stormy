@@ -6,7 +6,7 @@ const { updateMcuFilters } = require('../../app/postgres');
 const validFilters = ['all', 'p', 'peliculas', 'pelis', 'películas', 'c', 'cortos', 'cortometrajes', 's', 'series'];
 
 async function getMovieInfo(path) {
-    var info = { thumbURL: '', lastUpdate: '' };
+    var info = {};
     return new Promise(function (resolve, reject) {
         //passsing directoryPath and callback function
         fs.readdir(path, function (err, files) {
@@ -18,21 +18,8 @@ async function getMovieInfo(path) {
                 // Do whatever you want to do with the file
                 fs.readFile(`${path}/${file}`, 'utf8', function readFileCallback(err, data) {
                     if (err) console.log(err);
-                    if (file == 'thumbURL.txt')
-                        info.thumbURL = data;
-                    else if (file == 'lastUpdate.txt')
-                        info.lastUpdate = data;
-                    else if (file != 'image.jpg')
-                        try {
-                            const stats = fs.statSync(`${path}/${file}`);
-
-                            info[file.substring(0, file.length - 4)] = data;
-                            // print file last modified date
-                            console.log(`${file} Data Last Modified: ${stats.mtime}`);
-                            console.log(`${file} Status Last Modified: ${stats.ctime}`);
-                        } catch (error) {
-                            console.log(error);
-                        }
+                    if (file != 'image.jpg')
+                        info[file.substring(0, file.length - 4)] = data;
                 });
             });
         });
@@ -65,7 +52,7 @@ function getFilters(array) {
             if (validFilters.slice(5, 8).includes(arg))
                 filters.push('Cortometraje');
             if (validFilters.slice(8).includes(arg))
-                filters.push('Serie');
+                filters.push(['Serie', 'Miniserie']);
         });
     return filters;
 }
@@ -144,14 +131,14 @@ module.exports = {
                             else
                                 var title = name;
                             messages.push(new MessageEmbed()
-                                .setTitle(`${title} - versión ${ver} (actualizada por última vez ${lastUpdateToString(info.lastUpdate)})`)
+                                .setTitle(`${title} - versión ${ver} (actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)})`)
                                 .setColor(color)
                                 .addFields(fields)
-                                .setThumbnail(`attachment://${info.thumbURL}`));
+                                .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`));
                         }
                     }
                     messages[messages.length - 1].setImage(`attachment://image.jpg`);
-                    messageOrInteraction.reply({ embeds: messages, files: [`./assets/thumbs/mcu/${info.thumbURL}`, `./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`], ephemeral: true });
+                    messageOrInteraction.reply({ embeds: messages, files: [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`, `./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`], ephemeral: true });
                 }).catch(console.error);
             }
         } else if (!validateFilters(args))

@@ -30,7 +30,7 @@ module.exports = {
                 else {
                     var accInfo = account[0].split('#');
                     await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                        if (mmr.status == 204)
+                        if (mmr.data.currenttierpatched == null)
                             var thumb = `assets/thumbs/ranks/unranked.png`;
                         else
                             var thumb = `assets/thumbs/ranks/${mmr.data.currenttierpatched.toLowerCase()}.png`;
