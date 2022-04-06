@@ -23,7 +23,16 @@ async function getMovieInfo(path) {
                     else if (file == 'lastUpdate.txt')
                         info.lastUpdate = data;
                     else if (file != 'image.jpg')
-                        info[file.substring(0, file.length - 4)] = data;
+                        try {
+                            const stats = fs.statSync(`${path}/${file}`);
+
+                            info[file.substring(0, file.length - 4)] = data;
+                            // print file last modified date
+                            console.log(`${file} Data Last Modified: ${stats.mtime}`);
+                            console.log(`${file} Status Last Modified: ${stats.ctime}`);
+                        } catch (error) {
+                            console.log(error);
+                        }
                 });
             });
         });
