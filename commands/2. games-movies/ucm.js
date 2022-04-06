@@ -126,15 +126,13 @@ module.exports = {
                                 }
                             });
                             fields.push(field);
-                            if (mcuMovies[index].type == 'Cortometraje')
-                                var title = `Marvel One-shot collection (2011-2018)`;
-                            else
-                                var title = name;
+                            var title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
                             messages.push(new MessageEmbed()
-                                .setTitle(`${title} - versión ${ver} (actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)})`)
+                                .setTitle(`${title} - versión ${ver}`)
                                 .setColor(color)
                                 .addFields(fields)
-                                .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`));
+                                .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
+                                .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}` }));
                         }
                     }
                     messages[messages.length - 1].setImage(`attachment://image.jpg`);
