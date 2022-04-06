@@ -43,6 +43,16 @@ function containsAuthor(track) {
             break;
         }
     }
+    if (!ret) {
+        const title = track.title.split(' ');
+        for (let i = 0; i < title.length; i++) {
+            const element = title[i].toLowerCase();
+            if (track.author.toLowerCase().includes(element)) {
+                ret = true;
+                break;
+            }
+        }
+    }
     return ret;
 }
 

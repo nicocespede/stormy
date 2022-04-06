@@ -49,11 +49,9 @@ module.exports = {
         messageOrInteraction.reply({
             embeds: [new MessageEmbed()
                 .setColor([195, 36, 255])
-                .setDescription(`**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}\n\n${progress}`)
-                .setImage(track.thumbnail)
-                .setThumbnail(`attachment://icons8-musical-notes-64.png`)
-                .setTitle(track.title + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))],
-            files: ['./assets/thumbs/music/icons8-musical-notes-64.png']
+                .setDescription(`${progress}\n\n**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}`)
+                .setThumbnail(track.thumbnail)
+                .setTitle(track.title + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))]
         });
         return;
     }
