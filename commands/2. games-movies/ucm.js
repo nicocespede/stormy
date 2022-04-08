@@ -132,7 +132,7 @@ module.exports = {
                                 .setColor(color)
                                 .addFields(fields)
                                 .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
-                                .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}` }));
+                                .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}.` }));
                         }
                     }
                     messages[messages.length - 1].setImage(`attachment://image.jpg`);
@@ -177,7 +177,7 @@ module.exports = {
                 .setThumbnail(`attachment://mcu-logo.png`));
             for (let i = 0; i < messages.length; i++) {
                 var msg = messages[i];
-                msg.setTitle(`**Universo Cinematográfico de Marvel (${i + 1})**`)
+                msg.setTitle(`**Universo Cinematográfico de Marvel (${i + 1})**`);
                 if (i === 0)
                     msg.setDescription(texts.movies.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix));
                 if (i === messages.length - 1)

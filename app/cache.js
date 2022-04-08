@@ -32,7 +32,7 @@ const categorySettings = [
         emoji: '🔒',
         hidden: true
     }
-]
+];
 
 const ids = {
     users: {
@@ -526,7 +526,7 @@ const mcu = [
     {
         name: "Moon Knight Season 1 (2022)",
         type: "Serie",
-        lastUpdate: "04/04/2022",
+        lastUpdate: "06/04/2022",
         thumbURL: "moon-knight.png"
     }
 ];
@@ -726,7 +726,7 @@ const musicActions = {
     beingKicked: 'BEING_KICKED',
     ending: 'ENDING',
     startingTrack: 'STARTING_TRACK'
-}
+};
 
 var mcuMovies;
 
@@ -797,7 +797,7 @@ const updateReactionCollectorInfo = async () => {
         reactionCollectorInfo = json;
         console.log('> Caché de recolector de reacciones actualizado');
     }).catch(console.error);
-}
+};
 
 var anniversaries;
 
@@ -808,7 +808,7 @@ const updateAnniversaries = async () => {
         anniversaries = json;
         console.log('> Caché de aniversarios actualizado');
     }).catch(console.error);
-}
+};
 
 var avatar;
 
@@ -819,7 +819,7 @@ const updateAvatar = async () => {
         avatar = json;
         console.log('> Caché de avatar actualizado');
     }).catch(console.error);
-}
+};
 
 var lastAction;
 
@@ -832,7 +832,7 @@ var playlists = { names: [], urls: [] };
 const getPlaylists = () => playlists;
 
 const updatePlaylists = async () => {
-    await executeQuery('SELECT * FROM "playlists";').then(async json => {
+    await executeQuery('SELECT * FROM "playlists" ORDER BY "playlists_name";').then(async json => {
         var newNames = [];
         var newUrls = [];
         json.forEach(pl => {
@@ -851,4 +851,4 @@ module.exports = {
     getMcuMovies, updateMcuMovies, getBirthdays, updateBirthdays, getBanned, updateBanned, getSombraBans, updateSombraBans,
     getLastDateChecked, updateLastDateChecked, getReactionCollectorInfo, updateReactionCollectorInfo,
     getAnniversaries, updateAnniversaries, getAvatar, updateAvatar, getLastAction, updateLastAction, getPlaylists, updatePlaylists
-}
+};
