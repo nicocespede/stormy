@@ -157,6 +157,37 @@ function updateUsername(client) {
         client.user.setUsername(newUsername).catch(console.error);
 };
 
+const sendBdayAlert = async (client) => {
+    var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
+    birthdays.forEach(bday => {
+        if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
+            client.channels.fetch(cache.ids.channels.general).then(channel => {
+                client.guilds.fetch(cache.ids.guilds.nckg).then(async guild => {
+                    await guild.members.fetch(bday['bdays_id']).then(member => {
+                        generateBirthdayImage(member.user).then(attachment => {
+                            if (bday['bdays_id'] == `<@${cache.ids.users.bot}>`)
+                                var msg = `@everyone\n\n¡Hoy es mi cumpleaños!`;
+                            else
+                                var msg = `@everyone\n\nHoy es el cumpleaños de <@${bday['bdays_id']}>, ¡feliz cumpleaños!`;
+                            channel.send({ content: msg, files: [attachment] }).then(m => {
+                                m.react('🎈');
+                                m.react('🥳');
+                                m.react('🎉');
+                                m.react('🎂');
+                            }).catch(console.error);
+                        }).catch(console.error);
+                    }).catch(() => deleteBday(bday['bdays_id']).then(async () => {
+                        await cache.updateBirthdays();
+                        channel.send({ content: `Se eliminó el cumpleaños de **${bday['bdays_user']}** (**Hoy**) ya que el usuario no está más en el servidor.` });
+                    }));
+                }).catch(console.error);
+            }).catch(console.error);
+            updateBday(bday['bdays_id'], true).then(async () => (await cache.updateBirthdays())).catch(console.error);
+        } else if (bday['bdays_date'] != getToday() && bday['bdays_flag'])
+            updateBday(bday['bdays_id'], false).then(async () => (await cache.updateBirthdays())).catch(console.error);
+    });
+}
+
 module.exports = {
     isAMention: (str) => {
         return str.substring(0, 1) == '<' && str.substring(1, 2) == '@' && str.substring(str.length - 1, str.length) == '>';
@@ -195,36 +226,7 @@ module.exports = {
         updateUsername(client);
     },
 
-    sendBdayAlert: async (client) => {
-        var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
-        birthdays.forEach(bday => {
-            if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
-                client.channels.fetch(cache.ids.channels.general).then(channel => {
-                    client.guilds.fetch(cache.ids.guilds.nckg).then(async guild => {
-                        await guild.members.fetch(bday['bdays_id']).then(member => {
-                            generateBirthdayImage(member.user).then(attachment => {
-                                if (bday['bdays_id'] == `<@${cache.ids.users.bot}>`)
-                                    var msg = `@everyone\n\n¡Hoy es mi cumpleaños!`;
-                                else
-                                    var msg = `@everyone\n\nHoy es el cumpleaños de <@${bday['bdays_id']}>, ¡feliz cumpleaños!`;
-                                channel.send({ content: msg, files: [attachment] }).then(m => {
-                                    m.react('🎈');
-                                    m.react('🥳');
-                                    m.react('🎉');
-                                    m.react('🎂');
-                                }).catch(console.error);
-                            }).catch(console.error);
-                        }).catch(() => deleteBday(bday['bdays_id']).then(async () => {
-                            await cache.updateBirthdays();
-                            channel.send({ content: `Se eliminó el cumpleaños de **${bday['bdays_user']}** (**Hoy**) ya que el usuario no está más en el servidor.` });
-                        }));
-                    }).catch(console.error);
-                }).catch(console.error);
-                updateBday(bday['bdays_id'], true).then(async () => (await cache.updateBirthdays())).catch(console.error);
-            } else if (bday['bdays_date'] != getToday() && bday['bdays_flag'])
-                updateBday(bday['bdays_id'], false).then(async () => (await cache.updateBirthdays())).catch(console.error);
-        });
-    },
+    sendBdayAlert,
 
     convertTZ: (date, tzString) => {
         return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
