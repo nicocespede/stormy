@@ -30,7 +30,8 @@ module.exports = {
             return;
         }
 
-        var playlists = getPlaylists().names === [] ? await updatePlaylists() : getPlaylists();
+        var playlists = getPlaylists();
+        if (playlists.names === []) playlists = await updatePlaylists();
         var name = args.join(' ').toLowerCase();
         if (!playlists.names.includes(name)) {
             messageOrInteraction.reply({ content: `La lista que intentás borrar no existe.`, ephemeral: true });
