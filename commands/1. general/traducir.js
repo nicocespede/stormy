@@ -1,4 +1,4 @@
-const { Util } = require('discord.js');
+const { Util, Constants } = require('discord.js');
 const translate = require("translate");
 
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
             name: 'texto',
             description: 'El texto a traducir.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     slash: 'both',

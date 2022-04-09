@@ -1,7 +1,7 @@
 const { getBirthdays, prefix, updateBirthdays } = require('../../app/cache');
 const { deleteBday } = require('../../app/postgres');
 const { isAMention } = require('../../app/general');
-const { MessageButton, MessageActionRow } = require('discord.js');
+const { MessageButton, MessageActionRow, Constants } = require('discord.js');
 
 module.exports = {
     category: 'General',
@@ -17,7 +17,7 @@ module.exports = {
             name: 'amigo',
             description: 'La mención del cumpleañero.',
             required: true,
-            type: 'MENTIONABLE'
+            type: Constants.ApplicationCommandOptionTypes.USER
         }
     ],
     guildOnly: true,
@@ -32,7 +32,8 @@ module.exports = {
             var messageOrInteraction = interaction;
             await guild.members.fetch(args[0]).then(member => mention = member).catch(console.error);
         }
-        getBirthdays().forEach(bday => (bdays.push(bday['bdays_id'])));
+        var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+        birthdays.forEach(bday => (bdays.push(bday['bdays_id'])));
         if (message && !isAMention(args[0]))
             messageOrInteraction.reply({ content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}borrar-cumple <@amigo>"**.`, ephemeral: true });
         else if (!bdays.includes(mention.user.id))

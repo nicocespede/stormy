@@ -1,6 +1,6 @@
 const { MessageEmbed } = require('discord.js');
 const { isAMusicChannel } = require('../../app/music');
-const { prefix, getPlaylists } = require('../../app/cache');
+const { prefix, getPlaylists, updatePlaylists } = require('../../app/cache');
 
 module.exports = {
     category: 'Música',
@@ -19,11 +19,11 @@ module.exports = {
             return;
         }
 
-        var playlists = getPlaylists();
+        var playlists = getPlaylists().names === [] ? await updatePlaylists() : getPlaylists();
         var description = `Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\nLas listas de reproducción guardadas son:\n\n`;
         for (var i = 0; i < playlists.names.length; i++)
             description += `**${i + 1}.** ${playlists.names[i]} - ${playlists.urls[i]}\n\n`;
-        
+
         messageOrInteraction.reply({
             embeds: [new MessageEmbed()
                 .setTitle(`**Listas de reproducción**`)

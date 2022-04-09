@@ -1,4 +1,4 @@
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, Constants } = require("discord.js");
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 function orderArgs(array) {
@@ -34,7 +34,7 @@ module.exports = {
             name: 'números',
             description: 'Los números de las canciones que se quieren quitar.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     slash: 'both',

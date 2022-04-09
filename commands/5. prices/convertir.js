@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment } = require('discord.js');
+const { MessageEmbed, MessageAttachment, Constants } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 const { currencies } = require('../../app/cache');
@@ -21,12 +21,12 @@ module.exports = {
             name: 'moneda',
             description: 'La moneda desde la que se quiere convertir a pesos argentinos.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }, {
             name: 'cantidad',
             description: 'La cantidad que se quiere convertir a pesos argentinos.',
             required: true,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.NUMBER
         }],
 
     minArgs: 2,

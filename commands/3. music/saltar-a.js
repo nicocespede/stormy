@@ -1,4 +1,4 @@
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, Constants } = require("discord.js");
 const { isAMusicChannel } = require("../../app/music");
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
             name: 'número',
             description: 'El número de la canción a la que se quiere saltar.',
             required: true,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.INTEGER
         }
     ],
     slash: 'both',

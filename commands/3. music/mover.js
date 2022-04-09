@@ -1,4 +1,4 @@
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, Constants } = require("discord.js");
 const { updateLastAction, musicActions } = require("../../app/cache");
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
@@ -12,13 +12,13 @@ module.exports = {
             name: 'número',
             description: 'El número de la canción que se quiere mover.',
             required: true,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.INTEGER
         },
         {
             name: 'posición',
             description: 'El número de la posición a la que se quiere mover la canción.',
             required: true,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.INTEGER
         }
     ],
     slash: 'both',

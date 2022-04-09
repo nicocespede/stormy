@@ -8,9 +8,11 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
+    permissions: ['ADMINISTRATOR'],
 
-    callback: ({ guild, message }) => {
-        var aux = getReactionCollectorInfo()[0];
+    callback: async ({ guild, message }) => {
+        var aux = !getReactionCollectorInfo() ? await updateReactionCollectorInfo() : getReactionCollectorInfo();
+        aux = aux[0];
         if (!aux['collectorMessage_active'])
             message.author.send({ content: 'El recolector de reacciones no está activo.' });
         else

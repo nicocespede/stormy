@@ -1,9 +1,21 @@
 const { createCanvas } = require('canvas');
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, Constants } = require('discord.js');
 const fs = require('fs');
-const { prefix, texts, getMcuMovies, updateMcuMovies } = require('../../app/cache');
+const { prefix, texts, getMcuMovies, updateMcuMovies, getFilters, updateFilters } = require('../../app/cache');
 const { updateMcuFilters } = require('../../app/postgres');
 const validFilters = ['all', 'p', 'peliculas', 'pelis', 'películas', 'c', 'cortos', 'cortometrajes', 's', 'series'];
+
+function filtersNeedUpdate(oldFilters, newFilters) {
+    var ret = false;
+    newFilters.forEach(filter => {
+        if (!oldFilters.includes(filter)) {
+            ret = true;
+            return;
+        }
+    });
+    if (!ret) ret = oldFilters.length != newFilters.length;
+    return ret;
+}
 
 async function getMovieInfo(path) {
     var info = {};
@@ -40,7 +52,7 @@ function lastUpdateToString(lastUpdate) {
     return 'el ' + lastUpdate;
 }
 
-function getFilters(array) {
+function getNewFilters(array) {
     var filters = [];
     if (array.includes('all'))
         filters.push('all');
@@ -51,8 +63,10 @@ function getFilters(array) {
                 filters.push('Película');
             if (validFilters.slice(5, 8).includes(arg))
                 filters.push('Cortometraje');
-            if (validFilters.slice(8).includes(arg))
-                filters.push(['Serie', 'Miniserie']);
+            if (validFilters.slice(8).includes(arg)) {
+                filters.push('Serie');
+                filters.push('Miniserie');
+            }
         });
     return filters;
 }
@@ -77,19 +91,19 @@ module.exports = {
             name: 'numero',
             description: 'El número del elemento que se quiere ver.',
             required: false,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.INTEGER
         },
         {
             name: 'filtro1',
             description: 'El primer filtro para la lista.',
             required: false,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         },
         {
             name: 'filtro2',
             description: 'El segundo filtro para la lista.',
             required: false,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     maxArgs: 2,
@@ -98,7 +112,8 @@ module.exports = {
 
     callback: async ({ user, message, args, interaction }) => {
         var color = [181, 2, 22];
-        var mcuMovies = getMcuMovies();
+        var filters = !getFilters() ? await updateFilters() : getFilters();
+        var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
         if (args.length === 0) args = ['all'];
@@ -147,9 +162,11 @@ module.exports = {
             var messages = [];
             var moviesField = { name: 'Nombre', value: '', inline: true };
             var typesField = { name: 'Tipo', value: ``, inline: true };
-            await updateMcuFilters(getFilters(args));
-            await updateMcuMovies();
-            mcuMovies = getMcuMovies();
+            if (filtersNeedUpdate(filters, getNewFilters(args))) {
+                await updateMcuFilters(getNewFilters(args));
+                filters = await updateFilters();
+                mcuMovies = updateMcuMovies(filters);
+            }
             for (var i = 0; i < mcuMovies.length; i++) {
                 var name = mcuMovies[i].name;
                 var type = mcuMovies[i].type;

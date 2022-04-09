@@ -1,5 +1,5 @@
 const { MessageEmbed } = require('discord.js');
-const { getSombraBans } = require('../../app/cache');
+const { getSombraBans, updateSombraBans } = require('../../app/cache');
 
 module.exports = {
     category: 'Moderación',
@@ -11,7 +11,7 @@ module.exports = {
     callback: async ({ message, instance, interaction }) => {
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
-        var bans = getSombraBans();
+        var bans = !getSombraBans() ? await updateSombraBans() : getSombraBans();
         var description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
         for (var i = 0; i < bans.length; i++) {
             var actual = bans[i];

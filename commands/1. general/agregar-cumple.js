@@ -1,7 +1,7 @@
 const { getBirthdays, prefix, updateBirthdays } = require('../../app/cache');
 const { addBday } = require('../../app/postgres');
 const { isAMention, sendBdayAlert } = require('../../app/general');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton, Constants } = require('discord.js');
 var validDate = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))$/g;
 
 module.exports = {
@@ -18,13 +18,13 @@ module.exports = {
             name: 'amigo',
             description: 'La mención del cumpleañero.',
             required: true,
-            type: 'MENTIONABLE'
+            type: Constants.ApplicationCommandOptionTypes.USER
         },
         {
             name: 'fecha',
             description: 'La fecha (DD/MM) del cumpleaños.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     guildOnly: true,
@@ -39,7 +39,8 @@ module.exports = {
             var messageOrInteraction = interaction;
             await guild.members.fetch(args[0]).then(member => mention = member).catch(console.error);
         }
-        getBirthdays().forEach(bday => (bdays.push(bday['bdays_id'])));
+        var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+        birthdays.forEach(bday => (bdays.push(bday['bdays_id'])));
         if (message && !isAMention(args[0]))
             messageOrInteraction.reply({ content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}agregar-cumple <@amigo> <DD/MM>"**.`, ephemeral: true });
         else if (validDate.exec(args[1]) == null)

@@ -1,6 +1,7 @@
 const { ids, prefix } = require('../../app/cache');
 const { isAMention } = require('../../app/general');
 const fs = require('fs');
+const { Constants } = require('discord.js');
 
 async function getRandomMoscardon() {
     var fileName;
@@ -27,7 +28,7 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el moscardón.',
             required: true,
-            type: 'MENTIONABLE'
+            type: Constants.ApplicationCommandOptionTypes.USER
         }
     ],
     slash: 'both',

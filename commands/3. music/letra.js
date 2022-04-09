@@ -1,4 +1,4 @@
-const { MessageEmbed, Util } = require('discord.js');
+const { MessageEmbed, Util, Constants } = require('discord.js');
 const { prefix } = require('../../app/cache');
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 const Genius = require("genius-lyrics");
@@ -13,7 +13,7 @@ module.exports = {
             name: 'canción',
             description: 'El nombre de la canción de la que se quiere la letra.',
             required: false,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     slash: 'both',

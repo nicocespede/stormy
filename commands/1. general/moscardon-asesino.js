@@ -1,3 +1,4 @@
+const { Constants } = require('discord.js');
 const { ids, prefix } = require('../../app/cache');
 const { isAMention } = require('../../app/general');
 
@@ -10,7 +11,7 @@ module.exports = {
             name: 'amigo',
             description: `La mención de quien recibe el moscardón asesino.`,
             required: true,
-            type: 'MENTIONABLE'
+            type: Constants.ApplicationCommandOptionTypes.USER
         }
     ],
     slash: 'both',

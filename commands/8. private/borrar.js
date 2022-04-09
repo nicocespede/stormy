@@ -6,6 +6,7 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
+    permissions: ['ADMINISTRATOR'],
 
     callback: ({ channel, user }) => {
         if (user.id === ids.users.stormer && channel.type === 'DM') {

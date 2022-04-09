@@ -38,18 +38,6 @@ function getNextMessage(id, collection) {
     return ret;
 }
 
-async function setUpCache() {
-    cache.updateMcuMovies();
-    await cache.updateBirthdays();
-    await cache.updateBanned();
-    await cache.updateSombraBans();
-    cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
-    await cache.updateReactionCollectorInfo();
-    await cache.updateAnniversaries();
-    await cache.updateAvatar();
-    await cache.updatePlaylists();
-}
-
 function periodicFunction(client) {
     sendBdayAlert(client);
     sendSpecialDayMessage(client);
@@ -58,8 +46,9 @@ function periodicFunction(client) {
     updateUsername(client);
 }
 
-function sendBdayAlert(client) {
-    cache.getBirthdays().forEach(bday => {
+async function sendBdayAlert(client) {
+    var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
+    birthdays.forEach(bday => {
         if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
             client.channels.fetch(cache.ids.channels.general).then(channel => {
                 client.guilds.fetch(cache.ids.guilds.nckg).then(async guild => {
@@ -164,7 +153,8 @@ function initiateReactionCollector(client, message) {
                 await updateCollectorMessage(true, msg.id).catch(console.error);
                 await cache.updateReactionCollectorInfo();
             });
-        var aux = cache.getReactionCollectorInfo()[0];
+        var aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
+        aux = aux[0];
         channel.messages.fetch(aux['collectorMessage_id']).then(m => {
             if (message)
                 m.react('✅');
@@ -264,8 +254,9 @@ function sendSpecialDayMessage(client) {
     }).catch(console.error);
 }
 
-function sendAnniversaryAlert(client) {
-    cache.getAnniversaries().forEach(anniversary => {
+async function sendAnniversaryAlert(client) {
+    var anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
+    anniversaries.forEach(anniversary => {
         if (anniversary['anniversaries_date'].substring(0, 5) == getToday() && !anniversary['anniversaries_flag']) {
             client.channels.fetch(cache.ids.channels.general).then(channel => {
                 client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
@@ -291,8 +282,9 @@ function sendAnniversaryAlert(client) {
     });
 }
 
-function updateAvatar(client) {
-    var actualAvatar = cache.getAvatar()[0];
+async function updateAvatar(client) {
+    var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
+    actualAvatar = actualAvatar[0]
     var newAvatar = `./assets/custom/kgprime${getImageType()}.png`;
     if (actualAvatar['avatar_url'] != newAvatar) {
         client.user.setAvatar(newAvatar).then(() => {
@@ -318,6 +310,6 @@ function updateUsername(client) {
 }
 
 module.exports = {
-    isAMention, needsTranslation, getNextMessage, setUpCache, periodicFunction, sendBdayAlert, convertTZ,
+    isAMention, needsTranslation, getNextMessage, periodicFunction, sendBdayAlert, convertTZ,
     initiateReactionCollector, stopReactionCollector, generateWelcomeImage, isListed
 }

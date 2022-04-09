@@ -1,4 +1,4 @@
-const { MessageButton, MessageActionRow } = require('discord.js');
+const { MessageButton, MessageActionRow, Constants } = require('discord.js');
 const { ids, prefix, updateBanned } = require('../../app/cache');
 const { isAMention } = require('../../app/general');
 const { addBan } = require('../../app/postgres');
@@ -12,13 +12,13 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el ban.',
             required: true,
-            type: 'MENTIONABLE'
+            type: Constants.ApplicationCommandOptionTypes.USER
         },
         {
             name: 'razón',
             description: 'La razón del baneo.',
             required: false,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     slash: 'both',

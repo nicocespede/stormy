@@ -1,5 +1,5 @@
-const { MessageButton, MessageActionRow } = require('discord.js');
-const { ids, prefix, getBanned } = require('../../app/cache');
+const { MessageButton, MessageActionRow, Constants } = require('discord.js');
+const { ids, prefix, getBanned, updateBanned } = require('../../app/cache');
 
 module.exports = {
     category: 'Moderación',
@@ -10,7 +10,7 @@ module.exports = {
             name: 'indice',
             description: `El índice otorgado por el comando \`${prefix}baneados\`).`,
             required: true,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.INTEGER
         }
     ],
     slash: 'both',
@@ -25,7 +25,7 @@ module.exports = {
         else if (interaction) var messageOrInteraction = interaction;
         guild.roles.fetch(ids.roles.banear).then(async role => {
             const index = parseInt(args[0]) - 1;
-            var bans = getBanned();
+            var bans = !getBanned() ? await updateBanned() : getBanned();
             if (!role.members.has(user.id))
                 messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`, ephemeral: true });
             else if (index < 0 || index >= bans.length || isNaN(index))

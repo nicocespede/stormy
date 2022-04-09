@@ -6,7 +6,7 @@ dotenv.config();
 const translate = require("translate");
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
-const { needsTranslation, getNextMessage, setUpCache, convertTZ, initiateReactionCollector, generateWelcomeImage,
+const { needsTranslation, getNextMessage, convertTZ, initiateReactionCollector, generateWelcomeImage,
     isListed, periodicFunction } = require('./app/general');
 const { addBan, addSombraBan, deleteBan } = require('./app/postgres');
 const { setNewVoiceChannel, setKicked, containsAuthor, leaveEmptyChannel } = require('./app/music');
@@ -28,9 +28,10 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${cache.prefix}ayuda`, type: 'LISTENING' }] });
 
-    await setUpCache();
+    cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client)
-    var reactionCollectorInfo = cache.getReactionCollectorInfo()[0];
+    var reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
+    reactionCollectorInfo = reactionCollectorInfo[0];
     if (reactionCollectorInfo['collectorMessage_active'])
         initiateReactionCollector(client);
 
@@ -99,7 +100,8 @@ client.on('ready', async () => {
         defaultLanguage: 'spanish',
         disabledDefaultCommands: ['channelonly', 'command', 'help', 'language', 'prefix', 'requiredrole'],
         ephemeral: true,
-        ignoreBots: true
+        ignoreBots: true,
+        testServers: ['962233256433029180']
     }).setDefaultPrefix(cache.prefix)
         .setCategorySettings(cache.categorySettings)
         .setColor([142, 89, 170]);
@@ -141,9 +143,10 @@ client.on('guildMemberAdd', member => {
     }).catch(console.error);
 });
 
-client.on('guildMemberRemove', member => {
+client.on('guildMemberRemove', async member => {
+    var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
     member.guild.bans.fetch().then(bans => {
-        if (bans.size == cache.getBanned().length)
+        if (bans.size == banned.length)
             client.channels.fetch(cache.ids.channels.welcome).then(channel => {
                 var random = Math.floor(Math.random() * (cache.goodbye.length));
                 channel.send({ content: cache.goodbye[random].replace(/%USERNAME%/g, `${member.user.tag}`) });
@@ -153,7 +156,8 @@ client.on('guildMemberRemove', member => {
 
 client.on('guildBanAdd', async ban => {
     await new Promise(res => setTimeout(res, 3000));
-    if (!isListed(ban.user.id, cache.getBanned()))
+    var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
+    if (!isListed(ban.user.id, banned))
         await addBan([ban.user.id, ban.user.tag, ban.reason, "Desconocido"]).then(async () => {
             await cache.updateBanned();
         }).catch(console.error);
@@ -172,7 +176,8 @@ client.on('guildBanAdd', async ban => {
 });
 
 client.on('guildBanRemove', async ban => {
-    if (isListed(ban.user.id, cache.getBanned()))
+    var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
+    if (isListed(ban.user.id, banned))
         await deleteBan(ban.user.id).then(async () => await cache.updateBanned()).catch(console.error);
     client.channels.fetch(cache.ids.channels.welcome).then(channel => {
         var random = Math.floor(Math.random() * (cache.unbanned.length));

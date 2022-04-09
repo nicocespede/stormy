@@ -1,6 +1,7 @@
 const { executeQuery } = require('./postgres');
 
 const prefix = '-';
+const testing = false;
 
 const categorySettings = [
     {
@@ -54,7 +55,7 @@ const ids = {
         anuncios: "881187176216395826",
         general: "703056370039128105",
         cartelera: "836043727616213012",
-        welcome: "817149994959110235",
+        welcome: !testing ? "817149994959110235" : "962233358237188156",
         musica: [
             "703055406091468922",
             "859586260565229588",
@@ -732,22 +733,33 @@ var mcuMovies;
 
 const getMcuMovies = () => mcuMovies;
 
-const updateMcuMovies = async () => {
-    await executeQuery('SELECT * FROM "mcuFilters";').then(async json => {
-        var filters = json[0];
-        if (filters['mcuFilters_filters'].includes('all'))
-            mcuMovies = mcu;
-        else {
-            var newArray = [];
-            mcu.forEach(movie => {
-                if (filters['mcuFilters_filters'].includes(movie.type))
-                    newArray.push(movie);
-            });
-            mcuMovies = newArray;
-        }
-        console.log('> Caché de UCM actualizado');
-    }).catch(console.error);
+const updateMcuMovies = (filters) => {
+    if (filters.includes('all'))
+        mcuMovies = mcu;
+    else {
+        var newArray = [];
+        mcu.forEach(movie => {
+            if (filters.includes(movie.type))
+                newArray.push(movie);
+        });
+        mcuMovies = newArray;
+    }
+    console.log('> Caché de UCM actualizado');
+    return mcuMovies;
 };
+
+var filters;
+
+const getFilters = () => filters;
+
+const updateFilters = async () => {
+    await executeQuery('SELECT * FROM "mcuFilters";').then(async json => {
+        var aux = json[0]
+        filters = aux['mcuFilters_filters'];
+        console.log('> Caché de filtros actualizado');
+    }).catch(console.error);
+    return filters;
+}
 
 var birthdays;
 
@@ -758,6 +770,7 @@ const updateBirthdays = async () => {
         birthdays = json;
         console.log('> Caché de cumpleaños actualizado');
     }).catch(console.error);
+    return birthdays;
 };
 
 var banned;
@@ -769,6 +782,7 @@ const updateBanned = async () => {
         banned = json;
         console.log('> Caché de baneados actualizado');
     }).catch(console.error);
+    return banned;
 };
 
 var sombraBans;
@@ -780,6 +794,7 @@ const updateSombraBans = async () => {
         sombraBans = json;
         console.log('> Caché de baneos de Sombra actualizado');
     }).catch(console.error);
+    return sombraBans;
 };
 
 var lastDateChecked;
@@ -797,6 +812,7 @@ const updateReactionCollectorInfo = async () => {
         reactionCollectorInfo = json;
         console.log('> Caché de recolector de reacciones actualizado');
     }).catch(console.error);
+    return reactionCollectorInfo;
 };
 
 var anniversaries;
@@ -808,6 +824,7 @@ const updateAnniversaries = async () => {
         anniversaries = json;
         console.log('> Caché de aniversarios actualizado');
     }).catch(console.error);
+    return anniversaries;
 };
 
 var avatar;
@@ -819,6 +836,7 @@ const updateAvatar = async () => {
         avatar = json;
         console.log('> Caché de avatar actualizado');
     }).catch(console.error);
+    return avatar;
 };
 
 var lastAction;
@@ -843,6 +861,7 @@ const updatePlaylists = async () => {
         playlists.urls = newUrls;
         console.log('> Caché de playlists actualizado');
     }).catch(console.error);
+    return playlists;
 };
 
 module.exports = {
@@ -850,5 +869,6 @@ module.exports = {
     bannedWithReason, bannedWithoutReason, unbanned, musicActions,
     getMcuMovies, updateMcuMovies, getBirthdays, updateBirthdays, getBanned, updateBanned, getSombraBans, updateSombraBans,
     getLastDateChecked, updateLastDateChecked, getReactionCollectorInfo, updateReactionCollectorInfo,
-    getAnniversaries, updateAnniversaries, getAvatar, updateAvatar, getLastAction, updateLastAction, getPlaylists, updatePlaylists
+    getAnniversaries, updateAnniversaries, getAvatar, updateAvatar, getLastAction, updateLastAction, getPlaylists, updatePlaylists,
+    getFilters, updateFilters
 };

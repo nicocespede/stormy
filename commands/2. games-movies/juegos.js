@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, Constants } = require('discord.js');
 const fs = require('fs');
 const { texts, prefix } = require('../../app/cache');
 
@@ -65,7 +65,7 @@ module.exports = {
             name: 'numero',
             description: 'El número del juego que se quiere ver.',
             required: false,
-            type: 'NUMBER'
+            type: Constants.ApplicationCommandOptionTypes.INTEGER
         }
     ],
     maxArgs: 1,

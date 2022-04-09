@@ -1,3 +1,4 @@
+const { Constants } = require('discord.js');
 const { getPlaylists, prefix, updatePlaylists } = require('../../app/cache');
 const { isAMusicChannel } = require('../../app/music');
 const { addPlaylist } = require('../../app/postgres');
@@ -15,18 +16,18 @@ module.exports = {
             name: 'nombre',
             description: 'El nombre que tendrá la lista de reproducción.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         },
         {
             name: 'url',
             description: 'La URL de la lista de reproducción.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     guildOnly: true,
 
-    callback: ({ channel, message, args, interaction, user }) => {
+    callback: async ({ channel, message, args, interaction, user }) => {
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
 
@@ -35,7 +36,7 @@ module.exports = {
             return;
         }
 
-        var playlists = getPlaylists();
+        var playlists = getPlaylists().names === [] ? await updatePlaylists() : getPlaylists();
         var url = args.pop();
         var name = args.join(' ').toLowerCase();
         if (!url.includes('http') || !url.includes('www')) {

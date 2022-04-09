@@ -1,6 +1,6 @@
 const { QueryType } = require('discord-player');
-const { MessageEmbed } = require('discord.js');
-const { updateLastAction, musicActions, getPlaylists } = require('../../app/cache');
+const { MessageEmbed, Constants } = require('discord.js');
+const { updateLastAction, musicActions, getPlaylists, updatePlaylists } = require('../../app/cache');
 const { isAMusicChannel, containsAuthor } = require("../../app/music");
 
 module.exports = {
@@ -12,7 +12,7 @@ module.exports = {
             name: 'canción',
             description: 'La URL o el nombre de la canción que se quiere reproducir.',
             required: true,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     slash: 'both',
@@ -47,7 +47,7 @@ module.exports = {
             return;
         }
 
-        var playlists = getPlaylists();
+        var playlists = getPlaylists().names === [] ? await updatePlaylists() : getPlaylists();
         if (playlists.names.includes(text.toLowerCase()))
             text = playlists.urls[playlists.names.indexOf(text.toLowerCase())];
 

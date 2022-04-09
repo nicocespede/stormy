@@ -1,3 +1,4 @@
+const { Constants } = require('discord.js');
 const { ids, prefix } = require('../../app/cache');
 const { isAMention } = require('../../app/general');
 
@@ -9,13 +10,13 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el nuevo apodo.',
             required: true,
-            type: 'MENTIONABLE'
+            type: Constants.ApplicationCommandOptionTypes.USER
         },
         {
             name: 'apodo',
             description: 'El apodo nuevo (si no se ingresa nada, el apodo se resetea).',
             required: false,
-            type: 'STRING'
+            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
     slash: 'both',
