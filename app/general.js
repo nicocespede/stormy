@@ -9,6 +9,10 @@ Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium
 
 var reactionCollector = {};
 
+const convertTZ = (date, tzString) => {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+}
+
 function getToday() {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     var dd = today.getDate();
@@ -228,9 +232,7 @@ module.exports = {
 
     sendBdayAlert,
 
-    convertTZ: (date, tzString) => {
-        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
-    },
+    convertTZ,
 
     initiateReactionCollector: (client, message) => {
         client.channels.fetch(cache.ids.channels.cartelera).then(async channel => {
