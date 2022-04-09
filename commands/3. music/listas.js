@@ -19,8 +19,7 @@ module.exports = {
             return;
         }
 
-        var playlists = getPlaylists();
-        if (playlists.names === []) playlists = await updatePlaylists();
+        var playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
         var description = `Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\nLas listas de reproducción guardadas son:\n\n`;
         for (var i = 0; i < playlists.names.length; i++)
             description += `**${i + 1}.** ${playlists.names[i]} - ${playlists.urls[i]}\n\n`;

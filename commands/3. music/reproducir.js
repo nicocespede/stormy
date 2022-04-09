@@ -68,8 +68,7 @@ module.exports = {
             });
             return;
         } else {
-            var playlists = getPlaylists();
-            if (playlists.names === []) playlists = await updatePlaylists();
+            var playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
             if (playlists.names.includes(text.toLowerCase()))
                 text = playlists.urls[playlists.names.indexOf(text.toLowerCase())];
 

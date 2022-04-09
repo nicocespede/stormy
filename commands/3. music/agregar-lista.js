@@ -36,8 +36,7 @@ module.exports = {
             return;
         }
 
-        var playlists = getPlaylists();
-        if (playlists.names === []) playlists = await updatePlaylists();
+        var playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
         var url = args.pop();
         var name = args.join(' ').toLowerCase();
         if (!url.includes('http') || !url.includes('www')) {
