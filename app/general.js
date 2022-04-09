@@ -264,7 +264,7 @@ module.exports = {
         console.log('> Recolector de reacciones desactivado');
     },
 
-    generateWelcomeImage: (user) => {
+    generateWelcomeImage: async (user) => {
         const canvas = Canvas.createCanvas(1170, 720);
         const context = canvas.getContext('2d');
         var background = await Canvas.loadImage(`./assets/custom/welcome${getImageType()}.png`);
