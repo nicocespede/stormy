@@ -9,74 +9,6 @@ Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium
 
 var reactionCollector = {};
 
-function isAMention(str) {
-    return str.substring(0, 1) == '<' && str.substring(1, 2) == '@' && str.substring(str.length - 1, str.length) == '>';
-}
-
-function needsTranslation(string) {
-    var probabilities = lngDetector.detect(string);
-    if (probabilities[0][0] != 'spanish') {
-        if (probabilities[1][0] == 'spanish') {
-            if (probabilities[1][1] < 0.2)
-                return true;
-            return false;
-        }
-        return true;
-    }
-}
-
-function getNextMessage(id, collection) {
-    var previousMessage = collection.first();
-    var ret = null;
-    collection.forEach(element => {
-        if (element.id == id) {
-            ret = previousMessage;
-            return;
-        }
-        previousMessage = element;
-    });
-    return ret;
-}
-
-function periodicFunction(client) {
-    sendBdayAlert(client);
-    sendSpecialDayMessage(client);
-    sendAnniversaryAlert(client);
-    updateAvatar(client);
-    updateUsername(client);
-}
-
-async function sendBdayAlert(client) {
-    var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
-    birthdays.forEach(bday => {
-        if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
-            client.channels.fetch(cache.ids.channels.general).then(channel => {
-                client.guilds.fetch(cache.ids.guilds.nckg).then(async guild => {
-                    await guild.members.fetch(bday['bdays_id']).then(member => {
-                        generateBirthdayImage(member.user).then(attachment => {
-                            if (bday['bdays_id'] == `<@${cache.ids.users.bot}>`)
-                                var msg = `@everyone\n\n¡Hoy es mi cumpleaños!`;
-                            else
-                                var msg = `@everyone\n\nHoy es el cumpleaños de <@${bday['bdays_id']}>, ¡feliz cumpleaños!`;
-                            channel.send({ content: msg, files: [attachment] }).then(m => {
-                                m.react('🎈');
-                                m.react('🥳');
-                                m.react('🎉');
-                                m.react('🎂');
-                            }).catch(console.error);
-                        }).catch(console.error);
-                    }).catch(() => deleteBday(bday['bdays_id']).then(async () => {
-                        await cache.updateBirthdays();
-                        channel.send({ content: `Se eliminó el cumpleaños de **${bday['bdays_user']}** (**Hoy**) ya que el usuario no está más en el servidor.` });
-                    }));
-                }).catch(console.error);
-            }).catch(console.error);
-            updateBday(bday['bdays_id'], true).then(async () => (await cache.updateBirthdays())).catch(console.error);
-        } else if (bday['bdays_date'] != getToday() && bday['bdays_flag'])
-            updateBday(bday['bdays_id'], false).then(async () => (await cache.updateBirthdays())).catch(console.error);
-    });
-}
-
 function getToday() {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     var dd = today.getDate();
@@ -84,11 +16,7 @@ function getToday() {
     if (dd < 10) dd = '0' + dd;
     if (mm < 10) mm = '0' + mm;
     return `${dd}/${mm}`;
-}
-
-function convertTZ(date, tzString) {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
-}
+};
 
 async function generateBirthdayImage(user) {
     const canvas = Canvas.createCanvas(1170, 720);
@@ -131,7 +59,7 @@ async function generateBirthdayImage(user) {
     // Draw a shape onto the main canvas
     context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
     return new MessageAttachment(canvas.toBuffer());
-}
+};
 
 function applyText(canvas, text) {
     const context = canvas.getContext('2d');
@@ -146,77 +74,6 @@ function applyText(canvas, text) {
     return context.font;
 };
 
-function initiateReactionCollector(client, message) {
-    client.channels.fetch(cache.ids.channels.cartelera).then(async channel => {
-        if (message)
-            await channel.send(message).then(async msg => {
-                await updateCollectorMessage(true, msg.id).catch(console.error);
-                await cache.updateReactionCollectorInfo();
-            });
-        var aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
-        aux = aux[0];
-        channel.messages.fetch(aux['collectorMessage_id']).then(m => {
-            if (message)
-                m.react('✅');
-            const filter = (reaction) => reaction.emoji.name === '✅';
-            reactionCollector = m.createReactionCollector({ filter });
-            client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
-                guild.roles.fetch(cache.ids.roles.funcion).then(role => {
-                    reactionCollector.on('collect', (r, user) => {
-                        guild.members.fetch(user.id).then(member => {
-                            member.roles.add(role.id);
-                            console.log(`> Rol 'función' asignado a ${member.user.tag}`);
-                        }).catch(console.error);
-                    });
-                }).catch(console.error);
-            }).catch(console.error);
-            console.log('> Recolector de reacciones activado');
-        }).catch(console.error);
-    }).catch(console.error);
-}
-
-function stopReactionCollector() {
-    reactionCollector.stop();
-    console.log('> Recolector de reacciones desactivado');
-}
-
-async function generateWelcomeImage(user) {
-    const canvas = Canvas.createCanvas(1170, 720);
-    const context = canvas.getContext('2d');
-    var background = await Canvas.loadImage(`./assets/custom/welcome${getImageType()}.png`);
-    var avatarWidth = 250;
-    var avatarHeight = avatarWidth
-    var avatarX = 450;
-    var avatarY = 275;
-    context.strokeStyle = '#151515';
-    context.lineWidth = 2;
-    context.drawImage(background, 0, 0, canvas.width, canvas.height);
-    // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, user.username);
-    // Select the style that will be used to fill the text in
-    context.fillStyle = '#ffffff';
-    // Actually fill the text with a solid color
-    context.fillText(user.username, 725, canvas.height / 1.875);
-    context.strokeText(user.username, 725, canvas.height / 1.875);
-    // Slightly smaller text placed above the member's display name
-    context.font = '75px Titillium Web';
-    context.fillStyle = '#ffffff';
-    context.fillText(`#${user.discriminator}`, 725, 460);
-    context.strokeText(`#${user.discriminator}`, 725, 460);
-    // Pick up the pen
-    context.beginPath();
-    // Start the arc to form a circle
-    context.arc(avatarX + (avatarWidth / 2), avatarY + (avatarHeight / 2), avatarWidth / 2, 0, Math.PI * 2, true);
-    // Put the pen down
-    context.closePath();
-    // Clip off the region you drew on
-    context.clip();
-    const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
-    // Draw a shape onto the main canvas
-    context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
-    return new MessageAttachment(canvas.toBuffer());
-}
-
 function getImageType() {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     if (today.getMonth() + 1 == 1)
@@ -229,16 +86,7 @@ function getImageType() {
         return `-xmas`;
     }
     return ``;
-}
-
-function isListed(id, json) {
-    var ret = false;
-    json.forEach(ban => {
-        if (ban['bans_id'] === id)
-            ret = true;
-    });
-    return ret;
-}
+};
 
 function sendSpecialDayMessage(client) {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
@@ -252,7 +100,7 @@ function sendSpecialDayMessage(client) {
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean una muy felíz navidad a todos los miembros del servidor! 🎅🏻🎄`);
         }
     }).catch(console.error);
-}
+};
 
 async function sendAnniversaryAlert(client) {
     var anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
@@ -280,7 +128,7 @@ async function sendAnniversaryAlert(client) {
                 await cache.updateAnniversaries();
             }).catch(console.error);
     });
-}
+};
 
 async function updateAvatar(client) {
     var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
@@ -291,7 +139,7 @@ async function updateAvatar(client) {
             updateAvatarString(newAvatar).catch(console.error);
         }).catch(console.error);
     }
-}
+};
 
 function updateUsername(client) {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
@@ -307,9 +155,158 @@ function updateUsername(client) {
             newUsername += ' 🎅🏻';
     if (client.user.username != newUsername)
         client.user.setUsername(newUsername).catch(console.error);
-}
+};
 
 module.exports = {
-    isAMention, needsTranslation, getNextMessage, periodicFunction, sendBdayAlert, convertTZ,
-    initiateReactionCollector, stopReactionCollector, generateWelcomeImage, isListed
+    isAMention: (str) => {
+        return str.substring(0, 1) == '<' && str.substring(1, 2) == '@' && str.substring(str.length - 1, str.length) == '>';
+    },
+
+    needsTranslation: (string) => {
+        var probabilities = lngDetector.detect(string);
+        if (probabilities[0][0] != 'spanish') {
+            if (probabilities[1][0] == 'spanish') {
+                if (probabilities[1][1] < 0.2)
+                    return true;
+                return false;
+            }
+            return true;
+        }
+    },
+
+    getNextMessage: (id, collection) => {
+        var previousMessage = collection.first();
+        var ret = null;
+        collection.forEach(element => {
+            if (element.id == id) {
+                ret = previousMessage;
+                return;
+            }
+            previousMessage = element;
+        });
+        return ret;
+    },
+
+    periodicFunction: (client) => {
+        sendBdayAlert(client);
+        sendSpecialDayMessage(client);
+        sendAnniversaryAlert(client);
+        updateAvatar(client);
+        updateUsername(client);
+    },
+
+    sendBdayAlert: async (client) => {
+        var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
+        birthdays.forEach(bday => {
+            if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
+                client.channels.fetch(cache.ids.channels.general).then(channel => {
+                    client.guilds.fetch(cache.ids.guilds.nckg).then(async guild => {
+                        await guild.members.fetch(bday['bdays_id']).then(member => {
+                            generateBirthdayImage(member.user).then(attachment => {
+                                if (bday['bdays_id'] == `<@${cache.ids.users.bot}>`)
+                                    var msg = `@everyone\n\n¡Hoy es mi cumpleaños!`;
+                                else
+                                    var msg = `@everyone\n\nHoy es el cumpleaños de <@${bday['bdays_id']}>, ¡feliz cumpleaños!`;
+                                channel.send({ content: msg, files: [attachment] }).then(m => {
+                                    m.react('🎈');
+                                    m.react('🥳');
+                                    m.react('🎉');
+                                    m.react('🎂');
+                                }).catch(console.error);
+                            }).catch(console.error);
+                        }).catch(() => deleteBday(bday['bdays_id']).then(async () => {
+                            await cache.updateBirthdays();
+                            channel.send({ content: `Se eliminó el cumpleaños de **${bday['bdays_user']}** (**Hoy**) ya que el usuario no está más en el servidor.` });
+                        }));
+                    }).catch(console.error);
+                }).catch(console.error);
+                updateBday(bday['bdays_id'], true).then(async () => (await cache.updateBirthdays())).catch(console.error);
+            } else if (bday['bdays_date'] != getToday() && bday['bdays_flag'])
+                updateBday(bday['bdays_id'], false).then(async () => (await cache.updateBirthdays())).catch(console.error);
+        });
+    },
+
+    convertTZ: (date, tzString) => {
+        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+    },
+
+    initiateReactionCollector: (client, message) => {
+        client.channels.fetch(cache.ids.channels.cartelera).then(async channel => {
+            if (message)
+                await channel.send(message).then(async msg => {
+                    await updateCollectorMessage(true, msg.id).catch(console.error);
+                    await cache.updateReactionCollectorInfo();
+                });
+            var aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
+            aux = aux[0];
+            channel.messages.fetch(aux['collectorMessage_id']).then(m => {
+                if (message)
+                    m.react('✅');
+                const filter = (reaction) => reaction.emoji.name === '✅';
+                reactionCollector = m.createReactionCollector({ filter });
+                client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
+                    guild.roles.fetch(cache.ids.roles.funcion).then(role => {
+                        reactionCollector.on('collect', (r, user) => {
+                            guild.members.fetch(user.id).then(member => {
+                                member.roles.add(role.id);
+                                console.log(`> Rol 'función' asignado a ${member.user.tag}`);
+                            }).catch(console.error);
+                        });
+                    }).catch(console.error);
+                }).catch(console.error);
+                console.log('> Recolector de reacciones activado');
+            }).catch(console.error);
+        }).catch(console.error);
+    },
+
+    stopReactionCollector: () => {
+        reactionCollector.stop();
+        console.log('> Recolector de reacciones desactivado');
+    },
+
+    generateWelcomeImage: (user) => {
+        const canvas = Canvas.createCanvas(1170, 720);
+        const context = canvas.getContext('2d');
+        var background = await Canvas.loadImage(`./assets/custom/welcome${getImageType()}.png`);
+        var avatarWidth = 250;
+        var avatarHeight = avatarWidth
+        var avatarX = 450;
+        var avatarY = 275;
+        context.strokeStyle = '#151515';
+        context.lineWidth = 2;
+        context.drawImage(background, 0, 0, canvas.width, canvas.height);
+        // Select the font size and type from one of the natively available fonts
+        context.font = applyText(canvas, user.username);
+        // Select the style that will be used to fill the text in
+        context.fillStyle = '#ffffff';
+        // Actually fill the text with a solid color
+        context.fillText(user.username, 725, canvas.height / 1.875);
+        context.strokeText(user.username, 725, canvas.height / 1.875);
+        // Slightly smaller text placed above the member's display name
+        context.font = '75px Titillium Web';
+        context.fillStyle = '#ffffff';
+        context.fillText(`#${user.discriminator}`, 725, 460);
+        context.strokeText(`#${user.discriminator}`, 725, 460);
+        // Pick up the pen
+        context.beginPath();
+        // Start the arc to form a circle
+        context.arc(avatarX + (avatarWidth / 2), avatarY + (avatarHeight / 2), avatarWidth / 2, 0, Math.PI * 2, true);
+        // Put the pen down
+        context.closePath();
+        // Clip off the region you drew on
+        context.clip();
+        const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
+        // Draw a shape onto the main canvas
+        context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
+        return new MessageAttachment(canvas.toBuffer());
+    },
+
+    isListed: (id, json) => {
+        var ret = false;
+        json.forEach(ban => {
+            if (ban['bans_id'] === id)
+                ret = true;
+        });
+        return ret;
+    }
 }
