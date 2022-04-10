@@ -2,7 +2,25 @@ const { getBirthdays, prefix, updateBirthdays } = require('../../app/cache');
 const { addBday } = require('../../app/postgres');
 const { isAMention, sendBdayAlert } = require('../../app/general');
 const { MessageActionRow, MessageButton, Constants } = require('discord.js');
-var validDate = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))$/g;
+
+const validateDate = (date) => {
+    var ret = { valid: false, reason: 'La fecha debe estar en el formato DD/MM.' };
+    if (date.length < 5) return ret;
+    if (date.substring(2, 3) != '/') return ret;
+    const split = date.split('/');
+    const day = split[0];
+    const month = split[1];
+    const dayParsed = parseInt(day);
+    const monthParsed = parseInt(month);
+    if (isNaN(dayParsed) || isNaN(monthParsed)) return ret;
+    ret.reason = 'La fecha es inválida.';
+    if (dayParsed < 1 || dayParsed > 31 || monthParsed < 1 || monthParsed > 12) return ret;
+    const thirtyDaysMonths = [4, 6, 9, 11];
+    if (monthParsed === 2 && dayParsed > 29) return ret;
+    else if (thirtyDaysMonths.includes(monthParsed) && dayParsed > 30) return ret;
+    ret.valid = true;
+    return ret;
+}
 
 module.exports = {
     category: 'General',
@@ -43,8 +61,8 @@ module.exports = {
         birthdays.forEach(bday => (bdays.push(bday['bdays_id'])));
         if (message && !isAMention(args[0]))
             messageOrInteraction.reply({ content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}agregar-cumple <@amigo> <DD/MM>"**.`, ephemeral: true });
-        else if (validDate.exec(args[1]) == null)
-            messageOrInteraction.reply({ content: `La fecha debe estar en el formato DD/MM.`, ephemeral: true });
+        else if (!validateDate(args[1]).valid)
+            messageOrInteraction.reply({ content: validateDate(args[1]).reason, ephemeral: true });
         else if (bdays.includes(mention.user.id))
             messageOrInteraction.reply({ content: `Este usuario ya tiene registrado su cumpleaños.`, ephemeral: true });
         else {
