@@ -116,7 +116,6 @@ client.on('ready', async () => {
         if (cache.getMinutesUp() >= 1435) {
             var stats = await cache.updateStats();
             stats.forEach(async stat => await cache.pushCounter(stat['stats_id']));
-            await cache.updateStats();
             for (const key in getCounters()) updateCounter(key);
             console.log('> Enviando estadísticas a la base de datos antes del reinicio diario');
         } else
@@ -228,7 +227,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     delete intervals[newState.member.id];
                     await cache.updateStats();
                     await cache.pushCounter(newState.member.id);
-                    await cache.updateStats();
                     cache.updateCounter(newState.member.id);
                 }
             }

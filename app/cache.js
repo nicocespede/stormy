@@ -895,8 +895,11 @@ module.exports = {
             if (stat['stats_id'] === id) {
                 var totalTime = counters[id]
                     + fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds']);
-                var { days, hours, minutes, seconds } = secondsToFull(totalTime);
-                await updateStat(id, days, hours, minutes, seconds);
+                if (!isNaN(totalTime)) {
+                    var { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                    await updateStat(id, days, hours, minutes, seconds);
+                    await updateStats();
+                }
                 return;
             }
         });

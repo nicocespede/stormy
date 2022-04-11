@@ -49,7 +49,7 @@ module.exports = {
         else if (interaction) var messageOrInteraction = interaction;
         var stats = await updateStats();
         stats.forEach(async stat => await pushCounter(stat['stats_id']));
-        stats = await updateStats();
+        stats = getStats();
         for (const key in getCounters()) updateCounter(key);
         var usersField = { name: 'Usuario', value: '', inline: true };
         var timeField = { name: 'Tiempo', value: ``, inline: true };

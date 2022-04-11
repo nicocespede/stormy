@@ -12,7 +12,6 @@ module.exports = {
     callback: async () => {
         var stats = await updateStats();
         stats.forEach(async stat => await pushCounter(stat['stats_id']));
-        await updateStats();
         for (const key in getCounters()) updateCounter(key);
         return '¡Estadísticas enviadas a la base de datos!';
     }
