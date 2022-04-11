@@ -885,8 +885,10 @@ module.exports = {
     },
     pushCounter: async (id) => {
         const { isListed } = require('./general')
-        if (!isListed(id, stats, 'stats_id'))
+        if (!isListed(id, stats, 'stats_id')) {
             await addStat(id);
+            await this.updateStats();
+        }
         stats.forEach(async stat => {
             if (stat['stats_id'] === id) {
                 var totalTime = counters[id]
