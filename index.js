@@ -30,7 +30,7 @@ client.on('ready', async () => {
 
     client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
         guild.channels.cache.each(channel => {
-            if (channel.isVoice() && channel.id != cache.ids.channels.afk && channel.id != '914305106500010037') {
+            if (channel.isVoice() && channel.id != cache.ids.channels.afk) {
                 channel.members.each(member => {
                     if (member.id != cache.ids.users.bot) {
                         cache.addTimestamp(member.id, new Date());
