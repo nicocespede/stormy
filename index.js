@@ -125,11 +125,13 @@ client.on('ready', async () => {
             cache.updateLastDateChecked(newDate);
         }
         if (cache.getMinutesUp() >= 1438) {
-            var stats = !cache.getStats() ? await cache.updateStats() : cache.getStats();
-            stats.forEach(async stat => {
-                await pushDifference(stat['stats_id']);
-                cache.addTimestamp(stat['stats_id'], new Date())
-            });
+            var timestamps = cache.getTimestamps();
+            for (const key in timestamps) {
+                if (Object.hasOwnProperty.call(timestamps, key)) {
+                    await pushDifference(key);
+                    cache.addTimestamp(key, new Date())
+                }
+            }
             console.log('> Enviando estadísticas a la base de datos antes del reinicio diario');
         } else
             cache.addMinuteUp();

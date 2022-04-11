@@ -1,5 +1,5 @@
 const { MessageEmbed } = require('discord.js');
-const { getStats, updateStats, addTimestamp } = require('../../app/cache');
+const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
 
 const timeToString = (seconds, minutes, hours, days) => {
@@ -48,12 +48,14 @@ module.exports = {
     callback: async ({ guild, message, client, interaction, instance, user }) => {
         if (message) var messageOrInteraction = message;
         else if (interaction) var messageOrInteraction = interaction;
+        var timestamps = getTimestamps();
+        for (const key in timestamps) {
+            if (Object.hasOwnProperty.call(timestamps, key)) {
+                await pushDifference(key);
+                addTimestamp(key, new Date())
+            }
+        }
         var stats = !getStats() ? await updateStats() : getStats();
-        stats.forEach(async stat => {
-            await pushDifference(stat['stats_id']);
-            addTimestamp(stat['stats_id'], new Date())
-        });
-        stats = getStats();
         var usersField = { name: 'Usuario', value: '', inline: true };
         var timeField = { name: 'Tiempo', value: ``, inline: true };
         for (var i = 0; i < stats.length; i++) {

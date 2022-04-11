@@ -1,4 +1,4 @@
-const { updateStats, getStats, addTimestamp } = require("../../app/cache");
+const { addTimestamp, getTimestamps } = require("../../app/cache");
 const { pushDifference } = require("../../app/general");
 
 module.exports = {
@@ -11,11 +11,13 @@ module.exports = {
     permissions: ['ADMINISTRATOR'],
 
     callback: async () => {
-        var stats = !getStats() ? await updateStats() : getStats();
-        stats.forEach(async stat => {
-            await pushDifference(stat['stats_id']);
-            addTimestamp(stat['stats_id'], new Date());
-        });
+        var timestamps = getTimestamps();
+        for (const key in timestamps) {
+            if (Object.hasOwnProperty.call(timestamps, key)) {
+                await pushDifference(key);
+                addTimestamp(key, new Date())
+            }
+        }
         return '¡Estadísticas enviadas a la base de datos!';
     }
 }
