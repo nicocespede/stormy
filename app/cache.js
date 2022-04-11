@@ -1,4 +1,4 @@
-const { executeQuery } = require('./postgres');
+const { executeQuery, updateStat, addStat } = require('./postgres');
 
 const testing = false;
 
@@ -466,6 +466,27 @@ var anniversaries;
 var avatar;
 var lastAction;
 var playlists = { names: [], urls: [] };
+var stats;
+var counters = {};
+var intervals = {};
+
+const fullToSeconds = (days, hours, minutes, seconds) => {
+    return seconds + (minutes * 60) + (hours * 3600) + (days * 86400);
+};
+
+const secondsToFull = (seconds) => {
+    // calculate (and subtract) whole days
+    var days = Math.floor(seconds / 3600);
+    seconds -= days * 86400;
+    // calculate (and subtract) whole hours
+    var hours = Math.floor(seconds / 3600) % 24;
+    seconds -= hours * 3600;
+    // calculate (and subtract) whole minutes
+    var minutes = Math.floor(seconds / 60) % 60;
+    seconds -= minutes * 60;
+    seconds = seconds % 60;
+    return { days, hours, minutes, seconds };
+};
 
 module.exports = {
     prefix: '-',
@@ -523,6 +544,7 @@ module.exports = {
             general: "703056370039128105",
             cartelera: "836043727616213012",
             welcome: !testing ? "817149994959110235" : "962233358237188156",
+            afk: "585276720622338048",
             musica: [
                 "703055406091468922",
                 "859586260565229588",
@@ -843,5 +865,36 @@ module.exports = {
             console.log('> Caché de playlists actualizado');
         }).catch(console.error);
         return playlists;
-    }
+    },
+
+    getStats: () => stats,
+    updateStats: async () => {
+        await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(async json => {
+            stats = json;
+            console.log('> Caché de estadísticas actualizado');
+        }).catch(console.error);
+        return stats;
+    },
+    updateCounter: (id, time) => {
+        if (!time)
+            counters[id] = 0;
+        else
+            counters[id] += time;
+    },
+    pushCounter: async (id) => {
+        const { isListed } = require('./general')
+        if (!isListed(id, stats, 'stats_id'))
+            await addStat(id);
+        stats.forEach(async stat => {
+            if (stat['stats_id'] === id) {
+                var totalTime = counters[id]
+                    + fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds']);
+                var { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                await updateStat(id, days, hours, minutes, seconds);
+                return;
+            }
+        });
+    },
+    getIntervals: () => intervals,
+    addInterval: (id, interval) => (intervals[id] = interval)
 };

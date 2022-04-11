@@ -157,7 +157,7 @@ client.on('guildMemberRemove', async member => {
 client.on('guildBanAdd', async ban => {
     await new Promise(res => setTimeout(res, 3000));
     var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
-    if (!isListed(ban.user.id, banned))
+    if (!isListed(ban.user.id, banned, 'bans_id'))
         await addBan([ban.user.id, ban.user.tag, ban.reason, "Desconocido"]).then(async () => {
             await cache.updateBanned();
         }).catch(console.error);
@@ -177,7 +177,7 @@ client.on('guildBanAdd', async ban => {
 
 client.on('guildBanRemove', async ban => {
     var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
-    if (isListed(ban.user.id, banned))
+    if (isListed(ban.user.id, banned, 'bans_id'))
         await deleteBan(ban.user.id).then(async () => await cache.updateBanned()).catch(console.error);
     client.channels.fetch(cache.ids.channels.welcome).then(channel => {
         var random = Math.floor(Math.random() * (cache.unbanned.length));
@@ -185,20 +185,46 @@ client.on('guildBanRemove', async ban => {
     }).catch(console.error);
 });
 
-client.on('voiceStateUpdate', (oldState, newState) => {
-    // ignore if someone connects
-    if (oldState.channelId === null) return;
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    // check if someone connects, start counting for the stats
+    if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk) {
+        // start counting for the stats if the user is not the bot
+        if (newState.id !== client.user.id && newState.channelId != cache.ids.channels.afk) {
+            cache.updateCounter(oldState.member.id);
+            cache.addInterval(oldState.member.id, setInterval(function () {
+                if (oldState.member.voice.channel && oldState.member.voice.channelId != cache.ids.channels.afk)
+                    cache.updateCounter(oldState.member.id, 1);
+            }, 1000));
+        }
+        return;
+    }
     // check if a the update is from another user
     if (newState.id !== client.user.id) {
-        //start the disconnection timer if someone disconnects from the same channel
-        if (oldState.channel.members.has(client.user.id) && oldState.channelId != newState.channelId) {
-            new Promise(res => setTimeout(res, 60000)).then(() => {
-                client.channels.fetch(oldState.channelId).then(channel => {
-                    if (channel.members.size === 1 && channel.members.has(client.user.id))
-                        leaveEmptyChannel(client, oldState.guild);
-                }).catch(console.error);
-            });
-            return;
+        //check if someone disconnects
+        if (oldState.channelId != newState.channelId) {
+            //start the disconnection timer if someone disconnects from the same channel
+            if (oldState.channel.members.has(client.user.id))
+                new Promise(res => setTimeout(res, 60000)).then(() => {
+                    client.channels.fetch(oldState.channelId).then(channel => {
+                        if (channel.members.size === 1 && channel.members.has(client.user.id))
+                            leaveEmptyChannel(client, oldState.guild);
+                    }).catch(console.error);
+                });
+            //stop counting for the stats
+            if (newState.channelId === null || newState.channelId === cache.ids.channels.afk) {
+                var intervals = cache.getIntervals();
+                var userInterval = intervals[newState.member.id];
+                if (userInterval) {
+                    clearInterval(userInterval);
+                    console.log(intervals)
+                    delete intervals[newState.member.id];
+                    console.log(intervals)
+                    await cache.updateStats();
+                    await cache.pushCounter(newState.member.id);
+                    await cache.updateStats();
+                    cache.updateCounter(newState.member.id);
+                }
+            }
         }
         return;
     }

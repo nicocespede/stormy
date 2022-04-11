@@ -190,7 +190,7 @@ const sendBdayAlert = async (client) => {
         } else if (bday['bdays_date'] != getToday() && bday['bdays_flag'])
             updateBday(bday['bdays_id'], false).then(async () => (await cache.updateBirthdays())).catch(console.error);
     });
-}
+};
 
 module.exports = {
     isAMention: (str) => {
@@ -305,10 +305,10 @@ module.exports = {
         return new MessageAttachment(canvas.toBuffer());
     },
 
-    isListed: (id, json) => {
+    isListed: (id, json, string) => {
         var ret = false;
-        json.forEach(ban => {
-            if (ban['bans_id'] === id)
+        json.forEach(element => {
+            if (element[string] === id)
                 ret = true;
         });
         return ret;

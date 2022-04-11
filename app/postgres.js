@@ -164,5 +164,24 @@ module.exports = {
             setTimeout(function () { resolve(); }, 1000);
             console.log('> Filtros del UCM actualizados en la base de datos');
         });
+    },
+
+    addStat: (id) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`INSERT INTO "stats" VALUES('${id}');`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Estadística agregada a la base de datos');
+        });
+    },
+    updateStat: (id, days, hours, minutes, seconds) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`UPDATE "stats" SET "stats_days" = ${days}, "stats_hours" = ${hours}, "stats_minutes" = ${minutes}, "stats_seconds" = ${seconds} WHERE "stats_id" = '${id}';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Estadística actualizada en la base de datos');
+        });
     }
 };
