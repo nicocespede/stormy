@@ -7,10 +7,9 @@ const translate = require("translate");
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
 const { needsTranslation, getNextMessage, convertTZ, initiateReactionCollector, generateWelcomeImage,
-    isListed, periodicFunction } = require('./app/general');
+    isListed, periodicFunction, pushDifference } = require('./app/general');
 const { addBan, addSombraBan, deleteBan } = require('./app/postgres');
 const { setNewVoiceChannel, setKicked, containsAuthor, leaveEmptyChannel } = require('./app/music');
-const { getCounters, updateCounter } = require('./app/cache');
 
 const client = new Client({
     intents: [
@@ -29,8 +28,20 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${cache.prefix}ayuda`, type: 'LISTENING' }] });
 
+    client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
+        guild.channels.cache.each(channel => {
+            if (channel.isVoice() && channel.id != cache.ids.channels.afk && channel.id != '914305106500010037') {
+                channel.members.each(member => {
+                    if (member.id != cache.ids.users.bot) {
+                        cache.addTimestamp(member.id, new Date());
+                    }
+                });
+            }
+        });
+    }).catch(console.error);
+
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
-    periodicFunction(client)
+    periodicFunction(client);
     var reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
     reactionCollectorInfo = reactionCollectorInfo[0];
     if (reactionCollectorInfo['collectorMessage_active'])
@@ -113,10 +124,12 @@ client.on('ready', async () => {
             periodicFunction(client);
             cache.updateLastDateChecked(newDate);
         }
-        if (cache.getMinutesUp() >= 1435) {
-            var stats = await cache.updateStats();
-            stats.forEach(async stat => await cache.pushCounter(stat['stats_id']));
-            for (const key in getCounters()) updateCounter(key);
+        if (cache.getMinutesUp() >= 1438) {
+            var stats = !cache.getStats() ? await cache.updateStats() : cache.getStats();
+            stats.forEach(async stat => {
+                await pushDifference(stat['stats_id']);
+                cache.addTimestamp(stat['stats_id'], new Date())
+            });
             console.log('> Enviando estadísticas a la base de datos antes del reinicio diario');
         } else
             cache.addMinuteUp();
@@ -194,60 +207,53 @@ client.on('guildBanRemove', async ban => {
 });
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    // check if someone connects, start counting for the stats
-    if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk
-        || (oldState.guild.id != cache.ids.guilds.nckg && newState.guild.id === cache.ids.guilds.nckg)) {
-        // start counting for the stats if the user is not the bot
-        if (newState.id !== client.user.id && newState.channelId != cache.ids.channels.afk) {
-            cache.updateCounter(oldState.member.id);
-            cache.addInterval(oldState.member.id, setInterval(function () {
-                if (oldState.member.voice.channel && oldState.member.voice.channelId != cache.ids.channels.afk)
-                    cache.updateCounter(oldState.member.id, 1);
-            }, 1000));
+    if (oldState.guild.id === cache.ids.guilds.nckg || newState.guild.id === cache.ids.guilds.nckg) {
+        // check if someone connects, start counting for the stats
+        if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk
+            || (oldState.guild.id != cache.ids.guilds.nckg && newState.guild.id === cache.ids.guilds.nckg)) {
+            // start counting for the stats if the user is not the bot
+            if (newState.id !== client.user.id && newState.channelId != cache.ids.channels.afk)
+                cache.addTimestamp(oldState.member.id, new Date());
+            return;
         }
-        return;
-    }
-    // check if a the update is from another user
-    if (newState.id !== client.user.id) {
-        //check if someone disconnects
-        if (oldState.channelId != newState.channelId) {
-            //start the disconnection timer if someone disconnects from the same channel
-            if (oldState.channel.members.has(client.user.id))
-                new Promise(res => setTimeout(res, 60000)).then(() => {
-                    client.channels.fetch(oldState.channelId).then(channel => {
-                        if (channel.members.size === 1 && channel.members.has(client.user.id))
-                            leaveEmptyChannel(client, oldState.guild);
-                    }).catch(console.error);
-                });
-            //stop counting for the stats
-            if (newState.channelId === null || newState.channelId === cache.ids.channels.afk
-                || (oldState.guild.id === cache.ids.guilds.nckg && newState.guild.id != cache.ids.guilds.nckg)) {
-                var intervals = cache.getIntervals();
-                var userInterval = intervals[newState.member.id];
-                if (userInterval) {
-                    clearInterval(userInterval);
-                    delete intervals[newState.member.id];
-                    await cache.updateStats();
-                    await cache.pushCounter(newState.member.id);
-                    cache.updateCounter(newState.member.id);
+        // check if a the update is from another user
+        if (newState.id !== client.user.id) {
+            //check if someone disconnects
+            if (oldState.channelId != newState.channelId) {
+                //start the disconnection timer if someone disconnects from the same channel
+                if (oldState.channel.members.has(client.user.id))
+                    new Promise(res => setTimeout(res, 60000)).then(() => {
+                        client.channels.fetch(oldState.channelId).then(channel => {
+                            if (channel.members.size === 1 && channel.members.has(client.user.id))
+                                leaveEmptyChannel(client, oldState.guild);
+                        }).catch(console.error);
+                    });
+                //stop counting for the stats
+                if (newState.channelId === null || newState.channelId === cache.ids.channels.afk
+                    || (oldState.guild.id === cache.ids.guilds.nckg && newState.guild.id != cache.ids.guilds.nckg)) {
+                    var timestamps = cache.getTimestamps();
+                    if (timestamps[newState.member.id]) {
+                        await pushDifference(newState.member.id);
+                        cache.removeTimestamp(newState.member.id);
+                    }
                 }
             }
+            return;
         }
+        // ignore if mute/deafen update
+        if (oldState.channelId === newState.channelId) return;
+        // send message if the bot is moved to another channel
+        if (oldState.channelId !== newState.channelId && newState.channelId != null) {
+            setNewVoiceChannel(client, newState.guild, newState.channel);
+            return;
+        }
+        // clear the queue if was kicked
+        if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
+            && cache.getLastAction() != cache.musicActions.stopping
+            && cache.getLastAction() != cache.musicActions.ending)
+            setKicked(client, oldState.guild);
         return;
     }
-    // ignore if mute/deafen update
-    if (oldState.channelId === newState.channelId) return;
-    // send message if the bot is moved to another channel
-    if (oldState.channelId !== newState.channelId && newState.channelId != null) {
-        setNewVoiceChannel(client, newState.guild, newState.channel);
-        return;
-    }
-    // clear the queue if was kicked
-    if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
-        && cache.getLastAction() != cache.musicActions.stopping
-        && cache.getLastAction() != cache.musicActions.ending)
-        setKicked(client, oldState.guild);
-    return;
 });
 
 client.login(process.env.TOKEN);

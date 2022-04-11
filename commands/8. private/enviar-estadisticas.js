@@ -1,4 +1,5 @@
-const { updateStats, pushCounter, updateCounter, getCounters } = require("../../app/cache");
+const { updateStats, getStats, addTimestamp } = require("../../app/cache");
+const { pushDifference } = require("../../app/general");
 
 module.exports = {
     category: 'Privados',
@@ -10,9 +11,11 @@ module.exports = {
     permissions: ['ADMINISTRATOR'],
 
     callback: async () => {
-        var stats = await updateStats();
-        stats.forEach(async stat => await pushCounter(stat['stats_id']));
-        for (const key in getCounters()) updateCounter(key);
+        var stats = !getStats() ? await updateStats() : getStats();
+        stats.forEach(async stat => {
+            await pushDifference(stat['stats_id']);
+            addTimestamp(stat['stats_id'], new Date());
+        });
         return '¡Estadísticas enviadas a la base de datos!';
     }
 }

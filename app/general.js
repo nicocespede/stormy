@@ -2,7 +2,7 @@ const { MessageAttachment } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
-const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString } = require('./postgres');
+const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat } = require('./postgres');
 const Canvas = require('canvas');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
@@ -192,6 +192,33 @@ const sendBdayAlert = async (client) => {
     });
 };
 
+const isListed = (id, json, string) => {
+    var ret = false;
+    json.forEach(element => {
+        if (element[string] === id)
+            ret = true;
+    });
+    return ret;
+};
+
+const fullToSeconds = (days, hours, minutes, seconds) => {
+    return seconds + (minutes * 60) + (hours * 3600) + (days * 86400);
+};
+
+const secondsToFull = (seconds) => {
+    // calculate (and subtract) whole days
+    var days = Math.floor(seconds / 3600);
+    seconds -= days * 86400;
+    // calculate (and subtract) whole hours
+    var hours = Math.floor(seconds / 3600) % 24;
+    seconds -= hours * 3600;
+    // calculate (and subtract) whole minutes
+    var minutes = Math.floor(seconds / 60) % 60;
+    seconds -= minutes * 60;
+    seconds = seconds % 60;
+    return { days, hours, minutes, seconds };
+};
+
 module.exports = {
     isAMention: (str) => {
         return str.substring(0, 1) == '<' && str.substring(1, 2) == '@' && str.substring(str.length - 1, str.length) == '>';
@@ -305,12 +332,27 @@ module.exports = {
         return new MessageAttachment(canvas.toBuffer());
     },
 
-    isListed: (id, json, string) => {
-        var ret = false;
-        json.forEach(element => {
-            if (element[string] === id)
-                ret = true;
+    isListed,
+
+    pushDifference: async (id) => {
+        var stats = !cache.getStats() ? await cache.updateStats() : cache.getStats();
+        if (!isListed(id, stats, 'stats_id')) {
+            await addStat(id);
+            stats = await cache.updateStats();
+        }
+        const timestamps = cache.getTimestamps();
+        stats.forEach(async stat => {
+            if (stat['stats_id'] === id) {
+                const now = new Date();
+                var totalTime = (Math.abs(now - timestamps[id]) / 1000)
+                    + (fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds']));
+                if (!isNaN(totalTime)) {
+                    var { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                    await updateStat(id, days, hours, minutes, seconds);
+                    await cache.updateStats();
+                }
+                return;
+            }
         });
-        return ret;
     }
 }
