@@ -876,6 +876,7 @@ module.exports = {
         }).catch(console.error);
         return stats;
     },
+    getCounters: () => counters,
     updateCounter: (id, time) => {
         if (!time)
             counters[id] = 0;

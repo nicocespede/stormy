@@ -10,6 +10,7 @@ const { needsTranslation, getNextMessage, convertTZ, initiateReactionCollector, 
     isListed, periodicFunction } = require('./app/general');
 const { addBan, addSombraBan, deleteBan } = require('./app/postgres');
 const { setNewVoiceChannel, setKicked, containsAuthor, leaveEmptyChannel } = require('./app/music');
+const { getCounters, updateCounter } = require('./app/cache');
 
 const client = new Client({
     intents: [
@@ -116,6 +117,7 @@ client.on('ready', async () => {
             var stats = await cache.updateStats();
             stats.forEach(async stat => await cache.pushCounter(stat['stats_id']));
             await cache.updateStats();
+            for (const key in getCounters()) updateCounter(key);
             console.log('> Enviando estadísticas a la base de datos antes del reinicio diario');
         } else
             cache.addMinuteUp();
