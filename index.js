@@ -195,7 +195,8 @@ client.on('guildBanRemove', async ban => {
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
     // check if someone connects, start counting for the stats
-    if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk) {
+    if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk
+        || (oldState.guild.id != cache.ids.guilds.nckg && newState.guild.id === cache.ids.guilds.nckg)) {
         // start counting for the stats if the user is not the bot
         if (newState.id !== client.user.id && newState.channelId != cache.ids.channels.afk) {
             cache.updateCounter(oldState.member.id);
@@ -219,7 +220,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     }).catch(console.error);
                 });
             //stop counting for the stats
-            if (newState.channelId === null || newState.channelId === cache.ids.channels.afk) {
+            if (newState.channelId === null || newState.channelId === cache.ids.channels.afk
+                || (oldState.guild.id === cache.ids.guilds.nckg && newState.guild.id != cache.ids.guilds.nckg)) {
                 var intervals = cache.getIntervals();
                 var userInterval = intervals[newState.member.id];
                 if (userInterval) {
