@@ -8,16 +8,14 @@ const validateDate = (date) => {
     if (date.length < 5) return ret;
     if (date.substring(2, 3) != '/') return ret;
     const split = date.split('/');
-    const day = split[0];
-    const month = split[1];
-    const dayParsed = parseInt(day);
-    const monthParsed = parseInt(month);
-    if (isNaN(dayParsed) || isNaN(monthParsed)) return ret;
+    const day = parseInt(split[0]);
+    const month = parseInt(split[1]);
+    if (isNaN(day) || isNaN(month)) return ret;
     ret.reason = 'La fecha es inválida.';
-    if (dayParsed < 1 || dayParsed > 31 || monthParsed < 1 || monthParsed > 12) return ret;
+    if (day < 1 || day > 31 || month < 1 || month > 12) return ret;
     const thirtyDaysMonths = [4, 6, 9, 11];
-    if (monthParsed === 2 && dayParsed > 29) return ret;
-    else if (thirtyDaysMonths.includes(monthParsed) && dayParsed > 30) return ret;
+    if (month === 2 && day > 29) return ret;
+    else if (thirtyDaysMonths.includes(month) && day > 30) return ret;
     ret.valid = true;
     return ret;
 }
