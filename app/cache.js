@@ -489,6 +489,14 @@ const secondsToFull = (seconds) => {
     return { days, hours, minutes, seconds };
 };
 
+const updateStats = async () => {
+    await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(async json => {
+        stats = json;
+        console.log('> Caché de estadísticas actualizado');
+    }).catch(console.error);
+    return stats;
+};
+
 module.exports = {
     prefix: '-',
 
@@ -869,13 +877,7 @@ module.exports = {
     },
 
     getStats: () => stats,
-    updateStats: async () => {
-        await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(async json => {
-            stats = json;
-            console.log('> Caché de estadísticas actualizado');
-        }).catch(console.error);
-        return stats;
-    },
+    updateStats,
     getCounters: () => counters,
     updateCounter: (id, time) => {
         if (!time)
@@ -887,7 +889,7 @@ module.exports = {
         const { isListed } = require('./general')
         if (!isListed(id, stats, 'stats_id')) {
             await addStat(id);
-            await this.updateStats();
+            await updateStats();
         }
         stats.forEach(async stat => {
             if (stat['stats_id'] === id) {
