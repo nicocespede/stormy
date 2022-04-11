@@ -469,6 +469,7 @@ var playlists = { names: [], urls: [] };
 var stats;
 var counters = {};
 var intervals = {};
+var minutesUp = 0;
 
 const fullToSeconds = (days, hours, minutes, seconds) => {
     return seconds + (minutes * 60) + (hours * 3600) + (days * 86400);
@@ -896,5 +897,8 @@ module.exports = {
         });
     },
     getIntervals: () => intervals,
-    addInterval: (id, interval) => (intervals[id] = interval)
+    addInterval: (id, interval) => (intervals[id] = interval),
+
+    getMinutesUp: () => minutesUp,
+    addMinuteUp: () => minutesUp++
 };

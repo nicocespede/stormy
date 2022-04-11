@@ -106,12 +106,19 @@ client.on('ready', async () => {
         .setCategorySettings(cache.categorySettings)
         .setColor([142, 89, 170]);
 
-    setInterval(function () {
+    setInterval(async function () {
         var newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
         if (cache.getLastDateChecked().getDate() != newDate.getDate()) {
             periodicFunction(client);
             cache.updateLastDateChecked(newDate);
         }
+        if (cache.getMinutesUp() >= 1435) {
+            var stats = await cache.updateStats();
+            stats.forEach(async stat => await cache.pushCounter(stat['stats_id']));
+            await cache.updateStats();
+            console.log('> Enviando estadísticas a la base de datos antes del reinicio diario');
+        } else
+            cache.addMinuteUp();
     }, 60 * 1000);
 });
 
@@ -216,9 +223,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 var userInterval = intervals[newState.member.id];
                 if (userInterval) {
                     clearInterval(userInterval);
-                    console.log(intervals)
                     delete intervals[newState.member.id];
-                    console.log(intervals)
                     await cache.updateStats();
                     await cache.pushCounter(newState.member.id);
                     await cache.updateStats();
