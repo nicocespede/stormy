@@ -30,13 +30,8 @@ client.on('ready', async () => {
 
     client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
         guild.channels.cache.each(channel => {
-            if (channel.isVoice() && channel.id != cache.ids.channels.afk) {
-                channel.members.each(member => {
-                    if (member.id != cache.ids.users.bot) {
-                        cache.addTimestamp(member.id, new Date());
-                    }
-                });
-            }
+            if (channel.isVoice() && channel.id != cache.ids.channels.afk)
+                channel.members.each(member => cache.addTimestamp(member.id, new Date()));
         });
     }).catch(console.error);
 
@@ -213,8 +208,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         // check if someone connects, start counting for the stats
         if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk
             || (oldState.guild.id != cache.ids.guilds.nckg && newState.guild.id === cache.ids.guilds.nckg)) {
-            // start counting for the stats if the user is not the bot
-            if (newState.id !== client.user.id && newState.channelId != cache.ids.channels.afk)
+            // start counting for the stats
+            if (newState.channelId != cache.ids.channels.afk)
                 cache.addTimestamp(oldState.member.id, new Date());
             return;
         }
@@ -230,7 +225,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                                 leaveEmptyChannel(client, oldState.guild);
                         }).catch(console.error);
                     });
-                //stop counting for the stats
+                //stop counting for the stats (users)
                 if (newState.channelId === null || newState.channelId === cache.ids.channels.afk
                     || (oldState.guild.id === cache.ids.guilds.nckg && newState.guild.id != cache.ids.guilds.nckg)) {
                     var timestamps = cache.getTimestamps();
@@ -248,6 +243,12 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         if (oldState.channelId !== newState.channelId && newState.channelId != null) {
             setNewVoiceChannel(client, newState.guild, newState.channel);
             return;
+        }
+        // stop counting for the stats (bot)
+        var timestamps = cache.getTimestamps();
+        if (timestamps[client.user.id]) {
+            await pushDifference(client.user.id);
+            cache.removeTimestamp(client.user.id);
         }
         // clear the queue if was kicked
         if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
