@@ -207,7 +207,7 @@ const fullToSeconds = (days, hours, minutes, seconds) => {
 
 const secondsToFull = (seconds) => {
     // calculate (and subtract) whole days
-    var days = Math.floor(seconds / 3600);
+    var days = Math.floor(seconds / 86400);
     seconds -= days * 86400;
     // calculate (and subtract) whole hours
     var hours = Math.floor(seconds / 3600) % 24;
