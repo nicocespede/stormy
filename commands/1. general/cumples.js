@@ -12,8 +12,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, user, message, channel, interaction }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
         var months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         var usersField = { name: 'Usuario', value: '', inline: true };

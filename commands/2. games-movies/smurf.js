@@ -45,8 +45,7 @@ module.exports = {
     guildOnly: true,
 
     callback: ({ guild, member, user, message, channel, interaction }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         guild.roles.fetch(ids.roles.smurf).then(async role => {
             if (!role.members.has(user.id))
                 messageOrInteraction.reply({ content: `Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.` });

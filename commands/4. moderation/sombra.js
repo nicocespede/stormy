@@ -9,8 +9,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, instance, interaction }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         var bans = !getSombraBans() ? await updateSombraBans() : getSombraBans();
         var description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
         for (var i = 0; i < bans.length; i++) {

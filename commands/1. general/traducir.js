@@ -20,8 +20,7 @@ module.exports = {
     callback: async ({ message, channel, text, interaction }) => {
         const translation = await translate(text.replace(/[&]/g, 'and'), "es");
         var messages = Util.splitMessage(`**Texto traducido al español:**\n\n${translation}`);
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         messageOrInteraction.reply({ content: messages[0] })
         if (messages.slice(1).length > 0)
             messages.forEach(async m => {

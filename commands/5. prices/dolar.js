@@ -17,8 +17,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ user, message, interaction }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         try {
             const dataDolar = await axios.get("https://www.dolarsi.com/api/dolarSiInfo.xml")
             const json = convert.xml2json(dataDolar.data, { compact: true, spaces: 4 });

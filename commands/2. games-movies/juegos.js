@@ -73,8 +73,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, args, interaction, user }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         getAvailableFilesNames('./games').then(games => {
             var color = [234, 61, 78];
             if (args.length == 0) {

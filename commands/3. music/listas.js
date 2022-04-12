@@ -11,8 +11,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ user, message, channel, interaction }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
 
         if (!isAMusicChannel(channel.id)) {
             messageOrInteraction.reply({ content: `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, ephemeral: true });

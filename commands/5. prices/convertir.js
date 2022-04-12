@@ -35,8 +35,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ client, args, user, message, interaction }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         var quantity = parseFloat(args[1]);
         if (!Object.keys(currencies).includes(args[0]) && args[0] != 'dolar' && args[0] != 'usd') {
             messageOrInteraction.reply({ content: `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _usd, ${Object.keys(currencies).join(', ')}_.`, ephemeral: true });

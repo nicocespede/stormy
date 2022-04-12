@@ -11,8 +11,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, message, client, interaction, instance, user }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         var banned = !getBanned() ? await updateBanned() : getBanned();
         var usersField = { name: 'Usuario', value: '', inline: true };
         var responsiblesField = { name: 'Baneado por', value: ``, inline: true };

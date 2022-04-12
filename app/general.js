@@ -343,7 +343,6 @@ module.exports = {
         const timestamps = cache.getTimestamps();
         stats.forEach(async stat => {
             if (stat['stats_id'] === id) {
-                console.log('Subiendo la informacion del ID ', id);
                 const now = new Date();
                 var totalTime = (Math.abs(now - timestamps[id]) / 1000)
                     + (fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds']));

@@ -21,8 +21,7 @@ module.exports = {
     maxArgs: 1,
 
     callback: async ({ guild, user, message, args, interaction, channel }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         guild.roles.fetch(ids.roles.banear).then(async role => {
             const index = parseInt(args[0]) - 1;
             var bans = !getBanned() ? await updateBanned() : getBanned();

@@ -114,8 +114,7 @@ module.exports = {
         var color = [181, 2, 22];
         var filters = !getFilters() ? await updateFilters() : getFilters();
         var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         if (args.length === 0) args = ['all'];
         if (!isNaN(parseInt(args[0]))) {
             const index = parseInt(args[0]) - 1;
