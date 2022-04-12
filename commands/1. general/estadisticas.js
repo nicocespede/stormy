@@ -46,15 +46,13 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, message, client, interaction, instance, user }) => {
-        if (message) var messageOrInteraction = message;
-        else if (interaction) var messageOrInteraction = interaction;
+        var messageOrInteraction = message ? message : interaction;
         var timestamps = getTimestamps();
-        for (const key in timestamps) {
+        for (const key in timestamps)
             if (Object.hasOwnProperty.call(timestamps, key)) {
                 await pushDifference(key);
-                addTimestamp(key, new Date())
+                addTimestamp(key, new Date());
             }
-        }
         var stats = !getStats() ? await updateStats() : getStats();
         var usersField = { name: 'Usuario', value: '', inline: true };
         var timeField = { name: 'Tiempo', value: ``, inline: true };
