@@ -25,12 +25,13 @@ module.exports = {
     setKicked: (client, guild) => {
         updateLastAction(musicActions.beingKicked);
         var queue = client.player.getQueue(guild.id);
-        queue.metadata.send({
-            embeds: [new MessageEmbed().setColor([195, 36, 255])
-                .setDescription("⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!")
-                .setThumbnail(`attachment://icons8-disconnected-64.png`)],
-            files: [`./assets/thumbs/music/icons8-disconnected-64.png`]
-        });
+        if (queue)
+            queue.metadata.send({
+                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                    .setDescription("⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!")
+                    .setThumbnail(`attachment://icons8-disconnected-64.png`)],
+                files: [`./assets/thumbs/music/icons8-disconnected-64.png`]
+            });
         queue.destroy();
     },
 
