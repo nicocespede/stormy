@@ -70,7 +70,7 @@ module.exports = {
             .addFields(usersField.value.length != 0 ? [usersField, timeField] : [])
             .setColor([255, 205, 52])
             .setThumbnail(`attachment://stats.jpg`);
-        if (message) deferringMessage.edit({ content: ``, embeds: [embed], files: ['./assets/thumbs/stats.jpg'] });
+        if (message) deferringMessage.delete().then(message.reply({ embeds: [embed], files: ['./assets/thumbs/stats.jpg'] })).catch(console.error);
         else if (interaction) interaction.editReply({ embeds: [embed], files: ['./assets/thumbs/stats.jpg'] });
         return;
     }
