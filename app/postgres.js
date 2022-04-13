@@ -20,6 +20,10 @@ else
 
 dbClient.connect();
 
+dbClient.on('error', (err, client) => {
+    console.log('Error de conexión de postgres: ' + err);
+});
+
 module.exports = {
     executeQuery: async (query) => {
         var ret = [];
