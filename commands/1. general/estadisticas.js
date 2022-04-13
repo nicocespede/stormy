@@ -45,7 +45,7 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: async ({ guild, message, client, interaction, instance, user }) => {
+    callback: async ({ guild, message, interaction, user }) => {
         if (message) var deferringMessage = await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' });
         else if (interaction) await interaction.deferReply({ ephemeral: true });
         var timestamps = getTimestamps();
@@ -68,10 +68,10 @@ module.exports = {
             .setTitle(`**Estadísticas**`)
             .setDescription(`Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n${usersField.value.length === 0 ? '_No hay estadísticas actualmente._' : ''}`)
             .addFields(usersField.value.length != 0 ? [usersField, timeField] : [])
-            .setColor(instance.color)
-            .setThumbnail(client.user.avatarURL());
-        if (message) deferringMessage.edit({ content: ``, embeds: [embed] });
-        else if (interaction) interaction.editReply({ embeds: [embed] });
+            .setColor([255, 205, 52])
+            .setThumbnail(`attachment://stats.jpg`);
+        if (message) deferringMessage.edit({ content: ``, embeds: [embed], files: ['./assets/thumbs/stats.jpg'] });
+        else if (interaction) interaction.editReply({ embeds: [embed], files: ['./assets/thumbs/stats.jpg'] });
         return;
     }
 }
