@@ -67,7 +67,7 @@ module.exports = {
 
     callback: async ({ guild, user, message, args, interaction, channel }) => {
         var messageOrInteraction = message ? message : interaction;
-        const maxTime = 10;
+        const maxTime = 15;
         var extraMessages = [];
         const number = parseInt(args[0]);
         if (number <= 0 || number > quiz.length - 1 || isNaN(number))

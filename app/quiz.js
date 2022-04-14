@@ -186,5 +186,65 @@ module.exports = {
     {
         question: "¿Bajo qué alias exterminaba organizaciones criminales _Clint Barton_?",
         answers: ['ronin']
+    },
+    {
+        question: "¿Cuántos eran los _Vengadores_ originales?",
+        answers: ['6', 'seis']
+    },
+    {
+        question: "¿Cuántas son las _Gemas del Infinito_?",
+        answers: ['6', 'seis']
+    },
+    {
+        question: "¿Quién fue el responsable de que _Rhodey_ quedara casi parapléjico?",
+        answers: ['vision', 'visión']
+    },
+    {
+        question: '¿Bajo qué alias _"Bucky" Barnes_ completaba misiones para _HYDRA_?',
+        answers: ['soldado del invierno', 'winter soldier']
+    },
+    {
+        question: "¿Cómo se llama el reino de donde es originario _T'Challa (Pantera Negra)_?",
+        answers: ['wakanda']
+    },
+    {
+        question: "¿Qué tipo de radiación es la que dio origen a _Hulk_?",
+        answers: ['radiacion gamma', 'radiación gamma', 'rayos gamma', 'gamma']
+    },
+    {
+        question: "¿Cómo se llamaba el guardián del _Puente Bifrost_?",
+        answers: ['heimdall']
+    },
+    {
+        question: "¿Cómo se llamaba el líder de los _Elfos Oscuros_?",
+        answers: ['malekith']
+    },
+    {
+        question: "¿Cuál es el apodo de _Harold Hogan_, guardaespaldas y chofer de _Tony Stark_?",
+        answers: ['happy']
+    },
+    {
+        question: "¿Cuál es el apodo de justiciero de _Matt Murdock_?",
+        answers: ['daredevil']
+    },
+    {
+        question: "¿Cuál es el nombre del padre de _Loki_?",
+        answers: ['laufey']
+    },
+    {
+        question: '¿Cuál es el nombre de pila de _"Nick"_ Fury?',
+        answers: ['nicholas']
+    },
+    {
+        question: '¿Cómo se llama la primer inteligencia artificial creada por _Tony Stark_?',
+        answers: ['j.a.r.v.i.s.', 'jarvis']
+    },
+    {
+        question: '¿Cómo se llama la exposición tecnológica creada por _Howard Stark_?',
+        answers: ['stark expo']
+    },
+    {
+        question: '¿Cuál es el apodo de _Virginia Potts_, pareja de _Tony Stark_?',
+        answers: ['pepper']
     }]
 }

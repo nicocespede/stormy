@@ -229,7 +229,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 if (newState.channelId === null || newState.channelId === cache.ids.channels.afk
                     || (oldState.guild.id === cache.ids.guilds.nckg && newState.guild.id != cache.ids.guilds.nckg)) {
                     var timestamps = cache.getTimestamps();
-                    if (timestamps[newState.member.id]) {
+                    if (newState.member.id && timestamps[newState.member.id]) {
                         await pushDifference(newState.member.id);
                         cache.removeTimestamp(newState.member.id);
                     }
