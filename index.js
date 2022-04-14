@@ -119,7 +119,8 @@ client.on('ready', async () => {
             periodicFunction(client);
             cache.updateLastDateChecked(newDate);
         }
-        if (cache.getMinutesUp() >= 1438) {
+        var minutesUp = cache.getMinutesUp();
+        if (minutesUp >= 1438 || minutesUp % 60 === 0) {
             var timestamps = cache.getTimestamps();
             for (const key in timestamps) {
                 if (Object.hasOwnProperty.call(timestamps, key)) {
@@ -127,7 +128,7 @@ client.on('ready', async () => {
                     cache.addTimestamp(key, new Date())
                 }
             }
-            console.log('> Enviando estadísticas a la base de datos antes del reinicio diario');
+            console.log(`> ${minutesUp >= 1438 ? 'Pasaron 23 hs y 55 min' : 'Se cumplió el ciclo de 1 hora'}, enviando estadísticas a la base de datos`);
         } else
             cache.addMinuteUp();
     }, 60 * 1000);
