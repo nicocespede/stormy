@@ -61,8 +61,8 @@ module.exports = {
             const actualStat = stats[i];
             await guild.members.fetch(actualStat['stats_id']).then(member => {
                 usersField.value += `**${i + 1}. **${member.user.tag}\n\n`;
+                timeField.value += `${timeToString(actualStat['stats_seconds'], actualStat['stats_minutes'], actualStat['stats_hours'], actualStat['stats_days'])}\n\n`;
             }).catch(() => console.log(`> El usuario con ID ${actualStat['stats_id']} ya no está en el servidor.`));
-            timeField.value += `${timeToString(actualStat['stats_seconds'], actualStat['stats_minutes'], actualStat['stats_hours'], actualStat['stats_days'])}\n\n`;
         }
         const embed = new MessageEmbed()
             .setTitle(`**Estadísticas**`)
