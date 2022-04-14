@@ -120,7 +120,7 @@ client.on('ready', async () => {
             cache.updateLastDateChecked(newDate);
         }
         var minutesUp = cache.getMinutesUp();
-        if (minutesUp >= 1438 || minutesUp % 60 === 0) {
+        if (minutesUp >= 1438 || (minutesUp >= 60 && minutesUp % 60 === 0)) {
             var timestamps = cache.getTimestamps();
             for (const key in timestamps) {
                 if (Object.hasOwnProperty.call(timestamps, key)) {
