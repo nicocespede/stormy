@@ -120,7 +120,7 @@ client.on('ready', async () => {
             cache.updateLastDateChecked(newDate);
         }
         var minutesUp = cache.getMinutesUp();
-        if (minutesUp >= 1438 || (minutesUp >= 60 && minutesUp % 60 === 0)) {
+        if (minutesUp >= 1438/* || (minutesUp >= 60 && minutesUp % 60 === 0)*/) {
             var timestamps = cache.getTimestamps();
             for (const key in timestamps) {
                 if (Object.hasOwnProperty.call(timestamps, key)) {
@@ -128,7 +128,8 @@ client.on('ready', async () => {
                     cache.addTimestamp(key, new Date())
                 }
             }
-            console.log(`> ${minutesUp >= 1438 ? 'Pasaron 23 hs y 55 min' : 'Se cumplió el ciclo de 1 hora'}, enviando estadísticas a la base de datos`);
+            //console.log(`> ${minutesUp >= 1438 ? 'Pasaron 23 hs y 55 min' : 'Se cumplió el ciclo de 1 hora'}, enviando estadísticas a la base de datos`);
+            console.log(`> Pasaron 23 hs y 55 min, enviando estadísticas a la base de datos`);
         } else
             cache.addMinuteUp();
     }, 60 * 1000);
