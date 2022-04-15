@@ -21,6 +21,6 @@ module.exports = {
             }
             return '¡Estadísticas enviadas a la base de datos!';
         }
-        return 'No hay estadísticas para enviar';
+        return '¡No hay estadísticas para enviar!';
     }
 }
