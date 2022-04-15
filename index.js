@@ -121,16 +121,18 @@ client.on('ready', async () => {
             cache.updateLastDateChecked(newDate);
         }
         var minutesUp = cache.getMinutesUp();
-        if (minutesUp >= 1438 || minutesUp % 60 === 0) {
+        if (minutesUp === 1438 || minutesUp % 60 === 0) {
             var timestamps = cache.getTimestamps();
-            for (const key in timestamps) {
-                if (Object.hasOwnProperty.call(timestamps, key)) {
-                    await pushDifference(key);
-                    cache.addTimestamp(key, new Date())
+            if (Object.keys(timestamps).length > 0) {
+                if (minutesUp % 60 === 0) console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
+                if (minutesUp === 1438) console.log(`> Pasaron 23 hs y 55 min, enviando estadísticas a la base de datos`);
+                for (const key in timestamps) {
+                    if (Object.hasOwnProperty.call(timestamps, key)) {
+                        await pushDifference(key);
+                        cache.addTimestamp(key, new Date());
+                    }
                 }
             }
-            if (minutesUp % 60 === 0) console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
-            if (minutesUp >= 1438) console.log(`> Pasaron 23 hs y 55 min, enviando estadísticas a la base de datos`);
         }
     }, 60 * 1000);
 });

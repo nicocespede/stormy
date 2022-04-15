@@ -246,5 +246,17 @@ module.exports = {
     {
         question: '¿Cuál es el apodo de _Virginia Potts_, pareja de _Tony Stark_?',
         answers: ['pepper']
+    },
+    {
+        question: '¿Cómo se llama el reino al que entra _Ant-Man_ cuando se hace subatómico?',
+        answers: ['cuántico', 'cuantico', 'reino cuántico', 'reino cuantico']
+    },
+    {
+        question: '¿Cómo se llamaba lo que le inyectaban a los soldados de _A.I.M._ que luego los hacía explotar?',
+        answers: ['extremis']
+    },
+    {
+        question: '¿Cómo se llama el monstruo en el que se convierte _Emil Blonsky_ luego de inyectarse la sangre de _Banner_?',
+        answers: ['abominación', 'abominacion']
     }]
 }
