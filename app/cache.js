@@ -747,6 +747,10 @@ module.exports = {
         startingTrack: 'STARTING_TRACK'
     },
 
+    relativeSpecialDays: {
+        easter: 17
+    },
+
     getFilters: () => filters,
     updateFilters: async () => {
         await executeQuery('SELECT * FROM "mcuFilters";').then(async json => {

@@ -80,11 +80,13 @@ function applyText(canvas, text) {
 
 function getImageType() {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    if (today.getMonth() + 1 == 1)
+    if (today.getMonth() + 1 === 1)
         return `-newyear`;
-    if (today.getMonth() + 1 == 2)
+    if (today.getMonth() + 1 === 2)
         return `-love`;
-    if (today.getMonth() + 1 == 12) {
+    if (today.getMonth() + 1 === 4 && today.getDate() <= cache.relativeSpecialDays.easter)
+        return `-easter`;
+    if (today.getMonth() + 1 === 12) {
         if (today.getDate() >= 26)
             return `-newyear`;
         return `-xmas`;
@@ -95,12 +97,14 @@ function getImageType() {
 function sendSpecialDayMessage(client) {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     client.channels.fetch(cache.ids.channels.general).then(channel => {
-        if (today.getHours() == 0 && today.getMinutes() == 0) {
-            if (today.getDate() == 1 && today.getMonth() + 1 == 1)
+        if (today.getHours() === 0 && today.getMinutes() == 0) {
+            if (today.getDate() === 1 && today.getMonth() + 1 === 1)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un muy felíz año nuevo a todos los miembros del servidor! 🥂🌠`);
-            if (today.getDate() == 14 && today.getMonth() + 1 == 2)
+            if (today.getDate() === 14 && today.getMonth() + 1 === 2)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un felíz día de los enamorados a todas las parejas del servidor! 💘😍`);
-            if (today.getDate() == 25 && today.getMonth() + 1 == 12)
+            if (today.getDate() === cache.relativeSpecialDays.easter && today.getMonth() + 1 === 4)
+                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean unas felices pascuas a todos los miembros del servidor! 🐇🥚`);
+            if (today.getDate() === 25 && today.getMonth() + 1 === 12)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean una muy felíz navidad a todos los miembros del servidor! 🎅🏻🎄`);
         }
     }).catch(console.error);
