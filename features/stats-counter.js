@@ -34,17 +34,15 @@ module.exports = client => {
                     if (newState.member.id && timestamps[newState.member.id]) {
                         await pushDifference(newState.member.id);
                         removeTimestamp(newState.member.id);
-                    } else {
-                        console.log('> Un usuario salió del servidor mientras estaba en un canal de voz, enviando estadísticas a la base de datos');
-                        for (const key in timestamps)
-                            if (Object.hasOwnProperty.call(timestamps, key))
-                                client.guilds.fetch(ids.guilds.nckg).then(async guild => {
+                    } else
+                        client.guilds.fetch(ids.guilds.nckg).then(async guild => {
+                            for (const key in timestamps)
+                                if (Object.hasOwnProperty.call(timestamps, key))
                                     await guild.members.fetch(key).catch(async _ => {
                                         await pushDifference(key);
                                         removeTimestamp(key);
                                     });
-                                }).catch(console.error);
-                    }
+                        }).catch(console.error);
                 }
         }
         return;
