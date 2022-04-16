@@ -152,11 +152,13 @@ async function updateAvatar(client) {
 function updateUsername(client) {
     var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     var newUsername = 'StormY';
-    if (today.getMonth() + 1 == 1)
+    if (today.getMonth() + 1 === 1)
         newUsername += ' 🥂';
-    else if (today.getMonth() + 1 == 2)
+    else if (today.getMonth() + 1 === 2)
         newUsername += ' 💘';
-    else if (today.getMonth() + 1 == 12)
+    else if (today.getMonth() + 1 === 4 && today.getDate() <= cache.relativeSpecialDays.easter)
+        newUsername += ' 🐇';
+    else if (today.getMonth() + 1 === 12)
         if (today.getDate() >= 26)
             newUsername += ' 🥂';
         else

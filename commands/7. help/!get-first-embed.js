@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const clientInstance = require('../../index');
 const getFirstEmbed = (message, instance) => {
     const { guild, member } = message;
     const { commandHandler: { commands }, messageHandler, } = instance;
@@ -48,7 +47,7 @@ const getFirstEmbed = (message, instance) => {
         reactions.push(reaction);
         embed.setDescription(embed.description +
             `\n\n**${reaction} - ${key}** - ${amount} comando${amount === 1 ? '' : 's'}`)
-            .setThumbnail(clientInstance.client.user.avatarURL());
+            .setThumbnail(instance.client.user.avatarURL());
     }
     return {
         embed,

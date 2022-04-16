@@ -16,7 +16,7 @@ module.exports = {
             for (const key in timestamps) {
                 if (Object.hasOwnProperty.call(timestamps, key)) {
                     await pushDifference(key);
-                    addTimestamp(key, new Date())
+                    addTimestamp(key, new Date());
                 }
             }
             return '¡Estadísticas enviadas a la base de datos!';

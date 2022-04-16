@@ -1,15 +1,12 @@
-const { Client, Intents, MessageEmbed, Util } = require('discord.js');
+const { Client, Intents, MessageEmbed } = require('discord.js');
 const WOKCommands = require('wokcommands');
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
-const translate = require("translate");
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
-const { needsTranslation, getNextMessage, convertTZ, initiateReactionCollector, generateWelcomeImage,
-    isListed, periodicFunction, pushDifference } = require('./app/general');
-const { addBan, addSombraBan, deleteBan } = require('./app/postgres');
-const { setNewVoiceChannel, setKicked, containsAuthor, leaveEmptyChannel } = require('./app/music');
+const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference } = require('./app/general');
+const { containsAuthor } = require('./app/music');
 
 const client = new Client({
     intents: [
@@ -27,13 +24,6 @@ const client = new Client({
 
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${cache.prefix}ayuda`, type: 'LISTENING' }] });
-
-    client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
-        guild.channels.cache.each(channel => {
-            if (channel.isVoice() && channel.id != cache.ids.channels.afk)
-                channel.members.each(member => cache.addTimestamp(member.id, new Date()));
-        });
-    }).catch(console.error);
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client);
@@ -104,6 +94,7 @@ client.on('ready', async () => {
     new WOKCommands(client, {
         botOwners: cache.ids.users.stormer,
         commandDir: path.join(__dirname, 'commands'),
+        featuresDir: path.join(__dirname, 'features'),
         defaultLanguage: 'spanish',
         disabledDefaultCommands: ['channelonly', 'command', 'help', 'language', 'prefix', 'requiredrole'],
         ephemeral: true,
@@ -137,132 +128,4 @@ client.on('ready', async () => {
     }, 60 * 1000);
 });
 
-client.on('messageCreate', async message => {
-    if (message.channel.id === cache.ids.channels.anuncios && message.author.id != cache.ids.users.bot && !message.author.bot)
-        if (needsTranslation(message.content)) {
-            var text = await translate(message.content.replace(/[&]/g, 'and'), "es");
-            var messages = Util.splitMessage(`**Mensaje de <@${message.author.id}> traducido al español:**\n\n${text}`);
-            messages.forEach(m => message.channel.send({ content: m }));
-        }
-});
-
-client.on('messageUpdate', (oldMessage, newMessage) => {
-    if (oldMessage.channel.id === cache.ids.channels.anuncios && !oldMessage.author.bot)
-        if (needsTranslation(oldMessage.content))
-            oldMessage.channel.messages.fetch().then(async msgs => {
-                var msgToEdit = getNextMessage(newMessage.id, msgs);
-                var text = await translate(newMessage.content.replace(/[&]/g, 'and'), "es");
-                msgToEdit.edit(`**Mensaje de <@${newMessage.author.id}> traducido al español:**\n\n${text}`);
-            }).catch(console.error);
-});
-
-client.on('guildMemberAdd', member => {
-    client.channels.fetch(cache.ids.channels.welcome).then(channel => {
-        generateWelcomeImage(member.user).then(attachment => {
-            var random = Math.floor(Math.random() * (cache.welcome.length));
-            channel.send({ content: `${cache.welcome[random].replace(/%USER_ID%/g, member.user.id)}`, files: [attachment] });
-        }).catch(console.error);
-    }).catch(console.error);
-});
-
-client.on('guildMemberRemove', async member => {
-    var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
-    member.guild.bans.fetch().then(bans => {
-        if (bans.size == banned.length)
-            client.channels.fetch(cache.ids.channels.welcome).then(channel => {
-                var random = Math.floor(Math.random() * (cache.goodbye.length));
-                channel.send({ content: cache.goodbye[random].replace(/%USERNAME%/g, `${member.user.tag}`) });
-            }).catch(console.error);
-    }).catch(console.error);
-});
-
-client.on('guildBanAdd', async ban => {
-    await new Promise(res => setTimeout(res, 3000));
-    var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
-    if (!isListed(ban.user.id, banned, 'bans_id'))
-        await addBan([ban.user.id, ban.user.tag, ban.reason, "Desconocido"]).then(async () => {
-            await cache.updateBanned();
-        }).catch(console.error);
-    client.channels.fetch(cache.ids.channels.welcome).then(channel => {
-        if (ban.reason == null || ban.reason == "") {
-            var random = Math.floor(Math.random() * (cache.bannedWithoutReason.length));
-            channel.send(cache.bannedWithoutReason[random].replace(/%USERNAME%/g, `${ban.user.tag}`));
-        } else {
-            var random = Math.floor(Math.random() * (cache.bannedWithReason.length));
-            channel.send(cache.bannedWithReason[random].replace(/%USERNAME%/g, `${ban.user.tag}`)
-                .replace(/%REASON%/g, `${ban.reason}`));
-        }
-    }).catch(console.error);
-    if (ban.user.id == cache.ids.users.sombra)
-        addSombraBan(ban.reason).then(async () => await cache.updateSombraBans()).catch(console.error);
-});
-
-client.on('guildBanRemove', async ban => {
-    var banned = !cache.getBanned() ? await cache.updateBanned() : cache.getBanned();
-    if (isListed(ban.user.id, banned, 'bans_id'))
-        await deleteBan(ban.user.id).then(async () => await cache.updateBanned()).catch(console.error);
-    client.channels.fetch(cache.ids.channels.welcome).then(channel => {
-        var random = Math.floor(Math.random() * (cache.unbanned.length));
-        channel.send(cache.unbanned[random].replace(/%USERNAME%/g, `${ban.user.tag}`));
-    }).catch(console.error);
-});
-
-client.on('voiceStateUpdate', async (oldState, newState) => {
-    if (oldState.guild.id === cache.ids.guilds.nckg || newState.guild.id === cache.ids.guilds.nckg) {
-        // check if someone connects, start counting for the stats
-        if (oldState.channelId === null || oldState.channelId === cache.ids.channels.afk
-            || (oldState.guild.id != cache.ids.guilds.nckg && newState.guild.id === cache.ids.guilds.nckg)) {
-            // start counting for the stats
-            if (newState.channelId != cache.ids.channels.afk)
-                cache.addTimestamp(oldState.member.id, new Date());
-            return;
-        }
-        // check if a the update is from another user
-        if (newState.id !== client.user.id) {
-            //check if someone disconnects
-            if (oldState.channelId != newState.channelId) {
-                //start the disconnection timer if someone disconnects from the same channel
-                if (oldState.channel.members.has(client.user.id))
-                    new Promise(res => setTimeout(res, 60000)).then(() => {
-                        client.channels.fetch(oldState.channelId).then(channel => {
-                            if (channel.members.size === 1 && channel.members.has(client.user.id))
-                                leaveEmptyChannel(client, oldState.guild);
-                        }).catch(console.error);
-                    });
-                //stop counting for the stats (users)
-                if (newState.channelId === null || newState.channelId === cache.ids.channels.afk
-                    || (oldState.guild.id === cache.ids.guilds.nckg && newState.guild.id != cache.ids.guilds.nckg)) {
-                    var timestamps = cache.getTimestamps();
-                    if (newState.member.id && timestamps[newState.member.id]) {
-                        await pushDifference(newState.member.id);
-                        cache.removeTimestamp(newState.member.id);
-                    }
-                }
-            }
-            return;
-        }
-        // ignore if mute/deafen update
-        if (oldState.channelId === newState.channelId) return;
-        // send message if the bot is moved to another channel
-        if (oldState.channelId !== newState.channelId && newState.channelId != null) {
-            setNewVoiceChannel(client, newState.guild, newState.channel);
-            return;
-        }
-        // stop counting for the stats (bot)
-        var timestamps = cache.getTimestamps();
-        if (timestamps[client.user.id]) {
-            await pushDifference(client.user.id);
-            cache.removeTimestamp(client.user.id);
-        }
-        // clear the queue if was kicked
-        if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
-            && cache.getLastAction() != cache.musicActions.stopping
-            && cache.getLastAction() != cache.musicActions.ending)
-            setKicked(client, oldState.guild);
-        return;
-    }
-});
-
 client.login(process.env.TOKEN);
-
-module.exports = { client };
