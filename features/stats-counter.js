@@ -31,18 +31,19 @@ module.exports = client => {
                 if (newState.channelId === null || newState.channelId === ids.channels.afk
                     || (oldState.guild.id === ids.guilds.nckg && newState.guild.id != ids.guilds.nckg)) {
                     var timestamps = getTimestamps();
-                    if (newState.member && timestamps[newState.member.id]) {
-                        await pushDifference(newState.member.id);
-                        removeTimestamp(newState.member.id);
-                    } else
-                        client.guilds.fetch(ids.guilds.nckg).then(async guild => {
-                            for (const key in timestamps)
-                                if (Object.hasOwnProperty.call(timestamps, key))
-                                    await guild.members.fetch(key).catch(async _ => {
-                                        await pushDifference(key);
-                                        removeTimestamp(key);
-                                    });
-                        }).catch(console.error);
+                    if (newState.member != null)
+                        if (timestamps[newState.member.id]) {
+                            await pushDifference(newState.member.id);
+                            removeTimestamp(newState.member.id);
+                        } else
+                            client.guilds.fetch(ids.guilds.nckg).then(async guild => {
+                                for (const key in timestamps)
+                                    if (Object.hasOwnProperty.call(timestamps, key))
+                                        await guild.members.fetch(key).catch(async _ => {
+                                            await pushDifference(key);
+                                            removeTimestamp(key);
+                                        });
+                            }).catch(console.error);
                 }
         }
         return;
