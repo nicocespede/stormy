@@ -31,7 +31,7 @@ module.exports = client => {
                 if (newState.channelId === null || newState.channelId === ids.channels.afk
                     || (oldState.guild.id === ids.guilds.nckg && newState.guild.id != ids.guilds.nckg)) {
                     var timestamps = getTimestamps();
-                    if (newState.member.id && timestamps[newState.member.id]) {
+                    if (newState.member && timestamps[newState.member.id]) {
                         await pushDifference(newState.member.id);
                         removeTimestamp(newState.member.id);
                     } else
