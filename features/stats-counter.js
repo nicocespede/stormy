@@ -31,21 +31,11 @@ module.exports = client => {
                 if (newState.channelId === null || newState.channelId === ids.channels.afk
                     || (oldState.guild.id === ids.guilds.nckg && newState.guild.id != ids.guilds.nckg)) {
                     var timestamps = getTimestamps();
-                    console.log(newState)
-                    if (newState.member != null) {
-                        if (timestamps[newState.member.id]) {
-                            await pushDifference(newState.member.id);
-                            removeTimestamp(newState.member.id);
-                        }
-                    } else
-                        client.guilds.fetch(ids.guilds.nckg).then(async guild => {
-                            for (const key in timestamps)
-                                if (Object.hasOwnProperty.call(timestamps, key))
-                                    await guild.members.fetch(key).catch(async _ => {
-                                        await pushDifference(key);
-                                        removeTimestamp(key);
-                                    });
-                        }).catch(console.error);
+                    var id = newState.member ? newState.member.id : newState.id;
+                    if (timestamps[id]) {
+                        await pushDifference(id);
+                        removeTimestamp(id);
+                    }
                 }
         }
         return;
