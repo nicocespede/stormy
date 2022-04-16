@@ -14,12 +14,13 @@ module.exports = {
     setNewVoiceChannel: (client, guild, channel) => {
         updateLastAction(musicActions.changingChannel);
         var queue = client.player.getQueue(guild.id);
-        queue.metadata.send({
-            embeds: [new MessageEmbed().setColor([195, 36, 255])
-                .setDescription(`🔃 Fui movido al canal de voz **${channel.name}**.`)
-                .setThumbnail(`attachment://icons8-change-64.png`)],
-            files: [`./assets/thumbs/music/icons8-change-64.png`]
-        });
+        if (queue)
+            queue.metadata.send({
+                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                    .setDescription(`🔃 Fui movido al canal de voz **${channel.name}**.`)
+                    .setThumbnail(`attachment://icons8-change-64.png`)],
+                files: [`./assets/thumbs/music/icons8-change-64.png`]
+            });
     },
 
     setKicked: (client, guild) => {
