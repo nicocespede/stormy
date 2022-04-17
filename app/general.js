@@ -79,15 +79,17 @@ function applyText(canvas, text) {
 };
 
 function getImageType() {
-    var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    if (today.getMonth() + 1 === 1)
+    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const date = today.getDate();
+    const month = today.getMonth() + 1;
+    if (month === 1)
         return `-newyear`;
-    if (today.getMonth() + 1 === 2)
+    else if (month === 2)
         return `-love`;
-    if (today.getMonth() + 1 === 4 && today.getDate() <= cache.relativeSpecialDays.easter)
+    else if (month === 4 && date <= cache.relativeSpecialDays.easter)
         return `-easter`;
-    if (today.getMonth() + 1 === 12) {
-        if (today.getDate() >= 26)
+    else if (month === 12) {
+        if (date >= 26)
             return `-newyear`;
         return `-xmas`;
     }
@@ -95,17 +97,23 @@ function getImageType() {
 };
 
 function sendSpecialDayMessage(client) {
-    var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const date = today.getDate();
+    const month = today.getMonth() + 1;
     client.channels.fetch(cache.ids.channels.general).then(channel => {
-        if (today.getHours() === 0 && today.getMinutes() == 0) {
-            if (today.getDate() === 1 && today.getMonth() + 1 === 1)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un muy felíz año nuevo a todos los miembros del servidor! 🥂🌠`);
-            if (today.getDate() === 14 && today.getMonth() + 1 === 2)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un felíz día de los enamorados a todas las parejas del servidor! 💘😍`);
-            if (today.getDate() === cache.relativeSpecialDays.easter && today.getMonth() + 1 === 4)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean unas felices pascuas a todos los miembros del servidor! 🐇🥚`);
-            if (today.getDate() === 25 && today.getMonth() + 1 === 12)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean una muy felíz navidad a todos los miembros del servidor! 🎅🏻🎄`);
+        if (today.getHours() === 0 && today.getMinutes() === 0) {
+            if (date === 1 && month === 1)
+                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un muy felíz año nuevo a todos los miembros del servidor! 🥂🌠`)
+                    .then(m => ['🥂', '🌠', '🎆'].forEach(emoji => m.react(emoji)));
+            else if (date === 14 && month === 2)
+                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un felíz día de los enamorados a todas las parejas del servidor! 💘😍`)
+                    .then(m => ['💘', '😍', '💏'].forEach(emoji => m.react(emoji)));
+            else if (date === cache.relativeSpecialDays.easter && month === 4)
+                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean unas felices pascuas a todos los miembros del servidor! 🐇🥚`)
+                    .then(m => ['🐰', '🥚'].forEach(emoji => m.react(emoji)));
+            else if (date === 25 && month === 12)
+                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean una muy felíz navidad a todos los miembros del servidor! 🎅🏻🎄`)
+                    .then(m => ['🎅🏻', '🎄', '🎁'].forEach(emoji => m.react(emoji)));
         }
     }).catch(console.error);
 };
@@ -150,16 +158,18 @@ async function updateAvatar(client) {
 };
 
 function updateUsername(client) {
-    var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const date = today.getDate();
+    const month = today.getMonth() + 1;
     var newUsername = 'StormY';
-    if (today.getMonth() + 1 === 1)
+    if (month === 1)
         newUsername += ' 🥂';
-    else if (today.getMonth() + 1 === 2)
+    else if (month === 2)
         newUsername += ' 💘';
-    else if (today.getMonth() + 1 === 4 && today.getDate() <= cache.relativeSpecialDays.easter)
+    else if (month === 4 && date <= cache.relativeSpecialDays.easter)
         newUsername += ' 🐇';
-    else if (today.getMonth() + 1 === 12)
-        if (today.getDate() >= 26)
+    else if (month === 12)
+        if (date >= 26)
             newUsername += ' 🥂';
         else
             newUsername += ' 🎅🏻';
