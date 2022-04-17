@@ -13,12 +13,11 @@ module.exports = {
     callback: async () => {
         var timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
-            for (const key in timestamps) {
+            for (const key in timestamps)
                 if (Object.hasOwnProperty.call(timestamps, key)) {
                     await pushDifference(key);
                     addTimestamp(key, new Date());
                 }
-            }
             return '¡Estadísticas enviadas a la base de datos!';
         }
         return '¡No hay estadísticas para enviar!';

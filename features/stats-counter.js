@@ -2,15 +2,6 @@ const { ids, addTimestamp, getTimestamps, removeTimestamp } = require("../app/ca
 const { pushDifference } = require("../app/general");
 
 module.exports = client => {
-    client.on('ready', async () => {
-        client.guilds.fetch(ids.guilds.nckg).then(guild => {
-            guild.channels.cache.each(channel => {
-                if (channel.isVoice() && channel.id != ids.channels.afk)
-                    channel.members.each(member => addTimestamp(member.id, new Date()));
-            });
-        }).catch(console.error);
-    });
-
     client.on('voiceStateUpdate', async (oldState, newState) => {
         if (oldState.guild.id === ids.guilds.nckg || newState.guild.id === ids.guilds.nckg) {
             // ignore if mute/deafen update
@@ -21,7 +12,10 @@ module.exports = client => {
                 || (oldState.guild.id != ids.guilds.nckg && newState.guild.id === ids.guilds.nckg)) {
                 // start counting for the stats
                 if (newState.channelId != ids.channels.afk)
-                    addTimestamp(oldState.member.id, new Date());
+                    if (newState.channel.members.size === 2)
+                        newState.channel.members.each(member => addTimestamp(member.id, new Date()));
+                    else if (newState.channel.members.size > 2)
+                        addTimestamp(oldState.member.id, new Date());
                 return;
             }
 
@@ -31,11 +25,18 @@ module.exports = client => {
                 if (newState.channelId === null || newState.channelId === ids.channels.afk
                     || (oldState.guild.id === ids.guilds.nckg && newState.guild.id != ids.guilds.nckg)) {
                     var timestamps = getTimestamps();
-                    var id = newState.member ? newState.member.id : newState.id;
-                    if (timestamps[id]) {
-                        await pushDifference(id);
-                        removeTimestamp(id);
-                    }
+                    if (oldState.channel.members.size > 1) {
+                        var id = newState.member ? newState.member.id : newState.id;
+                        if (timestamps[id]) {
+                            await pushDifference(id);
+                            removeTimestamp(id);
+                        }
+                    } else if (oldState.channel.members.size === 1)
+                        for (const key in timestamps)
+                            if (Object.hasOwnProperty.call(timestamps, key)){
+                                await pushDifference(key);
+                                removeTimestamp(key);
+                            }
                 }
         }
         return;

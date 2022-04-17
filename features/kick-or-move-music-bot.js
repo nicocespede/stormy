@@ -1,4 +1,4 @@
-const { getLastAction, musicActions, ids } = require("../app/cache");
+const { getLastAction, musicActions } = require("../app/cache");
 const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/music");
 
 module.exports = client => {

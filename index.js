@@ -25,6 +25,13 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${cache.prefix}ayuda`, type: 'LISTENING' }] });
 
+    client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
+        guild.channels.cache.each(channel => {
+            if (channel.isVoice() && channel.id != cache.ids.channels.afk && channel.members.size > 1)
+                channel.members.each(member => cache.addTimestamp(member.id, new Date()));
+        });
+    }).catch(console.error);
+
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client);
     var reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
