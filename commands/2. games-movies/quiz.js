@@ -1,4 +1,4 @@
-const { MessageActionRow, MessageButton, Constants } = require("discord.js");
+const { MessageActionRow, MessageButton, Constants, MessageAttachment } = require("discord.js");
 const { quiz } = require("../../app/quiz");
 const { prefix } = require('../../app/cache');
 
@@ -65,7 +65,7 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: async ({ guild, user, message, args, interaction, channel }) => {
+    callback: async ({ guild, user, message, args, interaction, channel, client }) => {
         var messageOrInteraction = message ? message : interaction;
         const maxTime = 15;
         var extraMessages = [];
@@ -88,6 +88,11 @@ module.exports = {
                     .setEmoji('❌')
                     .setLabel('Cancelar')
                     .setStyle('DANGER'));
+
+            const newChannel = await guild.channels.create('❓┃QUIZ', 'text');
+            newChannel.permissionOverwrites.edit(client.user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
+            newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { VIEW_CHANNEL: false });
+
             var msg = {
                 content: `• Todos los que quieran participar en el quiz deben clickear en el botón **"✋🏼 Participo"**.\n • Una vez que estén todos los participantes listos, pulsar **"✔️ Comenzar"**.\n • Si el quiz no comienza en 2 minutos, se cancelará.\n• Cada pregunta tiene ${maxTime} segundos máximo para ser respondida.\n• Cada pregunta acertada suma 5 puntos.\n\n**Participantes:**\n- 👑 ${user.tag}`,
                 components: [row]
@@ -108,6 +113,7 @@ module.exports = {
                         participants.push(i.user.id);
                         var msg = { content: reply.content + `\n- ${i.user.tag}`, components: [row] };
                         reply = await reply.edit(msg);
+                        newChannel.permissionOverwrites.edit(i.user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
                     }
                 } else if (i.customId === 'ready')
                     if (i.user.id === participants[0])
@@ -129,7 +135,14 @@ module.exports = {
                     await reply.edit(msg);
                 } else {
                     extraMessages.forEach(m => m.delete());
-                    var msg = { content: '🏁 **¡Comienza el quiz!** Prepárense...', components: [] };
+                    var msg = {
+                        content: '🏁 **¡Comienza el quiz!** Prepárense...\n\u200b',
+                        components: [new MessageActionRow()
+                            .addComponents(new MessageButton()
+                                .setLabel('IR AL QUIZ')
+                                .setStyle('LINK')
+                                .setURL(`https://discord.com/channels/${guild.id}/${newChannel.id}`))]
+                    };
                     var allQuestions = quiz.slice(0);
                     var selectedQuestions = [];
                     for (let i = 0; i < number + 1; i++) {
@@ -149,28 +162,33 @@ module.exports = {
                         points[element] = 0;
                     }
 
+                    await new Promise(res => setTimeout(res, 1000 * 1));
+
                     for (let i = 0; i < selectedQuestions.length - 1; i++) {
-                        const actualQuestion = selectedQuestions[i];
                         var answered = false;
+                        const actualQuestion = selectedQuestions[i];
 
                         await new Promise(res => setTimeout(res, 1000 * 2));
-                        channel.send(`❓ **Pregunta ${i + 1}:** ${actualQuestion.question}`);
+                        newChannel.send({
+                            content: `❓ **Pregunta ${i + 1}:** ${actualQuestion.question}\n\u200b`,
+                            files: [new MessageAttachment(actualQuestion.file)]
+                        });
 
-                        const messagesCollector = channel.createMessageCollector({ filter, time: 1000 * maxTime });
+                        const messagesCollector = newChannel.createMessageCollector({ filter, time: 1000 * maxTime });
 
-                        messagesCollector.on('collect', msg => {
+                        messagesCollector.on('collect', async msg => {
                             if (actualQuestion.answers.includes(msg.content.trim().toLowerCase()))
-                                msg.react('✅').then(_ => {
+                                await msg.react('✅').then(_ => {
                                     answered = true;
-                                    points[msg.author.id] += 5;
-                                    channel.send(`✅ **¡Correcto <@${msg.author.id}>!**${i != selectedQuestions.length - 2 ? ' Siguiente pregunta...' : ''}`);
                                     messagesCollector.stop();
+                                    newChannel.send(`✅ **¡Correcto <@${msg.author.id}>!**${i != selectedQuestions.length - 2 ? ' Siguiente pregunta...' : ''}`);
+                                    points[msg.author.id] += 5;
                                 }).catch(console.error);
                         });
 
                         messagesCollector.on('end', collected => {
                             if (!answered) {
-                                channel.send(`⏳ **¡Tiempo!**${i != selectedQuestions.length - 2 ? ' Siguiente pregunta...' : ''}`);
+                                newChannel.send(`⏳ **¡Tiempo!**${i != selectedQuestions.length - 2 ? ' Siguiente pregunta...' : ''}`);
                                 answered = true;
                             }
                         });
@@ -178,32 +196,44 @@ module.exports = {
                     }
 
                     if (checkDraw(points)) {
-                        var actualQuestion = selectedQuestions[selectedQuestions.length - 1];
                         var answered = false;
-                        channel.send(`🤔 **¡Hay empate!** Última pregunta de desempate...`);
+                        var actualQuestion = selectedQuestions[selectedQuestions.length - 1];
+                        newChannel.send(`🤔 **¡Hay empate!** Última pregunta de desempate...`);
                         await new Promise(res => setTimeout(res, 1000 * 3));
-                        channel.send(`⁉ **Pregunta de desempate:** ${actualQuestion.question}`);
+                        newChannel.send({
+                            content: `⁉ **Pregunta de desempate:** ${actualQuestion.question}\n\u200b`,
+                            files: [new MessageAttachment(actualQuestion.file)]
+                        });
 
-                        const messagesCollector = channel.createMessageCollector({ filter, time: 1000 * maxTime });
+                        const messagesCollector = newChannel.createMessageCollector({ filter, time: 1000 * maxTime });
 
-                        messagesCollector.on('collect', msg => {
+                        messagesCollector.on('collect', async msg => {
                             if (actualQuestion.answers.includes(msg.content.trim().toLowerCase()))
-                                msg.react('✅').then(_ => {
+                                await msg.react('✅').then(_ => {
                                     answered = true;
-                                    points[msg.author.id] += 5;
-                                    channel.send(`✅ **¡Correcto <@${msg.author.id}>!**`);
                                     messagesCollector.stop();
+                                    newChannel.send(`✅ **¡Correcto <@${msg.author.id}>!**`);
+                                    points[msg.author.id] += 5;
                                 }).catch(console.error);
                         });
 
                         messagesCollector.on('end', collected => {
                             if (!answered) {
-                                channel.send(`⏳ **¡Tiempo!**`);
+                                newChannel.send(`⏳ **¡Tiempo!**`);
                                 answered = true;
                             }
                         });
                         await until(_ => answered === true);
                     }
+
+                    await newChannel.send({
+                        content: '📊 Quiz finalizado...\n\u200b',
+                        components: [new MessageActionRow()
+                            .addComponents(new MessageButton()
+                                .setLabel('VER RESULTADOS')
+                                .setStyle('LINK')
+                                .setURL(`https://discord.com/channels/${guild.id}/${channel.id}/${reply.id}`))]
+                    });
 
                     var msg = checkDraw(points) ? `⚖ **¡Quiz terminado en empate!**\n\n**Puntuaciones:**\n`
                         : `🏆 **¡${await getWinner(guild, points)} ganó el quiz!**\n\n**Puntuaciones:**\n`;
@@ -212,7 +242,9 @@ module.exports = {
                             const element = points[id];
                             await guild.members.fetch(id).then(member => msg += `- ${member.user.tag}: ${element} puntos\n`).catch(console.error);
                         }
-                    channel.send(msg);
+                    await reply.edit({ content: msg, components: [] });
+                    await new Promise(res => setTimeout(res, 1000 * 6));
+                    newChannel.delete();
                 }
             });
         }
