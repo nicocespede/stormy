@@ -187,5 +187,24 @@ module.exports = {
             setTimeout(function () { resolve(); }, 1000);
             console.log('> Estadística actualizada en la base de datos');
         });
+    },
+
+    addThermalPasteDate: (id, date) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`INSERT INTO "thermalPasteDates" VALUES('${id}', '${date}');`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Fecha de cambio de pasta térmica agregada a la base de datos');
+        });
+    },
+    updateThermalPasteDate: (id, date) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`UPDATE "thermalPasteDates" SET "tpd_date" = '${date}' WHERE "tpd_id" = '${id}';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Fecha de cambio de pasta térmica actualizada en la base de datos');
+        });
     }
 };

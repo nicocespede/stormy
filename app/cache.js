@@ -469,6 +469,7 @@ var playlists = { names: [], urls: [] };
 var stats;
 var timestamps = {};
 var minutesUp = 0;
+var thermalPasteDates = {};
 
 module.exports = {
     prefix: '-',
@@ -855,7 +856,7 @@ module.exports = {
 
     getStats: () => stats,
     updateStats: async () => {
-        await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(async json => {
+        await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(json => {
             stats = json;
             console.log('> Caché de estadísticas actualizado');
         }).catch(console.error);
@@ -866,5 +867,18 @@ module.exports = {
     removeTimestamp: id => (delete timestamps[id]),
 
     getMinutesUp: () => minutesUp,
-    addMinuteUp: () => minutesUp++
+    addMinuteUp: () => minutesUp++,
+
+    getThermalPasteDates: () => thermalPasteDates,
+    updateThermalPasteDates: async () => {
+        await executeQuery('SELECT * FROM "thermalPasteDates";').then(json => {
+            json.forEach(element => {
+                const id = element['tpd_id'];
+                const date = element['tpd_date'];
+                thermalPasteDates[id] = date;
+            });
+            console.log('> Caché de fechas de cambio de pasta térmica actualizado');
+        }).catch(console.error);
+        return thermalPasteDates;
+    }
 };
