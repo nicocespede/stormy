@@ -27,8 +27,18 @@ client.on('ready', async () => {
 
     client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
         guild.channels.cache.each(channel => {
-            if (channel.isVoice() && channel.id != cache.ids.channels.afk && channel.members.size > 1)
-                channel.members.each(member => cache.addTimestamp(member.id, new Date()));
+            if (channel.isVoice() && channel.id != cache.ids.channels.afk) {
+                const membersInChannel = channel.members.has(cache.ids.users.bot) ? channel.members.size - 1 : channel.members.size;
+                if (membersInChannel >= 2)
+                    channel.members.each(member => {
+                        console.log('Comenzando contador de', member.user.tag)
+                        cache.addTimestamp(member.id, new Date())
+                    });
+                else if (channel.members.has(cache.ids.users.bot)) {
+                    console.log('Comenzando contador del bot')
+                    cache.addTimestamp(cache.ids.users.bot, new Date());
+                }
+            }
         });
     }).catch(console.error);
 

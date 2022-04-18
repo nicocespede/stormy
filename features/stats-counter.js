@@ -7,39 +7,62 @@ module.exports = client => {
             // ignore if mute/deafen update
             if (oldState.channelId === newState.channelId) return;
 
-            // check if someone connects
-            if (oldState.channelId === null || oldState.channelId === ids.channels.afk
-                || (oldState.guild.id != ids.guilds.nckg && newState.guild.id === ids.guilds.nckg)) {
-                // start counting for the stats
-                if (newState.channelId != ids.channels.afk)
-                    if (newState.channel.members.size === 2)
-                        newState.channel.members.each(member => addTimestamp(member.id, new Date()));
-                    else if (newState.channel.members.size > 2)
+            var timestamps = getTimestamps();
+
+            //check for new channel
+            if (newState.channelId != null && newState.channelId != ids.channels.afk && newState.guild.id === ids.guilds.nckg) {
+                const membersInNewChannel = newState.channel.members.has(ids.users.bot) ? newState.channel.members.size - 1 : newState.channel.members.size;
+                if (membersInNewChannel === 2)
+                    newState.channel.members.each(member => {
+                        if (!timestamps[member.id]) {
+                            console.log('Comenzando contador de', member.user.tag)
+                            addTimestamp(member.id, new Date())
+                        } else
+                            console.log('El contador de', member.user.tag, 'continúa')
+                    });
+                else if (membersInNewChannel > 2 || oldState.member.id === ids.users.bot) {
+                    if (!timestamps[oldState.member.id]) {
+                        console.log('Comenzando contador de', oldState.member.user.tag)
                         addTimestamp(oldState.member.id, new Date());
-                return;
+                    } else
+                        console.log('El contador de', oldState.member.user.tag, 'continúa')
+                } else {
+                    var id = newState.member ? newState.member.id : newState.id;
+                    if (timestamps[id]) {
+                        console.log('Terminando contador de', id)
+                        await pushDifference(id);
+                        removeTimestamp(id);
+                    } else
+                        console.log('El contador de', oldState.member.user.tag, 'no existía')
+
+                }
+            } else {
+                var id = newState.member ? newState.member.id : newState.id;
+                if (timestamps[id]) {
+                    console.log('Terminando contador de', id)
+                    await pushDifference(id);
+                    removeTimestamp(id);
+                } else
+                    console.log('El contador de', id, 'no existía')
             }
 
-            //check if someone disconnects
-            if (oldState.channelId != newState.channelId)
-                //stop counting for the stats
-                if (newState.channelId === null || newState.channelId === ids.channels.afk
-                    || (oldState.guild.id === ids.guilds.nckg && newState.guild.id != ids.guilds.nckg)) {
-                    var timestamps = getTimestamps();
-                    if (oldState.channel.members.size > 1) {
-                        var id = newState.member ? newState.member.id : newState.id;
-                        if (timestamps[id]) {
-                            await pushDifference(id);
-                            removeTimestamp(id);
-                        }
-                    } else if (oldState.channel.members.size === 1)
-                        for (const key in timestamps)
-                            if (Object.hasOwnProperty.call(timestamps, key)){
-                                await pushDifference(key);
-                                removeTimestamp(key);
-                            }
-                }
+            //check for old channel
+            if (oldState.channelId != null && oldState.channelId != ids.channels.afk && oldState.guild.id === ids.guilds.nckg) {
+                const membersInOldChannel = oldState.channel.members.has(ids.users.bot) ? oldState.channel.members.size - 1 : oldState.channel.members.size;
+                if (membersInOldChannel < 2)
+                    oldState.channel.members.each(async member => {
+                        if (member.id != ids.users.bot)
+                            if (timestamps[member.id]) {
+                                console.log('Terminando contador de', member.user.tag)
+                                await pushDifference(member.id);
+                                removeTimestamp(member.id)
+                            } else
+                                console.log('El contador de', member.user.tag, 'no existía')
+                    });
+            }
+
+            return;
         }
-        return;
     });
 };
 
