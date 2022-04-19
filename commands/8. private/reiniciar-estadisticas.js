@@ -1,3 +1,5 @@
+const { executeQuery } = require('../../app/postgres');
+
 module.exports = {
     category: 'Privados',
     description: 'Reinicia por completo las estadísticas.',
