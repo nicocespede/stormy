@@ -14,36 +14,22 @@ module.exports = client => {
                 const membersInNewChannel = newState.channel.members.has(ids.users.bot) ? newState.channel.members.size - 1 : newState.channel.members.size;
                 if (membersInNewChannel === 2)
                     newState.channel.members.each(member => {
-                        if (!timestamps[member.id]) {
-                            console.log('Comenzando contador de', member.user.tag)
-                            addTimestamp(member.id, new Date())
-                        } else
-                            console.log('El contador de', member.user.tag, 'continúa')
+                        if (!timestamps[member.id])
+                            addTimestamp(member.id, new Date());
                     });
                 else if (membersInNewChannel > 2 || oldState.member.id === ids.users.bot) {
-                    if (!timestamps[oldState.member.id]) {
-                        console.log('Comenzando contador de', oldState.member.user.tag)
+                    if (!timestamps[oldState.member.id])
                         addTimestamp(oldState.member.id, new Date());
-                    } else
-                        console.log('El contador de', oldState.member.user.tag, 'continúa')
-                } else {
-                    var id = newState.member ? newState.member.id : newState.id;
-                    if (timestamps[id]) {
-                        console.log('Terminando contador de', id)
-                        await pushDifference(id);
-                        removeTimestamp(id);
-                    } else
-                        console.log('El contador de', oldState.member.user.tag, 'no existía')
-
+                } else if (timestamps[newState.member.id]) {
+                    await pushDifference(newState.member.id);
+                    removeTimestamp(newState.member.id);
                 }
             } else {
                 var id = newState.member ? newState.member.id : newState.id;
                 if (timestamps[id]) {
-                    console.log('Terminando contador de', id)
                     await pushDifference(id);
                     removeTimestamp(id);
-                } else
-                    console.log('El contador de', id, 'no existía')
+                }
             }
 
             //check for old channel
@@ -53,11 +39,9 @@ module.exports = client => {
                     oldState.channel.members.each(async member => {
                         if (member.id != ids.users.bot)
                             if (timestamps[member.id]) {
-                                console.log('Terminando contador de', member.user.tag)
                                 await pushDifference(member.id);
                                 removeTimestamp(member.id)
-                            } else
-                                console.log('El contador de', member.user.tag, 'no existía')
+                            }
                     });
             }
 
