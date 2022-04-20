@@ -74,7 +74,7 @@ module.exports = {
 
         embed.setDescription(description);
 
-        embed.setFooter({ text: songs > songsShown ? `+otras ${songs - songsShown} canciones...` : `` });
+        embed.setFooter({ text: songs > songsShown ? `+otra${songs - songsShown > 1 ? 's' : ''} ${songs - songsShown === 1 ? 'canción' : `${songs - songsShown} canciones`}...` : `` });
 
         messageOrInteraction.reply({
             embeds: [embed],

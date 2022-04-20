@@ -63,7 +63,7 @@ client.on('ready', async () => {
                     .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
                     .setThumbnail(`attachment://icons8-circled-play-64.png`)
-                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} canciones restantes en la cola` : ''}` })],
+                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })],
                 files: [`./assets/thumbs/music/icons8-circled-play-64.png`]
             });
     }).on('trackAdd', async (queue, track) => {
