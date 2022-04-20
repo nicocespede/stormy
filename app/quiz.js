@@ -1,7 +1,7 @@
 module.exports = {
     quiz: [{
         question: '¿Cómo se llama el primer arma que empuñó _Thor_?',
-        answers: ['mjolnir'],
+        answers: ['mjolnir', 'mjølnir'],
         file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/7/79/Mavengersfilmstillsgh35.jpg'
     },
     {
@@ -318,5 +318,45 @@ module.exports = {
         question: '¿Cómo se llama el monstruo en el que se convierte _Emil Blonsky_ luego de inyectarse la sangre de _Banner_?',
         answers: ['abominación', 'abominacion'],
         file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/c/c9/BlonskyTransformation-TIH.png'
+    },
+    {
+        question: '¿En qué ciudad latinoamericana se esconde _Bruce Banner_ para evitar tener incidentes?',
+        answers: ['río de janeiro', 'rio de janeiro'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/3/35/Meditating.jpg'
+    },
+    {
+        question: '¿Qué construye _Tony Stark_ para mantener alejada la metralla de su corazón?',
+        answers: ['reactor arc'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/f/f5/Stark_Vest.png'
+    },
+    {
+        question: '¿Cómo se llama el grupo de androides creados por _Tony Stark_ para proteger a los civiles?',
+        answers: ['la legión de hierro', 'la legion de hierro', 'legion de hierro', 'legión de hierro'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/Iron_Legion_Bot_1.png'
+    },
+    {
+        question: '¿Cuál es el apodo por el que se conoce a la armadura _Mark XLIV_ de _Iron Man_?',
+        answers: ['hulkbuster'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/07/Hulk_and_Hulkbuster_Punch.jpg'
+    },
+    {
+        question: '¿Cuál es el apodo de villano de _Quentin Beck_?',
+        answers: ['mysterio', 'misterio'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/a/ac/QBeckSeesPParkerWithTheProjector.jpg'
+    },
+    {
+        question: '¿Cómo se llamaba la inteligencia artificial que le deja _Tony Stark_ a _Peter Parker_ en un par de gafas?',
+        answers: ['e.d.i.t.h.', 'edith'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/7/76/Far_From_Home_64.jpg'
+    },
+    {
+        question: '¿Qué gema tiene _Visión_ en su frente?',
+        answers: ['gema de la mente', 'mente', 'de la mente'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/6/60/Vision_%28Removing_the_Mind_Stone%29.png'
+    },
+    {
+        question: '¿Quién fue la responsable de que _Thor_ perdiera un ojo?',
+        answers: ['hela'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/5/56/Screen_Shot_2018-02-24_at_20.23.05.jpg'
     }]
 }

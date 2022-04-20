@@ -4,36 +4,14 @@ const { pushDifference } = require('../../app/general');
 
 const timeToString = (seconds, minutes, hours, days) => {
     var ret = '';
-    if (days != 0) {
-        if (days == 1)
-            ret += days + ' día';
-        else
-            ret += days + ' días';
-    }
-    if (hours != 0) {
-        if (ret != '')
-            ret += ', ';
-        if (hours == 1)
-            ret += hours + ' hora';
-        else
-            ret += hours + ' horas';
-    }
-    if (minutes != 0) {
-        if (ret != '')
-            ret += ', ';
-        if (minutes == 1)
-            ret += minutes + ' minuto';
-        else
-            ret += minutes + ' minutos';
-    }
-    if (seconds != 0) {
-        if (ret != '')
-            ret += ', ';
-        if (seconds == 1)
-            ret += seconds + ' segundo';
-        else
-            ret += seconds + ' segundos';
-    }
+    if (days != 0)
+        ret += days + ` día${days > 1 ? 's' : ''}`;
+    if (hours != 0)
+        ret += (ret != '' ? ', ' : '') + hours + ` hora${hours > 1 ? 's' : ''}`;
+    if (minutes != 0)
+        ret += (ret != '' ? ', ' : '') + minutes + ` minuto${minutes > 1 ? 's' : ''}`;
+    if (seconds != 0)
+        ret += (ret != '' ? ', ' : '') + seconds + ` segundo${seconds > 1 ? 's' : ''}`;
     return ret;
 }
 

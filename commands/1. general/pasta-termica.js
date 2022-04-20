@@ -23,22 +23,14 @@ const validateDate = (date) => {
     return ret;
 };
 
-const timeToString = (years, days) => {
+const timeToString = (years, weeks, days) => {
     var ret = '';
-    if (years != 0) {
-        if (years == 1)
-            ret += years + ' año';
-        else
-            ret += years + ' años';
-    }
-    if (days != 0) {
-        if (ret != '')
-            ret += ', ';
-        if (days == 1)
-            ret += days + ' día';
-        else
-            ret += days + ' días';
-    }
+    if (years != 0)
+        ret += years + ` año${years > 1 ? 's' : ''}`;
+    if (weeks != 0)
+        ret += (ret != '' ? ', ' : '') + weeks + ` semana${weeks > 1 ? 's' : ''}`;
+    if (days != 0)
+        ret += (ret != '' ? ', ' : '') + days + ` día${days > 1 ? 's' : ''}`;
     return ret;
 };
 
@@ -46,9 +38,12 @@ const secondsToFull = (seconds) => {
     // calculate (and subtract) whole years
     var years = Math.floor(seconds / 31557600);
     seconds -= years * 31557600;
+    // calculate (and subtract) whole weeks
+    var weeks = Math.floor(seconds / 604800) % 52.17857;
+    seconds -= weeks * 604800;
     // calculate (and subtract) whole days
-    var days = Math.floor(seconds / 86400) % 365;
-    return { years, days };
+    var days = Math.floor(seconds / 86400) % 7;
+    return { years, weeks, days };
 };
 
 module.exports = {
@@ -77,8 +72,8 @@ module.exports = {
                 const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
                 const splittedUserDate = userDate.split('/');
                 var totalTime = Math.abs(today - convertTZ(`${splittedUserDate[1]}/${splittedUserDate[0]}/${splittedUserDate[2]}`, 'America/Argentina/Buenos_Aires')) / 1000;
-                const { years, days } = secondsToFull(totalTime);
-                var msg = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, days)}** (**${userDate}**).`;
+                const { years, weeks, days } = secondsToFull(totalTime);
+                var msg = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${userDate}**).`;
             } else
                 var msg = `Hola <@${user.id}>, no tenés registrada la última vez que cambiaste la pasta térmica, usá **"${prefix}pasta-termica <DD/MM/AAAA>"** para hacerlo.`;
             await messageOrInteraction.reply({
