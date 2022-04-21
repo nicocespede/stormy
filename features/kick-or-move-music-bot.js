@@ -1,6 +1,16 @@
-const { getLastAction, musicActions } = require("../app/cache");
+const { getLastAction, musicActions, ids } = require("../app/cache");
 const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/music");
 
+const allMembersAreDeafened = members => {
+    var ret = true;
+    members.each(member => {
+        if (member.id != ids.users.bot && !member.voice.selfDeaf && !member.voice.selfMute) {
+            ret = false;
+            return;
+        }
+    });
+    return ret;
+};
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
         // ignore if someone connects
@@ -10,7 +20,7 @@ module.exports = client => {
             if (oldState.channelId != newState.channelId && oldState.channel.members.has(client.user.id)) {
                 new Promise(res => setTimeout(res, 60000)).then(() => {
                     client.channels.fetch(oldState.channelId).then(channel => {
-                        if (channel.members.size === 1 && channel.members.has(client.user.id))
+                        if (channel.members.has(client.user.id) && (channel.members.size === 1 || allMembersAreDeafened(channel.members)))
                             leaveEmptyChannel(client, oldState.guild);
                     }).catch(console.error);
                 });
