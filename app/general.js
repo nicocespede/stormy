@@ -370,5 +370,9 @@ module.exports = {
             }
         });
         await cache.updateStats();
-    }
+    },
+
+    fullToSeconds,
+
+    secondsToFull
 }
