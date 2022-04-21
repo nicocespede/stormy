@@ -63,12 +63,14 @@ module.exports = {
     leaveEmptyChannel: (client, guild) => {
         updateLastAction(musicActions.leavingEmptyChannel);
         var queue = client.player.getQueue(guild.id);
-        queue.metadata.send({
-            embeds: [new MessageEmbed().setColor([195, 36, 255])
-                .setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
-                .setThumbnail(`attachment://icons8-no-audio-64.png`)],
-            files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
-        });
-        queue.destroy();
+        if (queue) {
+            queue.metadata.send({
+                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                    .setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
+                    .setThumbnail(`attachment://icons8-no-audio-64.png`)],
+                files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
+            });
+            queue.destroy();
+        }
     }
 }

@@ -4,7 +4,7 @@ const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/mus
 const allMembersAreDeafened = members => {
     var ret = true;
     members.each(member => {
-        if (member.id != ids.users.bot && !member.voice.selfDeaf && !member.voice.selfMute) {
+        if (member.id != ids.users.bot && !member.voice.selfDeaf && !member.voice.serverDeaf) {
             ret = false;
             return;
         }
@@ -17,7 +17,9 @@ module.exports = client => {
         if (oldState.channelId === null) return;
         // start the disconnection timer if another user disconnects from the same channel
         if (newState.id != client.user.id) {
-            if (oldState.channelId != newState.channelId && oldState.channel.members.has(client.user.id)) {
+            if (oldState.channel.members.has(client.user.id) && (oldState.channelId != newState.channelId ||
+                ((!oldState.serverDeaf && newState.serverDeaf) || (!oldState.selfDeaf && newState.selfDeaf)))) {
+                console.log('Comenzando contador de 1 minuto');
                 new Promise(res => setTimeout(res, 60000)).then(() => {
                     client.channels.fetch(oldState.channelId).then(channel => {
                         if (channel.members.has(client.user.id) && (channel.members.size === 1 || allMembersAreDeafened(channel.members)))
