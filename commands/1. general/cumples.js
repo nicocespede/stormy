@@ -11,8 +11,7 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: async ({ guild, user, message, channel, interaction }) => {
-        var messageOrInteraction = message ? message : interaction;
+    callback: async ({ guild, user, channel }) => {
         var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
         var months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         var usersField = { name: 'Usuario', value: '', inline: true };
@@ -34,16 +33,16 @@ module.exports = {
                 channel.send(`Se eliminó el cumpleaños de **${actualBday['bdays_user']}** (el **${actualBday['bdays_date']}**) ya que el usuario no está más en el servidor.`);
             }).catch(console.error));
         }
-        messageOrInteraction.reply({
+        return {
+            custom: true,
             embeds: [new MessageEmbed()
                 .setTitle(`**Cumpleaños**`)
                 .setDescription(`Hola <@${user.id}>, los cumpleaños registrados son:\n\n`)
                 .setColor([237, 0, 0])
                 .addFields([usersField, datesField])
                 .setThumbnail(`attachment://bday.png`)],
-            files: [`./assets/thumbs/bday.png`],
-            ephemeral: true
-        });
-        return;
+            ephemeral: true,
+            files: [`./assets/thumbs/bday.png`]
+        };
     }
 }

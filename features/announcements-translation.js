@@ -1,6 +1,6 @@
 const { Util } = require("discord.js");
 const translate = require("translate");
-const { ids } = require("../app/cache");
+const { ids } = require("../app/constants");
 const { needsTranslation, getNextMessage } = require("../app/general");
 
 module.exports = client => {

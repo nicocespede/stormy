@@ -1,7 +1,7 @@
 const { MessageEmbed, MessageAttachment, Constants } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
-const { currencies } = require('../../app/cache');
+const { currencies } = require('../../app/constants');
 const convert = require('xml-js');
 const axios = require('axios');
 const Canvas = require('canvas');
@@ -35,27 +35,26 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ client, args, user, message, interaction }) => {
-        var messageOrInteraction = message ? message : interaction;
-        var quantity = parseFloat(args[1]);
-        if (!Object.keys(currencies).includes(args[0]) && args[0] != 'dolar' && args[0] != 'usd') {
-            messageOrInteraction.reply({ content: `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _usd, ${Object.keys(currencies).join(', ')}_.`, ephemeral: true });
-            return;
-        } else if (isNaN(quantity) || quantity < 0) {
-            messageOrInteraction.reply({ content: `¡Uso incorrecto! La cantidad ingresada es inválida.`, ephemeral: true });
-            return;
-        } else {
+        const argsCurrency = message ? args[0] : interaction.options.getString('moneda');
+        const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
+        var reply = { custom: true, ephemeral: true };
+        if (!Object.keys(currencies).includes(argsCurrency) && argsCurrency != 'dolar' && argsCurrency != 'usd')
+            reply.content = `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _usd, ${Object.keys(currencies).join(', ')}_.`;
+        else if (isNaN(quantity) || quantity < 0)
+            reply.content = `¡Uso incorrecto! La cantidad ingresada es inválida.`;
+        else {
             const canvas = Canvas.createCanvas(500, 250);
             const context = canvas.getContext('2d');
             const dataDolar = await axios.get("https://www.dolarsi.com/api/dolarSiInfo.xml")
             const json = convert.xml2json(dataDolar.data, { compact: true, spaces: 4 });
             const jsonParsed = JSON.parse(json);
-            var swapImage = await Canvas.loadImage(`./assets/custom/swap.png`);
-            var pesoImage = await Canvas.loadImage(`./assets/custom/peso.png`);
+            const swapImage = await Canvas.loadImage(`./assets/custom/swap.png`);
+            const pesoImage = await Canvas.loadImage(`./assets/custom/peso.png`);
 
             var usdPrice = formatNumber(jsonParsed.cotiza.Dolar.casa380.venta._text);
-            if (args[0] != 'dolar' && args[0] != 'usd') {
-                var coinID = currencies[args[0]].id;
-                var color = currencies[args[0]].color;
+            if (argsCurrency != 'dolar' && argsCurrency != 'usd' && argsCurrency != 'dólar') {
+                var coinID = currencies[argsCurrency].id;
+                var color = currencies[argsCurrency].color;
                 let data = await CoinGeckoClient.coins.fetch(coinID, {});
                 data = data.data;
                 var currency = data.localization.es;
@@ -69,23 +68,20 @@ module.exports = {
                 var imageURL = './assets/thumbs/dolar.png';
                 var finalPrice = (usdPrice * quantity).toFixed(2);
             }
-            var coinImage = await Canvas.loadImage(imageURL);
+            const coinImage = await Canvas.loadImage(imageURL);
 
             context.drawImage(swapImage, (canvas.width / 2) - 50, (canvas.height / 2) - 50, 100, 100);
             context.drawImage(pesoImage, canvas.width - 175, (canvas.height / 2) - 75, 150, 150);
             context.drawImage(coinImage, 25, (canvas.height / 2) - 75, 150, 150);
 
-            messageOrInteraction.reply({
-                embeds: [new MessageEmbed()
-                    .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
-                    .setDescription(`Hola <@${user.id}>, la conversión de **${args[1]} ${currency}** a Pesos Argentinos es: **ARS$ ${finalPrice}**.\n\nValores tomados en cuenta:\n\n${coinID ? '**• ' + currency + ':** USD$ ' + coinPrice + '\n' : ''}**• Dólar blue (venta):** ARS$ ${usdPrice}`)
-                    .setColor(color)
-                    .setImage('attachment://image.png')
-                    .setThumbnail(client.user.avatarURL())],
-                files: [new MessageAttachment(canvas.toBuffer('image/png'), 'image.png')],
-                ephemeral: true
-            });
+            reply.embeds = [new MessageEmbed()
+                .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
+                .setDescription(`Hola <@${user.id}>, la conversión de **${quantity} ${currency}** a Pesos Argentinos es: **ARS$ ${finalPrice}**.\n\nValores tomados en cuenta:\n\n${coinID ? '**• ' + currency + ':** USD$ ' + coinPrice + '\n' : ''}**• Dólar blue (venta):** ARS$ ${usdPrice}`)
+                .setColor(color)
+                .setImage('attachment://image.png')
+                .setThumbnail(client.user.avatarURL())];
+            reply.files = [new MessageAttachment(canvas.toBuffer('image/png'), 'image.png')];
         }
-        return;
+        return reply;
     }
 }

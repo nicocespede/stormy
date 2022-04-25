@@ -1,12 +1,13 @@
-const { prefix, getThermalPasteDates, updateThermalPasteDates } = require('../../app/cache');
+const { getThermalPasteDates, updateThermalPasteDates } = require('../../app/cache');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../app/postgres');
 const { convertTZ } = require('../../app/general');
 const { MessageActionRow, MessageButton, Constants } = require('discord.js');
+const { prefix } = require('../../app/constants');
 
 const validateDate = (date) => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     var ret = { valid: false, reason: 'La fecha debe estar en el formato DD/MM/AAAA.' };
-    if (date.length < 10) return ret;
+    if (date.length != 10) return ret;
     if (date.substring(2, 3) != '/' || date.substring(5, 6) != '/') return ret;
     const split = date.split('/');
     const day = parseInt(split[0]);
@@ -49,6 +50,7 @@ const secondsToFull = (seconds) => {
 module.exports = {
     category: 'General',
     description: 'Recuerda o guarda/modifica la última fecha en que el usuario cambió su pasta térmica.',
+    aliases: ['pasta-térmica'],
 
     minArgs: 0,
     maxArgs: 1,
@@ -64,8 +66,9 @@ module.exports = {
     ],
 
     callback: async ({ message, args, interaction, channel, user }) => {
-        var messageOrInteraction = message ? message : interaction;
-        if (args.length === 0) {
+        var reply = { custom: true, ephemeral: true };
+        var date = message ? args[0] : interaction.options.getString('fecha');
+        if (!date) {
             var dates = Object.keys(getThermalPasteDates()).length === 0 ? await updateThermalPasteDates() : getThermalPasteDates();
             const userDate = dates[user.id];
             if (dates[user.id]) {
@@ -73,17 +76,15 @@ module.exports = {
                 const splittedUserDate = userDate.split('/');
                 var totalTime = Math.abs(today - convertTZ(`${splittedUserDate[1]}/${splittedUserDate[0]}/${splittedUserDate[2]}`, 'America/Argentina/Buenos_Aires')) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
-                var msg = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${userDate}**).`;
+                reply.content = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${userDate}**).`;
             } else
-                var msg = `Hola <@${user.id}>, no tenés registrada la última vez que cambiaste la pasta térmica, usá **"${prefix}pasta-termica <DD/MM/AAAA>"** para hacerlo.`;
-            await messageOrInteraction.reply({
-                content: msg,
-                ephemeral: true
-            });
+                reply.content = `Hola <@${user.id}>, no tenés registrada la última vez que cambiaste la pasta térmica, usá **"${prefix}pasta-termica <DD/MM/AAAA>"** para hacerlo.`;
+            return reply;
         } else
-            if (!validateDate(args[0]).valid)
-                messageOrInteraction.reply({ content: validateDate(args[0]).reason, ephemeral: true });
-            else {
+            if (!validateDate(date).valid) {
+                reply.content = validateDate(date).reason;
+                return reply;
+            } else {
                 const row = new MessageActionRow()
                     .addComponents(new MessageButton().setCustomId('add_yes')
                         .setEmoji('✔️')
@@ -93,35 +94,35 @@ module.exports = {
                         .setEmoji('❌')
                         .setLabel('Cancelar')
                         .setStyle('DANGER'));
-                var reply = await messageOrInteraction.reply({
-                    content: `¿Estás seguro de querer guardar la fecha **${args[0]}** cómo tu último cambio de pasta térmica?`,
+
+                const messageOrInteraction = message ? message : interaction;
+                const replyMessage = await messageOrInteraction.reply({
                     components: [row],
+                    content: `¿Estás seguro de querer guardar la fecha **${date}** cómo tu último cambio de pasta térmica?`,
                     ephemeral: true
                 });
 
                 const filter = (btnInt) => {
                     return user.id === btnInt.user.id;
-                }
+                };
 
                 const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
                 collector.on('end', async collection => {
+                    var edit = { components: [] };
                     if (!collection.first()) {
-                        message ? await reply.edit({ content: 'La acción expiró.', components: [], ephemeral: true })
-                            : await interaction.editReply({ content: 'La acción expiró.', components: [], ephemeral: true });
+                        edit.content = 'La acción expiró.';
                     } else if (collection.first().customId === 'add_yes') {
-                        var dates = Object.keys(getThermalPasteDates()).length === 0 ? await updateThermalPasteDates() : getThermalPasteDates();
-                        var msg;
-                        !dates[user.id] ? await addThermalPasteDate(user.id, args[0]).then(async () => msg = { content: `Se agregó la fecha **${args[0]}** como tu último cambio de pasta térmica.`, components: [], ephemeral: true }).catch(console.error)
-                            : await updateThermalPasteDate(user.id, args[0]).then(async () => msg = { content: `Se actualizó tu fecha del último cambio de pasta térmica a **${args[0]}**.`, components: [], ephemeral: true }).catch(console.error);
-                        message ? await reply.edit({ content: 'La acción fue completada.', components: [], ephemeral: true })
-                            : await interaction.editReply({ content: 'La acción fue completada.', components: [], ephemeral: true });
-                        await updateThermalPasteDates();
-                        await channel.send(msg);
+                        const dates = Object.keys(getThermalPasteDates()).length === 0 ? await updateThermalPasteDates() : getThermalPasteDates();
+                        var msg = {};
+                        !dates[user.id] ? await addThermalPasteDate(user.id, date).then(async () => msg.content = `Se agregó la fecha **${date}** como tu último cambio de pasta térmica.`).catch(console.error)
+                            : await updateThermalPasteDate(user.id, date).then(async () => msg.content = `Se actualizó tu fecha del último cambio de pasta térmica a **${date}**.`).catch(console.error);
+                        edit.content = 'La acción fue completada.';
+                        channel.send(msg);
+                        updateThermalPasteDates();
                     } else
-                        message ? await reply.edit({ content: 'La acción fue cancelada.', components: [], ephemeral: true })
-                            : await interaction.editReply({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
-
+                        edit.content = 'La acción fue cancelada.';
+                    message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                 });
             }
         return;

@@ -1,6 +1,6 @@
 const { MessageEmbed, Constants } = require('discord.js');
 const fs = require('fs');
-const { texts, prefix } = require('../../app/cache');
+const { prefix, texts } = require('../../app/constants');
 
 async function getAvailableFilesNames(path) {
     var names = [];
@@ -73,10 +73,11 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, args, interaction, user }) => {
-        var messageOrInteraction = message ? message : interaction;
-        getAvailableFilesNames('./games').then(games => {
+        var reply = { custom: true, ephemeral: true };
+        const number = message ? args[0] : interaction.options.getInteger('numero');
+        await getAvailableFilesNames('./games').then(async games => {
             var color = [234, 61, 78];
-            if (args.length == 0) {
+            if (!number) {
                 var gamesField = { name: 'Juego', value: '', inline: true };
                 var updatesField = { name: 'Última actualización', value: ``, inline: true };
                 for (var i = 0; i < games.length; i++) {
@@ -84,24 +85,21 @@ module.exports = {
                     gamesField.value += `** ${i + 1}.** ${name}\n\n`;
                     updatesField.value += `*${date.replace(/-/g, '/')}*\n\n`;
                 }
-                messageOrInteraction.reply({
-                    embeds: [new MessageEmbed()
-                        .setTitle(`**Juegos crackeados**`)
-                        .setDescription(texts.games.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix))
-                        .setColor(color)
-                        .addFields([gamesField, updatesField])
-                        .setFooter({ text: texts.games.footer })
-                        .setThumbnail(`attachment://games.png`)],
-                    files: [`assets/thumbs/games.png`],
-                    ephemeral: true
-                });
+                reply.embeds = [new MessageEmbed()
+                    .setTitle(`**Juegos crackeados**`)
+                    .setDescription(texts.games.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix))
+                    .setColor(color)
+                    .addFields([gamesField, updatesField])
+                    .setFooter({ text: texts.games.footer })
+                    .setThumbnail(`attachment://games.png`)];
+                reply.files = [`assets/thumbs/games.png`];
             } else {
-                const index = parseInt(args[0]) - 1;
+                const index = parseInt(number) - 1;
                 if (index < 0 || index >= games.length || isNaN(index))
-                    messageOrInteraction.reply({ content: `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}juegos [numero]"**.`, ephemeral: true });
+                    reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}juegos [numero]"**.`;
                 else {
                     var { name, date } = games[index];
-                    getGameInfo(`./games/${name} ${date}`).then(info => {
+                    await getGameInfo(`./games/${name} ${date}`).then(info => {
                         var fields = [];
                         for (const key in info)
                             if (Object.hasOwnProperty.call(info, key))
@@ -121,20 +119,17 @@ module.exports = {
                                     fields.push(field);
                                 } else if (key != 'title' && key != 'imageURL')
                                     fields.push({ name: key, value: info[key] });
-                        messageOrInteraction.reply({
-                            embeds: [new MessageEmbed()
-                                .setTitle(info.title)
-                                .setColor(color)
-                                .addFields(fields)
-                                .setThumbnail(`attachment://games.png`)
-                                .setImage(info.imageURL)],
-                            files: [attachment],
-                            ephemeral: true
-                        });
+                        reply.embeds = [new MessageEmbed()
+                            .setTitle(info.title)
+                            .setColor(color)
+                            .addFields(fields)
+                            .setThumbnail(`attachment://games.png`)
+                            .setImage(info.imageURL)];
+                        reply.files = [`assets/thumbs/games.png`];
                     }).catch(console.error);
                 }
             }
         }).catch(console.error);
-        return;
+        return reply;
     }
 }

@@ -4,6 +4,7 @@ const lngDetector = new LanguageDetect();
 const cache = require('./cache');
 const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat } = require('./postgres');
 const Canvas = require('canvas');
+const { ids, relativeSpecialDays } = require('./constants');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -38,7 +39,7 @@ async function generateBirthdayImage(user) {
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
     var usernameWidth = context.measureText(user.username).width;
-    if (user.id == cache.ids.users.stormer || user.id == cache.ids.users.darkness) {
+    if (user.id == ids.users.stormer || user.id == ids.users.darkness) {
         var crownWidth = 60;
         var gapWidth = 5;
         const crown = await Canvas.loadImage('./assets/custom/crown.png');
@@ -86,7 +87,7 @@ function getImageType() {
         return `-newyear`;
     else if (month === 2)
         return `-love`;
-    else if (month === 4 && date <= cache.relativeSpecialDays.easter)
+    else if (month === 4 && date <= relativeSpecialDays.easter)
         return `-easter`;
     else if (month === 12) {
         if (date >= 26)
@@ -100,7 +101,7 @@ function sendSpecialDayMessage(client) {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     const date = today.getDate();
     const month = today.getMonth() + 1;
-    client.channels.fetch(cache.ids.channels.general).then(channel => {
+    client.channels.fetch(ids.channels.general).then(channel => {
         if (today.getHours() === 0 && today.getMinutes() === 0) {
             if (date === 1 && month === 1)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un muy felíz año nuevo a todos los miembros del servidor! 🥂🌠`)
@@ -108,7 +109,7 @@ function sendSpecialDayMessage(client) {
             else if (date === 14 && month === 2)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un felíz día de los enamorados a todas las parejas del servidor! 💘😍`)
                     .then(m => ['💘', '😍', '💏'].forEach(emoji => m.react(emoji)));
-            else if (date === cache.relativeSpecialDays.easter && month === 4)
+            else if (date === relativeSpecialDays.easter && month === 4)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean unas felices pascuas a todos los miembros del servidor! 🐇🥚`)
                     .then(m => ['🐰', '🥚'].forEach(emoji => m.react(emoji)));
             else if (date === 25 && month === 12)
@@ -122,8 +123,8 @@ async function sendAnniversaryAlert(client) {
     var anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
     anniversaries.forEach(anniversary => {
         if (anniversary['anniversaries_date'].substring(0, 5) == getToday() && !anniversary['anniversaries_flag']) {
-            client.channels.fetch(cache.ids.channels.general).then(channel => {
-                client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
+            client.channels.fetch(ids.channels.general).then(channel => {
+                client.guilds.fetch(ids.guilds.default).then(guild => {
                     guild.members.fetch(anniversary['anniversaries_id1']).then(member1 => {
                         guild.members.fetch(anniversary['anniversaries_id2']).then(member2 => {
                             const years = (new Date().getFullYear()) - parseInt(anniversary['anniversaries_date'].substring(6));
@@ -166,7 +167,7 @@ function updateUsername(client) {
         newUsername += ' 🥂';
     else if (month === 2)
         newUsername += ' 💘';
-    else if (month === 4 && date <= cache.relativeSpecialDays.easter)
+    else if (month === 4 && date <= relativeSpecialDays.easter)
         newUsername += ' 🐇';
     else if (month === 12)
         if (date >= 26)
@@ -181,11 +182,11 @@ const sendBdayAlert = async (client) => {
     var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
     birthdays.forEach(bday => {
         if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
-            client.channels.fetch(cache.ids.channels.general).then(channel => {
-                client.guilds.fetch(cache.ids.guilds.nckg).then(async guild => {
+            client.channels.fetch(ids.channels.general).then(channel => {
+                client.guilds.fetch(ids.guilds.default).then(async guild => {
                     await guild.members.fetch(bday['bdays_id']).then(member => {
                         generateBirthdayImage(member.user).then(attachment => {
-                            if (bday['bdays_id'] == `<@${cache.ids.users.bot}>`)
+                            if (bday['bdays_id'] === ids.users.bot)
                                 var msg = `@everyone\n\n¡Hoy es mi cumpleaños!`;
                             else
                                 var msg = `@everyone\n\nHoy es el cumpleaños de <@${bday['bdays_id']}>, ¡feliz cumpleaños!`;
@@ -236,10 +237,6 @@ const secondsToFull = (seconds) => {
 };
 
 module.exports = {
-    isAMention: (str) => {
-        return str.substring(0, 1) == '<' && str.substring(1, 2) == '@' && str.substring(str.length - 1, str.length) == '>';
-    },
-
     needsTranslation: (string) => {
         var probabilities = lngDetector.detect(string);
         if (probabilities[0][0] != 'spanish') {
@@ -278,7 +275,7 @@ module.exports = {
     convertTZ,
 
     initiateReactionCollector: (client, message) => {
-        client.channels.fetch(cache.ids.channels.cartelera).then(async channel => {
+        client.channels.fetch(ids.channels.cartelera).then(async channel => {
             if (message)
                 await channel.send(message).then(async msg => {
                     await updateCollectorMessage(true, msg.id).catch(console.error);
@@ -291,8 +288,8 @@ module.exports = {
                     m.react('✅');
                 const filter = (reaction) => reaction.emoji.name === '✅';
                 reactionCollector = m.createReactionCollector({ filter });
-                client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
-                    guild.roles.fetch(cache.ids.roles.funcion).then(role => {
+                client.guilds.fetch(ids.guilds.default).then(guild => {
+                    guild.roles.fetch(ids.roles.funcion).then(role => {
                         reactionCollector.on('collect', (r, user) => {
                             guild.members.fetch(user.id).then(member => {
                                 member.roles.add(role.id);

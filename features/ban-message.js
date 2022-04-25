@@ -1,4 +1,5 @@
-const { getBanned, updateBanned, ids, bannedWithoutReason, bannedWithReason, updateSombraBans } = require("../app/cache");
+const { getBanned, updateBanned, updateSombraBans } = require("../app/cache");
+const { ids, bannedWithoutReason, bannedWithReason } = require("../app/constants");
 const { isListed } = require("../app/general");
 const { addBan, addSombraBan } = require("../app/postgres");
 
@@ -11,10 +12,10 @@ module.exports = client => {
         client.channels.fetch(ids.channels.welcome).then(channel => {
             if (ban.reason === null || ban.reason === "") {
                 var random = Math.floor(Math.random() * (bannedWithoutReason.length));
-                channel.send(bannedWithoutReason[random].replace(/%USERNAME%/g, `${ban.user.tag}`));
+                channel.send(bannedWithoutReason[random].replace(/%USERNAME%/g, `<@${ban.user.id}>`));
             } else {
                 var random = Math.floor(Math.random() * (bannedWithReason.length));
-                channel.send(bannedWithReason[random].replace(/%USERNAME%/g, `${ban.user.tag}`)
+                channel.send(bannedWithReason[random].replace(/%USERNAME%/g, `<@${ban.user.id}>`)
                     .replace(/%REASON%/g, `${ban.reason}`));
             }
         }).catch(console.error);

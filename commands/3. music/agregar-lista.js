@@ -1,6 +1,6 @@
 const { Constants } = require('discord.js');
-const { getPlaylists, prefix, updatePlaylists } = require('../../app/cache');
-const { isAMusicChannel } = require('../../app/music');
+const { getPlaylists, updatePlaylists } = require('../../app/cache');
+const { prefix, ids } = require('../../app/constants');
 const { addPlaylist } = require('../../app/postgres');
 
 module.exports = {
@@ -28,27 +28,27 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ channel, message, args, interaction, user }) => {
-        var messageOrInteraction = message ? message : interaction;
+        const url = message ? args.pop() : interaction.options.getString('url');
+        const argsName = message ? args.join(' ') : interaction.options.getString('nombre');
+        var reply = { custom: true, ephemeral: true };
 
-        if (!isAMusicChannel(channel.id)) {
-            messageOrInteraction.reply({ content: `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, ephemeral: true });
-            return;
+        if (!ids.channels.musica.includes(channel.id)) {
+            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            return reply;
         }
 
-        var playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
-        var url = args.pop();
-        var name = args.join(' ').toLowerCase();
-        if (!url.includes('http') || !url.includes('www')) {
-            messageOrInteraction.reply({ content: `¡Uso incorrecto! La URL es inválida. Usá **"${prefix}agregar-lista <nombre> <url>"**.`, ephemeral: true });
-            return;
-        } else if (playlists.names.includes(name)) {
-            messageOrInteraction.reply({ content: `Ya hay una lista de reproducción guardada con ese nombre.`, ephemeral: true });
-            return;
-        } else
-            addPlaylist([name, url]).then(async () => {
+        const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
+        const name = argsName.toLowerCase();
+        if (!url.includes('http') || !url.includes('www'))
+            reply.content = `¡Uso incorrecto! La URL es inválida. Usá **"${prefix}agregar-lista <nombre> <url>"**.`;
+        else if (playlists.names.includes(name))
+            reply.content = `Ya hay una lista de reproducción guardada con ese nombre.`;
+        else
+            await addPlaylist([name, url]).then(async () => {
                 await updatePlaylists();
-                messageOrInteraction.reply({ content: `Se agregó la lista de reproducción **${name}**.` });
+                reply.content = `Se agregó la lista de reproducción **${name}**.`;
+                reply.ephemeral = false;
             }).catch(console.error);
-        return;
+        return reply;
     }
 }

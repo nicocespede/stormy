@@ -7,6 +7,7 @@ const { Player } = require('discord-player');
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference } = require('./app/general');
 const { containsAuthor } = require('./app/music');
+const { testing, prefix, ids, musicActions, categorySettings } = require('./app/constants');
 
 const client = new Client({
     intents: [
@@ -23,16 +24,16 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    client.user.setPresence({ activities: [{ name: `${cache.prefix}ayuda`, type: 'LISTENING' }] });
+    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: 'LISTENING' }] });
 
-    client.guilds.fetch(cache.ids.guilds.nckg).then(guild => {
+    client.guilds.fetch(ids.guilds.default).then(guild => {
         guild.channels.cache.each(channel => {
-            if (channel.isVoice() && channel.id != cache.ids.channels.afk) {
-                const membersInChannel = channel.members.has(cache.ids.users.bot) ? channel.members.size - 1 : channel.members.size;
+            if (channel.isVoice() && channel.id != ids.channels.afk) {
+                const membersInChannel = channel.members.has(ids.users.bot) ? channel.members.size - 1 : channel.members.size;
                 if (membersInChannel >= 2)
                     channel.members.each(member => cache.addTimestamp(member.id, new Date()));
-                else if (channel.members.has(cache.ids.users.bot))
-                    cache.addTimestamp(cache.ids.users.bot, new Date());
+                else if (channel.members.has(ids.users.bot))
+                    cache.addTimestamp(ids.users.bot, new Date());
             }
         });
     }).catch(console.error);
@@ -55,8 +56,8 @@ client.on('ready', async () => {
             highWaterMark: 1 << 25
         }
     }).on('trackStart', (queue, track) => {
-        if (cache.getLastAction() === cache.musicActions.changingChannel)
-            cache.updateLastAction(cache.musicActions.startingTrack);
+        if (cache.getLastAction() === musicActions.changingChannel)
+            cache.updateLastAction(musicActions.startingTrack);
         else
             queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
@@ -68,31 +69,31 @@ client.on('ready', async () => {
             });
     }).on('trackAdd', async (queue, track) => {
         var lastAction = cache.getLastAction();
-        if (queue.playing && lastAction != cache.musicActions.moving && lastAction != cache.musicActions.addingNext)
+        if (queue.playing && lastAction != musicActions.moving && lastAction != musicActions.addingNext)
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
     }).on('tracksAdd', async (queue, tracks) => {
-        if (cache.getLastAction() != cache.musicActions.addingNext)
+        if (cache.getLastAction() != musicActions.addingNext)
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription(`☑️ **${tracks.length} canciones** agregadas a la cola.`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
     }).on('channelEmpty', (queue) => {
-        cache.updateLastAction(cache.musicActions.leavingEmptyChannel);
+        cache.updateLastAction(musicActions.leavingEmptyChannel);
         queue.metadata.send({
             embeds: [musicEmbed.setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
                 .setThumbnail(`attachment://icons8-no-audio-64.png`)],
             files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
         });
     }).on('queueEnd', (queue) => {
-        if (cache.getLastAction() != cache.musicActions.leavingEmptyChannel
-            && cache.getLastAction() != cache.musicActions.stopping
-            && cache.getLastAction() != cache.musicActions.beingKicked) {
-            cache.updateLastAction(cache.musicActions.ending);
+        if (cache.getLastAction() != musicActions.leavingEmptyChannel
+            && cache.getLastAction() != musicActions.stopping
+            && cache.getLastAction() != musicActions.beingKicked) {
+            cache.updateLastAction(musicActions.ending);
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
                     .setThumbnail(`attachment://icons8-so-so-64.png`)],
@@ -104,7 +105,7 @@ client.on('ready', async () => {
     console.log(`¡Loggeado como ${client.user.tag}!`);
 
     new WOKCommands(client, {
-        botOwners: cache.ids.users.stormer,
+        botOwners: ids.users.stormer,
         commandDir: path.join(__dirname, 'commands'),
         featuresDir: path.join(__dirname, 'features'),
         defaultLanguage: 'spanish',
@@ -112,20 +113,20 @@ client.on('ready', async () => {
         ephemeral: true,
         ignoreBots: true,
         testServers: ['962233256433029180']
-    }).setDefaultPrefix(cache.prefix)
-        .setCategorySettings(cache.categorySettings)
+    }).setDefaultPrefix(prefix)
+        .setCategorySettings(categorySettings)
         .setColor([142, 89, 170]);
 
     setInterval(async function () {
         cache.addMinuteUp();
-        var newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
         if (cache.getLastDateChecked().getDate() != newDate.getDate()) {
             periodicFunction(client);
             cache.updateLastDateChecked(newDate);
         }
-        var minutesUp = cache.getMinutesUp();
+        const minutesUp = cache.getMinutesUp();
         if (minutesUp === 1438 || minutesUp % 60 === 0) {
-            var timestamps = cache.getTimestamps();
+            const timestamps = cache.getTimestamps();
             if (Object.keys(timestamps).length > 0) {
                 if (minutesUp % 60 === 0) console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
                 if (minutesUp === 1438) console.log(`> Pasaron 23 hs y 55 min, enviando estadísticas a la base de datos`);
@@ -140,4 +141,5 @@ client.on('ready', async () => {
     }, 60 * 1000);
 });
 
-client.login(process.env.TOKEN);
+const token = !testing ? process.env.TOKEN : process.env.TESTING_TOKEN;
+client.login(token);

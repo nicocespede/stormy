@@ -29,10 +29,10 @@ module.exports = {
     permissions: ['ADMINISTRATOR'],
 
     callback: ({ message, args, client }) => {
-        var url = args[0];
+        const url = args[0];
         args = args.splice(1);
         getRandomThumb('movies').then(fileName => {
-            var msg = {
+            const msg = {
                 content: '@everyone',
                 embeds: [new MessageEmbed()
                     .setDescription(args.join(" "))

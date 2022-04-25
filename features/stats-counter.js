@@ -1,16 +1,17 @@
-const { ids, addTimestamp, getTimestamps, removeTimestamp } = require("../app/cache");
+const { addTimestamp, getTimestamps, removeTimestamp } = require("../app/cache");
+const { ids } = require("../app/constants");
 const { pushDifference } = require("../app/general");
 
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
-        if (oldState.guild.id === ids.guilds.nckg || newState.guild.id === ids.guilds.nckg) {
+        if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
             // ignore if mute/deafen update
             if (oldState.channelId === newState.channelId) return;
 
-            var timestamps = getTimestamps();
+            const timestamps = getTimestamps();
 
             //check for new channel
-            if (newState.channelId != null && newState.channelId != ids.channels.afk && newState.guild.id === ids.guilds.nckg) {
+            if (newState.channelId != null && newState.channelId != ids.channels.afk && newState.guild.id === ids.guilds.default) {
                 const membersInNewChannel = newState.channel.members.has(ids.users.bot) ? newState.channel.members.size - 1 : newState.channel.members.size;
                 if (membersInNewChannel === 2)
                     newState.channel.members.each(member => {
@@ -33,7 +34,7 @@ module.exports = client => {
             }
 
             //check for old channel
-            if (oldState.channelId != null && oldState.channelId != ids.channels.afk && oldState.guild.id === ids.guilds.nckg) {
+            if (oldState.channelId != null && oldState.channelId != ids.channels.afk && oldState.guild.id === ids.guilds.default) {
                 const membersInOldChannel = oldState.channel.members.has(ids.users.bot) ? oldState.channel.members.size - 1 : oldState.channel.members.size;
                 if (membersInOldChannel < 2)
                     oldState.channel.members.each(async member => {

@@ -12,16 +12,21 @@ module.exports = {
     permissions: ['ADMINISTRATOR'],
 
     callback: async ({ args }) => {
-        var stats = !getStats() ? await updateStats() : getStats();
-        if (!isListed(args[0], stats, 'stats_id'))
+        const stats = !getStats() ? await updateStats() : getStats();
+        const id = args[0];
+        const argsDays = args[1];
+        const argsHours = args[2];
+        const argsMinutes = args[3];
+        const argsSeconds = args[4];
+        if (!isListed(id, stats, 'stats_id'))
             return 'El ID ingresado no tiene estadísticas registradas.';
         stats.forEach(async stat => {
-            if (stat['stats_id'] === args[0]) {
+            if (stat['stats_id'] === id) {
                 var totalTime = fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds'])
-                    - fullToSeconds(parseInt(args[1]), parseInt(args[2]), parseInt(args[3]), parseInt(args[4]));
+                    - fullToSeconds(parseInt(argsDays), parseInt(argsHours), parseInt(argsMinutes), parseInt(argsSeconds));
                 if (!isNaN(totalTime)) {
-                    var { days, hours, minutes, seconds } = secondsToFull(totalTime);
-                    await updateStat(args[0], days, hours, minutes, seconds);
+                    const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                    await updateStat(id, days, hours, minutes, seconds);
                 }
                 return;
             }

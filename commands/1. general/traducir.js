@@ -17,15 +17,15 @@ module.exports = {
     expectedArgs: '<texto>',
     minArgs: 1,
 
-    callback: async ({ message, channel, text, interaction }) => {
+    callback: async ({ message, channel, args, interaction }) => {
+        const text = message ? args.join(' ') : interaction.options.getString('texto');
         const translation = await translate(text.replace(/[&]/g, 'and'), "es");
-        var messages = Util.splitMessage(`**Texto traducido al español:**\n\n${translation}`);
-        var messageOrInteraction = message ? message : interaction;
-        messageOrInteraction.reply({ content: messages[0] })
-        if (messages.slice(1).length > 0)
-            messages.forEach(async m => {
-                await channel.send({ content: m })
-            });
+        var chunks = Util.splitMessage(`**Texto traducido al español:**\n\n${translation}`, { char: ' ' });
+        const messageOrInteraction = message ? message : interaction;
+        await messageOrInteraction.reply({ content: chunks[0] });
+        chunks.shift();
+        if (chunks.length > 0)
+            chunks.forEach(async m => await channel.send({ content: m }));
         return;
     }
 }

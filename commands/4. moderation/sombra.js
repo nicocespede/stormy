@@ -8,19 +8,17 @@ module.exports = {
     maxArgs: 0,
     slash: 'both',
 
-    callback: async ({ message, instance, interaction }) => {
-        var messageOrInteraction = message ? message : interaction;
-        var bans = !getSombraBans() ? await updateSombraBans() : getSombraBans();
+    callback: async ({ instance }) => {
+        const bans = !getSombraBans() ? await updateSombraBans() : getSombraBans();
         var description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
         for (var i = 0; i < bans.length; i++) {
-            var actual = bans[i];
-            if (actual['sombraBans_reason'] == "" || actual['sombraBans_reason'] == null)
-                description += `**${i + 1}:** Sin razón de baneo.\n`;
-            else
-                description += `**${i + 1}:** ${actual['sombraBans_reason']}\n`;
+            const actual = bans[i];
+            description += `**${i + 1}:** ${actual['sombraBans_reason'] === "" || actual['sombraBans_reason'] === null
+                ? 'Sin razón de baneo.' : actual['sombraBans_reason']}\n`;
         }
         description = description.replace(/[\\\n]+n/g, '\n');
-        messageOrInteraction.reply({
+        return {
+            custom: true,
             embeds: [new MessageEmbed()
                 .setTitle('Bans de **Sombra#9370**')
                 .setDescription(description)
@@ -28,7 +26,6 @@ module.exports = {
                 .setThumbnail(`attachment://sombra.jpeg`)],
             files: ['assets/thumbs/sombra.jpeg'],
             ephemeral: true
-        });
-        return;
+        };
     }
 }

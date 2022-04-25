@@ -1,7 +1,6 @@
-const { ids, prefix } = require('../../app/cache');
-const { isAMention } = require('../../app/general');
 const fs = require('fs');
 const { Constants } = require('discord.js');
+const { prefix, ids } = require('../../app/constants');
 
 async function getRandomMoscardon() {
     var fileName;
@@ -23,6 +22,7 @@ async function getRandomMoscardon() {
 module.exports = {
     category: 'General',
     description: 'Envía un moscardón por mensaje directo a un amigo.',
+    aliases: ['moscardón'],
     options: [
         {
             name: 'amigo',
@@ -38,32 +38,25 @@ module.exports = {
     minArgs: 1,
     maxArgs: 1,
 
-    callback: async ({ guild, user, message, args, interaction }) => {
-        var mention;
-        if (message) {
-            var messageOrInteraction = message;
-            mention = message.mentions.members.first();
-        } else if (interaction) {
-            var messageOrInteraction = interaction;
-            await guild.members.fetch(args[0]).then(member => mention = member).catch(console.error);
-        }
-        if (message && !isAMention(args[0]))
-            message.reply({ content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}moscardon <@amigo>"**.`, ephemeral: true });
-        else if (mention.user.id === user.id)
-            messageOrInteraction.reply({ content: `¡Lo siento <@${user.id}>, no podés enviarte un moscardón a vos mismo!`, ephemeral: true });
-        else if (mention.user.id === ids.users.bot)
-            messageOrInteraction.reply({ content: `¡Lo siento <@${user.id}>, no podés enviarme un moscardón a mí!`, ephemeral: true });
+    callback: async ({ user, message, interaction }) => {
+        const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
+        var reply = { custom: true, ephemeral: true };
+        if (!target)
+            reply.content = `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}moscardon <@amigo>"**.`;
+        else if (target.user.id === user.id)
+            reply.content = `¡Lo siento <@${user.id}>, no podés enviarte un moscardón a vos mismo!`;
+        else if (target.user.id === ids.users.bot)
+            reply.content = `¡Lo siento <@${user.id}>, no podés enviarme un moscardón a mí!`;
         else {
-            var msg = { content: `¡Moscardón enviado!` };
-            getRandomMoscardon().then(fileName => {
-                mention.send({
-                    files: [{ attachment: `./assets/moscas/${fileName}` }]
-                }).catch(() => {
-                    msg = { content: `Lo siento, no pude enviarle el mensaje a este usuario.`, ephemeral: true };
+            reply.content = `¡Moscardón enviado!`;
+            reply.ephemeral = false;
+            getRandomMoscardon().then(async fileName => {
+                await target.send({ files: [{ attachment: `./assets/moscas/${fileName}` }] }).catch(() => {
+                    reply.content = `Lo siento, no pude enviarle el mensaje a este usuario.`
+                    reply.ephemeral = true;
                 });
             }).catch(console.error);
-            messageOrInteraction.reply(msg);
         }
-        return;
+        return reply;
     }
 }

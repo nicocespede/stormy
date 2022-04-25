@@ -1,4 +1,5 @@
-const { getReactionCollectorInfo, ids, updateReactionCollectorInfo } = require('../../app/cache');
+const { getReactionCollectorInfo, updateReactionCollectorInfo } = require('../../app/cache');
+const { ids } = require('../../app/constants');
 const { stopReactionCollector } = require('../../app/general');
 const { updateCollectorMessage } = require('../../app/postgres');
 

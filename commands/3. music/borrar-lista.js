@@ -1,6 +1,6 @@
 const { Constants } = require('discord.js');
 const { getPlaylists, updatePlaylists } = require('../../app/cache');
-const { isAMusicChannel } = require('../../app/music');
+const { ids } = require('../../app/constants');
 const { deletePlaylist } = require('../../app/postgres');
 
 module.exports = {
@@ -22,23 +22,24 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ channel, message, args, interaction, user }) => {
-        var messageOrInteraction = message ? message : interaction;
+        const argsName = message ? args.join(' ') : interaction.options.getString('nombre');
+        var reply = { custom: true, ephemeral: true };
 
-        if (!isAMusicChannel(channel.id)) {
-            messageOrInteraction.reply({ content: `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, ephemeral: true });
-            return;
+        if (!ids.channels.musica.includes(channel.id)) {
+            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            return reply;
         }
 
-        var playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
-        var name = args.join(' ').toLowerCase();
-        if (!playlists.names.includes(name)) {
-            messageOrInteraction.reply({ content: `La lista que intentás borrar no existe.`, ephemeral: true });
-            return;
-        } else
-            deletePlaylist(name).then(async () => {
+        const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
+        const name = argsName.toLowerCase();
+        if (!playlists.names.includes(name))
+            reply.content = `La lista que intentás borrar no existe.`;
+        else
+            await deletePlaylist(name).then(async () => {
                 await updatePlaylists();
-                messageOrInteraction.reply({ content: `La lista de reproducción fue borrada de manera exitosa.` });
+                reply.content = `La lista de reproducción fue borrada de manera exitosa.`;
+                reply.ephemeral = false;
             }).catch(console.error);
-        return;
+        return reply;
     }
 }

@@ -1,6 +1,5 @@
 const { Constants } = require('discord.js');
-const { ids, prefix, reminders } = require('../../app/cache');
-const { isAMention } = require('../../app/general');
+const { prefix, ids, reminders } = require('../../app/constants');
 
 module.exports = {
     category: 'General',
@@ -20,32 +19,24 @@ module.exports = {
     minArgs: 1,
     maxArgs: 1,
 
-    callback: async ({ guild, message, channel, args, interaction }) => {
-        var mentionId;
-        var options = {};
-        if (message)
-            mentionId = message.mentions.users.first().id;
-        else if (interaction) {
-            await guild.members.fetch(args[0]).then(member => mentionId = member.user.id).catch(console.error);
-            args = `<@${args}>`;
-        }
-        if (message && !isAMention(args[0]))
-            message.reply({ content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}recordatorio <@amigo>"**.`, ephemeral: true });
-        else if (mentionId === ids.users.sombra) {
+    callback: async ({ message, channel, interaction }) => {
+        const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
+        var options = { custom: true, ephemeral: true };
+        if (!target)
+            options.content = `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}recordatorio <@amigo>"**.`;
+        else if (target.user.id === ids.users.sombra) {
             var random = Math.floor(Math.random() * (reminders.sombra.length));
-            options = { content: `${args} ${reminders.sombra[random]}` };
-        } else if (mentionId == ids.users.jimmy)
-            options = { content: `${args} tu nivel de nene down supera los límites conocidos.` };
+            options.content = `<@${target.user.id}> ${reminders.sombra[random]}`;
+        } else if (target.user.id == ids.users.jimmy)
+            options.content = `<@${target.user.id}> tu nivel de nene down supera los límites conocidos.`;
         else {
-            var recordatorios = reminders.everyone;
+            const recordatorios = reminders.everyone;
             recordatorios.push(`tu nivel de nene down es ${Math.floor(Math.random() * 101)}%.`);
             var random = Math.floor(Math.random() * (recordatorios.length));
-            options = { content: `${args} ${recordatorios[random]}` }
+            options.content = `<@${target.user.id}> ${recordatorios[random]}`
+            options.ephemeral = false;
         }
-        if (message)
-            channel.send(options);
-        else if (interaction)
-            interaction.reply(options);
-        return;
+        if (message) channel.send(options)
+        else return options;
     }
 }

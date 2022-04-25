@@ -1,6 +1,6 @@
 const { MessageEmbed } = require('discord.js');
-const { isAMusicChannel } = require('../../app/music');
-const { prefix, getPlaylists, updatePlaylists } = require('../../app/cache');
+const { getPlaylists, updatePlaylists } = require('../../app/cache');
+const { prefix, ids } = require('../../app/constants');
 
 module.exports = {
     category: 'Música',
@@ -10,28 +10,25 @@ module.exports = {
     maxArgs: 0,
     slash: 'both',
 
-    callback: async ({ user, message, channel, interaction }) => {
-        var messageOrInteraction = message ? message : interaction;
+    callback: async ({ user, channel }) => {
+        var reply = { custom: true, ephemeral: true };
 
-        if (!isAMusicChannel(channel.id)) {
-            messageOrInteraction.reply({ content: `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, ephemeral: true });
-            return;
+        if (!ids.channels.musica.includes(channel.id)) {
+            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            return reply;
         }
 
-        var playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
+        const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
         var description = `Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\nLas listas de reproducción guardadas son:\n\n`;
         for (var i = 0; i < playlists.names.length; i++)
             description += `**${i + 1}.** ${playlists.names[i]} - ${playlists.urls[i]}\n\n`;
 
-        messageOrInteraction.reply({
-            embeds: [new MessageEmbed()
-                .setTitle(`**Listas de reproducción**`)
-                .setDescription(description)
-                .setColor([195, 36, 255])
-                .setThumbnail(`attachment://icons8-playlist-64.png`)],
-            files: ['./assets/thumbs/music/icons8-playlist-64.png'],
-            ephemeral: true
-        });
-        return;
+        reply.embeds = [new MessageEmbed()
+            .setTitle(`**Listas de reproducción**`)
+            .setDescription(description)
+            .setColor([195, 36, 255])
+            .setThumbnail(`attachment://icons8-playlist-64.png`)];
+        reply.files = ['./assets/thumbs/music/icons8-playlist-64.png'];
+        return reply;
     }
 }

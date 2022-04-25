@@ -1,4 +1,4 @@
-const { ids, welcome } = require("../app/cache");
+const { ids, welcome } = require("../app/constants");
 const { generateWelcomeImage } = require("../app/general");
 
 module.exports = client => {

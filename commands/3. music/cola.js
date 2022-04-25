@@ -1,5 +1,6 @@
 const { MessageEmbed } = require("discord.js");
-const { isAMusicChannel, containsAuthor } = require("../../app/music");
+const { ids } = require("../../app/constants");
+const { containsAuthor } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -11,43 +12,32 @@ module.exports = {
     maxArgs: 0,
     guildOnly: true,
 
-    callback: ({ guild, member, user, message, channel, client, interaction }) => {
+    callback: ({ guild, member, user, channel, client }) => {
         var errorEmbed = new MessageEmbed().setColor([195, 36, 255]);
-        var messageOrInteraction = message ? message : interaction;
-        if (!isAMusicChannel(channel.id)) {
-            messageOrInteraction.reply({ content: `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, ephemeral: true });
-            return;
+        var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+        if (!ids.channels.musica.includes(channel.id)) {
+            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            reply.files = [];
+            return reply;
         }
         if (!member.voice.channel) {
-            messageOrInteraction.reply({
-                embeds: [errorEmbed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
-                    .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
-                ephemeral: true
-            });
-            return;
+            reply.embeds = [errorEmbed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
+                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            return reply;
         }
 
         const queue = client.player.getQueue(guild.id);
 
         if (!queue || !queue.playing) {
-            messageOrInteraction.reply({
-                embeds: [errorEmbed.setDescription("🛑 No hay música reproduciéndose.")
-                    .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
-                ephemeral: true
-            });
-            return;
+            reply.embeds = [errorEmbed.setDescription("🛑 No hay música reproduciéndose.")
+                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            return reply;
         }
 
         if (!queue.tracks[0]) {
-            messageOrInteraction.reply({
-                embeds: [errorEmbed.setDescription("🛑 ¡No hay más canciones en la cola!")
-                    .setThumbnail(`attachment://icons8-no-entry-64.png`)],
-                files: [`./assets/thumbs/music/icons8-no-entry-64.png`],
-                ephemeral: true
-            });
-            return;
+            reply.embeds = [errorEmbed.setDescription("🛑 ¡No hay más canciones en la cola!")
+                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            return reply;
         }
 
         const embed = new MessageEmbed();
@@ -76,10 +66,9 @@ module.exports = {
 
         embed.setFooter({ text: songs > songsShown ? `+otra${songs - songsShown > 1 ? 's' : ''} ${songs - songsShown === 1 ? 'canción' : `${songs - songsShown} canciones`}...` : `` });
 
-        messageOrInteraction.reply({
-            embeds: [embed],
-            files: [`./assets/thumbs/music/icons8-playlist-64.png`]
-        });
-        return;
+        reply.embeds = [embed];
+        reply.ephemeral = false;
+        reply.files = [`./assets/thumbs/music/icons8-playlist-64.png`];
+        return reply;
     }
 }

@@ -11,7 +11,7 @@ module.exports = {
     permissions: ['ADMINISTRATOR'],
 
     callback: async () => {
-        var timestamps = getTimestamps();
+        const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
             for (const key in timestamps)
                 if (Object.hasOwnProperty.call(timestamps, key)) {

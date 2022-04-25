@@ -18,14 +18,15 @@ const timeToString = (seconds, minutes, hours, days) => {
 module.exports = {
     category: 'General',
     description: 'Responde con las estadísticas de los usuarios del servidor.',
+    aliases: ['estadísticas'],
 
     maxArgs: 0,
     slash: 'both',
     guildOnly: true,
 
     callback: async ({ guild, message, interaction, user }) => {
-        if (message) var deferringMessage = await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' });
-        else if (interaction) await interaction.deferReply({ ephemeral: true });
+        const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
+            : await interaction.deferReply({ ephemeral: true });
         var timestamps = getTimestamps();
         for (const key in timestamps)
             if (Object.hasOwnProperty.call(timestamps, key)) {
@@ -38,10 +39,12 @@ module.exports = {
         var aux1 = '';
         var aux2 = '';
         var needsFooter = false;
+        var counter = 0;
         for (var i = 0; i < stats.length; i++) {
             const actualStat = stats[i];
             await guild.members.fetch(actualStat['stats_id']).then(member => {
-                aux1 = usersField.value + `**${i + 1}. **${member.user.tag}\n\n`;
+                counter++;
+                aux1 = usersField.value + `**${counter}. **${member.user.tag}\n\n`;
                 aux2 = timeField.value + `${timeToString(actualStat['stats_seconds'], actualStat['stats_minutes'], actualStat['stats_hours'], actualStat['stats_days'])}\n\n`;
             }).catch(() => console.log(`> El usuario con ID ${actualStat['stats_id']} ya no está en el servidor.`));
             if (aux1.length <= 1024 || aux2.length <= 1024) {
@@ -59,8 +62,10 @@ module.exports = {
             .setColor([255, 205, 52])
             .setThumbnail(`attachment://stats.jpg`)
             .setFooter({ text: needsFooter ? 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' : '' });
-        if (message) deferringMessage.delete().then(message.reply({ embeds: [embed], files: ['./assets/thumbs/stats.jpg'] })).catch(console.error);
-        else if (interaction) interaction.editReply({ embeds: [embed], files: ['./assets/thumbs/stats.jpg'] });
+
+        if (message) await deferringMessage.delete();
+        const reply = { embeds: [embed], files: ['./assets/thumbs/stats.jpg'] };
+        message ? message.reply(reply) : interaction.editReply(reply);
         return;
     }
 }

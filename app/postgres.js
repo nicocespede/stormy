@@ -1,4 +1,5 @@
 const { Client } = require('pg');
+const { testing } = require('./constants');
 
 // if on heroku
 if (process.env.DATABASE_URL)
@@ -15,7 +16,7 @@ else
         password: process.env.D_password,
         port: process.env.D_pport,
         host: process.env.D_host,
-        database: process.env.D_database
+        database: !testing ? process.env.D_database : process.env.D_testing_database
     });
 
 dbClient.connect();
@@ -76,15 +77,6 @@ module.exports = {
             });
             setTimeout(function () { resolve(); }, 1000);
             console.log('> Ban agregado a la base de datos');
-        });
-    },
-    updateBan: (id) => {
-        return new Promise(function (resolve, reject) {
-            dbClient.query(`UPDATE "bans" SET "bans_responsible" = 'Desconocido' WHERE "bans_id" = '${id}';`, (err, res) => {
-                if (err) throw err;
-            });
-            setTimeout(function () { resolve(); }, 1000);
-            console.log('> Ban actualizado en la base de datos');
         });
     },
     deleteBan: (id) => {

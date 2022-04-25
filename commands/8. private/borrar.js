@@ -1,4 +1,4 @@
-const { ids } = require('../../app/cache');
+const { ids } = require("../../app/constants");
 
 module.exports = {
     category: 'Privados',

@@ -1,6 +1,5 @@
 const { Constants } = require('discord.js');
-const { ids, prefix } = require('../../app/cache');
-const { isAMention } = require('../../app/general');
+const { prefix, ids } = require('../../app/constants');
 
 module.exports = {
     category: 'General',
@@ -26,35 +25,27 @@ module.exports = {
     minArgs: 1,
 
     callback: async ({ guild, user, message, args, interaction }) => {
-        var mention;
-        if (message) {
-            var messageOrInteraction = message;
-            mention = message.mentions.members.first();
-        } else if (interaction) {
-            var messageOrInteraction = interaction;
-            await guild.members.fetch(args[0]).then(member => mention = member).catch(console.error);
-        }
-        guild.roles.fetch(ids.roles.banear).then(role => {
+        const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
+        var reply = { custom: true, ephemeral: true };
+        await guild.roles.fetch(ids.roles.banear).then(async role => {
             var newNickname = args.slice(1).join(' ');
             if (!role.members.has(user.id))
-                messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`, ephemeral: true });
-            else if (message && !isAMention(args[0]))
-                messageOrInteraction.reply({ content: `¡Uso incorrecto! Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando. Usá **"${prefix}apodo <@amigo> [apodo]"**.`, ephemeral: true });
-            else if (mention.user.id === ids.users.bot)
-                messageOrInteraction.reply({ content: `¡No podés cambiarme el apodo a mí!`, ephemeral: true });
+                reply.content = `Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`;
+            else if (!target)
+                reply.content = `¡Uso incorrecto! Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando. Usá **"${prefix}apodo <@amigo> [apodo]"**.`;
+            else if (target.user.id === ids.users.bot)
+                reply.content = `¡No podés cambiarme el apodo a mí!`;
             else if (newNickname.length > 32)
-                messageOrInteraction.reply({ content: `El apodo no puede contener más de 32 caracteres.`, ephemeral: true });
+                reply.content = `El apodo no puede contener más de 32 caracteres.`;
             else {
-                mention.setNickname(newNickname).then(() => {
-                    if (newNickname.length > 0)
-                        messageOrInteraction.reply({ content: `Apodo de **${mention.user.tag}** cambiado correctamente.` });
-                    else
-                        messageOrInteraction.reply({ content: `Apodo de **${mention.user.tag}** reseteado correctamente.` });
+                await target.setNickname(newNickname).then(() => {
+                    reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
+                    reply.ephemeral = false;
                 }).catch(() => {
-                    messageOrInteraction.reply({ content: 'Lo siento, no se pudo cambiar el apodo.', ephemeral: true });
+                    reply.content = 'Lo siento, no se pudo cambiar el apodo.';
                 })
             }
         }).catch(console.error);
-        return;
+        return reply;
     }
 }

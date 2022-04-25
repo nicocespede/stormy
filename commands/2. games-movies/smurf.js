@@ -1,6 +1,6 @@
 const { MessageEmbed } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
-const { ids, smurf, prefix } = require('../../app/cache');
+const { prefix, ids, smurf } = require('../../app/constants');
 
 function translateRank(rank) {
     if (rank == null)
@@ -44,46 +44,45 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: ({ guild, member, user, message, channel, interaction }) => {
-        var messageOrInteraction = message ? message : interaction;
-        guild.roles.fetch(ids.roles.smurf).then(async role => {
-            if (!role.members.has(user.id))
-                messageOrInteraction.reply({ content: `Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.` });
-            else {
-                if (message) var deferringMessage = await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` });
-                else if (interaction) await interaction.deferReply({ ephemeral: true });
-                var accountsField = { name: 'Cuenta', value: '', inline: true };
-                var commandsField = { name: 'Comando', value: ``, inline: true };
-                var ranksField = { name: 'Rango', value: ``, inline: true };
-                for (var acc in smurf) {
-                    var aux = acc;
-                    acc = smurf[acc];
-                    var accInfo = acc[0].split('#');
-                    await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                        if (mmr.data.name != null && mmr.data.tag != null)
-                            accountsField.value += `${mmr.data.name}#${mmr.data.tag}\n\n`;
-                        else
-                            accountsField.value += `${acc[0]}\n\n`;
-                        commandsField.value += `${prefix}${aux}\n\n`;
-                        ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
-                    }).catch(console.error);
-                }
-                member.send({
-                    embeds: [new MessageEmbed()
-                        .setTitle(`**Cuentas smurf**`)
-                        .setDescription(`Hola <@${user.id}>, ingresa el comando de la cuenta smurf que deseas:\n\n`)
-                        .setColor([7, 130, 169])
-                        .addFields([accountsField, commandsField, ranksField])
-                        .setThumbnail(`attachment://smurf.png`)],
-                    files: [`./assets/thumbs/smurf.png`]
-                }).then(() => {
-                    if (message) deferringMessage.delete().then(channel.send({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!` }));
-                    else if (interaction) interaction.editReply({ content: `Hola <@${user.id}>, ¡revisá tus mensajes privados!`, ephemeral: true });
-                }).catch(() => {
-                    messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`, ephemeral: true });
-                });
+    callback: async ({ guild, member, user, message, interaction }) => {
+        var reply = { custom: true, ephemeral: true };
+        const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
+        if (!smurfRole.members.has(user.id)) {
+            reply.content = `Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`;
+            reply.ephemeral = false;
+            return reply;
+        } else {
+            const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
+                : await interaction.deferReply({ ephemeral: true });
+            var accountsField = { name: 'Cuenta', value: '', inline: true };
+            var commandsField = { name: 'Comando', value: ``, inline: true };
+            var ranksField = { name: 'Rango', value: ``, inline: true };
+            for (var acc in smurf) {
+                var aux = acc;
+                acc = smurf[acc];
+                var accInfo = acc[0].split('#');
+                await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
+                    accountsField.value += `${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${acc[0]}`}\n\n`;
+                    commandsField.value += `${prefix}${aux}\n\n`;
+                    ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
+                }).catch(console.error);
             }
-        }).catch(console.error);
+            member.send({
+                embeds: [new MessageEmbed()
+                    .setTitle(`**Cuentas smurf**`)
+                    .setDescription(`Hola <@${user.id}>, ingresa el comando de la cuenta smurf que deseas:\n\n`)
+                    .setColor([7, 130, 169])
+                    .addFields([accountsField, commandsField, ranksField])
+                    .setThumbnail(`attachment://smurf.png`)],
+                files: [`./assets/thumbs/smurf.png`]
+            }).then(() => {
+                reply.content = `Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
+                message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+            }).catch(() => {
+                reply.content = `Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
+                message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+            });
+        }
         return;
     }
 }

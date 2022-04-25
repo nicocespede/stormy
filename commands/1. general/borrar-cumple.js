@@ -1,7 +1,8 @@
-const { getBirthdays, prefix, updateBirthdays } = require('../../app/cache');
+const { getBirthdays, updateBirthdays } = require('../../app/cache');
 const { deleteBday } = require('../../app/postgres');
-const { isAMention } = require('../../app/general');
 const { MessageButton, MessageActionRow, Constants } = require('discord.js');
+const { prefix } = require('../../app/constants');
+const { isListed } = require('../../app/general');
 
 module.exports = {
     category: 'General',
@@ -22,22 +23,13 @@ module.exports = {
     ],
     guildOnly: true,
 
-    callback: async ({ guild, message, args, interaction, channel, user }) => {
-        var mention;
-        var bdays = [];
-        if (message) {
-            var messageOrInteraction = message;
-            mention = message.mentions.members.first();
-        } else if (interaction) {
-            var messageOrInteraction = interaction;
-            await guild.members.fetch(args[0]).then(member => mention = member).catch(console.error);
-        }
+    callback: async ({ message, interaction, channel, user }) => {
+        const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
-        birthdays.forEach(bday => (bdays.push(bday['bdays_id'])));
-        if (message && !isAMention(args[0]))
-            messageOrInteraction.reply({ content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}borrar-cumple <@amigo>"**.`, ephemeral: true });
-        else if (!bdays.includes(mention.user.id))
-            messageOrInteraction.reply({ content: `El cumpleaños que intentás borrar no existe.`, ephemeral: true });
+        if (!target)
+            return { content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}borrar-cumple <@amigo>"**.`, custom: true, ephemeral: true };
+        else if (!isListed(target.user.id, birthdays, 'bdays_id'))
+            return { content: `El cumpleaños que intentás borrar no existe.`, custom: true, ephemeral: true };
         else {
             const row = new MessageActionRow()
                 .addComponents(new MessageButton().setCustomId('delete_yes')
@@ -48,9 +40,11 @@ module.exports = {
                     .setEmoji('❌')
                     .setLabel('Cancelar')
                     .setStyle('DANGER'));
-            var reply = await messageOrInteraction.reply({
-                content: `¿Estás seguro de querer borrar el cumpleaños de **${mention.user.tag}**?`,
+
+            const messageOrInteraction = message ? message : interaction;
+            const reply = await messageOrInteraction.reply({
                 components: [row],
+                content: `¿Estás seguro de querer borrar el cumpleaños de **${target.user.tag}**?`,
                 ephemeral: true
             });
 
@@ -61,26 +55,18 @@ module.exports = {
             const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
             collector.on('end', async collection => {
-                if (!collection.first()) {
-                    if (message)
-                        await reply.edit({ content: 'La acción expiró.', components: [], ephemeral: true });
-                    else if (interaction)
-                        await interaction.editReply({ content: 'La acción expiró.', components: [], ephemeral: true });
-                } else if (collection.first().customId === 'delete_yes') {
-                    deleteBday(mention.user.id).then(async () => {
-                        if (message)
-                            await reply.edit({ content: 'La acción fue completada.', components: [], ephemeral: true });
-                        else if (interaction)
-                            await interaction.editReply({ content: 'La acción fue completada.', components: [], ephemeral: true });
-                        await channel.send({ content: `El cumpleaños fue borrado de manera exitosa.`, components: [] });
-                        await updateBirthdays();
+                var edit = { components: [] };
+                if (!collection.first())
+                    edit.content = 'La acción expiró.';
+                else if (collection.first().customId === 'delete_yes')
+                    await deleteBday(target.user.id).then(async () => {
+                        edit.content = 'La acción fue completada.';
+                        channel.send({ content: `El cumpleaños fue borrado de manera exitosa.` });
+                        updateBirthdays();
                     }).catch(console.error);
-                } else
-                    if (message)
-                        await reply.edit({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
-                    else if (interaction)
-                        await interaction.editReply({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
-
+                else
+                    edit.content = 'La acción fue cancelada.';
+                message ? await reply.edit(edit) : await interaction.editReply(edit);
             });
         }
         return;

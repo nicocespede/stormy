@@ -1,6 +1,5 @@
 const { MessageActionRow, MessageButton, Constants, MessageAttachment } = require("discord.js");
-const { quiz } = require("../../app/quiz");
-const { prefix } = require('../../app/cache');
+const { prefix, quiz } = require('../../app/constants');
 
 function until(conditionFunction) {
     const poll = resolve => {
@@ -66,12 +65,12 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, user, message, args, interaction, channel, client }) => {
-        var messageOrInteraction = message ? message : interaction;
         const maxTime = 15;
         var extraMessages = [];
-        const number = parseInt(args[0]);
-        if (number <= 0 || number > quiz.length - 1 || isNaN(number))
-            messageOrInteraction.reply({ content: `¡Uso incorrecto! El número debe estar entre 1 y ${quiz.length - 1}. Usá **"${prefix}quiz <cantidad>"**.`, ephemeral: true });
+        const number = message ? args[0] : interaction.options.getInteger('cantidad');
+        const parsedNumber = parseInt(number);
+        if (parsedNumber <= 0 || parsedNumber > quiz.length - 1 || isNaN(parsedNumber))
+            return { content: `¡Uso incorrecto! El número debe estar entre 1 y ${quiz.length - 1}. Usá **"${prefix}quiz <cantidad>"**.`, custom: true, ephemeral: true };
         else {
             var participants = [user.id];
             var readyToStart = false;
@@ -94,15 +93,13 @@ module.exports = {
             newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { VIEW_CHANNEL: false });
 
             var msg = {
-                content: `• Todos los que quieran participar en el quiz deben clickear en el botón **"✋🏼 Participo"**.\n • Una vez que estén todos los participantes listos, pulsar **"✔️ Comenzar"**.\n • Si el quiz no comienza en 2 minutos, se cancelará.\n• Cada pregunta tiene ${maxTime} segundos máximo para ser respondida.\n• Cada pregunta acertada suma 5 puntos.\n\n**Participantes:**\n- 👑 ${user.tag}`,
-                components: [row]
+                components: [row],
+                content: `• Todos los que quieran participar en el quiz deben clickear en el botón **"✋🏼 Participo"**.\n • Una vez que estén todos los participantes listos, pulsar **"✔️ Comenzar"**.\n • Si el quiz no comienza en 2 minutos, se cancelará.\n• Cada pregunta tiene ${maxTime} segundos máximo para ser respondida.\n• Cada pregunta acertada suma 5 puntos.\n\n**Participantes:**\n- 👑 ${user.tag}`
             };
-            if (message)
-                var reply = await message.reply(msg);
-            else if (interaction) {
+
+            if (interaction)
                 await interaction.reply({ content: `Inicializando quiz...`, ephemeral: true });
-                var reply = await channel.send(msg);
-            }
+            var reply = message ? await message.reply(msg) : await channel.send(msg);
 
             const interactionsCollector = channel.createMessageComponentCollector({ time: 1000 * 60 * 2 });
 
@@ -111,8 +108,7 @@ module.exports = {
                 if (i.customId === 'join') {
                     if (!participants.includes(i.user.id)) {
                         participants.push(i.user.id);
-                        var msg = { content: reply.content + `\n- ${i.user.tag}`, components: [row] };
-                        reply = await reply.edit(msg);
+                        reply = await reply.edit({ components: [row], content: reply.content + `\n- ${i.user.tag}` });
                         newChannel.permissionOverwrites.edit(i.user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
                     }
                 } else if (i.customId === 'ready')
@@ -130,27 +126,26 @@ module.exports = {
             });
 
             interactionsCollector.on('end', async collection => {
+                extraMessages.forEach(m => m.delete());
                 if (!readyToStart) {
-                    var msg = { content: '❌ **Quiz cancelado.**', components: [] };
-                    await reply.edit(msg);
+                    await reply.edit({ components: [], content: '❌ **Quiz cancelado.**' });
+                    newChannel.delete();
                 } else {
-                    extraMessages.forEach(m => m.delete());
-                    var msg = {
-                        content: '🏁 **¡Comienza el quiz!** Prepárense...\n\u200b',
-                        components: [new MessageActionRow()
-                            .addComponents(new MessageButton()
-                                .setLabel('IR AL QUIZ')
-                                .setStyle('LINK')
-                                .setURL(`https://discord.com/channels/${guild.id}/${newChannel.id}`))]
-                    };
                     var allQuestions = quiz.slice(0);
                     var selectedQuestions = [];
-                    for (let i = 0; i < number + 1; i++) {
+                    for (let i = 0; i < parsedNumber + 1; i++) {
                         var random = Math.floor(Math.random() * (allQuestions.length));
                         const element = allQuestions.splice(random, 1);
                         selectedQuestions.push(element[0]);
                     }
-                    await reply.edit(msg);
+                    await reply.edit({
+                        components: [new MessageActionRow()
+                            .addComponents(new MessageButton()
+                                .setLabel('IR AL QUIZ')
+                                .setStyle('LINK')
+                                .setURL(`https://discord.com/channels/${guild.id}/${newChannel.id}`))],
+                        content: '🏁 **¡Comienza el quiz!** Prepárense...\n\u200b'
+                    });
 
                     const filter = m => {
                         return participants.includes(m.author.id);
@@ -242,7 +237,7 @@ module.exports = {
                             const element = points[id];
                             await guild.members.fetch(id).then(member => msg += `- ${member.user.tag}: ${element} puntos\n`).catch(console.error);
                         }
-                    await reply.edit({ content: msg, components: [] });
+                    await reply.edit({ components: [], content: msg });
                     await new Promise(res => setTimeout(res, 1000 * 6));
                     newChannel.delete();
                 }

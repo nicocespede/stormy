@@ -1,16 +1,8 @@
 const { MessageEmbed } = require("discord.js");
-const { ids, updateLastAction, musicActions } = require("./cache");
+const { updateLastAction } = require("./cache");
+const { musicActions } = require("./constants");
 
 module.exports = {
-    isAMusicChannel: (id) => {
-        var ret = false;
-        ids.channels.musica.forEach(channel => {
-            if (id === channel)
-                ret = true;
-        });
-        return ret;
-    },
-
     setNewVoiceChannel: (client, guild, channel) => {
         updateLastAction(musicActions.changingChannel);
         var queue = client.player.getQueue(guild.id);

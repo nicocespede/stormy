@@ -1,4 +1,5 @@
-const { getLastAction, musicActions, ids } = require("../app/cache");
+const { getLastAction } = require("../app/cache");
+const { ids, musicActions } = require("../app/constants");
 const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/music");
 
 const allMembersAreDeafened = members => {
@@ -19,7 +20,6 @@ module.exports = client => {
         if (newState.id != client.user.id) {
             if (oldState.channel.members.has(client.user.id) && (oldState.channelId != newState.channelId ||
                 ((!oldState.serverDeaf && newState.serverDeaf) || (!oldState.selfDeaf && newState.selfDeaf)))) {
-                console.log('Comenzando contador de 1 minuto');
                 new Promise(res => setTimeout(res, 60000)).then(() => {
                     client.channels.fetch(oldState.channelId).then(channel => {
                         if (channel.members.has(client.user.id) && (channel.members.size === 1 || allMembersAreDeafened(channel.members)))

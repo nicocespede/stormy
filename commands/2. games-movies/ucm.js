@@ -1,7 +1,8 @@
 const { createCanvas } = require('canvas');
 const { MessageEmbed, Constants } = require('discord.js');
 const fs = require('fs');
-const { prefix, texts, getMcuMovies, updateMcuMovies, getFilters, updateFilters } = require('../../app/cache');
+const { getMcuMovies, updateMcuMovies, getFilters, updateFilters } = require('../../app/cache');
+const { prefix, texts } = require('../../app/constants');
 const { updateMcuFilters } = require('../../app/postgres');
 const validFilters = ['all', 'p', 'peliculas', 'pelis', 'películas', 'c', 'cortos', 'cortometrajes', 's', 'series'];
 
@@ -111,18 +112,18 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ user, message, args, interaction }) => {
-        var color = [181, 2, 22];
+        const color = [181, 2, 22];
         var filters = !getFilters() ? await updateFilters() : getFilters();
         var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
-        var messageOrInteraction = message ? message : interaction;
-        if (args.length === 0) args = ['all'];
-        if (!isNaN(parseInt(args[0]))) {
-            const index = parseInt(args[0]) - 1;
+        const number = message ? args[0] : interaction.options.getInteger('numero');
+        var reply = { custom: true, ephemeral: true };
+        if (number && !isNaN(parseInt(number))) {
+            const index = parseInt(number) - 1;
             if (index < 0 || index >= mcuMovies.length)
-                messageOrInteraction.reply({ content: `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}ucm [numero]"**.`, ephemeral: true });
+                reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}ucm [numero]"**.`;
             else {
                 var name = mcuMovies[index].name;
-                getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(info => {
+                await getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(info => {
                     var messages = [];
                     for (const ver in info) {
                         if (Object.hasOwnProperty.call(info, ver) && ver != 'thumbURL' && ver != 'lastUpdate') {
@@ -150,57 +151,66 @@ module.exports = {
                         }
                     }
                     messages[messages.length - 1].setImage(`attachment://image.jpg`);
-                    messageOrInteraction.reply({ embeds: messages, files: [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`, `./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`], ephemeral: true });
+                    reply.embeds = messages;
+                    reply.files = [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`, `./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
                 }).catch(console.error);
             }
-        } else if (!validateFilters(args))
-            messageOrInteraction.reply({ content: `¡Uso incorrecto! Alguno de los filtros es inválido. Usá **"${prefix}ucm [filtro1] [filtro2]"**.\n\nLos filtros válidos son: _${validFilters.slice(1).join(', ')}_.`, ephemeral: true })
-        else {
-            var canvas = createCanvas(200, 200);
-            var ctx = canvas.getContext('2d');
-            var messages = [];
-            var moviesField = { name: 'Nombre', value: '', inline: true };
-            var typesField = { name: 'Tipo', value: ``, inline: true };
-            if (filtersNeedUpdate(filters, getNewFilters(args))) {
-                await updateMcuFilters(getNewFilters(args));
-                filters = await updateFilters();
-                mcuMovies = updateMcuMovies(filters);
-            }
-            for (var i = 0; i < mcuMovies.length; i++) {
-                var name = mcuMovies[i].name;
-                var type = mcuMovies[i].type;
-                var newName = `**${i + 1}.** ${name}`;
-                var aux = moviesField.value + `${newName}\n\n`;
-                if (aux.length <= 1024) {
-                    moviesField.value += `${newName}\n\n`;
-                    typesField.value += `*${type}*\n\n`;
-                    if (ctx.measureText(newName).width > 288)
-                        typesField.value += `\n`;
-                } else {
-                    messages.push(new MessageEmbed()
-                        .setColor(color)
-                        .addFields([moviesField, typesField])
-                        .setThumbnail(`attachment://mcu-logo.png`));
-                    moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
-                    typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
-                    if (ctx.measureText(newName).width > 288)
-                        typesField.value += `\n`;
+        } else {
+            const filter1 = message ? args[0] : interaction.options.getString('filtro1');
+            const filter2 = message ? args[1] : interaction.options.getString('filtro2');
+            var argsFilters = !filter1 && !filter2 ? ['all'] : [];
+            if (filter1) argsFilters.push(filter1);
+            if (filter2) argsFilters.push(filter2);
+            if (!validateFilters(argsFilters))
+                reply.content = `¡Uso incorrecto! Alguno de los filtros es inválido. Usá **"${prefix}ucm [filtro1] [filtro2]"**.\n\nLos filtros válidos son: _${validFilters.slice(1).join(', ')}_.`;
+            else {
+                var canvas = createCanvas(200, 200);
+                var ctx = canvas.getContext('2d');
+                var messages = [];
+                var moviesField = { name: 'Nombre', value: '', inline: true };
+                var typesField = { name: 'Tipo', value: ``, inline: true };
+                if (filtersNeedUpdate(filters, getNewFilters(argsFilters))) {
+                    await updateMcuFilters(getNewFilters(argsFilters));
+                    filters = await updateFilters();
+                    mcuMovies = updateMcuMovies(filters);
                 }
+                for (var i = 0; i < mcuMovies.length; i++) {
+                    var name = mcuMovies[i].name;
+                    var type = mcuMovies[i].type;
+                    var newName = `**${i + 1}.** ${name}`;
+                    var aux = moviesField.value + `${newName}\n\n`;
+                    if (aux.length <= 1024) {
+                        moviesField.value += `${newName}\n\n`;
+                        typesField.value += `*${type}*\n\n`;
+                        if (ctx.measureText(newName).width > 288)
+                            typesField.value += `\n`;
+                    } else {
+                        messages.push(new MessageEmbed()
+                            .setColor(color)
+                            .addFields([moviesField, typesField])
+                            .setThumbnail(`attachment://mcu-logo.png`));
+                        moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
+                        typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
+                        if (ctx.measureText(newName).width > 288)
+                            typesField.value += `\n`;
+                    }
+                }
+                messages.push(new MessageEmbed()
+                    .setColor(color)
+                    .addFields([moviesField, typesField])
+                    .setThumbnail(`attachment://mcu-logo.png`));
+                for (let i = 0; i < messages.length; i++) {
+                    var msg = messages[i];
+                    msg.setTitle(`**Universo Cinematográfico de Marvel (${i + 1})**`);
+                    if (i === 0)
+                        msg.setDescription(texts.movies.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix));
+                    if (i === messages.length - 1)
+                        msg.setFooter({ text: texts.movies.footer });
+                }
+                reply.embeds = messages;
+                reply.files = [`assets/thumbs/mcu-logo.png`];
             }
-            messages.push(new MessageEmbed()
-                .setColor(color)
-                .addFields([moviesField, typesField])
-                .setThumbnail(`attachment://mcu-logo.png`));
-            for (let i = 0; i < messages.length; i++) {
-                var msg = messages[i];
-                msg.setTitle(`**Universo Cinematográfico de Marvel (${i + 1})**`);
-                if (i === 0)
-                    msg.setDescription(texts.movies.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix));
-                if (i === messages.length - 1)
-                    msg.setFooter({ text: texts.movies.footer });
-            }
-            messageOrInteraction.reply({ embeds: messages, files: [`assets/thumbs/mcu-logo.png`], ephemeral: true });
         }
-        return;
+        return reply;
     }
 }

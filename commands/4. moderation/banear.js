@@ -1,6 +1,6 @@
 const { MessageButton, MessageActionRow, Constants } = require('discord.js');
-const { ids, prefix, updateBanned } = require('../../app/cache');
-const { isAMention } = require('../../app/general');
+const { updateBanned } = require('../../app/cache');
+const { prefix, ids } = require('../../app/constants');
 const { addBan } = require('../../app/postgres');
 
 module.exports = {
@@ -28,77 +28,64 @@ module.exports = {
     minArgs: 1,
 
     callback: async ({ guild, user, message, args, interaction, channel }) => {
-        var mention;
-        if (message) {
-            var messageOrInteraction = message;
-            mention = message.mentions.members.first();
-        } else if (interaction) {
-            var messageOrInteraction = interaction;
-            await guild.members.fetch(args[0]).then(member => mention = member).catch(console.error);
-        }
-        guild.roles.fetch(ids.roles.banear).then(async role => {
-            if (!role.members.has(user.id))
-                messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`, epehemeral: true });
-            else if (message && !isAMention(args[0]))
-                message.reply({ content: `¡Uso incorrecto! Debe haber una mención y (opcionalmente) la razón del baneo luego del comando. Usá **"${prefix}apodo <@amigo> [razón]"**.`, ephemeral: true });
-            else {
-                if (mention.user.id === user.id)
-                    messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, ¡no podés banearte a vos mismo!`, ephemeral: true });
-                else if (mention.user.id === ids.users.stormer || mention.user.id === ids.users.darkness)
-                    messageOrInteraction.reply({ content: `Lo siento <@${user.id}>, los dueños de casa no pueden ser baneados.`, ephemeral: true });
-                else {
-                    const row = new MessageActionRow()
-                        .addComponents(new MessageButton().setCustomId('ban_yes')
-                            .setEmoji('✔️')
-                            .setLabel('Confirmar')
-                            .setStyle('SUCCESS'))
-                        .addComponents(new MessageButton().setCustomId('ban_no')
-                            .setEmoji('❌')
-                            .setLabel('Cancelar')
-                            .setStyle('DANGER'));
-                    var reply = await messageOrInteraction.reply({
-                        content: `¿Estás seguro de querer banear a **${mention.user.tag}**?`,
-                        components: [row],
-                        ephemeral: true
-                    });
+        const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
+        const aux = args.splice(1).join(' ');
+        const banReason = message ? (aux === '' ? null : aux) : interaction.options.getString('razón');
+        var reply = { custom: true, ephemeral: true };
+        const banRole = await guild.roles.fetch(ids.roles.banear).catch(console.error);
+        if (!banRole.members.has(user.id)) {
+            reply.content = `Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`;
+            return reply;
+        } else if (!target) {
+            reply.content = `¡Uso incorrecto! Debe haber una mención y (opcionalmente) la razón del baneo luego del comando. Usá **"${prefix}banear <@amigo> [razón]"**.`;
+            return reply;
+        } else if (target.user.id === user.id) {
+            reply.content = `Lo siento <@${user.id}>, ¡no podés banearte a vos mismo!`;
+            return reply;
+        } else if (target.user.id === ids.users.stormer || target.user.id === ids.users.darkness) {
+            reply.content = `Lo siento <@${user.id}>, los dueños de casa no pueden ser baneados.`;
+            return reply;
+        } else {
+            const row = new MessageActionRow()
+                .addComponents(new MessageButton().setCustomId('ban_yes')
+                    .setEmoji('✔️')
+                    .setLabel('Confirmar')
+                    .setStyle('SUCCESS'))
+                .addComponents(new MessageButton().setCustomId('ban_no')
+                    .setEmoji('❌')
+                    .setLabel('Cancelar')
+                    .setStyle('DANGER'));
+            const messageOrInteraction = message ? message : interaction;
+            const replyMessage = await messageOrInteraction.reply({
+                components: [row],
+                content: `¿Estás seguro de querer banear a **${target.user.tag}**?`,
+                ephemeral: true
+            });
 
-                    const filter = (btnInt) => {
-                        return user.id === btnInt.user.id;
-                    }
-
-                    const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
-
-                    collector.on('end', async collection => {
-                        if (!collection.first()) {
-                            if (message)
-                                await reply.edit({ content: 'La acción expiró.', components: [], ephemeral: true });
-                            else if (interaction)
-                                await interaction.editReply({ content: 'La acción expiró.', components: [], ephemeral: true });
-                        } else if (collection.first().customId === 'ban_yes') {
-                            args = args.splice(1);
-                            if (args.length != 0) var banReason = args.join(" ");
-                            else var banReason = null;
-                            await mention.ban({ days: 0, reason: banReason }).then(async () => {
-                                const array = [mention.user.id, mention.user.tag, banReason, user.id];
-                                await addBan(array).then(async () => {
-                                    if (message)
-                                        await reply.edit({ content: 'La acción fue completada.', components: [], ephemeral: true });
-                                    else if (interaction)
-                                        await interaction.editReply({ content: 'La acción fue completada.', components: [], ephemeral: true });
-                                    await channel.send({ content: `Hola <@${user.id}>, el usuario fue baneado correctamente.`, components: [] });
-                                    await updateBanned();
-                                }).catch(console.error);
-                            }).catch(console.error);
-                        } else
-                            if (message)
-                                await reply.edit({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
-                            else if (interaction)
-                                await interaction.editReply({ content: 'La acción fue cancelada.', components: [], ephemeral: true });
-
-                    });
-                }
+            const filter = (btnInt) => {
+                return user.id === btnInt.user.id;
             }
-        }).catch(console.error);
+
+            const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
+
+            collector.on('end', async collection => {
+                var edit = { components: [] };
+                if (!collection.first())
+                    edit.content = 'La acción expiró.';
+                else if (collection.first().customId === 'ban_yes')
+                    await target.ban({ days: 0, reason: banReason }).then(async () => {
+                        const array = [target.user.id, target.user.tag, banReason, user.id];
+                        await addBan(array).then(async () => {
+                            edit.content = 'La acción fue completada.';
+                            channel.send({ content: `Hola <@${user.id}>, el usuario fue baneado correctamente.` });
+                            updateBanned();
+                        }).catch(console.error);
+                    }).catch(console.error);
+                else
+                    edit.content = 'La acción fue cancelada.';
+                message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+            });
+        }
         return;
     }
 }
