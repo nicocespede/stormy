@@ -1,5 +1,5 @@
 const { createCanvas } = require('canvas');
-const { MessageEmbed, Constants } = require('discord.js');
+const { MessageEmbed, Constants, MessageActionRow, MessageButton } = require('discord.js');
 const fs = require('fs');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters } = require('../../app/cache');
 const { prefix, texts } = require('../../app/constants');
@@ -111,7 +111,7 @@ module.exports = {
     expectedArgs: '[numero] ó [filtro1] [filtro2]',
     slash: 'both',
 
-    callback: async ({ user, message, args, interaction }) => {
+    callback: async ({ user, message, args, interaction, channel }) => {
         const color = [181, 2, 22];
         var filters = !getFilters() ? await updateFilters() : getFilters();
         var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
@@ -119,40 +119,72 @@ module.exports = {
         var reply = { custom: true, ephemeral: true };
         if (number && !isNaN(parseInt(number))) {
             const index = parseInt(number) - 1;
-            if (index < 0 || index >= mcuMovies.length)
+            if (index < 0 || index >= mcuMovies.length) {
                 reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}ucm [numero]"**.`;
-            else {
+                return reply;
+            } else {
                 var name = mcuMovies[index].name;
-                await getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(info => {
-                    var messages = [];
+                await getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(async info => {
+                    const row = new MessageActionRow();
                     for (const ver in info) {
-                        if (Object.hasOwnProperty.call(info, ver) && ver != 'thumbURL' && ver != 'lastUpdate') {
-                            const element = info[ver];
-                            var fields = [];
-                            var field = { name: '\u200b', value: '' };
-                            var fullString = element.split('\n');
-                            fullString.forEach(line => {
-                                var aux = field.value + line + '\n';
-                                if (aux.length < 1025)
-                                    field.value += line + '\n';
-                                else {
-                                    fields.push(field);
-                                    field = { name: '\u200b', value: line + '\n' };
-                                }
-                            });
-                            fields.push(field);
-                            var title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
-                            messages.push(new MessageEmbed()
-                                .setTitle(`${title} - versión ${ver}`)
-                                .setColor(color)
-                                .addFields(fields)
-                                .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
-                                .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}.` }));
+                        if (Object.hasOwnProperty.call(info, ver)) {
+                            row.addComponents(new MessageButton().setCustomId(ver)
+                                .setEmoji('📽')
+                                .setLabel(ver)
+                                .setStyle('PRIMARY'));
                         }
                     }
-                    messages[messages.length - 1].setImage(`attachment://image.jpg`);
-                    reply.embeds = messages;
-                    reply.files = [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`, `./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
+                    reply.content = `**${name}**\n\nPor favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
+                    reply.components = [row];
+                    reply.files = [`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
+
+                    const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
+
+                    const filter = (btnInt) => {
+                        const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
+                        const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
+                        return user.id === btnInt.user.id && isTheSameMessage;
+                    }
+
+                    const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
+
+                    var nowShowing = '';
+                    var messagesSent = [];
+
+                    collector.on('collect', async i => {
+                        i.deferUpdate();
+                        if (i.customId != nowShowing) {
+                            nowShowing = i.customId;
+                            messagesSent.forEach(async m => await m.delete());
+                            messagesSent = [];
+                            const serverOptions = info[i.customId].split('\r\n**');
+                            const password = '**' + serverOptions.pop();
+                            serverOptions.forEach(async server => {
+                                const lines = server.split('\r\n');
+                                const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
+                                const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
+                                messagesSent.push(await channel.send({
+                                    embeds: [new MessageEmbed()
+                                        .setTitle(`${title} - ${i.customId} (${serverName})`)
+                                        .setColor(color)
+                                        .setDescription(lines.join('\r\n') + `\n${password}`)
+                                        .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
+                                        .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}.` })],
+                                    files: [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`]
+                                }));
+                            });
+                        }
+                    });
+
+                    collector.on('end', async _ => {
+                        var edit = {
+                            components: [],
+                            content: `**${name}**\n\nEsta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index}**.\n\u200b`,
+                            files: reply.files
+                        };
+                        messagesSent.forEach(m => m.delete());
+                        message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+                    });
                 }).catch(console.error);
             }
         } else {
@@ -164,8 +196,8 @@ module.exports = {
             if (!validateFilters(argsFilters))
                 reply.content = `¡Uso incorrecto! Alguno de los filtros es inválido. Usá **"${prefix}ucm [filtro1] [filtro2]"**.\n\nLos filtros válidos son: _${validFilters.slice(1).join(', ')}_.`;
             else {
-                var canvas = createCanvas(200, 200);
-                var ctx = canvas.getContext('2d');
+                const canvas = createCanvas(200, 200);
+                const ctx = canvas.getContext('2d');
                 var messages = [];
                 var moviesField = { name: 'Nombre', value: '', inline: true };
                 var typesField = { name: 'Tipo', value: ``, inline: true };
@@ -175,10 +207,10 @@ module.exports = {
                     mcuMovies = updateMcuMovies(filters);
                 }
                 for (var i = 0; i < mcuMovies.length; i++) {
-                    var name = mcuMovies[i].name;
-                    var type = mcuMovies[i].type;
-                    var newName = `**${i + 1}.** ${name}`;
-                    var aux = moviesField.value + `${newName}\n\n`;
+                    const name = mcuMovies[i].name;
+                    const type = mcuMovies[i].type;
+                    const newName = `**${i + 1}.** ${name}`;
+                    const aux = moviesField.value + `${newName}\n\n`;
                     if (aux.length <= 1024) {
                         moviesField.value += `${newName}\n\n`;
                         typesField.value += `*${type}*\n\n`;
@@ -210,7 +242,8 @@ module.exports = {
                 reply.embeds = messages;
                 reply.files = [`assets/thumbs/mcu-logo.png`];
             }
+            return reply;
         }
-        return reply;
+        return;
     }
 }

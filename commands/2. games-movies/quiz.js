@@ -90,6 +90,7 @@ module.exports = {
 
             const newChannel = await guild.channels.create('❓┃QUIZ', 'text');
             newChannel.permissionOverwrites.edit(client.user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
+            newChannel.permissionOverwrites.edit(user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
             newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { VIEW_CHANNEL: false });
 
             var msg = {
@@ -125,7 +126,7 @@ module.exports = {
                     i.user.id === participants[0] ? interactionsCollector.stop() : extraMessages.push(await channel.send('⛔ ¡Sólo el que inició el quiz puede cancelarlo!'));
             });
 
-            interactionsCollector.on('end', async collection => {
+            interactionsCollector.on('end', async _ => {
                 extraMessages.forEach(m => m.delete());
                 if (!readyToStart) {
                     await reply.edit({ components: [], content: '❌ **Quiz cancelado.**' });
@@ -181,7 +182,7 @@ module.exports = {
                                 }).catch(console.error);
                         });
 
-                        messagesCollector.on('end', collected => {
+                        messagesCollector.on('end', _ => {
                             if (!answered) {
                                 newChannel.send(`⏳ **¡Tiempo!**${i != selectedQuestions.length - 2 ? ' Siguiente pregunta...' : ''}`);
                                 answered = true;
