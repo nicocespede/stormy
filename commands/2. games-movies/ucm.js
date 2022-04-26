@@ -4,7 +4,7 @@ const fs = require('fs');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters } = require('../../app/cache');
 const { prefix, texts } = require('../../app/constants');
 const { updateMcuFilters } = require('../../app/postgres');
-const validFilters = ['all', 'p', 'peliculas', 'pelis', 'películas', 'c', 'cortos', 'cortometrajes', 's', 'series'];
+const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
 
 function filtersNeedUpdate(oldFilters, newFilters) {
     var ret = false;
@@ -53,35 +53,16 @@ function lastUpdateToString(lastUpdate) {
     return 'el ' + lastUpdate;
 }
 
-function getNewFilters(array) {
-    var filters = [];
-    if (array.includes('all'))
-        filters.push('all');
-    else
-        array.forEach(arg => {
-            arg = arg.toLowerCase();
-            if (validFilters.slice(1, 5).includes(arg))
-                filters.push('Película');
-            if (validFilters.slice(5, 8).includes(arg))
-                filters.push('Cortometraje');
-            if (validFilters.slice(8).includes(arg)) {
-                filters.push('Serie');
-                filters.push('Miniserie');
-            }
-        });
-    return filters;
-}
-
-function validateFilters(array) {
-    var ret = true;
-    array.forEach(filter => {
-        if (!validFilters.includes(filter)) {
-            ret = false;
+const getButton = (array, id) => {
+    var ret;
+    array.forEach(element => {
+        if (element.customId === id) {
+            ret = element;
             return;
         }
     });
     return ret;
-}
+};
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -93,156 +74,233 @@ module.exports = {
             description: 'El número del elemento que se quiere ver.',
             required: false,
             type: Constants.ApplicationCommandOptionTypes.INTEGER
-        },
-        {
-            name: 'filtro1',
-            description: 'El primer filtro para la lista.',
-            required: false,
-            type: Constants.ApplicationCommandOptionTypes.STRING
-        },
-        {
-            name: 'filtro2',
-            description: 'El segundo filtro para la lista.',
-            required: false,
-            type: Constants.ApplicationCommandOptionTypes.STRING
         }
     ],
-    maxArgs: 2,
-    expectedArgs: '[numero] ó [filtro1] [filtro2]',
+    maxArgs: 1,
+    expectedArgs: '[numero]',
     slash: 'both',
 
     callback: async ({ user, message, args, interaction, channel }) => {
         const color = [181, 2, 22];
-        var filters = !getFilters() ? await updateFilters() : getFilters();
-        var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
         const number = message ? args[0] : interaction.options.getInteger('numero');
         var reply = { custom: true, ephemeral: true };
-        if (number && !isNaN(parseInt(number))) {
+        if (number) {
+            var filters = !getFilters() ? await updateFilters() : getFilters();
+            var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
             const index = parseInt(number) - 1;
-            if (index < 0 || index >= mcuMovies.length) {
+            if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
                 reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}ucm [numero]"**.`;
                 return reply;
-            } else {
-                var name = mcuMovies[index].name;
-                await getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(async info => {
-                    const row = new MessageActionRow();
-                    for (const ver in info) {
-                        if (Object.hasOwnProperty.call(info, ver)) {
-                            row.addComponents(new MessageButton().setCustomId(ver)
-                                .setEmoji('📽')
-                                .setLabel(ver)
-                                .setStyle('PRIMARY'));
-                        }
+            }
+            var name = mcuMovies[index].name;
+            await getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(async info => {
+                const row = new MessageActionRow();
+                for (const ver in info) {
+                    if (Object.hasOwnProperty.call(info, ver)) {
+                        row.addComponents(new MessageButton().setCustomId(ver)
+                            .setEmoji('📽')
+                            .setLabel(ver)
+                            .setStyle('PRIMARY'));
                     }
-                    reply.content = `**${name}**\n\nPor favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
-                    reply.components = [row];
-                    reply.files = [`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
+                }
+                reply.content = `**${name}**\n\nPor favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
+                reply.components = [row];
+                reply.files = [`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
 
-                    const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
+                const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
 
-                    const filter = (btnInt) => {
-                        const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
-                        const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
-                        return user.id === btnInt.user.id && isTheSameMessage;
-                    }
+                const filter = (btnInt) => {
+                    const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
+                    const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
+                    return user.id === btnInt.user.id && isTheSameMessage;
+                }
 
-                    const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
+                const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
 
-                    var nowShowing = '';
-                    var messagesSent = [];
+                var nowShowing = '';
 
-                    collector.on('collect', async i => {
+                collector.on('collect', async i => {
+                    if (i.customId != nowShowing) {
+                        var embeds = [];
+                        if (nowShowing != '') getButton(row.components, nowShowing).setStyle('PRIMARY');
+                        nowShowing = i.customId;
+                        getButton(row.components, i.customId).setStyle('SECONDARY');
+                        const serverOptions = info[i.customId].split('\r\n**');
+                        const password = '**' + serverOptions.pop();
+                        serverOptions.forEach(async server => {
+                            const lines = server.split('\r\n');
+                            const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
+                            const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
+                            embeds.push(new MessageEmbed()
+                                .setTitle(`${title} - ${i.customId} (${serverName})`)
+                                .setColor(color)
+                                .setDescription(lines.join('\r\n') + `\n${password}`)
+                                .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
+                                .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}.` }));
+                        });
+                        i.update({ components: [row], embeds: embeds, files: reply.files.concat([`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`]) });
+                    } else
                         i.deferUpdate();
-                        if (i.customId != nowShowing) {
-                            nowShowing = i.customId;
-                            messagesSent.forEach(async m => await m.delete());
-                            messagesSent = [];
-                            const serverOptions = info[i.customId].split('\r\n**');
-                            const password = '**' + serverOptions.pop();
-                            serverOptions.forEach(async server => {
-                                const lines = server.split('\r\n');
-                                const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
-                                const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
-                                messagesSent.push(await channel.send({
-                                    embeds: [new MessageEmbed()
-                                        .setTitle(`${title} - ${i.customId} (${serverName})`)
-                                        .setColor(color)
-                                        .setDescription(lines.join('\r\n') + `\n${password}`)
-                                        .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
-                                        .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}.` })],
-                                    files: [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`]
-                                }));
-                            });
-                        }
-                    });
+                });
 
-                    collector.on('end', async _ => {
-                        var edit = {
-                            components: [],
-                            content: `**${name}**\n\nEsta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index}**.\n\u200b`,
-                            files: reply.files
-                        };
-                        messagesSent.forEach(m => m.delete());
-                        message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
-                    });
-                }).catch(console.error);
-            }
+                collector.on('end', async _ => {
+                    var edit = {
+                        components: [],
+                        content: `**${name}**\n\nEsta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                        embeds: [],
+                        files: reply.files
+                    };
+                    message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+                });
+            }).catch(console.error);
         } else {
-            const filter1 = message ? args[0] : interaction.options.getString('filtro1');
-            const filter2 = message ? args[1] : interaction.options.getString('filtro2');
-            var argsFilters = !filter1 && !filter2 ? ['all'] : [];
-            if (filter1) argsFilters.push(filter1);
-            if (filter2) argsFilters.push(filter2);
-            if (!validateFilters(argsFilters))
-                reply.content = `¡Uso incorrecto! Alguno de los filtros es inválido. Usá **"${prefix}ucm [filtro1] [filtro2]"**.\n\nLos filtros válidos son: _${validFilters.slice(1).join(', ')}_.`;
-            else {
-                const canvas = createCanvas(200, 200);
-                const ctx = canvas.getContext('2d');
-                var messages = [];
-                var moviesField = { name: 'Nombre', value: '', inline: true };
-                var typesField = { name: 'Tipo', value: ``, inline: true };
-                if (filtersNeedUpdate(filters, getNewFilters(argsFilters))) {
-                    await updateMcuFilters(getNewFilters(argsFilters));
-                    filters = await updateFilters();
-                    mcuMovies = updateMcuMovies(filters);
-                }
-                for (var i = 0; i < mcuMovies.length; i++) {
-                    const name = mcuMovies[i].name;
-                    const type = mcuMovies[i].type;
-                    const newName = `**${i + 1}.** ${name}`;
-                    const aux = moviesField.value + `${newName}\n\n`;
-                    if (aux.length <= 1024) {
-                        moviesField.value += `${newName}\n\n`;
-                        typesField.value += `*${type}*\n\n`;
-                        if (ctx.measureText(newName).width > 288)
-                            typesField.value += `\n`;
-                    } else {
-                        messages.push(new MessageEmbed()
-                            .setColor(color)
-                            .addFields([moviesField, typesField])
-                            .setThumbnail(`attachment://mcu-logo.png`));
-                        moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
-                        typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
-                        if (ctx.measureText(newName).width > 288)
-                            typesField.value += `\n`;
-                    }
-                }
-                messages.push(new MessageEmbed()
-                    .setColor(color)
-                    .addFields([moviesField, typesField])
-                    .setThumbnail(`attachment://mcu-logo.png`));
-                for (let i = 0; i < messages.length; i++) {
-                    var msg = messages[i];
-                    msg.setTitle(`**Universo Cinematográfico de Marvel (${i + 1})**`);
-                    if (i === 0)
-                        msg.setDescription(texts.movies.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix));
-                    if (i === messages.length - 1)
-                        msg.setFooter({ text: texts.movies.footer });
-                }
-                reply.embeds = messages;
-                reply.files = [`assets/thumbs/mcu-logo.png`];
+            var filters = !getFilters() ? await updateFilters() : getFilters();
+            var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
+
+            const primaryRow = new MessageActionRow()
+                .addComponents(new MessageButton()
+                    .setCustomId('all')
+                    .setEmoji(!filters.includes('all') ? '🔳' : '✅')
+                    .setLabel('Todo')
+                    .setStyle('SECONDARY'));
+            validFilters.forEach(f => {
+                primaryRow.addComponents(new MessageButton()
+                    .setCustomId(f)
+                    .setEmoji(!filters.includes(f) ? '🔳' : '✅')
+                    .setLabel(f + 's')
+                    .setStyle('SECONDARY'));
+            });
+
+            const secondaryRow = new MessageActionRow()
+                .addComponents(new MessageButton()
+                    .setCustomId('confirm')
+                    .setEmoji('✔')
+                    .setLabel('Confirmar')
+                    .setStyle('SUCCESS'))
+                .addComponents(new MessageButton()
+                    .setCustomId('cancel')
+                    .setEmoji('❌')
+                    .setLabel('Cancelar')
+                    .setStyle('DANGER'));
+
+            reply.content = `**Universo Cinematográfico de Marvel**\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
+            reply.components = [primaryRow, secondaryRow];
+            reply.files = [`./assets/mcu.jpg`];
+
+            const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
+
+            const filter = (btnInt) => {
+                const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
+                const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
+                return user.id === btnInt.user.id && isTheSameMessage;
             }
-            return reply;
+
+            const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
+
+            var selected = filters;
+            var status = '';
+            var extraMessages = [];
+
+            collector.on('collect', async i => {
+                var update = {};
+                if (i.customId === 'all') {
+                    if (!selected.includes('all')) {
+                        primaryRow.components.forEach(element => {
+                            if (element.customId != i.customId)
+                                element.setEmoji('🔳');
+                        });
+                        selected = [i.customId];
+                        getButton(primaryRow.components, i.customId).setEmoji('✅');
+                    } else {
+                        selected = [];
+                        getButton(primaryRow.components, i.customId).setEmoji('🔳');
+                    }
+                    update.components = [primaryRow, secondaryRow];
+                } else if (i.customId === 'confirm') {
+                    if (selected.length === 0)
+                        extraMessages.push(await channel.send('⛔ ¡Debes seleccionar algún filtro para confirmar!'));
+                    else {
+                        if (filtersNeedUpdate(filters, selected)) {
+                            await updateMcuFilters(selected);
+                            filters = await updateFilters();
+                            mcuMovies = updateMcuMovies(filters);
+                        }
+                        status = 'CONFIRMED';
+                        update.components = [];
+                        collector.stop();
+                    }
+                } else if (i.customId === 'cancel') {
+                    status = 'CANCELLED';
+                    update.components = [];
+                    collector.stop();
+                } else {
+                    if (selected.includes('all')) {
+                        getButton(primaryRow.components, 'all').setEmoji('🔳');
+                        selected = [];
+                    }
+                    if (!selected.includes(i.customId)) {
+                        selected.push(i.customId);
+                        getButton(primaryRow.components, i.customId).setEmoji('✅');
+                    } else {
+                        selected.splice(selected.indexOf(i.customId), 1);
+                        getButton(primaryRow.components, i.customId).setEmoji('🔳');
+                    }
+                    update.components = [primaryRow, secondaryRow];
+                }
+                i.update(update);
+            });
+
+            collector.on('end', async _ => {
+                extraMessages.forEach(m => m.delete());
+                var edit = {};
+                if (status === 'CONFIRMED') {
+                    const canvas = createCanvas(200, 200);
+                    const ctx = canvas.getContext('2d');
+                    var embeds = [];
+                    var moviesField = { name: 'Nombre', value: '', inline: true };
+                    var typesField = { name: 'Tipo', value: ``, inline: true };
+                    for (var i = 0; i < mcuMovies.length; i++) {
+                        const name = mcuMovies[i].name;
+                        const type = mcuMovies[i].type;
+                        const newName = `**${i + 1}.** ${name}`;
+                        const aux = moviesField.value + `${newName}\n\n`;
+                        if (aux.length <= 1024) {
+                            moviesField.value += `${newName}\n\n`;
+                            typesField.value += `*${type}*\n\n`;
+                            if (ctx.measureText(newName).width > 288)
+                                typesField.value += `\n`;
+                        } else {
+                            embeds.push(new MessageEmbed()
+                                .setColor(color)
+                                .addFields([moviesField, typesField])
+                                .setThumbnail(`attachment://mcu-logo.png`));
+                            moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
+                            typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
+                            if (ctx.measureText(newName).width > 288)
+                                typesField.value += `\n`;
+                        }
+                    }
+                    embeds.push(new MessageEmbed()
+                        .setColor(color)
+                        .addFields([moviesField, typesField])
+                        .setThumbnail(`attachment://mcu-logo.png`));
+                    for (let i = 0; i < embeds.length; i++) {
+                        const msg = embeds[i];
+                        if (i === 0)
+                            msg.setDescription(texts.movies.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix));
+                        if (i === embeds.length - 1)
+                            msg.setFooter({ text: texts.movies.footer });
+                    }
+                    edit.content = `**Universo Cinematográfico de Marvel**\n\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
+                    edit.embeds = embeds;
+                    edit.files = reply.files.concat([`./assets/thumbs/mcu-logo.png`]);
+                } else if (status === 'CANCELLED')
+                    edit.content = `**Universo Cinematográfico de Marvel**\n\n❌ Esta acción **fue cancelada**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
+                else
+                    edit.content = `**Universo Cinematográfico de Marvel**\n\n⌛ Esta acción **expiró**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
+
+                message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+            });
         }
         return;
     }

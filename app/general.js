@@ -26,7 +26,7 @@ function getToday() {
 async function generateBirthdayImage(user) {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage('./assets/custom/happy-bday.png');
+    const background = await Canvas.loadImage('./assets/happy-bday.png');
     var avatarWidth = 300;
     var avatarHeight = avatarWidth;
     var avatarX = (background.width / 2) - (avatarWidth / 2);
@@ -42,7 +42,7 @@ async function generateBirthdayImage(user) {
     if (user.id == ids.users.stormer || user.id == ids.users.darkness) {
         var crownWidth = 60;
         var gapWidth = 5;
-        const crown = await Canvas.loadImage('./assets/custom/crown.png');
+        const crown = await Canvas.loadImage('./assets/crown.png');
         // Actually fill the text with a solid color
         context.fillText(user.username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
         context.strokeText(user.username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
@@ -150,7 +150,7 @@ async function sendAnniversaryAlert(client) {
 async function updateAvatar(client) {
     var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
     actualAvatar = actualAvatar[0]
-    var newAvatar = `./assets/custom/kgprime${getImageType()}.png`;
+    var newAvatar = `./assets/kgprime${getImageType()}.png`;
     if (actualAvatar['avatar_url'] != newAvatar) {
         client.user.setAvatar(newAvatar).then(() => {
             updateAvatarString(newAvatar).catch(console.error);
@@ -311,7 +311,7 @@ module.exports = {
     generateWelcomeImage: async (user) => {
         const canvas = Canvas.createCanvas(1170, 720);
         const context = canvas.getContext('2d');
-        var background = await Canvas.loadImage(`./assets/custom/welcome${getImageType()}.png`);
+        var background = await Canvas.loadImage(`./assets/welcome${getImageType()}.png`);
         var avatarWidth = 250;
         var avatarHeight = avatarWidth
         var avatarX = 450;

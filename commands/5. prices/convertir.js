@@ -48,8 +48,8 @@ module.exports = {
             const dataDolar = await axios.get("https://www.dolarsi.com/api/dolarSiInfo.xml")
             const json = convert.xml2json(dataDolar.data, { compact: true, spaces: 4 });
             const jsonParsed = JSON.parse(json);
-            const swapImage = await Canvas.loadImage(`./assets/custom/swap.png`);
-            const pesoImage = await Canvas.loadImage(`./assets/custom/peso.png`);
+            const swapImage = await Canvas.loadImage(`./assets/swap.png`);
+            const pesoImage = await Canvas.loadImage(`./assets/peso.png`);
 
             var usdPrice = formatNumber(jsonParsed.cotiza.Dolar.casa380.venta._text);
             if (argsCurrency != 'dolar' && argsCurrency != 'usd' && argsCurrency != 'dólar') {
