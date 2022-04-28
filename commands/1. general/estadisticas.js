@@ -63,9 +63,8 @@ module.exports = {
             .setThumbnail(`attachment://stats.jpg`)
             .setFooter({ text: needsFooter ? 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' : '' });
 
-        if (message) await deferringMessage.delete();
-        const reply = { embeds: [embed], files: ['./assets/thumbs/stats.jpg'] };
-        message ? message.reply(reply) : interaction.editReply(reply);
+        const reply = { content: null, embeds: [embed], files: ['./assets/thumbs/stats.jpg'] };
+        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
         return;
     }
 }

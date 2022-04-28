@@ -6,16 +6,16 @@ const { prefix, texts } = require('../../app/constants');
 const { updateMcuFilters } = require('../../app/postgres');
 const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
 
-function filtersNeedUpdate(oldFilters, newFilters) {
-    var ret = false;
-    newFilters.forEach(filter => {
-        if (!oldFilters.includes(filter)) {
-            ret = true;
-            return;
-        }
-    });
-    if (!ret) ret = oldFilters.length != newFilters.length;
-    return ret;
+function areEqual(oldFilters, newFilters) {
+    if (oldFilters.length === newFilters.length) {
+        return oldFilters.every(element => {
+          if (newFilters.includes(element)) {
+            return true;
+          }
+          return false;
+        });
+      }
+      return false;
 }
 
 async function getMovieInfo(path) {
@@ -197,7 +197,7 @@ module.exports = {
 
             const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
 
-            var selected = filters;
+            var selected = filters.slice(0);
             var status = '';
             var extraMessages = [];
 
@@ -216,22 +216,25 @@ module.exports = {
                         getButton(primaryRow.components, i.customId).setEmoji('🔳');
                     }
                     update.components = [primaryRow, secondaryRow];
+                    await i.update(update);
                 } else if (i.customId === 'confirm') {
                     if (selected.length === 0)
                         extraMessages.push(await channel.send('⛔ ¡Debes seleccionar algún filtro para confirmar!'));
                     else {
-                        if (filtersNeedUpdate(filters, selected)) {
+                        if (!areEqual(filters, selected)) {
                             await updateMcuFilters(selected);
                             filters = await updateFilters();
                             mcuMovies = updateMcuMovies(filters);
                         }
                         status = 'CONFIRMED';
                         update.components = [];
+                        await i.update(update);
                         collector.stop();
                     }
                 } else if (i.customId === 'cancel') {
                     status = 'CANCELLED';
                     update.components = [];
+                    await i.update(update);
                     collector.stop();
                 } else {
                     if (selected.includes('all')) {
@@ -246,8 +249,8 @@ module.exports = {
                         getButton(primaryRow.components, i.customId).setEmoji('🔳');
                     }
                     update.components = [primaryRow, secondaryRow];
+                    await i.update(update);
                 }
-                i.update(update);
             });
 
             collector.on('end', async _ => {
@@ -293,7 +296,7 @@ module.exports = {
                     }
                     edit.content = `**Universo Cinematográfico de Marvel**\n\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
                     edit.embeds = embeds;
-                    edit.files = reply.files.concat([`./assets/thumbs/mcu-logo.png`]);
+                    edit.files = [`./assets/thumbs/mcu-logo.png`];
                 } else if (status === 'CANCELLED')
                     edit.content = `**Universo Cinematográfico de Marvel**\n\n❌ Esta acción **fue cancelada**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
                 else
