@@ -5,8 +5,8 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
-    permissions: ['ADMINISTRATOR'],
     testOnly: true,
+    ownerOnly: true,
 
     callback: ({ member, client }) => {
         client.emit('guildMemberAdd', member);

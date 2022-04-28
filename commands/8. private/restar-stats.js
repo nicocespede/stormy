@@ -8,8 +8,9 @@ module.exports = {
 
     minArgs: 5,
     maxArgs: 5,
+    expectedArgs: '<ID> <días> <horas> <minutos> <segundos>',
     slash: false,
-    permissions: ['ADMINISTRATOR'],
+    ownerOnly: true,
 
     callback: async ({ args }) => {
         const stats = !getStats() ? await updateStats() : getStats();

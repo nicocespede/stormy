@@ -8,7 +8,7 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
-    permissions: ['ADMINISTRATOR'],
+    ownerOnly: true,
 
     callback: async () => {
         const timestamps = getTimestamps();

@@ -9,7 +9,7 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
-    permissions: ['ADMINISTRATOR'],
+    ownerOnly: true,
 
     callback: async ({ guild, message }) => {
         var aux = !getReactionCollectorInfo() ? await updateReactionCollectorInfo() : getReactionCollectorInfo();

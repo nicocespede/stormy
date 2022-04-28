@@ -26,7 +26,7 @@ module.exports = {
     minArgs: 2,
     expectedArgs: '<url> <descripción>',
     slash: false,
-    permissions: ['ADMINISTRATOR'],
+    ownerOnly: true,
 
     callback: ({ message, args, client }) => {
         const url = args[0];

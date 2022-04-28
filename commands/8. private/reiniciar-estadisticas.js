@@ -7,7 +7,7 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
-    permissions: ['ADMINISTRATOR'],
+    ownerOnly: true,
 
     callback: async () => {
         await executeQuery(`DELETE FROM "stats";`).catch(console.error);

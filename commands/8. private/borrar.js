@@ -6,10 +6,10 @@ module.exports = {
 
     maxArgs: 0,
     slash: false,
-    permissions: ['ADMINISTRATOR'],
+    ownerOnly: true,
 
-    callback: ({ channel, user }) => {
-        if (user.id === ids.users.stormer && channel.type === 'DM') {
+    callback: ({ channel }) => {
+        if (channel.type === 'DM') {
             channel.messages.fetch().then(messages => {
                 messages.forEach(m => {
                     if (m.author.id === ids.users.bot)
