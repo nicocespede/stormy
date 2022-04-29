@@ -4,7 +4,7 @@ const lngDetector = new LanguageDetect();
 const cache = require('./cache');
 const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat } = require('./postgres');
 const Canvas = require('canvas');
-const { ids, relativeSpecialDays } = require('./constants');
+const { ids, relativeSpecialDays, currencies } = require('./constants');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -371,5 +371,12 @@ module.exports = {
 
     fullToSeconds,
 
-    secondsToFull
+    secondsToFull,
+
+    getAvailableCurrencies: () => {
+        var ret = [];
+        for (const currency in currencies)
+                ret.push(currency);
+        return ret;
+    }
 }

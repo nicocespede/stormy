@@ -5,6 +5,9 @@ const { currencies } = require('../../app/constants');
 const convert = require('xml-js');
 const axios = require('axios');
 const Canvas = require('canvas');
+const { getAvailableCurrencies } = require('../../app/general');
+
+const availableCurrencies = ['usd'].concat(getAvailableCurrencies());
 
 function formatNumber(value, decimalPlaces) {
     let decimals = decimalPlaces || 2;
@@ -21,7 +24,8 @@ module.exports = {
             name: 'moneda',
             description: 'La moneda desde la que se quiere convertir a pesos argentinos.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: Constants.ApplicationCommandOptionTypes.STRING,
+            choices: availableCurrencies.map(currency => ({ name: currency, value: currency }))
         }, {
             name: 'cantidad',
             description: 'La cantidad que se quiere convertir a pesos argentinos.',
@@ -38,8 +42,8 @@ module.exports = {
         const argsCurrency = message ? args[0] : interaction.options.getString('moneda');
         const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
         var reply = { custom: true, ephemeral: true };
-        if (!Object.keys(currencies).includes(argsCurrency) && argsCurrency != 'dolar' && argsCurrency != 'usd')
-            reply.content = `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _usd, ${Object.keys(currencies).join(', ')}_.`;
+        if (!availableCurrencies.includes(argsCurrency))
+            reply.content = `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _${availableCurrencies.join(', ')}_. Si querés la cotización de otra moneda, no dudes en pedirla.`;
         else if (isNaN(quantity) || quantity < 0)
             reply.content = `¡Uso incorrecto! La cantidad ingresada es inválida.`;
         else {
@@ -52,7 +56,7 @@ module.exports = {
             const pesoImage = await Canvas.loadImage(`./assets/peso.png`);
 
             var usdPrice = formatNumber(jsonParsed.cotiza.Dolar.casa380.venta._text);
-            if (argsCurrency != 'dolar' && argsCurrency != 'usd' && argsCurrency != 'dólar') {
+            if (argsCurrency != 'usd') {
                 var coinID = currencies[argsCurrency].id;
                 var color = currencies[argsCurrency].color;
                 let data = await CoinGeckoClient.coins.fetch(coinID, {});

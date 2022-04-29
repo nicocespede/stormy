@@ -1098,5 +1098,45 @@ module.exports = {
         question: '¿Quién fue la responsable de que _Thor_ perdiera un ojo?',
         answers: ['hela'],
         file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/5/56/Screen_Shot_2018-02-24_at_20.23.05.jpg'
+    },
+    {
+        question: '¿Qué _Gema del infinito_ les otorgó los poderes a los hermanos _Maximoff_?',
+        answers: ['mente', 'gema de la mente'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/7/73/Twins_AOU.jpg'
+    },
+    {
+        question: '¿Qué _Gema del infinito_ tiene _Visión_ en su frente?',
+        answers: ['mente', 'gema de la mente'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/6/64/-4XspK7MzJc-1-.jpg'
+    },
+    {
+        question: '¿Por qué apodo se lo conoce a _Uatu_, quien observa el multiverso desde el _Nexo de Todas las Realidades_?',
+        answers: ['el vigilante', 'vigilante'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/f/fa/Uatu_%28The_Watcher%29_watching_Phil_Coulson.jpg'
+    },
+    {
+        question: '¿Cuál es el nombre de pila de la variante de _Loki_ que buscaba venganza contra la _AVT_?',
+        answers: ['sylvie'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/b1/Sylvie_and_fire_1x1.png'
+    },
+    {
+        question: '¿Qué significa la sigla _AVT_?',
+        answers: ['autoridad de variacion temporal', 'autoridad de variación temporal'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/02/TimeVarianceAuthorityLogo.png'
+    },
+    {
+        question: '¿Cuáles eran los nombres de pila de los hijos mellizos de _Wanda_ y _Visión_ dentro del _Hex_?',
+        answers: ['tommy y billy', 'billy y tommy'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/5/5e/Tommy_%26_Billy_%28Age_10%29.png'
+    },
+    {
+        question: '¿Quién fue el responsable de que _Quill_ se convirtiera en _Star-Lord_?',
+        answers: ['yondu', 'yondu udonta'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/e/ea/Milano_on_Eath.png'
+    },
+    {
+        question: '¿Con qué apodo se lo conoce al principal enemigo de _Daredevil_, también enfrentado por _Kate Bishop_ más tarde?',
+        answers: ['kingpin'],
+        file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/7/72/Rabbit_05.jpg'
     }]
 }

@@ -2,19 +2,15 @@ const { MessageEmbed } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 const { currencies } = require('../../app/constants');
+const { getAvailableCurrencies } = require('../../app/general');
 
-const getCurrencies = () => {
-    var ret = [];
-    for (const currency in currencies)
-        if (currency != 'btc')
-            ret.push(currency);
-    return ret;
-};
+const availableCurrencies = getAvailableCurrencies();
+availableCurrencies.splice(availableCurrencies.indexOf('btc'), 1)
 
 module.exports = {
     category: 'Cotizaciones',
     description: 'Responde con la cotización del Bitcoin (tomada de CoinGecko) o la de otra moneda que aparezca en los alias.',
-    aliases: getCurrencies(),
+    aliases: availableCurrencies,
 
     maxArgs: 0,
     slash: false,
