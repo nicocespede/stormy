@@ -22,7 +22,8 @@ else
 dbClient.connect();
 
 dbClient.on('error', (err, client) => {
-    console.log('Error de conexión de postgres: ' + err);
+    console.log('Error de conexión de postgres: ' + err, '\nIntentando reconectar...');
+    setTimeout(function () { dbClient.connect() }, 10 * 1000);
 });
 
 module.exports = {
