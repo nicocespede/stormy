@@ -734,7 +734,7 @@ module.exports = {
         {
             name: "Moon Knight Season 1 (2022)",
             type: "Serie",
-            lastUpdate: "06/04/2022",
+            lastUpdate: "29/04/2022",
             thumbURL: "moon-knight.png"
         }
     ],
@@ -1138,5 +1138,57 @@ module.exports = {
         question: '¿Con qué apodo se lo conoce al principal enemigo de _Daredevil_, también enfrentado por _Kate Bishop_ más tarde?',
         answers: ['kingpin'],
         file: 'https://static.wikia.nocookie.net/marvelcinematicuniverse/images/7/72/Rabbit_05.jpg'
+    }],
+
+    games: [{
+        name: 'Beyond: Two Souls (2020)',
+        version: '',
+        lastUpdate: '27/03/2022',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/960990/header.jpg'
+    }, {
+        name: 'Green Hell (2019)',
+        version: 'V0.11.4',
+        lastUpdate: '23/11/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/815370/header.jpg'
+    }, {
+        name: 'Grounded (2020)',
+        version: '',
+        lastUpdate: '23/11/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/962130/header.jpg'
+    }, {
+        name: 'Left 4 Dead 2 (2009)',
+        version: 'Build 04102021',
+        lastUpdate: '23/11/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/550/header.jpg'
+    }, {
+        name: "Marvel's Avengers (2020)",
+        version: 'V4.2110.150.0',
+        lastUpdate: '30/04/2022',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/997070/header.jpg'
+    }, {
+        name: 'Phasmophobia (2020)',
+        version: 'V0.5.1.0',
+        lastUpdate: '30/12/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/739630/header.jpg'
+    }, {
+        name: 'Pummel Party (2018)',
+        version: 'V1.11.2f',
+        lastUpdate: '23/11/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/880940/header.jpg'
+    }, {
+        name: 'Subsistence (2016)',
+        version: 'ALPHA 57',
+        lastUpdate: '03/11/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/418030/header.jpg'
+    }, {
+        name: 'Superliminal (2020)',
+        version: 'V24.11.2021',
+        lastUpdate: '23/11/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1049410/header.jpg'
+    }, {
+        name: 'The Forest (2018)',
+        version: 'V1.12',
+        lastUpdate: '28/07/2021',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/242760/header.jpg'
     }]
 }

@@ -93,7 +93,7 @@ module.exports = {
                 return reply;
             }
             var name = mcuMovies[index].name;
-            await getMovieInfo(`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(async info => {
+            await getMovieInfo(`./assets/movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(async info => {
                 const row = new MessageActionRow();
                 for (const ver in info) {
                     if (Object.hasOwnProperty.call(info, ver)) {
@@ -105,7 +105,7 @@ module.exports = {
                 }
                 reply.content = `**${name}**\n\nPor favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
                 reply.components = [row];
-                reply.files = [`./movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
+                reply.files = [`./assets/movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
 
                 const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
 
