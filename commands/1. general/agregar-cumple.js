@@ -1,6 +1,6 @@
 const { getBirthdays, updateBirthdays } = require('../../app/cache');
 const { addBday } = require('../../app/postgres');
-const { sendBdayAlert, isListed } = require('../../app/general');
+const { sendBdayAlert } = require('../../app/general');
 const { MessageActionRow, MessageButton, Constants } = require('discord.js');
 const { prefix } = require('../../app/constants');
 
@@ -49,12 +49,12 @@ module.exports = {
     callback: async ({ message, args, interaction, client, channel, user }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const date = message ? args[1] : interaction.options.getString('fecha');
-        var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+        const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
         if (!target)
             return { content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}agregar-cumple <@amigo> <DD/MM>"**.`, custom: true, ephemeral: true }
         else if (!validateDate(date).valid)
             return { content: validateDate(date).reason, custom: true, ephemeral: true }
-        else if (isListed(target.user.id, birthdays, 'bdays_id'))
+        else if (Object.keys(birthdays).includes(target.user.id))
             return { content: `Este usuario ya tiene registrado su cumpleaños.`, custom: true, ephemeral: true }
         else {
             const row = new MessageActionRow()
@@ -88,7 +88,7 @@ module.exports = {
                     await addBday(newArray).then(async () => {
                         edit.content = 'La acción fue completada.';
                         channel.send({ content: `Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
-                        updateBirthdays();
+                        await updateBirthdays();
                         sendBdayAlert(client);
                     }).catch(console.error);
                 } else

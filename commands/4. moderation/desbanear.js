@@ -26,16 +26,17 @@ module.exports = {
         var reply = { custom: true, ephemeral: true };
         const banRole = await guild.roles.fetch(ids.roles.banear).catch(console.error);
         const index = parseInt(number) - 1;
-        const bans = !getBanned() ? await updateBanned() : getBanned();
+        const bans = !getBanned().ids ? await updateBanned() : getBanned();
         if (!banRole.members.has(user.id)) {
             reply.content = `Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`;
             return reply;
-        } else if (index < 0 || index >= bans.length || isNaN(index)) {
+        } else if (index < 0 || index >= bans.ids.length || isNaN(index)) {
             reply.content = `El índice ingresado es inválido.`;
             return reply;
         } else {
-            const ban = bans[index];
-            if (user.id != ban['bans_responsible'] && ban['bans_responsible'] != "Desconocido") {
+            const id = bans.ids[index];
+            const ban = bans.bans[id];
+            if (user.id != ban.responsible && ban.responsible != "Desconocido") {
                 reply.content = `Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`;
                 return reply;
             } else {
@@ -52,7 +53,7 @@ module.exports = {
                 const messageOrInteraction = message ? message : interaction;
                 const replyMessage = await messageOrInteraction.reply({
                     components: [row],
-                    content: `¿Estás seguro de querer desbanear a **${ban['bans_user']}**?`,
+                    content: `¿Estás seguro de querer desbanear a **${ban.user}**?`,
                     ephemeral: true
                 });
 
@@ -67,7 +68,7 @@ module.exports = {
                     if (!collection.first())
                         edit.content = 'La acción expiró.';
                     else if (collection.first().customId === 'unban_yes')
-                        await guild.members.unban(ban['bans_id']).then(async () => {
+                        await guild.members.unban(id).then(async () => {
                             edit.content = 'La acción fue completada.';
                             channel.send({ content: `Hola <@${user.id}>, el usuario fue desbaneado correctamente.` });
                         }).catch(console.error);

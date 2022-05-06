@@ -10,7 +10,7 @@ module.exports = {
 
     ids: {
         users: {
-            bot: "967139569969528923",
+            bot: !testing ? "967139569969528923" : "853113828501225502",
             stormer: "334409923389554699",
             darkness: "479521831267598336",
             sombra: '662237023540609044',
@@ -734,7 +734,7 @@ module.exports = {
         {
             name: "Moon Knight Season 1 (2022)",
             type: "Serie",
-            lastUpdate: "29/04/2022",
+            lastUpdate: "04/05/2022",
             thumbURL: "moon-knight.png"
         }
     ],

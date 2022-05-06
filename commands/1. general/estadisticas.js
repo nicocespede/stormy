@@ -27,32 +27,34 @@ module.exports = {
     callback: async ({ guild, message, interaction, user }) => {
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });
-        var timestamps = getTimestamps();
+        const timestamps = getTimestamps();
         for (const key in timestamps)
             if (Object.hasOwnProperty.call(timestamps, key)) {
                 await pushDifference(key);
                 addTimestamp(key, new Date());
             }
-        var stats = !getStats() ? await updateStats() : getStats();
+        const stats = !getStats() ? await updateStats() : getStats();
         var usersField = { name: 'Usuario', value: '', inline: true };
         var timeField = { name: 'Tiempo', value: ``, inline: true };
         var aux1 = '';
         var aux2 = '';
         var needsFooter = false;
         var counter = 0;
-        for (var i = 0; i < stats.length; i++) {
-            const actualStat = stats[i];
-            await guild.members.fetch(actualStat['stats_id']).then(member => {
-                counter++;
-                aux1 = usersField.value + `**${counter}. **${member.user.tag}\n\n`;
-                aux2 = timeField.value + `${timeToString(actualStat['stats_seconds'], actualStat['stats_minutes'], actualStat['stats_hours'], actualStat['stats_days'])}\n\n`;
-            }).catch(() => console.log(`> El usuario con ID ${actualStat['stats_id']} ya no está en el servidor.`));
-            if (aux1.length <= 1024 || aux2.length <= 1024) {
-                usersField.value = aux1;
-                timeField.value = aux2;
-            } else {
-                needsFooter = true;
-                break;
+        for (const key in stats) {
+            if (Object.hasOwnProperty.call(stats, key)) {
+                const stat = stats[key];
+                await guild.members.fetch(key).then(member => {
+                    counter++;
+                    aux1 = usersField.value + `**${counter}. **${member.user.tag}\n\n`;
+                    aux2 = timeField.value + `${timeToString(stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
+                }).catch(() => console.log(`> El usuario con ID ${key} ya no está en el servidor.`));
+                if (aux1.length <= 1024 || aux2.length <= 1024) {
+                    usersField.value = aux1;
+                    timeField.value = aux2;
+                } else {
+                    needsFooter = true;
+                    break;
+                }
             }
         }
         const embed = new MessageEmbed()

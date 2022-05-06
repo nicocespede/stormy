@@ -1,6 +1,6 @@
 const { getStats, updateStats } = require("../../app/cache");
 const { updateStat } = require("../../app/postgres");
-const { isListed, fullToSeconds, secondsToFull } = require("../../app/general");
+const { fullToSeconds, secondsToFull } = require("../../app/general");
 
 module.exports = {
     category: 'Privados',
@@ -19,19 +19,15 @@ module.exports = {
         const argsHours = args[2];
         const argsMinutes = args[3];
         const argsSeconds = args[4];
-        if (!isListed(id, stats, 'stats_id'))
+        if (!Object.keys(stats).includes(id))
             return 'El ID ingresado no tiene estadísticas registradas.';
-        stats.forEach(async stat => {
-            if (stat['stats_id'] === id) {
-                var totalTime = fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds'])
-                    - fullToSeconds(parseInt(argsDays), parseInt(argsHours), parseInt(argsMinutes), parseInt(argsSeconds));
-                if (!isNaN(totalTime)) {
-                    const { days, hours, minutes, seconds } = secondsToFull(totalTime);
-                    await updateStat(id, days, hours, minutes, seconds);
-                }
-                return;
-            }
-        });
+        const stat = stats[id];
+        const totalTime = fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds)
+            - fullToSeconds(parseInt(argsDays), parseInt(argsHours), parseInt(argsMinutes), parseInt(argsSeconds));
+        if (!isNaN(totalTime)) {
+            const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+            await updateStat(id, days, hours, minutes, seconds);
+        }
         await updateStats();
         return '¡Tiempo restado!';
     }

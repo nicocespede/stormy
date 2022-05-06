@@ -179,43 +179,31 @@ function updateUsername(client) {
 };
 
 const sendBdayAlert = async (client) => {
-    var birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
-    birthdays.forEach(bday => {
-        if (bday['bdays_date'] == getToday() && !bday['bdays_flag']) {
-            client.channels.fetch(ids.channels.general).then(channel => {
-                client.guilds.fetch(ids.guilds.default).then(async guild => {
-                    await guild.members.fetch(bday['bdays_id']).then(member => {
-                        generateBirthdayImage(member.user).then(attachment => {
-                            if (bday['bdays_id'] === ids.users.bot)
-                                var msg = `@everyone\n\n¡Hoy es mi cumpleaños!`;
-                            else
-                                var msg = `@everyone\n\nHoy es el cumpleaños de <@${bday['bdays_id']}>, ¡feliz cumpleaños!`;
-                            channel.send({ content: msg, files: [attachment] }).then(m => {
-                                m.react('🎈');
-                                m.react('🥳');
-                                m.react('🎉');
-                                m.react('🎂');
+    const birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
+    for (const key in birthdays)
+        if (Object.hasOwnProperty.call(birthdays, key)) {
+            const bday = birthdays[key];
+            if (bday.date === getToday() && !bday.flag) {
+                client.channels.fetch(ids.channels.general).then(channel => {
+                    client.guilds.fetch(ids.guilds.default).then(async guild => {
+                        await guild.members.fetch(key).then(member => {
+                            generateBirthdayImage(member.user).then(attachment => {
+                                const msg = key === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
+                                    : `@everyone\n\nHoy es el cumpleaños de <@${key}>, ¡feliz cumpleaños!`;
+                                channel.send({ content: msg, files: [attachment] }).then(m => {
+                                    ['🎈', '🥳', '🎉', '🎂'].forEach(emoji => m.react(emoji));
+                                }).catch(console.error);
                             }).catch(console.error);
-                        }).catch(console.error);
-                    }).catch(() => deleteBday(bday['bdays_id']).then(async () => {
-                        await cache.updateBirthdays();
-                        channel.send({ content: `Se eliminó el cumpleaños de **${bday['bdays_user']}** (**Hoy**) ya que el usuario no está más en el servidor.` });
-                    }));
+                        }).catch(() => deleteBday(key).then(async () => {
+                            await cache.updateBirthdays();
+                            channel.send({ content: `Se eliminó el cumpleaños de **${bday.user}** (**Hoy**) ya que el usuario no está más en el servidor.` });
+                        }));
+                    }).catch(console.error);
                 }).catch(console.error);
-            }).catch(console.error);
-            updateBday(bday['bdays_id'], true).then(async () => (await cache.updateBirthdays())).catch(console.error);
-        } else if (bday['bdays_date'] != getToday() && bday['bdays_flag'])
-            updateBday(bday['bdays_id'], false).then(async () => (await cache.updateBirthdays())).catch(console.error);
-    });
-};
-
-const isListed = (id, json, string) => {
-    var ret = false;
-    json.forEach(element => {
-        if (element[string] === id)
-            ret = true;
-    });
-    return ret;
+                updateBday(key, true).then(async () => await cache.updateBirthdays()).catch(console.error);
+            } else if (bday.date != getToday() && bday.flag)
+                updateBday(key, false).then(async () => await cache.updateBirthdays()).catch(console.error);
+        }
 };
 
 const fullToSeconds = (days, hours, minutes, seconds) => {
@@ -345,27 +333,20 @@ module.exports = {
         return new MessageAttachment(canvas.toBuffer());
     },
 
-    isListed,
-
-    pushDifference: async (id) => {
+    pushDifference: async (id, username) => {
         var stats = !cache.getStats() ? await cache.updateStats() : cache.getStats();
-        if (!isListed(id, stats, 'stats_id')) {
+        if (!Object.keys(stats).includes(id)) {
             await addStat(id);
             stats = await cache.updateStats();
         }
         const timestamps = cache.getTimestamps();
-        stats.forEach(async stat => {
-            if (stat['stats_id'] === id) {
-                const now = new Date();
-                var totalTime = (Math.abs(now - timestamps[id]) / 1000)
-                    + (fullToSeconds(stat['stats_days'], stat['stats_hours'], stat['stats_minutes'], stat['stats_seconds']));
-                if (!isNaN(totalTime)) {
-                    var { days, hours, minutes, seconds } = secondsToFull(totalTime);
-                    await updateStat(id, days, hours, minutes, seconds);
-                }
-                return;
-            }
-        });
+        const stat = stats[id];
+        const now = new Date();
+        var totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
+        if (!isNaN(totalTime)) {
+            var { days, hours, minutes, seconds } = secondsToFull(totalTime);
+            await updateStat(id, days, hours, minutes, seconds, username);
+        }
         await cache.updateStats();
     },
 
@@ -376,7 +357,22 @@ module.exports = {
     getAvailableCurrencies: () => {
         var ret = [];
         for (const currency in currencies)
-                ret.push(currency);
+            ret.push(currency);
         return ret;
+    },
+
+    getMembersStatus: channel => {
+        var membersSize = channel.members.size;
+        var valid = [];
+        channel.members.each(member => {
+            if (member.id === ids.users.bot) {
+                membersSize--;
+                valid.push(member);
+            } else if (member.voice.deaf && !member.voice.streaming)
+                membersSize--;
+            else
+                valid.push(member);
+        });
+        return { size: membersSize, valid: valid };
     }
 }

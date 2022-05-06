@@ -103,7 +103,7 @@ module.exports = {
                             .setStyle('PRIMARY'));
                     }
                 }
-                reply.content = `**${name}**\n\nPor favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
+                reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
                 reply.components = [row];
                 reply.files = [`./assets/movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
 
@@ -119,25 +119,25 @@ module.exports = {
 
                 var nowShowing = '';
 
-                collector.on('collect', async i => {
+                collector.on('collect', i => {
                     if (i.customId != nowShowing) {
                         var embeds = [];
                         if (nowShowing != '') getButton(row.components, nowShowing).setStyle('PRIMARY');
                         nowShowing = i.customId;
                         getButton(row.components, i.customId).setStyle('SECONDARY');
-                        const serverOptions = info[i.customId].split('\r\n**');
+                        const serverOptions = info[i.customId].split('\n**');
                         const password = '**' + serverOptions.pop();
-                        serverOptions.forEach(async server => {
-                            const lines = server.split('\r\n');
+                        serverOptions.forEach(server => {
+                            const lines = server.split('\n');
                             const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
                             const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
                             embeds.push(new MessageEmbed()
                                 .setTitle(`${title} - ${i.customId} (${serverName})`)
                                 .setColor(color)
-                                .setDescription(lines.join('\r\n') + `\n${password}`)
+                                .setDescription(lines.join('\n') + `\n${password}`)
                                 .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`)
                                 .setFooter({ text: `Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate)}.` }));
-                        });
+                            });    
                         i.update({ components: [row], embeds: embeds, files: reply.files.concat([`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`]) });
                     } else
                         i.deferUpdate();
@@ -146,7 +146,7 @@ module.exports = {
                 collector.on('end', async _ => {
                     var edit = {
                         components: [],
-                        content: `**${name}**\n\nEsta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                        content: `**${name}**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
                         embeds: [],
                         files: reply.files
                     };

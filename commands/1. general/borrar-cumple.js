@@ -2,7 +2,6 @@ const { getBirthdays, updateBirthdays } = require('../../app/cache');
 const { deleteBday } = require('../../app/postgres');
 const { MessageButton, MessageActionRow, Constants } = require('discord.js');
 const { prefix } = require('../../app/constants');
-const { isListed } = require('../../app/general');
 
 module.exports = {
     category: 'General',
@@ -25,10 +24,10 @@ module.exports = {
 
     callback: async ({ message, interaction, channel, user }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
-        var birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+        const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
         if (!target)
             return { content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}borrar-cumple <@amigo>"**.`, custom: true, ephemeral: true };
-        else if (!isListed(target.user.id, birthdays, 'bdays_id'))
+        else if (!Object.keys(birthdays).includes(target.user.id))
             return { content: `El cumpleaños que intentás borrar no existe.`, custom: true, ephemeral: true };
         else {
             const row = new MessageActionRow()

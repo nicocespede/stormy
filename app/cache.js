@@ -4,7 +4,7 @@ const { executeQuery } = require('./postgres');
 var mcuMovies;
 var filters;
 var birthdays;
-var banned;
+var banned = {};
 var sombraBans;
 var lastDateChecked;
 var reactionCollectorInfo;
@@ -15,7 +15,7 @@ var playlists = { names: [], urls: [] };
 var stats;
 var timestamps = {};
 var minutesUp = 0;
-var thermalPasteDates = {};
+var thermalPasteDates;
 
 module.exports = {
     getFilters: () => filters,
@@ -47,7 +47,14 @@ module.exports = {
     getBirthdays: () => birthdays,
     updateBirthdays: async () => {
         await executeQuery('SELECT * FROM "bdays" ORDER BY substring("bdays_date", 4, 5), substring("bdays_date", 1, 2);').then(async json => {
-            birthdays = json;
+            birthdays = {};
+            json.forEach(element => {
+                birthdays[element['bdays_id']] = {
+                    date: element['bdays_date'],
+                    flag: element['bdays_flag'],
+                    user: element['bdays_user']
+                };
+            });
             console.log('> Caché de cumpleaños actualizado');
         }).catch(console.error);
         return birthdays;
@@ -56,7 +63,16 @@ module.exports = {
     getBanned: () => banned,
     updateBanned: async () => {
         await executeQuery('SELECT * FROM "bans";').then(async json => {
-            banned = json;
+            banned.bans = {};
+            banned.ids = [];
+            json.forEach(element => {
+                banned.ids.push(element['bans_id']);
+                banned.bans[element['bans_id']] = {
+                    reason: element['bans_responsible'],
+                    responsible: element['bans_responsible'],
+                    user: element['bans_user']
+                };
+            });
             console.log('> Caché de baneados actualizado');
         }).catch(console.error);
         return banned;
@@ -123,7 +139,15 @@ module.exports = {
     getStats: () => stats,
     updateStats: async () => {
         await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(json => {
-            stats = json;
+            stats = {};
+            json.forEach(element => {
+                stats[element['stats_id']] = {
+                    days: element['stats_days'],
+                    hours: element['stats_hours'],
+                    minutes: element['stats_minutes'],
+                    seconds: element['stats_seconds']
+                };
+            });
             console.log('> Caché de estadísticas actualizado');
         }).catch(console.error);
         return stats;
@@ -138,6 +162,7 @@ module.exports = {
     getThermalPasteDates: () => thermalPasteDates,
     updateThermalPasteDates: async () => {
         await executeQuery('SELECT * FROM "thermalPasteDates";').then(json => {
+            thermalPasteDates = {};
             json.forEach(element => {
                 const id = element['tpd_id'];
                 const date = element['tpd_date'];

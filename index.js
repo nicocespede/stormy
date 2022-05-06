@@ -5,9 +5,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
-const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference } = require('./app/general');
+const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, getMembersStatus } = require('./app/general');
 const { containsAuthor } = require('./app/music');
 const { testing, prefix, ids, musicActions, categorySettings } = require('./app/constants');
+const { getBanned, updateBanned } = require('./app/cache');
+const { deleteBan } = require('./app/postgres');
 
 const client = new Client({
     intents: [
@@ -26,16 +28,33 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: 'LISTENING' }] });
 
+    // check for people connected to voice channels
     client.guilds.fetch(ids.guilds.default).then(guild => {
         guild.channels.cache.each(channel => {
             if (channel.isVoice() && channel.id != ids.channels.afk) {
-                const membersInChannel = channel.members.has(ids.users.bot) ? channel.members.size - 1 : channel.members.size;
-                if (membersInChannel >= 2)
-                    channel.members.each(member => cache.addTimestamp(member.id, new Date()));
-                else if (channel.members.has(ids.users.bot))
-                    cache.addTimestamp(ids.users.bot, new Date());
+                const membersInChannel = getMembersStatus(channel);
+                if (membersInChannel.size >= 2)
+                    membersInChannel.valid.forEach(member => {
+                        cache.addTimestamp(member.id, new Date());
+                    });
             }
         });
+    }).catch(console.error);
+
+    // check for bans correlativity
+    await client.guilds.fetch(ids.guilds.default).then(async guild => {
+        await guild.bans.fetch().then(async bans => {
+            const banned = !getBanned().ids ? await updateBanned() : getBanned();
+            let needUpdate = false;
+            for (const key in banned.bans)
+                if (!bans.has(key)) {
+                    needUpdate = true;
+                    console.log(`> El ban de ${banned.bans[key].user} no corresponde a este servidor`);
+                    await deleteBan(key);
+                }
+            if (needUpdate)
+                await updateBanned();
+        }).catch(console.error);
     }).catch(console.error);
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));

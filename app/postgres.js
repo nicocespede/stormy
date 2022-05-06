@@ -172,13 +172,13 @@ module.exports = {
             console.log('> Estadística agregada a la base de datos');
         });
     },
-    updateStat: (id, days, hours, minutes, seconds) => {
+    updateStat: (id, days, hours, minutes, seconds, username) => {
         return new Promise(function (resolve, reject) {
             dbClient.query(`UPDATE "stats" SET "stats_days" = ${days}, "stats_hours" = ${hours}, "stats_minutes" = ${minutes}, "stats_seconds" = ${seconds} WHERE "stats_id" = '${id}';`, (err, res) => {
                 if (err) throw err;
             });
             setTimeout(function () { resolve(); }, 1000);
-            console.log('> Estadística actualizada en la base de datos');
+            console.log(`> Estadística ${username ? `de ${username}` : ''} actualizada en la base de datos`);
         });
     },
 

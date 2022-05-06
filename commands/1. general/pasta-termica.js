@@ -69,7 +69,7 @@ module.exports = {
         var reply = { custom: true, ephemeral: true };
         var date = message ? args[0] : interaction.options.getString('fecha');
         if (!date) {
-            var dates = Object.keys(getThermalPasteDates()).length === 0 ? await updateThermalPasteDates() : getThermalPasteDates();
+            const dates = !getThermalPasteDates() ? await updateThermalPasteDates() : getThermalPasteDates();
             const userDate = dates[user.id];
             if (dates[user.id]) {
                 const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
@@ -113,7 +113,7 @@ module.exports = {
                     if (!collection.first()) {
                         edit.content = 'La acción expiró.';
                     } else if (collection.first().customId === 'add_yes') {
-                        const dates = Object.keys(getThermalPasteDates()).length === 0 ? await updateThermalPasteDates() : getThermalPasteDates();
+                        const dates = !getThermalPasteDates() ? await updateThermalPasteDates() : getThermalPasteDates();
                         var msg = {};
                         !dates[user.id] ? await addThermalPasteDate(user.id, date).then(async () => msg.content = `Se agregó la fecha **${date}** como tu último cambio de pasta térmica.`).catch(console.error)
                             : await updateThermalPasteDate(user.id, date).then(async () => msg.content = `Se actualizó tu fecha del último cambio de pasta térmica a **${date}**.`).catch(console.error);
