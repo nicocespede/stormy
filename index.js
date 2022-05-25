@@ -5,11 +5,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
-const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, getMembersStatus } = require('./app/general');
-const { containsAuthor } = require('./app/music');
+const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, checkMoviesAndGamesUpdates } = require('./app/general');
+const { containsAuthor, emergencyShutdown, playInterruptedQueue } = require('./app/music');
 const { testing, prefix, ids, musicActions, categorySettings } = require('./app/constants');
-const { getBanned, updateBanned } = require('./app/cache');
-const { deleteBan } = require('./app/postgres');
+const { dbClient } = require('./app/postgres');
+var interval;
 
 const client = new Client({
     intents: [
@@ -28,34 +28,9 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: 'LISTENING' }] });
 
-    // check for people connected to voice channels
-    client.guilds.fetch(ids.guilds.default).then(guild => {
-        guild.channels.cache.each(channel => {
-            if (channel.isVoice() && channel.id != ids.channels.afk) {
-                const membersInChannel = getMembersStatus(channel);
-                if (membersInChannel.size >= 2)
-                    membersInChannel.valid.forEach(member => {
-                        cache.addTimestamp(member.id, new Date());
-                    });
-            }
-        });
-    }).catch(console.error);
+    startStatsCounters(client);
 
-    // check for bans correlativity
-    await client.guilds.fetch(ids.guilds.default).then(async guild => {
-        await guild.bans.fetch().then(async bans => {
-            const banned = !getBanned().ids ? await updateBanned() : getBanned();
-            let needUpdate = false;
-            for (const key in banned.bans)
-                if (!bans.has(key)) {
-                    needUpdate = true;
-                    console.log(`> El ban de ${banned.bans[key].user} no corresponde a este servidor`);
-                    await deleteBan(key);
-                }
-            if (needUpdate)
-                await updateBanned();
-        }).catch(console.error);
-    }).catch(console.error);
+    await checkBansCorrelativity(client);
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client);
@@ -75,8 +50,8 @@ client.on('ready', async () => {
             highWaterMark: 1 << 25
         }
     }).on('trackStart', (queue, track) => {
-        if (cache.getLastAction() === musicActions.changingChannel)
-            cache.updateLastAction(musicActions.startingTrack);
+        if (cache.getLastAction() === musicActions.CHANGING_CHANNEL)
+            cache.updateLastAction(musicActions.STARTING_TRACK);
         else
             queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
@@ -88,31 +63,32 @@ client.on('ready', async () => {
             });
     }).on('trackAdd', async (queue, track) => {
         var lastAction = cache.getLastAction();
-        if (queue.playing && lastAction != musicActions.moving && lastAction != musicActions.addingNext)
+        if (queue.playing && lastAction != musicActions.MOVING_SONG && lastAction != musicActions.ADDING_NEXT)
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
     }).on('tracksAdd', async (queue, tracks) => {
-        if (cache.getLastAction() != musicActions.addingNext)
+        if (cache.getLastAction() != musicActions.ADDING_NEXT)
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription(`☑️ **${tracks.length} canciones** agregadas a la cola.`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
     }).on('channelEmpty', (queue) => {
-        cache.updateLastAction(musicActions.leavingEmptyChannel);
+        cache.updateLastAction(musicActions.LEAVING_EMPTY_CHANNEL);
         queue.metadata.send({
             embeds: [musicEmbed.setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
                 .setThumbnail(`attachment://icons8-no-audio-64.png`)],
             files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
         });
     }).on('queueEnd', (queue) => {
-        if (cache.getLastAction() != musicActions.leavingEmptyChannel
-            && cache.getLastAction() != musicActions.stopping
-            && cache.getLastAction() != musicActions.beingKicked) {
-            cache.updateLastAction(musicActions.ending);
+        if (cache.getLastAction() != musicActions.LEAVING_EMPTY_CHANNEL
+            && cache.getLastAction() != musicActions.STOPPING
+            && cache.getLastAction() != musicActions.BEING_KICKED
+            && cache.getLastAction() != musicActions.RESTARTING) {
+            cache.updateLastAction(musicActions.ENDING);
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
                     .setThumbnail(`attachment://icons8-so-so-64.png`)],
@@ -120,6 +96,10 @@ client.on('ready', async () => {
             });
         }
     });
+
+    playInterruptedQueue(client);
+
+    await checkMoviesAndGamesUpdates(client);
 
     console.log(`¡Loggeado como ${client.user.tag}!`);
 
@@ -136,7 +116,7 @@ client.on('ready', async () => {
         .setCategorySettings(categorySettings)
         .setColor([142, 89, 170]);
 
-    setInterval(async function () {
+    interval = setInterval(async function () {
         cache.addMinuteUp();
         const newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
         if (cache.getLastDateChecked().getDate() != newDate.getDate()) {
@@ -144,11 +124,10 @@ client.on('ready', async () => {
             cache.updateLastDateChecked(newDate);
         }
         const minutesUp = cache.getMinutesUp();
-        if (minutesUp === 1438 || minutesUp % 60 === 0) {
+        if (minutesUp % 60 === 0) {
             const timestamps = cache.getTimestamps();
             if (Object.keys(timestamps).length > 0) {
-                if (minutesUp % 60 === 0) console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
-                if (minutesUp === 1438) console.log(`> Pasaron 23 hs y 55 min, enviando estadísticas a la base de datos`);
+                console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
                 for (const key in timestamps) {
                     if (Object.hasOwnProperty.call(timestamps, key)) {
                         await pushDifference(key);
@@ -160,5 +139,33 @@ client.on('ready', async () => {
     }, 60 * 1000);
 });
 
-const token = !testing ? process.env.TOKEN : process.env.TESTING_TOKEN;
-client.login(token);
+client.login(!testing ? process.env.TOKEN : process.env.TESTING_TOKEN);
+
+process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
+    console.log('> Reinicio inminente...');
+    // disconnects music bot
+    await emergencyShutdown(client, ids.guilds.default);
+
+    // send stats
+    const timestamps = cache.getTimestamps();
+    if (Object.keys(timestamps).length > 0) {
+        console.log('> Enviando estadísticas a la base de datos');
+        for (const key in timestamps) {
+            if (Object.hasOwnProperty.call(timestamps, key)) {
+                await pushDifference(key);
+            }
+        }
+    }
+
+    //clears 1 minute interval
+    if (interval) {
+        console.log('> Terminando intervalo de 1 minuto');
+        clearInterval(interval);
+    }
+
+    //ends postgres client and discord client
+    console.log('> Terminando cliente de postgres');
+    await dbClient.end();
+    console.log('> Desconectando bot');
+    client.destroy();
+});

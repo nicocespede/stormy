@@ -90,7 +90,7 @@ module.exports = {
 
         if (queue.tracks.length != 0) {
             var description;
-            updateLastAction(musicActions.addingNext);
+            updateLastAction(musicActions.ADDING_NEXT);
             if (res.playlist) {
                 const actualQueue = queue.tracks;
                 queue.clear();
@@ -110,7 +110,7 @@ module.exports = {
             message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
             return;
         } else {
-            updateLastAction(musicActions.adding);
+            updateLastAction(musicActions.ADDING);
             res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
             message ? deferringMessage.delete() : interaction.deleteReply();
         }

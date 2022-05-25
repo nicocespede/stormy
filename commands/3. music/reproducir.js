@@ -102,7 +102,7 @@ module.exports = {
                 selfDeaf: true
             });
 
-            updateLastAction(musicActions.adding);
+            updateLastAction(musicActions.ADDING);
 
             res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
 

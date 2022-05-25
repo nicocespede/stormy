@@ -37,8 +37,8 @@ module.exports = client => {
             return;
         }
         // clear the queue if was kicked
-        if (getLastAction() != musicActions.leavingEmptyChannel && getLastAction() != musicActions.stopping
-            && getLastAction() != musicActions.ending)
+        if (getLastAction() != musicActions.LEAVING_EMPTY_CHANNEL && getLastAction() != musicActions.STOPPING
+            && getLastAction() != musicActions.ENDING && getLastAction() != musicActions.RESTARTING)
             setKicked(client, oldState.guild);
         return;
     });

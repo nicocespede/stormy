@@ -2,9 +2,9 @@ const { MessageAttachment } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
-const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat } = require('./postgres');
+const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat, deleteBan, executeQuery, updateMovies, updateGames } = require('./postgres');
 const Canvas = require('canvas');
-const { ids, relativeSpecialDays, currencies } = require('./constants');
+const { ids, relativeSpecialDays, currencies, mcu, games } = require('./constants');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -224,6 +224,21 @@ const secondsToFull = (seconds) => {
     return { days, hours, minutes, seconds };
 };
 
+const getMembersStatus = channel => {
+    var membersSize = channel.members.size;
+    var valid = [];
+    channel.members.each(member => {
+        if (member.id === ids.users.bot) {
+            membersSize--;
+            valid.push(member);
+        } else if (member.voice.deaf && !member.voice.streaming)
+            membersSize--;
+        else
+            valid.push(member);
+    });
+    return { size: membersSize, valid: valid };
+};
+
 module.exports = {
     needsTranslation: (string) => {
         var probabilities = lngDetector.detect(string);
@@ -361,18 +376,114 @@ module.exports = {
         return ret;
     },
 
-    getMembersStatus: channel => {
-        var membersSize = channel.members.size;
-        var valid = [];
-        channel.members.each(member => {
-            if (member.id === ids.users.bot) {
-                membersSize--;
-                valid.push(member);
-            } else if (member.voice.deaf && !member.voice.streaming)
-                membersSize--;
-            else
-                valid.push(member);
+    getMembersStatus,
+
+    checkBansCorrelativity: async client => {
+        await client.guilds.fetch(ids.guilds.default).then(async guild => {
+            await guild.bans.fetch().then(async bans => {
+                const banned = !cache.getBanned().ids ? await cache.updateBanned() : cache.getBanned();
+                let needUpdate = false;
+                for (const key in banned.bans)
+                    if (!bans.has(key)) {
+                        needUpdate = true;
+                        console.log(`> El ban de ${banned.bans[key].user} no corresponde a este servidor`);
+                        await deleteBan(key);
+                    }
+                if (needUpdate)
+                    await cache.updateBanned();
+            }).catch(console.error);
+        }).catch(console.error);
+    },
+
+    startStatsCounters: client => {
+        client.guilds.fetch(ids.guilds.default).then(guild => {
+            guild.channels.cache.each(channel => {
+                if (channel.isVoice() && channel.id != ids.channels.afk) {
+                    const membersInChannel = getMembersStatus(channel);
+                    if (membersInChannel.size >= 2)
+                        membersInChannel.valid.forEach(member => {
+                            cache.addTimestamp(member.id, new Date());
+                        });
+                }
+            });
+        }).catch(console.error);
+    },
+
+    checkMoviesAndGamesUpdates: async client => {
+        var oldGames;
+        var oldMovies;
+        await executeQuery('SELECT * FROM "moviesAndGames";').then(json => {
+            json.forEach(element => {
+                if (element['identifier'] === 'movies')
+                    oldMovies = JSON.parse(element['data'].replace(/APOSTROFE/g, "'"));
+                else if (element['identifier'] === 'games')
+                    oldGames = JSON.parse(element['data'].replace(/APOSTROFE/g, "'"));
+            });
+        }).catch(console.error);
+        const newStuff = { movies: [], games: [] };
+        const updatedStuff = { movies: [], games: [] };
+        mcu.forEach(movie => {
+            var found = false;
+            oldMovies.forEach(element => {
+                if (movie.name === element.name) {
+                    found = true;
+                    var updated = [];
+                    var added = [];
+                    for (const key in movie.lastUpdate)
+                        if (Object.hasOwnProperty.call(movie.lastUpdate, key))
+                            if (!element.lastUpdate[key])
+                                added.push(key)
+                            else if (movie.lastUpdate[key] !== element.lastUpdate[key])
+                                updated.push(key);
+                    if (updated.length > 0)
+                        updatedStuff.movies.push({ name: movie.name, versions: updated });
+                    if (added.length > 0)
+                        newStuff.movies.push({ name: movie.name, versions: added });
+                    return;
+                }
+            });
+            if (!found)
+                newStuff.movies.push({ name: movie.name, versions: Object.keys(movie.lastUpdate) });
         });
-        return { size: membersSize, valid: valid };
+        games.forEach(game => {
+            var found = false;
+            oldGames.forEach(element => {
+                if (game.name === element.name) {
+                    found = true;
+                    if (game.lastUpdate !== element.lastUpdate)
+                        updatedStuff.games.push(game.name);
+                    return;
+                }
+            });
+            if (!found)
+                newStuff.games.push(game.name);
+        });
+        if (updatedStuff.games.length != 0 || updatedStuff.movies.length != 0
+            || newStuff.games.length != 0 || newStuff.movies.length != 0) {
+            client.channels.fetch(ids.channels.anuncios).then(async channel => {
+                var content = '@everyone\n';
+                if (updatedStuff.movies.length != 0 || newStuff.movies.length != 0) {
+                    content += '\n🎬 **___Universo Cinematográfico de Marvel:___**\n\n'
+                    for (let i = 0; i < newStuff.movies.length; i++) {
+                        const element = newStuff.movies[i];
+                        content += `• Se agregó **${element.name}** en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} **${element.versions.join(', ')}**.\n`;
+                    }
+                    for (let i = 0; i < updatedStuff.movies.length; i++) {
+                        const element = updatedStuff.movies[i];
+                        content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} **${element.versions.join(', ')}** de **${element.name}**.\n`;
+                    }
+                    await updateMovies(JSON.stringify(mcu).replace(/'/g, 'APOSTROFE'));
+                }
+                if (updatedStuff.games.length != 0 || newStuff.games.length != 0) {
+                    content += '\n🎮 **___Juegos:___**\n\n'
+                    for (let i = 0; i < newStuff.games.length; i++)
+                        content += `• Se agregó el juego **${newStuff.games[i]}**.\n`;
+                    for (let i = 0; i < updatedStuff.games.length; i++)
+                        content += `• Se actualizó el juego **${updatedStuff.games[i]}**.\n`;
+                    await updateGames(JSON.stringify(games).replace(/'/g, 'APOSTROFE'));
+                }
+                channel.send(content).catch(console.error);
+            }).catch(console.error);
+        }
     }
 }

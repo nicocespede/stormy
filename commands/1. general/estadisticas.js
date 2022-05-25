@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
+const { ids } = require('../../app/constants');
 
 const timeToString = (seconds, minutes, hours, days) => {
     var ret = '';
@@ -39,13 +40,12 @@ module.exports = {
         var aux1 = '';
         var aux2 = '';
         var needsFooter = false;
-        var counter = 0;
+        var counter = 1;
         for (const key in stats) {
             if (Object.hasOwnProperty.call(stats, key)) {
                 const stat = stats[key];
                 await guild.members.fetch(key).then(member => {
-                    counter++;
-                    aux1 = usersField.value + `**${counter}. **${member.user.tag}\n\n`;
+                    aux1 = usersField.value + `**${key === ids.users.bot ? '🤖' : `${counter++}.`} **${member.user.tag}\n\n`;
                     aux2 = timeField.value + `${timeToString(stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
                 }).catch(() => console.log(`> El usuario con ID ${key} ya no está en el servidor.`));
                 if (aux1.length <= 1024 || aux2.length <= 1024) {

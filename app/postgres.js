@@ -27,6 +27,8 @@ dbClient.on('error', (err, client) => {
 });
 
 module.exports = {
+    dbClient,
+
     executeQuery: async (query) => {
         var ret = [];
         return new Promise(function (resolve, reject) {
@@ -178,7 +180,7 @@ module.exports = {
                 if (err) throw err;
             });
             setTimeout(function () { resolve(); }, 1000);
-            console.log(`> Estadística ${username ? `de ${username}` : ''} actualizada en la base de datos`);
+            console.log(`> Estadística ${username ? `de ${username} ` : ''}actualizada en la base de datos`);
         });
     },
 
@@ -198,6 +200,36 @@ module.exports = {
             });
             setTimeout(function () { resolve(); }, 1000);
             console.log('> Fecha de cambio de pasta térmica actualizada en la base de datos');
+        });
+    },
+
+    addQueue: (current, guild, metadata, previousTracks, tracks, voiceChannel) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`INSERT INTO "previousQueue" VALUES('${current}', '${guild}', '${metadata}','${previousTracks}','${tracks}', '${voiceChannel}');`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Cola agregada a la base de datos');
+        });
+    },
+
+    updateMovies: (movies) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`UPDATE "moviesAndGames" SET "data" = '${movies}' WHERE "identifier" = 'movies';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log(`> Películas actualizadas en la base de datos`);
+        });
+    },
+
+    updateGames: (games) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`UPDATE "moviesAndGames" SET "data" = '${games}' WHERE "identifier" = 'games';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log(`> Juegos actualizados en la base de datos`);
         });
     }
 };

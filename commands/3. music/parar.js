@@ -41,7 +41,7 @@ module.exports = {
             return reply;
         }
 
-        updateLastAction(musicActions.stopping);
+        updateLastAction(musicActions.STOPPING);
         queue.destroy();
 
         reply.embeds = [embed.setDescription("⏹️ Música parada, 👋 ¡adiós!")

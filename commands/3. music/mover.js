@@ -90,7 +90,7 @@ module.exports = {
             var auxString = 'al final';
         } else
             var auxString = `a la posición ${positionIndex + 1}`;
-        updateLastAction(musicActions.moving);
+        updateLastAction(musicActions.MOVING_SONG);
         queue.insert(song, positionIndex);
 
         reply.embeds = [embed.setDescription(`🔁 **${song.title}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)

@@ -80,7 +80,7 @@ module.exports = {
 
     getSombraBans: () => sombraBans,
     updateSombraBans: async () => {
-        await executeQuery('SELECT * FROM "sombraBans";').then(async json => {
+        await executeQuery('SELECT * FROM "sombraBans";').then(json => {
             sombraBans = json;
             console.log('> Caché de baneos de Sombra actualizado');
         }).catch(console.error);

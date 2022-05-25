@@ -9,7 +9,7 @@ module.exports = client => {
             const timestamps = getTimestamps();
 
             // check for streaming or deafen/undeafen updates
-            if (oldState.member.id != ids.users.bot && oldState.channelId === newState.channelId) {
+            if (oldState.member.id != ids.users.bot && oldState.channelId === newState.channelId && oldState.channelId != ids.channels.afk) {
                 const membersInChannel = getMembersStatus(oldState.channel);
 
                 // start counter if user undeafens or starts streaming while being deafened,

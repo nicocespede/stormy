@@ -19,7 +19,7 @@ module.exports = {
     hidden: true,
 
     callback: async ({ message, client }) => {
-        const cmd = message.content.split(' ')[0].substring(1);
+        const cmd = message.content.toLowerCase().split(' ')[0].substring(1);
         const account = smurf[cmd];
         var reply = { custom: true };
         await client.guilds.fetch(ids.guilds.default).then(async guild => {
