@@ -16,6 +16,7 @@ var stats;
 var timestamps = {};
 var minutesUp = 0;
 var thermalPasteDates;
+var bansResponsibles = {};
 
 module.exports = {
     getFilters: () => filters,
@@ -171,5 +172,9 @@ module.exports = {
             console.log('> Caché de fechas de cambio de pasta térmica actualizado');
         }).catch(console.error);
         return thermalPasteDates;
-    }
+    },
+
+    getBansResponsibles: () => bansResponsibles,
+    addBanResponsible: (id, responsible) => (bansResponsibles[id] = responsible),
+    removeBanResponsible: id => (delete bansResponsibles[id])
 };

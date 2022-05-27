@@ -1,7 +1,6 @@
 const { MessageButton, MessageActionRow, Constants } = require('discord.js');
-const { updateBanned } = require('../../app/cache');
+const { addBanResponsible } = require('../../app/cache');
 const { prefix, ids } = require('../../app/constants');
-const { addBan } = require('../../app/postgres');
 
 module.exports = {
     category: 'Moderación',
@@ -74,12 +73,9 @@ module.exports = {
                     edit.content = 'La acción expiró.';
                 else if (collection.first().customId === 'ban_yes')
                     await target.ban({ days: 0, reason: banReason }).then(async () => {
-                        const array = [target.user.id, target.user.tag, banReason, user.id];
-                        await addBan(array).then(async () => {
-                            edit.content = 'La acción fue completada.';
-                            channel.send({ content: `Hola <@${user.id}>, el usuario fue baneado correctamente.` });
-                            updateBanned();
-                        }).catch(console.error);
+                        addBanResponsible(target.user.id, user.id);
+                        edit.content = 'La acción fue completada.';
+                        channel.send({ content: `Hola <@${user.id}>, el usuario fue baneado correctamente.` });
                     }).catch(console.error);
                 else
                     edit.content = 'La acción fue cancelada.';

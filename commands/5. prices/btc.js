@@ -16,7 +16,7 @@ module.exports = {
     slash: false,
 
     callback: async ({ user, message }) => {
-        const cmd = message.content.split(' ')[0].substring(1);
+        const cmd = message.content.toLowerCase().split(' ')[0].substring(1);
         const coinID = currencies[cmd].id;
         const color = currencies[cmd].color;
         let data = await CoinGeckoClient.coins.fetch(coinID, {});
