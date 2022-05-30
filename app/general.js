@@ -491,7 +491,7 @@ module.exports = {
         client.guilds.fetch(ids.guilds.default).then(async guild => {
             const members = await guild.members.fetch();
             let membersCounter = members.filter(m => !m.user.bot).size;
-            const totalMembersName = `👥 Totales: ${membersCounter}`;
+            const totalMembersName = `👥 Miembros: ${membersCounter}`;
             guild.channels.fetch(ids.channels.members).then(channel => {
                 if (channel.name !== totalMembersName)
                     channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
