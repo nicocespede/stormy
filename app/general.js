@@ -491,7 +491,7 @@ module.exports = {
         client.guilds.fetch(ids.guilds.default).then(async guild => {
             const members = await guild.members.fetch();
             let membersCounter = members.filter(m => !m.user.bot).size;
-            let connectedCounter = members.filter(m => !m.user.bot && m.presence?.status !== 'offline').size;
+            let connectedCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
             const totalMembersName = `👥 Totales: ${membersCounter}`;
             const connectedMembersName = `🟢 Conectados: ${connectedCounter}`;
             guild.channels.fetch(ids.channels.members).then(channel => {
