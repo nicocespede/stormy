@@ -1,5 +1,6 @@
 const { getBanned, updateBanned } = require("../app/cache");
 const { ids, goodbye } = require("../app/constants");
+const { countMembers } = require("../app/general");
 
 module.exports = client => {
     client.on('guildMemberRemove', async member => {
@@ -9,6 +10,7 @@ module.exports = client => {
                 client.channels.fetch(ids.channels.welcome).then(channel => {
                     var random = Math.floor(Math.random() * (goodbye.length));
                     channel.send({ content: goodbye[random].replace(/%USERNAME%/g, `<@${member.user.id}>`) });
+                    countMembers(client);
                 }).catch(console.error);
         }).catch(console.error);
     });

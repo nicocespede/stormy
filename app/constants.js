@@ -29,6 +29,8 @@ module.exports = {
             general: !testing ? "703056370039128105" : testingChannel,
             cartelera: !testing ? "836043727616213012" : testingChannel,
             welcome: !testing ? "817149994959110235" : "962233358237188156",
+            members: !testing ? "980905383008804914" : "980894343302877334",
+            connectedMembers: !testing ? "980905523308281876" : "980899687659888710",
             afk: "585276720622338048",
             musica: !testing ? [
                 "703055406091468922",

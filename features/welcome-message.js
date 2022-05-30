@@ -1,5 +1,5 @@
 const { ids, welcome } = require("../app/constants");
-const { generateWelcomeImage } = require("../app/general");
+const { generateWelcomeImage, countMembers } = require("../app/general");
 
 module.exports = client => {
     client.on('guildMemberAdd', member => {
@@ -7,6 +7,7 @@ module.exports = client => {
             generateWelcomeImage(member.user).then(attachment => {
                 var random = Math.floor(Math.random() * (welcome.length));
                 channel.send({ content: `${welcome[random].replace(/%USER_ID%/g, member.user.id)}`, files: [attachment] });
+                countMembers(client);
             }).catch(console.error);
         }).catch(console.error);
     });

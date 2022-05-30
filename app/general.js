@@ -1,4 +1,4 @@
-const { MessageAttachment } = require('discord.js')
+const { MessageAttachment, Constants } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
@@ -485,5 +485,31 @@ module.exports = {
                 channel.send(content).catch(console.error);
             }).catch(console.error);
         }
+    },
+
+    countMembers: client => {
+        client.guilds.fetch(ids.guilds.default).then(guild => {
+            guild.members.fetch().then(members => {
+                let membersCounter = 0;
+                let connectedCounter = 0;
+                members.each(member => {
+                    if (!member.user.bot) {
+                        membersCounter++;
+                        if (member.presence && member.presence.status != Constants.Status.DISCONNECTED)
+                            connectedCounter++;
+                    }
+                });
+                const totalMembersName = `Miembros totales: ${membersCounter}`;
+                const connectedMembersName = `Miembros conectados: ${connectedCounter}`;
+                guild.channels.fetch(ids.channels.members).then(channel => {
+                    if (channel.name != totalMembersName)
+                        channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
+                }).catch(console.error);
+                guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
+                    if (channel.name != connectedMembersName)
+                        channel.setName(connectedMembersName).then(_ => console.log('> Contador de miembros conectados actualizado')).catch(console.error);
+                }).catch(console.error);
+            }).catch(console.error);
+        }).catch(console.error);
     }
 }

@@ -1,5 +1,6 @@
 const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible } = require("../app/cache");
 const { ids, bannedWithoutReason, bannedWithReason } = require("../app/constants");
+const { countMembers } = require("../app/general");
 const { addBan, addSombraBan } = require("../app/postgres");
 
 module.exports = client => {
@@ -23,6 +24,7 @@ module.exports = client => {
             }).catch(console.error);
             if (ban.user.id === ids.users.sombra)
                 addSombraBan(ban.reason).then(async () => await updateSombraBans()).catch(console.error);
+            countMembers(client);
         }).catch(console.error);
     });
 };
