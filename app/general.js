@@ -499,8 +499,8 @@ module.exports = {
                             connectedCounter++;
                     }
                 });
-                const totalMembersName = `Miembros totales: ${membersCounter}`;
-                const connectedMembersName = `Miembros conectados: ${connectedCounter}`;
+                const totalMembersName = `👥 Totales: ${membersCounter}`;
+                const connectedMembersName = `🟢 Conectados: ${connectedCounter}`;
                 guild.channels.fetch(ids.channels.members).then(channel => {
                     if (channel.name != totalMembersName)
                         channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
