@@ -488,27 +488,19 @@ module.exports = {
     },
 
     countMembers: client => {
-        client.guilds.fetch(ids.guilds.default).then(guild => {
-            guild.members.fetch().then(members => {
-                let membersCounter = 0;
-                let connectedCounter = 0;
-                members.each(member => {
-                    if (!member.user.bot) {
-                        membersCounter++;
-                        if (member.presence && member.presence.status != Constants.Status.DISCONNECTED)
-                            connectedCounter++;
-                    }
-                });
-                const totalMembersName = `👥 Totales: ${membersCounter}`;
-                const connectedMembersName = `🟢 Conectados: ${connectedCounter}`;
-                guild.channels.fetch(ids.channels.members).then(channel => {
-                    if (channel.name != totalMembersName)
-                        channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
-                }).catch(console.error);
-                guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
-                    if (channel.name != connectedMembersName)
-                        channel.setName(connectedMembersName).then(_ => console.log('> Contador de miembros conectados actualizado')).catch(console.error);
-                }).catch(console.error);
+        client.guilds.fetch(ids.guilds.default).then(async guild => {
+            const members = await guild.members.fetch();
+            let membersCounter = members.filter(m => !m.user.bot).size;
+            let connectedCounter = members.filter(m => !m.user.bot && m.presence?.status !== 'offline').size;
+            const totalMembersName = `👥 Totales: ${membersCounter}`;
+            const connectedMembersName = `🟢 Conectados: ${connectedCounter}`;
+            guild.channels.fetch(ids.channels.members).then(channel => {
+                if (channel.name !== totalMembersName)
+                    channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
+            }).catch(console.error);
+            guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
+                if (channel.name !== connectedMembersName)
+                    channel.setName(connectedMembersName).then(_ => console.log('> Contador de miembros conectados actualizado')).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
     }

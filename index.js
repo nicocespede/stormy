@@ -120,7 +120,6 @@ client.on('ready', async () => {
 
     interval = setInterval(async function () {
         cache.addMinuteUp();
-        countMembers(client);
         const newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
         if (cache.getLastDateChecked().getDate() != newDate.getDate()) {
             periodicFunction(client);
