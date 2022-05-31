@@ -1,4 +1,4 @@
-const testing = true;
+const testing = false;
 
 const testingRole = '967420341540511824';
 const testingChannel = '962233256433029183';
