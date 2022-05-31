@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
 const fs = require('fs');
+const { ids } = require('../../app/constants');
 
 async function getRandomThumb(path) {
     var fileName;
@@ -33,7 +34,7 @@ module.exports = {
         args = args.splice(1);
         getRandomThumb('movies').then(fileName => {
             const msg = {
-                content: '@everyone',
+                content: `<@&${ids.roles.cine}>`,
                 embeds: [new MessageEmbed()
                     .setDescription(args.join(" "))
                     .setColor([255, 0, 6])

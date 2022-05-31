@@ -14,10 +14,10 @@ module.exports = {
     callback: async ({ guild, message }) => {
         var aux = !getReactionCollectorInfo() ? await updateReactionCollectorInfo() : getReactionCollectorInfo();
         aux = aux[0];
-        if (!aux['collectorMessage_active'])
+        if (!aux['activeCollector'])
             message.author.send({ content: 'El recolector de reacciones no está activo.' });
         else
-            updateCollectorMessage(false, aux['collectorMessage_id']).then(async () => {
+            updateCollectorMessage(false, aux['messageId']).then(async () => {
                 await updateReactionCollectorInfo();
                 stopReactionCollector();
                 guild.roles.fetch(ids.roles.funcion).then(role => {

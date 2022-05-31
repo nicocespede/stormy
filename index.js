@@ -39,7 +39,7 @@ client.on('ready', async () => {
     periodicFunction(client);
     var reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
     reactionCollectorInfo = reactionCollectorInfo[0];
-    if (reactionCollectorInfo['collectorMessage_active'])
+    if (reactionCollectorInfo['activeCollector'])
         initiateReactionCollector(client);
 
     var musicEmbed = new MessageEmbed().setColor([195, 36, 255]);

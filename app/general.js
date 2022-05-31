@@ -1,4 +1,4 @@
-const { MessageAttachment, Constants } = require('discord.js')
+const { MessageAttachment } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
@@ -286,7 +286,7 @@ module.exports = {
                 });
             var aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
             aux = aux[0];
-            channel.messages.fetch(aux['collectorMessage_id']).then(m => {
+            channel.messages.fetch(aux['messageId']).then(m => {
                 if (message)
                     m.react('✅');
                 const filter = (reaction) => reaction.emoji.name === '✅';
@@ -461,9 +461,9 @@ module.exports = {
         if (updatedStuff.games.length != 0 || updatedStuff.movies.length != 0
             || newStuff.games.length != 0 || newStuff.movies.length != 0) {
             client.channels.fetch(ids.channels.anuncios).then(async channel => {
-                var content = '@everyone\n';
+                let content = '';
                 if (updatedStuff.movies.length != 0 || newStuff.movies.length != 0) {
-                    content += '\n🎬 **___Universo Cinematográfico de Marvel:___**\n\n'
+                    content += `<@&${ids.roles.anunciosUcm}>\n🎬 **___Universo Cinematográfico de Marvel:___**\n\n`;
                     for (let i = 0; i < newStuff.movies.length; i++) {
                         const element = newStuff.movies[i];
                         content += `• Se agregó **${element.name}** en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} **${element.versions.join(', ')}**.\n`;
@@ -475,7 +475,7 @@ module.exports = {
                     await updateMovies(JSON.stringify(mcu).replace(/'/g, 'APOSTROFE'));
                 }
                 if (updatedStuff.games.length != 0 || newStuff.games.length != 0) {
-                    content += '\n🎮 **___Juegos:___**\n\n'
+                    content += `\n<@&${ids.roles.anunciosJuegos}>\n🎮 **___Juegos:___**\n\n`;
                     for (let i = 0; i < newStuff.games.length; i++)
                         content += `• Se agregó el juego **${newStuff.games[i]}**.\n`;
                     for (let i = 0; i < updatedStuff.games.length; i++)

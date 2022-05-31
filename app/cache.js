@@ -8,6 +8,7 @@ var banned = {};
 var sombraBans;
 var lastDateChecked;
 var reactionCollectorInfo;
+var rolesMessageInfo;
 var anniversaries;
 var avatar;
 var lastAction;
@@ -93,11 +94,20 @@ module.exports = {
 
     getReactionCollectorInfo: () => reactionCollectorInfo,
     updateReactionCollectorInfo: async () => {
-        await executeQuery('SELECT * FROM "collectorMessage";').then(async json => {
+        await executeQuery('SELECT * FROM "messages" WHERE "id" = \'billboard_message\';').then(async json => {
             reactionCollectorInfo = json;
             console.log('> Caché de recolector de reacciones actualizado');
         }).catch(console.error);
         return reactionCollectorInfo;
+    },
+
+    getRolesMessageInfo: () => rolesMessageInfo,
+    updateRolesMessageInfo: async () => {
+        await executeQuery('SELECT * FROM "messages" WHERE "id" = \'roles_message\';').then(async json => {
+            rolesMessageInfo = json;
+            console.log('> Caché de mensaje de roles actualizado');
+        }).catch(console.error);
+        return rolesMessageInfo;
     },
 
     getAnniversaries: () => anniversaries,

@@ -104,15 +104,21 @@ module.exports = {
 
     updateCollectorMessage: (value, id) => {
         return new Promise(function (resolve, reject) {
-            dbClient.query(`DELETE FROM "collectorMessage";`, (err, res) => {
+            dbClient.query(`UPDATE "messages" SET "activeCollector" = ${value}, "messageId" = '${id}' WHERE "id" = 'billboard_message';`, (err, res) => {
                 if (err) throw err;
-                dbClient.query(`INSERT INTO "collectorMessage" VALUES(${value}, ${id});`, (err, res) => {
-                    if (err) throw err;
-                });
-                setTimeout(function () { resolve(); }, 1000);
             });
             setTimeout(function () { resolve(); }, 1000);
             console.log('> Mensaje de recolector actualizado en la base de datos');
+        });
+    },
+
+    updateRolesMessage: (channelId, messageId) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`UPDATE "messages" SET "channelId" = '${channelId}', "messageId" = '${messageId}' WHERE "id" = 'roles_message';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Mensaje de roles actualizado en la base de datos');
         });
     },
 

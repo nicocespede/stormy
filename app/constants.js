@@ -19,7 +19,12 @@ module.exports = {
         roles: {
             banear: !testing ? '872782064271917067' : testingRole,
             smurf: !testing ? "872768314689060936" : testingRole,
-            funcion: !testing ? "875942757733122078" : testingRole
+            funcion: !testing ? "875942757733122078" : testingRole,
+            juegos: !testing ? "981291002126012456" : testingRole,
+            musica: !testing ? "981291168484708392" : testingRole,
+            anunciosUcm: !testing ? "981291223522357298" : testingRole,
+            anunciosJuegos: !testing ? "981291298310991872" : testingRole,
+            cine: !testing ? "981291579769753660" : testingRole,
         },
         guilds: {
             default: !testing ? '479523718368854027' : '962233256433029180'
@@ -34,7 +39,6 @@ module.exports = {
             afk: "585276720622338048",
             musica: !testing ? [
                 "703055406091468922", //musica
-                "859586260565229588", //musica para nenes down
                 "853926878498521089" //test
             ] : [testingChannel]
         }
