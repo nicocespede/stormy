@@ -1298,8 +1298,8 @@ module.exports = {
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/962130/header.jpg'
     }, {
         name: 'Left 4 Dead 2 (2009)',
-        version: 'Build 04102021',
-        lastUpdate: '23/11/2021',
+        version: 'V23.02.2022',
+        lastUpdate: '30/05/2022',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/550/header.jpg'
     }, {
         name: "Marvel's Avengers (2020)",
