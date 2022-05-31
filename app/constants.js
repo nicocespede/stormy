@@ -1,4 +1,4 @@
-const testing = false;
+const testing = true;
 
 const testingRole = '967420341540511824';
 const testingChannel = '962233256433029183';
@@ -30,11 +30,12 @@ module.exports = {
             cartelera: !testing ? "836043727616213012" : testingChannel,
             welcome: !testing ? "817149994959110235" : "962233358237188156",
             members: !testing ? "980905383008804914" : "980894343302877334",
+            connectedMembers: !testing ? "981245429679259688" : "981241293395099728",
             afk: "585276720622338048",
             musica: !testing ? [
-                "703055406091468922",
-                "859586260565229588",
-                "853926878498521089"
+                "703055406091468922", //musica
+                "859586260565229588", //musica para nenes down
+                "853926878498521089" //test
             ] : [testingChannel]
         }
     },

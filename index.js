@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
-const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, checkMoviesAndGamesUpdates, countMembers } = require('./app/general');
+const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, checkMoviesAndGamesUpdates, countMembers, countConnectedMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue } = require('./app/music');
 const { testing, prefix, ids, musicActions, categorySettings } = require('./app/constants');
 const { dbClient } = require('./app/postgres');
@@ -31,7 +31,8 @@ client.on('ready', async () => {
     startStatsCounters(client);
 
     countMembers(client);
-    
+    countConnectedMembers(client);
+
     await checkBansCorrelativity(client);
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
@@ -138,6 +139,8 @@ client.on('ready', async () => {
                 }
             }
         }
+        if (minutesUp % 5 === 0)
+            countConnectedMembers(client);
     }, 60 * 1000);
 });
 

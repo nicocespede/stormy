@@ -491,10 +491,22 @@ module.exports = {
         client.guilds.fetch(ids.guilds.default).then(async guild => {
             const members = await guild.members.fetch();
             let membersCounter = members.filter(m => !m.user.bot).size;
-            const totalMembersName = `👥 Miembros: ${membersCounter}`;
+            const totalMembersName = `👥 Totales: ${membersCounter}`;
             guild.channels.fetch(ids.channels.members).then(channel => {
                 if (channel.name !== totalMembersName)
                     channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
+            }).catch(console.error);
+        }).catch(console.error);
+    },
+
+    countConnectedMembers: client => {
+        client.guilds.fetch(ids.guilds.default).then(async guild => {
+            const members = await guild.members.fetch();
+            let membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
+            const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
+            guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
+                if (channel.name !== connectedMembersName)
+                    channel.setName(connectedMembersName).then(_ => console.log('> Contador de miembros conectados actualizado')).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
     }
