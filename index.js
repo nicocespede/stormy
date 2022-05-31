@@ -144,6 +144,8 @@ client.on('ready', async () => {
     }, 60 * 1000);
 });
 
+client.on('rateLimit', data => console.log('> Se recibió un límite de tarifa:\n', data));
+
 client.login(!testing ? process.env.TOKEN : process.env.TESTING_TOKEN);
 
 process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
@@ -155,11 +157,9 @@ process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
     const timestamps = cache.getTimestamps();
     if (Object.keys(timestamps).length > 0) {
         console.log('> Enviando estadísticas a la base de datos');
-        for (const key in timestamps) {
-            if (Object.hasOwnProperty.call(timestamps, key)) {
+        for (const key in timestamps)
+            if (Object.hasOwnProperty.call(timestamps, key))
                 await pushDifference(key);
-            }
-        }
     }
 
     //clears 1 minute interval
