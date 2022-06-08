@@ -882,6 +882,12 @@ module.exports = {
                 '1080p': "13/05/2022"
             },
             thumbURL: "moon-knight.png"
+        },
+        {
+            name: "Ms. Marvel Season 1 (2022)",
+            type: "Serie",
+            lastUpdate: { '720p': "08/06/2022" },
+            thumbURL: "ms-marvel.png"
         }
     ],
 
