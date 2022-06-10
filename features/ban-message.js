@@ -16,10 +16,10 @@ module.exports = client => {
             client.channels.fetch(ids.channels.welcome).then(channel => {
                 if (ban.reason === null || ban.reason === "") {
                     var random = Math.floor(Math.random() * (bannedWithoutReason.length));
-                    channel.send(bannedWithoutReason[random].replace(/%USERNAME%/g, `<@${ban.user.id}>`));
+                    channel.send(bannedWithoutReason[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`));
                 } else {
                     var random = Math.floor(Math.random() * (bannedWithReason.length));
-                    channel.send(bannedWithReason[random].replace(/%USERNAME%/g, `<@${ban.user.id}>`).replace(/%REASON%/g, `${ban.reason}`));
+                    channel.send(bannedWithReason[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`).replace(/%REASON%/g, `${ban.reason}`));
                 }
             }).catch(console.error);
             if (ban.user.id === ids.users.sombra)

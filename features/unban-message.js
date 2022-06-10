@@ -9,7 +9,7 @@ module.exports = client => {
             await deleteBan(ban.user.id).then(async () => await updateBanned()).catch(console.error);
         client.channels.fetch(ids.channels.welcome).then(channel => {
             var random = Math.floor(Math.random() * (unbanned.length));
-            channel.send(unbanned[random].replace(/%USERNAME%/g, `<@${ban.user.id}>`));
+            channel.send(unbanned[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`));
         }).catch(console.error);
     });
 };
