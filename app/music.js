@@ -81,11 +81,11 @@ module.exports = {
             });
             var previousTracks = queue.previousTracks.slice();
             await addQueue(
-                JSON.stringify(previousTracks.pop()).replace(/'/g, ''),
+                JSON.stringify(previousTracks.pop()).replace(/'/g, 'APOSTROFE'),
                 JSON.stringify(queue.guild),
                 JSON.stringify(queue.metadata),
-                JSON.stringify(previousTracks).replace(/'/g, ''),
-                JSON.stringify(queue.tracks).replace(/'/g, ''),
+                JSON.stringify(previousTracks).replace(/'/g, 'APOSTROFE'),
+                JSON.stringify(queue.tracks).replace(/'/g, 'APOSTROFE'),
                 JSON.stringify(queue.connection.channel)
             );
             queue.destroy();
@@ -95,11 +95,11 @@ module.exports = {
     playInterruptedQueue: async client => {
         await executeQuery('SELECT * FROM "previousQueue";').then(async json => {
             if (json.length > 0) {
-                const current = JSON.parse(json[0]['current']);
+                const current = JSON.parse(json[0]['current'].replace(/APOSTROFE/g, "'"));
                 const guild = await client.guilds.fetch(JSON.parse(json[0]['guild']).id).catch(console.error);
                 const metadata = await guild.channels.fetch(JSON.parse(json[0]['metadata']).id).catch(console.error);
-                const previousTracks = JSON.parse(json[0]['previousTracks']);
-                const tracks = JSON.parse(json[0]['tracks']);
+                const previousTracks = JSON.parse(json[0]['previousTracks'].replace(/APOSTROFE/g, "'"));
+                const tracks = JSON.parse(json[0]['tracks'].replace(/APOSTROFE/g, "'"));
                 const voiceChannel = await guild.channels.fetch(JSON.parse(json[0]['voiceChannel']).id).catch(console.error);
 
                 if (voiceChannel.members.size > 0) {
