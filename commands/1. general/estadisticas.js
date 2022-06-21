@@ -5,16 +5,16 @@ const { pushDifference } = require('../../app/general');
 const { ids } = require('../../app/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
-    short: ['d.', 'h.', 'min.', 'seg.']
+    short: ['día', 'hora', 'min.', 'seg.']
 };
 
 const timeToString = (version, seconds, minutes, hours, days) => {
     const strings = Versions[version];
     var ret = '';
     if (days != 0)
-        ret += days + ` ${strings[0]}${version === 'full' && days > 1 ? 's' : ''}`;
+        ret += days + ` ${strings[0]}${days > 1 ? 's' : ''}`;
     if (hours != 0)
-        ret += (ret != '' ? ', ' : '') + hours + ` ${strings[1]}${version === 'full' && hours > 1 ? 's' : ''}`;
+        ret += (ret != '' ? ', ' : '') + hours + ` ${strings[1]}${hours > 1 ? 's' : ''}`;
     if (minutes != 0)
         ret += (ret != '' ? ', ' : '') + minutes + ` ${strings[2]}${version === 'full' && minutes > 1 ? 's' : ''}`;
     if (seconds != 0)
