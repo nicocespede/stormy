@@ -1,18 +1,24 @@
 const { MessageEmbed } = require('discord.js');
+const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
 const { ids } = require('../../app/constants');
+const Versions = {
+    full: ['día', 'hora', 'minuto', 'segundo'],
+    short: ['d.', 'h.', 'min.', 'seg.']
+};
 
-const timeToString = (seconds, minutes, hours, days) => {
+const timeToString = (version, seconds, minutes, hours, days) => {
+    const strings = Versions[version];
     var ret = '';
     if (days != 0)
-        ret += days + ` día${days > 1 ? 's' : ''}`;
+        ret += days + ` ${strings[0]}${version === 'full' && days > 1 ? 's' : ''}`;
     if (hours != 0)
-        ret += (ret != '' ? ', ' : '') + hours + ` hora${hours > 1 ? 's' : ''}`;
+        ret += (ret != '' ? ', ' : '') + hours + ` ${strings[1]}${version === 'full' && hours > 1 ? 's' : ''}`;
     if (minutes != 0)
-        ret += (ret != '' ? ', ' : '') + minutes + ` minuto${minutes > 1 ? 's' : ''}`;
+        ret += (ret != '' ? ', ' : '') + minutes + ` ${strings[2]}${version === 'full' && minutes > 1 ? 's' : ''}`;
     if (seconds != 0)
-        ret += (ret != '' ? ', ' : '') + seconds + ` segundo${seconds > 1 ? 's' : ''}`;
+        ret += (ret != '' ? ', ' : '') + seconds + ` ${strings[3]}${version === 'full' && seconds > 1 ? 's' : ''}`;
     return ret;
 }
 
@@ -40,13 +46,17 @@ module.exports = {
         var aux1 = '';
         var aux2 = '';
         var needsFooter = false;
+        const canvas = createCanvas(200, 200);
+        const ctx = canvas.getContext('2d');
         var counter = 1;
         for (const key in stats) {
             if (Object.hasOwnProperty.call(stats, key)) {
                 const stat = stats[key];
                 await guild.members.fetch(key).then(member => {
                     aux1 = usersField.value + `**${key === ids.users.bot ? '🤖' : `${counter++}.`} **${member.user.tag}\n\n`;
-                    aux2 = timeField.value + `${timeToString(stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
+                    aux2 = timeField.value + `${timeToString('full', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
+                    if (ctx.measureText(aux2).width >= 182)
+                        aux2 = timeField.value + `${timeToString('short', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
                 }).catch(() => console.log(`> El usuario con ID ${key} ya no está en el servidor.`));
                 if (aux1.length <= 1024 || aux2.length <= 1024) {
                     usersField.value = aux1;
