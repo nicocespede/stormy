@@ -884,6 +884,15 @@ module.exports = {
             thumbURL: "moon-knight.png"
         },
         {
+            name: "Doctor Strange In The Multiverse Of Madness (2022)",
+            type: "Película",
+            lastUpdate: {
+                '4K': "21/06/2022",
+                '1080p': "21/06/2022"
+            },
+            thumbURL: "doctor-strange.png"
+        },
+        {
             name: "Ms. Marvel Season 1 (2022)",
             type: "Serie",
             lastUpdate: { '1080p': "17/06/2022" },
