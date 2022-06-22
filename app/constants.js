@@ -887,8 +887,8 @@ module.exports = {
             name: "Doctor Strange In The Multiverse Of Madness (2022)",
             type: "Película",
             lastUpdate: {
-                '4K': "21/06/2022",
-                '1080p': "21/06/2022"
+                '4K': "22/06/2022",
+                '1080p': "22/06/2022"
             },
             thumbURL: "doctor-strange.png"
         },
