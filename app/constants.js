@@ -31,6 +31,7 @@ module.exports = {
         },
         channels: {
             anuncios: !testing ? "881187176216395826" : testingChannel,
+            autorol: !testing ? "981294118825230366" : testingChannel,
             general: !testing ? "703056370039128105" : testingChannel,
             cartelera: !testing ? "836043727616213012" : testingChannel,
             welcome: !testing ? "817149994959110235" : "962233358237188156",
