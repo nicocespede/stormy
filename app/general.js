@@ -149,16 +149,16 @@ async function sendAnniversaryAlert(client) {
 
 async function updateAvatar(client) {
     var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-    actualAvatar = actualAvatar[0]
+    actualAvatar = actualAvatar[0];
     var newAvatar = `./assets/kgprime${getImageType()}.png`;
     if (actualAvatar['avatar_url'] != newAvatar) {
-        client.user.setAvatar(newAvatar).then(() => {
+        await client.user.setAvatar(newAvatar).then(() => {
             updateAvatarString(newAvatar).catch(console.error);
         }).catch(console.error);
     }
 };
 
-function updateUsername(client) {
+async function updateUsername(client) {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     const date = today.getDate();
     const month = today.getMonth() + 1;
@@ -175,7 +175,7 @@ function updateUsername(client) {
         else
             newUsername += ' 🎅🏻';
     if (client.user.username != newUsername)
-        client.user.setUsername(newUsername).catch(console.error);
+        await client.user.setUsername(newUsername).catch(console.error);
 };
 
 const sendBdayAlert = async (client) => {
@@ -509,5 +509,9 @@ module.exports = {
                     channel.setName(connectedMembersName).then(_ => console.log('> Contador de miembros conectados actualizado')).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
-    }
+    },
+
+    updateAvatar,
+
+    updateUsername
 }

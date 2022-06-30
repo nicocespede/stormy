@@ -102,7 +102,7 @@ module.exports = {
                 reply.components = [getVersionsRow()];
                 reply.files = [`./assets/movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
 
-                const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
+                const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
 
                 const filter = (btnInt) => {
                     const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
@@ -241,7 +241,7 @@ module.exports = {
             reply.components = [getFiltersRow(filters), secondaryRow];
             reply.files = [`./assets/mcu.jpg`];
 
-            const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
+            const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
 
             const filter = (btnInt) => {
                 const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
