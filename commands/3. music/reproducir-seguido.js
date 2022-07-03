@@ -45,6 +45,7 @@ module.exports = {
             return reply;
         }
 
+        if (interaction) interaction.deferReply();
         const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
         if (playlists.names.includes(song.toLowerCase()))
             song = playlists.urls[playlists.names.indexOf(song.toLowerCase())];
@@ -77,7 +78,7 @@ module.exports = {
             .setThumbnail(`attachment://icons8-sand-timer-64.png`)];
         reply.ephemeral = false;
         reply.files = [`./assets/thumbs/music/icons8-sand-timer-64.png`];
-        const deferringMessage = message ? await message.reply(reply) : await interaction.reply(reply);
+        const deferringMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
         const voiceChannel = member.voice.channel;
         const { joinVoiceChannel } = require('@discordjs/voice');
