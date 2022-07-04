@@ -148,9 +148,9 @@ async function sendAnniversaryAlert(client) {
 };
 
 async function updateAvatar(client) {
+    var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
+    actualAvatar = actualAvatar[0];
     if (actualAvatar['avatar_url'] != `./assets/kgprime-kru.png`) {
-        var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-        actualAvatar = actualAvatar[0];
         var newAvatar = `./assets/kgprime${getImageType()}.png`;
         if (actualAvatar['avatar_url'] != newAvatar)
             await client.user.setAvatar(newAvatar).then(() => {
