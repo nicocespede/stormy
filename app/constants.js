@@ -1346,6 +1346,11 @@ module.exports = {
         lastUpdate: '03/11/2021',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/418030/header.jpg'
     }, {
+        name: 'SUPERHOT (2016)',
+        version: 'V1.0.17_005 + L1.1.10 GOG',
+        lastUpdate: '04/07/2022',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/322500/header.jpg'
+    }, {
         name: 'Superliminal (2020)',
         version: 'V24.11.2021',
         lastUpdate: '23/11/2021',

@@ -148,34 +148,37 @@ async function sendAnniversaryAlert(client) {
 };
 
 async function updateAvatar(client) {
-    var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-    actualAvatar = actualAvatar[0];
-    var newAvatar = `./assets/kgprime${getImageType()}.png`;
-    if (actualAvatar['avatar_url'] != newAvatar) {
-        await client.user.setAvatar(newAvatar).then(() => {
-            updateAvatarString(newAvatar).catch(console.error);
-        }).catch(console.error);
+    if (actualAvatar['avatar_url'] != `./assets/kgprime-kru.png`) {
+        var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
+        actualAvatar = actualAvatar[0];
+        var newAvatar = `./assets/kgprime${getImageType()}.png`;
+        if (actualAvatar['avatar_url'] != newAvatar)
+            await client.user.setAvatar(newAvatar).then(() => {
+                updateAvatarString(newAvatar).catch(console.error);
+            }).catch(console.error);
     }
 };
 
 async function updateUsername(client) {
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    const date = today.getDate();
-    const month = today.getMonth() + 1;
-    var newUsername = 'StormY';
-    if (month === 1)
-        newUsername += ' 🥂';
-    else if (month === 2)
-        newUsername += ' 💘';
-    else if (month === 4 && date <= relativeSpecialDays.easter)
-        newUsername += ' 🐇';
-    else if (month === 12)
-        if (date >= 26)
+    if (client.user.username != 'KRÜ StormY 🤟🏼') {
+        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const date = today.getDate();
+        const month = today.getMonth() + 1;
+        var newUsername = 'StormY';
+        if (month === 1)
             newUsername += ' 🥂';
-        else
-            newUsername += ' 🎅🏻';
-    if (client.user.username != newUsername)
-        await client.user.setUsername(newUsername).catch(console.error);
+        else if (month === 2)
+            newUsername += ' 💘';
+        else if (month === 4 && date <= relativeSpecialDays.easter)
+            newUsername += ' 🐇';
+        else if (month === 12)
+            if (date >= 26)
+                newUsername += ' 🥂';
+            else
+                newUsername += ' 🎅🏻';
+        if (client.user.username != newUsername)
+            await client.user.setUsername(newUsername).catch(console.error);
+    }
 };
 
 const sendBdayAlert = async (client) => {
