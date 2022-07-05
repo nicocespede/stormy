@@ -439,7 +439,7 @@ module.exports = {
                             else if (movie.lastUpdate[key] !== element.lastUpdate[key])
                                 updated.push(key);
                     if (updated.length > 0)
-                        updatedStuff.movies.push({ name: movie.name, versions: updated });
+                        updatedStuff.movies.push({ name: movie.name, versions: updated, updateInfo: movie.updateInfo });
                     if (added.length > 0)
                         newStuff.movies.push({ name: movie.name, versions: added });
                     return;
@@ -473,7 +473,7 @@ module.exports = {
                     }
                     for (let i = 0; i < updatedStuff.movies.length; i++) {
                         const element = updatedStuff.movies[i];
-                        content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} **${element.versions.join(', ')}** de **${element.name}**.\n`;
+                        content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} **${element.versions.join(', ')}** de **${element.name}**: ${element.updateInfo}.\n`;
                     }
                     await updateMovies(JSON.stringify(mcu).replace(/'/g, 'APOSTROFE'));
                 }
