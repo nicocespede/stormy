@@ -862,7 +862,7 @@ module.exports = {
             type: "Película",
             lastUpdate: {
                 '4K': "16/05/2022",
-                '1080p': "16/05/2022"
+                '1080p': "04/07/2022"
             },
             thumbURL: "morbius.png"
         },
