@@ -316,7 +316,7 @@ module.exports = {
             thumbURL: "agent-carter.png"
         },
         {
-            name: "Marvel One-Shot: Agent Carter (2013)",
+            name: "Agent Carter (2013)",
             type: "Cortometraje",
             lastUpdate: { '1080p': "01/03/2022" },
             thumbURL: "agent-carter.png"
@@ -359,13 +359,13 @@ module.exports = {
             thumbURL: "hulk.png"
         },
         {
-            name: "Marvel One-Shot: The Consultant (2011)",
+            name: "The Consultant (2011)",
             type: "Cortometraje",
             lastUpdate: { '1080p': "01/03/2022" },
             thumbURL: "agents-of-shield.png"
         },
         {
-            name: "Marvel One-Shot: A Funny Thing Happened On The Way To Thor's Hammer (2011)",
+            name: "A Funny Thing Happened On The Way To Thor's Hammer (2011)",
             type: "Cortometraje",
             lastUpdate: { '1080p': "01/03/2022" },
             thumbURL: "agents-of-shield.png"
@@ -380,7 +380,7 @@ module.exports = {
             thumbURL: "thor.png"
         },
         {
-            name: "The Avengers (2012)",
+            name: "Avengers (2012)",
             type: "Película",
             lastUpdate: {
                 '4K': "11/01/2022",
@@ -389,7 +389,7 @@ module.exports = {
             thumbURL: "avengers.png"
         },
         {
-            name: "Marvel One-Shot: Item 47 (2012)",
+            name: "Item 47 (2012)",
             type: "Cortometraje",
             lastUpdate: { '1080p': "01/03/2022" },
             thumbURL: "agents-of-shield.png"
@@ -414,7 +414,7 @@ module.exports = {
             thumbURL: "iron-man.png"
         },
         {
-            name: "Marvel One-Shot: All Hail The King (2014)",
+            name: "All Hail The King (2014)",
             type: "Cortometraje",
             lastUpdate: { '1080p': "01/03/2022" },
             thumbURL: "agents-of-shield.png"
@@ -435,7 +435,7 @@ module.exports = {
             thumbURL: "agents-of-shield.png"
         },
         {
-            name: "Guardians of the Galaxy (2014)",
+            name: "Guardians Of The Galaxy (2014)",
             type: "Película",
             lastUpdate: {
                 '3D': "11/01/2022",
@@ -444,7 +444,7 @@ module.exports = {
             thumbURL: "guardians-of-the-galaxy.png"
         },
         {
-            name: "Guardians of the Galaxy Vol. 2 (2017)",
+            name: "Guardians Of The Galaxy Vol. 2 (2017)",
             type: "Película",
             lastUpdate: {
                 '3D': "11/01/2022",
@@ -466,7 +466,7 @@ module.exports = {
             thumbURL: "jessica-jones.png"
         },
         {
-            name: "Avengers: Age of Ultron (2015)",
+            name: "Avengers: Age Of Ultron (2015)",
             type: "Película",
             lastUpdate: {
                 '3D': "12/01/2022",
@@ -753,12 +753,6 @@ module.exports = {
             thumbURL: "scarlet-witch.png"
         },
         {
-            name: "The Falcon And The Winter Soldier Season 1 (2021)",
-            type: "Serie",
-            lastUpdate: { '1080p': "13/01/2022" },
-            thumbURL: "falcon.png"
-        },
-        {
             name: "Shang-Chi and the Legend of the Ten Rings (2021)",
             type: "Película",
             lastUpdate: {
@@ -766,6 +760,12 @@ module.exports = {
                 '1080p': "14/01/2022"
             },
             thumbURL: "shang-chi.png"
+        },
+        {
+            name: "The Falcon And The Winter Soldier Season 1 (2021)",
+            type: "Serie",
+            lastUpdate: { '1080p': "13/01/2022" },
+            thumbURL: "falcon.png"
         },
         {
             name: "Helstrom Season 1 (2020)",
@@ -867,6 +867,15 @@ module.exports = {
             thumbURL: "morbius.png"
         },
         {
+            name: "Doctor Strange In The Multiverse Of Madness (2022)",
+            type: "Película",
+            lastUpdate: {
+                '4K': "22/06/2022",
+                '1080p': "22/06/2022"
+            },
+            thumbURL: "doctor-strange.png"
+        },
+        {
             name: "Hawkeye Season 1 (2021)",
             type: "Serie",
             lastUpdate: {
@@ -883,15 +892,6 @@ module.exports = {
                 '1080p': "13/05/2022"
             },
             thumbURL: "moon-knight.png"
-        },
-        {
-            name: "Doctor Strange In The Multiverse Of Madness (2022)",
-            type: "Película",
-            lastUpdate: {
-                '4K': "22/06/2022",
-                '1080p': "22/06/2022"
-            },
-            thumbURL: "doctor-strange.png"
         },
         {
             name: "Ms. Marvel Season 1 (2022)",
