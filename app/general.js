@@ -466,23 +466,25 @@ module.exports = {
             client.channels.fetch(ids.channels.anuncios).then(async channel => {
                 let content = '';
                 if (updatedStuff.movies.length != 0 || newStuff.movies.length != 0) {
-                    content += `<@&${ids.roles.anunciosUcm}>\n\n🎬 **___Universo Cinematográfico de Marvel:___**\n\n`;
+                    content += `<@&${ids.roles.anunciosUcm}>\n\n🎬 **___Universo Cinematográfico de Marvel:___**\n\`\`\``;
                     for (let i = 0; i < newStuff.movies.length; i++) {
                         const element = newStuff.movies[i];
-                        content += `• Se agregó **${element.name}** en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} **${element.versions.join(', ')}**.\n`;
+                        content += `• Se agregó ${element.name} en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} ${element.versions.join(', ')}.\n`;
                     }
                     for (let i = 0; i < updatedStuff.movies.length; i++) {
                         const element = updatedStuff.movies[i];
-                        content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} **${element.versions.join(', ')}** de **${element.name}**: ${element.updateInfo}.\n`;
+                        content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} ${element.versions.join(', ')} de ${element.name}: ${element.updateInfo}.\n`;
                     }
+                    content += '```';
                     await updateMovies(JSON.stringify(mcu).replace(/'/g, 'APOSTROFE'));
                 }
                 if (updatedStuff.games.length != 0 || newStuff.games.length != 0) {
-                    content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\n`;
+                    content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\`\`\``;
                     for (let i = 0; i < newStuff.games.length; i++)
-                        content += `• Se agregó el juego **${newStuff.games[i]}**.\n`;
+                        content += `• Se agregó el juego ${newStuff.games[i]}.\n`;
                     for (let i = 0; i < updatedStuff.games.length; i++)
-                        content += `• Se actualizó el juego **${updatedStuff.games[i]}**.\n`;
+                        content += `• Se actualizó el juego ${updatedStuff.games[i]}.\n`;
+                    content += '```';
                     await updateGames(JSON.stringify(games).replace(/'/g, 'APOSTROFE'));
                 }
                 channel.send(content).catch(console.error);
