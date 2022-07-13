@@ -98,7 +98,9 @@ client.on('ready', async () => {
                 files: [`./assets/thumbs/music/icons8-so-so-64.png`]
             });
         }
-    });
+    }).on('connectionError', (queue, error) => {
+        console.log(error);
+    }).on('error', (queue, error) => console.log(error));
 
     playInterruptedQueue(client);
 

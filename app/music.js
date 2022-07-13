@@ -88,7 +88,7 @@ module.exports = {
                 JSON.stringify(queue.tracks).replace(/'/g, 'APOSTROFE'),
                 JSON.stringify(queue.connection.channel)
             );
-            queue.destroy();
+            queue.destroy(true);
         }
     },
 
