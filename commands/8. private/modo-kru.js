@@ -26,7 +26,7 @@ module.exports = {
                 await general.updateAvatar(client);
                 await general.updateUsername(client);
                 return {
-                    content: `Modo KRÜ desactivado...`,
+                    content: `Modo KRÜ desactivado... ¡GG!`,
                     custom: true
                 };
             } else {
