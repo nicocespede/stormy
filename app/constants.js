@@ -897,10 +897,10 @@ module.exports = {
             name: "Ms. Marvel Season 1 (2022)",
             type: "Serie",
             lastUpdate: {
-                '720p': "06/07/2022",
+                '720p': "13/07/2022",
                 '1080p': "17/06/2022"
             },
-            updateInfo: "Agregado el episodio 5.",
+            updateInfo: "agregado el episodio 6 (episodio final)",
             thumbURL: "ms-marvel.png"
         }
     ],
@@ -1328,8 +1328,8 @@ module.exports = {
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/550/header.jpg'
     }, {
         name: "Marvel's Avengers (2020)",
-        version: 'V4.2110.150.0',
-        lastUpdate: '30/04/2022',
+        version: 'V24.2206.160.0',
+        lastUpdate: '13/07/2022',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/997070/header.jpg'
     }, {
         name: 'Phasmophobia (2020)',
