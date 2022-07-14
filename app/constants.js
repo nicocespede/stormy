@@ -140,6 +140,11 @@ module.exports = {
             "Ysy A#11111",
             "R4zeMain",
             "valorant123"
+        ],
+        tomi: [
+            "Tomi04#2004",
+            "BenicioMartin012",
+            "Gatumas10"
         ]
     },
 

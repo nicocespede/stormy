@@ -26,6 +26,9 @@ function translateRank(rank) {
         case 'Diamond':
             ret = `Diamante ${rankName[1]}`;
             break;
+        case 'Ascendant':
+            ret = `Ascendente ${rankName[1]}`;
+            break;
         case 'Immortal':
             ret = `Inmortal ${rankName[1]}`;
             break;
