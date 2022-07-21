@@ -20,7 +20,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, interaction, args, user }) => {
-        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
+        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
 
         var reply = { ephemeral: true };
 
@@ -46,7 +46,7 @@ module.exports = {
         else
             await deleteCrosshair(id).then(async () => {
                 await updateCrosshairs();
-                reply.content = `La mira fue borrada de manera exitosa.`;
+                reply.content = `La mira **${crosshairs[id].name}** fue borrada de manera exitosa.`;
                 reply.ephemeral = false;
             }).catch(console.error);
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);

@@ -21,9 +21,9 @@ module.exports = {
             if (Object.hasOwnProperty.call(crosshairs, ch)) {
                 const crosshair = crosshairs[ch];
                 if (crosshair.owner === user.id)
-                    userCrosshairsField.value += `**${ch}.** ${crosshair.name}`;
+                    userCrosshairsField.value += `**${ch}.** ${crosshair.name}\n`;
                 else
-                    crosshairsField.value += `**${ch}.** ${crosshair.name}`;
+                    crosshairsField.value += `**${ch}.** ${crosshair.name}\n`;
             }
         if (userCrosshairsField.value === '') userCrosshairsField.value = 'No hay miras guardadas.';
         if (crosshairsField.value === '') crosshairsField.value = 'No hay miras guardadas.';
