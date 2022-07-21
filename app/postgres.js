@@ -1,30 +1,36 @@
 const { Client } = require('pg');
 const { testing } = require('./constants');
 
-// if on heroku
-if (process.env.DATABASE_URL)
-    var dbClient = new Client({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-            rejectUnauthorized: false
-        }
-    });
-// if on local
-else
-    var dbClient = new Client({
-        user: process.env.D_user,
-        password: process.env.D_password,
-        port: process.env.D_pport,
-        host: process.env.D_host,
-        database: !testing ? process.env.D_database : process.env.D_testing_database
-    });
+var dbClient;
 
-dbClient.connect();
+const init = () => {
+    // if on heroku
+    if (process.env.DATABASE_URL)
+        dbClient = new Client({
+            connectionString: process.env.DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false
+            }
+        });
+    // if on local
+    else
+        dbClient = new Client({
+            user: process.env.D_user,
+            password: process.env.D_password,
+            port: process.env.D_pport,
+            host: process.env.D_host,
+            database: !testing ? process.env.D_database : process.env.D_testing_database
+        });
 
-dbClient.on('error', (err, client) => {
-    console.log('Error de conexión de postgres: ' + err, '\nIntentando reconectar...');
-    setTimeout(function () { dbClient.connect() }, 10 * 1000);
-});
+    dbClient.connect();
+
+    dbClient.on('error', (err, client) => {
+        console.log('Error de conexión de postgres: ' + err, '\nIntentando reconectar...');
+        setTimeout(function () { init() }, 10 * 1000);
+    });
+}
+
+init();
 
 module.exports = {
     dbClient,
