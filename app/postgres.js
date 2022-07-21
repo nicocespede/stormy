@@ -237,5 +237,24 @@ module.exports = {
             setTimeout(function () { resolve(); }, 1000);
             console.log(`> Juegos actualizados en la base de datos`);
         });
-    }
+    },
+
+    addCrosshair: (name, code, owner, url) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`INSERT INTO "crosshairs" ("crosshair_name", "crosshair_code", "crosshair_owner", "crosshair_imageUrl") VALUES ('${name}', '${code}', '${owner}', '${url}');`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Mira agregada a la base de datos');
+        });
+    },
+    deleteCrosshair: (id) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`DELETE FROM "crosshairs" WHERE "crosshair_id" = '${id}';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Mira eliminada de la base de datos');
+        });
+    },
 };

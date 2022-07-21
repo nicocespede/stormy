@@ -18,6 +18,7 @@ var timestamps = {};
 var minutesUp = 0;
 var thermalPasteDates;
 var bansResponsibles = {};
+var crosshairs;
 
 module.exports = {
     getFilters: () => filters,
@@ -186,5 +187,20 @@ module.exports = {
 
     getBansResponsibles: () => bansResponsibles,
     addBanResponsible: (id, responsible) => (bansResponsibles[id] = responsible),
-    removeBanResponsible: id => (delete bansResponsibles[id])
+    removeBanResponsible: id => (delete bansResponsibles[id]),
+
+    getCrosshairs: () => crosshairs,
+    updateCrosshairs: async () => {
+        await executeQuery('SELECT * FROM "crosshairs";').then(async json => {
+            crosshairs = {};
+            json.forEach(ch => crosshairs[ch['crosshair_id']] = {
+                name: ch['crosshair_name'],
+                code: ch['crosshair_code'],
+                owner: ch['crosshair_owner'],
+                imageUrl: ch['crosshair_imageUrl']
+            });
+            console.log('> Caché de miras actualizado');
+        }).catch(console.error);
+        return crosshairs;
+    },
 };

@@ -1347,6 +1347,11 @@ module.exports = {
         lastUpdate: '23/11/2021',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/880940/header.jpg'
     }, {
+        name: 'Stranded Deep (2015)',
+        version: 'V0.90.11',
+        lastUpdate: '20/07/2022',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/313120/header.jpg'
+    }, {
         name: 'Subsistence (2016)',
         version: 'ALPHA 57',
         lastUpdate: '03/11/2021',

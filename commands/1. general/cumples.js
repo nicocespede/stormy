@@ -74,7 +74,7 @@ module.exports = {
 
         if (subCommand === 'ver') {
             const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
-            var months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             var usersField = { name: 'Usuario', value: '', inline: true };
             var datesField = { name: 'Fecha', value: '', inline: true };
             var previousMonth = -1;
