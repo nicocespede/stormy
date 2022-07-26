@@ -190,7 +190,7 @@ const sendBdayAlert = async (client) => {
                                 const msg = key === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
                                     : `@everyone\n\nHoy es el cumpleaños de <@${key}>, ¡feliz cumpleaños!`;
                                 channel.send({ content: msg, files: [attachment] }).then(m => {
-                                    ['🎈', '🥳', '🎉', '🎂'].forEach(emoji => m.react(emoji));
+                                    ['🎈', '🥳', '🎉', '🎂'].forEach(async emoji => await m.react(emoji));
                                 }).catch(console.error);
                             }).catch(console.error);
                         }).catch(() => deleteBday(key).then(async () => {
