@@ -75,19 +75,21 @@ module.exports = {
             console.log('> Guardando cola de reproducción actual');
             queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
-                    .setDescription("⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!")
+                    .setDescription(`⚠ Lo siento, tengo que reiniciarme 👋 ¡${queue.tracks.length < 500 ? 'ya vuelvo' : 'adiós'}!`)
                     .setThumbnail(`attachment://icons8-shutdown-64.png`)],
                 files: [`./assets/thumbs/music/icons8-shutdown-64.png`]
             });
-            var previousTracks = queue.previousTracks.slice();
-            await addQueue(
-                JSON.stringify(previousTracks.pop()).replace(/'/g, 'APOSTROFE'),
-                JSON.stringify(queue.guild),
-                JSON.stringify(queue.metadata),
-                JSON.stringify(previousTracks).replace(/'/g, 'APOSTROFE'),
-                JSON.stringify(queue.tracks).replace(/'/g, 'APOSTROFE'),
-                JSON.stringify(queue.connection.channel)
-            );
+            if (queue.tracks.length < 500) {
+                var previousTracks = queue.previousTracks.slice();
+                await addQueue(
+                    JSON.stringify(previousTracks.pop()).replace(/'/g, 'APOSTROFE'),
+                    JSON.stringify(queue.guild),
+                    JSON.stringify(queue.metadata),
+                    JSON.stringify(previousTracks).replace(/'/g, 'APOSTROFE'),
+                    JSON.stringify(queue.tracks).replace(/'/g, 'APOSTROFE'),
+                    JSON.stringify(queue.connection.channel)
+                );
+            }
             queue.destroy(true);
         }
     },
