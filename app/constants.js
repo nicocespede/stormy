@@ -1352,6 +1352,11 @@ module.exports = {
         lastUpdate: '20/07/2022',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/313120/header.jpg'
     }, {
+        name: 'Stray (2022)',
+        version: 'V1.3.214',
+        lastUpdate: '01/08/2022',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1332010/header.jpg'
+    }, {
         name: 'Subsistence (2016)',
         version: 'ALPHA 57',
         lastUpdate: '03/11/2021',
