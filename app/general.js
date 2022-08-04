@@ -101,7 +101,7 @@ function sendSpecialDayMessage(client) {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     const date = today.getDate();
     const month = today.getMonth() + 1;
-    client.channels.fetch(ids.channels.general).then(channel => {
+    client.channels.fetch(ids.channels.anuncios).then(channel => {
         if (today.getHours() === 0 && today.getMinutes() === 0) {
             if (date === 1 && month === 1)
                 channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un muy felíz año nuevo a todos los miembros del servidor! 🥂🌠`)
@@ -123,7 +123,7 @@ async function sendAnniversaryAlert(client) {
     var anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
     anniversaries.forEach(anniversary => {
         if (anniversary['anniversaries_date'].substring(0, 5) == getToday() && !anniversary['anniversaries_flag']) {
-            client.channels.fetch(ids.channels.general).then(channel => {
+            client.channels.fetch(ids.channels.anuncios).then(channel => {
                 client.guilds.fetch(ids.guilds.default).then(guild => {
                     guild.members.fetch(anniversary['anniversaries_id1']).then(member1 => {
                         guild.members.fetch(anniversary['anniversaries_id2']).then(member2 => {
@@ -183,7 +183,7 @@ const sendBdayAlert = async (client) => {
         if (Object.hasOwnProperty.call(birthdays, key)) {
             const bday = birthdays[key];
             if (bday.date === getToday() && !bday.flag) {
-                client.channels.fetch(ids.channels.general).then(channel => {
+                client.channels.fetch(ids.channels.anuncios).then(channel => {
                     client.guilds.fetch(ids.guilds.default).then(async guild => {
                         await guild.members.fetch(key).then(member => {
                             generateBirthdayImage(member.user).then(attachment => {

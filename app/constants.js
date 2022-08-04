@@ -1,8 +1,5 @@
 const testing = false;
 
-const testingRole = '967420341540511824';
-const testingChannel = '962233256433029183';
-
 module.exports = {
     prefix: '-',
 
@@ -17,31 +14,30 @@ module.exports = {
             jimmy: '360246288349921310'
         },
         roles: {
-            banear: !testing ? '872782064271917067' : testingRole,
-            smurf: !testing ? "872768314689060936" : testingRole,
-            funcion: !testing ? "875942757733122078" : testingRole,
-            juegos: !testing ? "981291002126012456" : testingRole,
-            musica: !testing ? "981291168484708392" : testingRole,
-            anunciosUcm: !testing ? "981291223522357298" : testingRole,
-            anunciosJuegos: !testing ? "981291298310991872" : testingRole,
-            cine: !testing ? "981291579769753660" : testingRole,
+            banear: !testing ? '872782064271917067' : '1004802478522519685',
+            smurf: !testing ? "872768314689060936" : '1004802478522519683',
+            funcion: !testing ? "875942757733122078" : '1004802478522519684',
+            juegos: !testing ? "981291002126012456" : '1004802478556069892',
+            musica: !testing ? "981291168484708392" : '1004802478556069891',
+            anunciosUcm: !testing ? "981291223522357298" : '1004802478556069890',
+            anunciosJuegos: !testing ? "981291298310991872" : '1004802478556069889',
+            cine: !testing ? "981291579769753660" : '1004802478556069888',
         },
         guilds: {
-            default: !testing ? '479523718368854027' : '962233256433029180'
+            default: !testing ? '479523718368854027' : '1004802478522519682'
         },
         channels: {
-            anuncios: !testing ? "881187176216395826" : testingChannel,
-            autorol: !testing ? "981294118825230366" : testingChannel,
-            general: !testing ? "703056370039128105" : testingChannel,
-            cartelera: !testing ? "836043727616213012" : testingChannel,
-            welcome: !testing ? "817149994959110235" : "962233358237188156",
-            members: !testing ? "980905383008804914" : "980894343302877334",
-            connectedMembers: !testing ? "981245429679259688" : "981241293395099728",
+            anuncios: !testing ? "881187176216395826" : '1004802479935991831',
+            autorol: !testing ? "981294118825230366" : '1004802479399108785',
+            cartelera: !testing ? "836043727616213012" : '1004802480363806773',
+            welcome: !testing ? "817149994959110235" : "1004802479399108784",
+            members: !testing ? "980905383008804914" : "1004802479399108781",
+            connectedMembers: !testing ? "981245429679259688" : "1004802479399108782",
             afk: "585276720622338048",
             musica: !testing ? [
                 "703055406091468922", //musica
                 "853926878498521089" //test
-            ] : [testingChannel]
+            ] : ['1004802479935991832']
         }
     },
 
