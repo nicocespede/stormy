@@ -16,11 +16,13 @@ module.exports = {
         var deleted = 0;
         await client.users.fetch(targetId).then(async user => {
             await user.createDM();
-            await user.dmChannel.messages.fetch().then(async messages => {
+            await user.dmChannel.messages.fetch().then(messages => {
                 messages.forEach(async m => {
                     if (m.author.id === ids.users.bot) {
-                        await m.delete().then(deleted++);
-                        await new Promise(res => setTimeout(res, 1000 * 5));
+                        await m.delete().then(async _ => {
+                            deleted++;
+                            await new Promise(res => setTimeout(res, 1000 * 3));
+                        });
                     }
                 });
                 reply.content = deleted > 0 ? `Se borraron **${deleted} mensajes**.` : 'Este usuario no tiene ningún mensaje directo.';
