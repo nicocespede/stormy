@@ -14,20 +14,17 @@ module.exports = {
         const targetId = args[0];
         const reply = { custom: true };
         var deleted = 0;
-        await client.users.fetch(targetId).then(async user => {
-            await user.createDM();
-            await user.dmChannel.messages.fetch().then(messages => {
-                messages.forEach(async m => {
-                    if (m.author.id === ids.users.bot) {
-                        await m.delete().then(async _ => {
-                            deleted++;
-                            await new Promise(res => setTimeout(res, 1000 * 3));
-                        });
-                    }
-                });
-                reply.content = deleted > 0 ? `Se borraron **${deleted} mensajes**.` : 'Este usuario no tiene ningún mensaje directo.';
-            }).catch(console.error);
-        }).catch(console.error);
+        const user = await client.users.fetch(targetId).catch(console.error);
+        await user.createDM();
+        const messages = await user.dmChannel.messages.fetch().catch(console.error);
+        messages.forEach(async m => {
+            if (m.author.id === ids.users.bot) {
+                await m.delete();
+                deleted++;
+                await new Promise(res => setTimeout(res, 1000 * 5));
+            }
+        });
+        reply.content = deleted > 0 ? `Se borraron **${deleted} mensajes**.` : 'Este usuario no tiene ningún mensaje directo.';
         return reply;
     }
 }
