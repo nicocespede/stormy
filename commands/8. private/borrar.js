@@ -4,19 +4,26 @@ module.exports = {
     category: 'Privados',
     description: 'Elimina todos los mensajes del canal de mensajes directos.',
 
-    maxArgs: 0,
+    expectedArgs: '<id>',
+    minArgs: 1,
+    maxArgs: 1,
     slash: false,
     ownerOnly: true,
 
-    callback: ({ channel }) => {
-        if (channel.type === 'DM') {
-            channel.messages.fetch().then(messages => {
-                messages.forEach(m => {
+    callback: async ({ client, args }) => {
+        const targetId = args[0];
+        const reply = { custom: true };
+        var deleted = 0;
+        await client.users.fetch(targetId).then(async user => {
+            await user.createDM();
+            await user.dmChannel.messages.fetch().then(messages => {
+                messages.forEach(async m => {
                     if (m.author.id === ids.users.bot)
-                        m.delete();
+                        await m.delete().then(deleted++);
                 });
+                reply.content = deleted > 0 ? `Se borraron **${deleted} mensajes**.` : 'Este usuario no tiene ningún mensaje directo.';
             }).catch(console.error);
-        }
-        return;
+        }).catch(console.error);
+        return reply;
     }
 }
