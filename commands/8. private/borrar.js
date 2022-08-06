@@ -21,7 +21,7 @@ module.exports = {
             if (m.author.id === ids.users.bot) {
                 await m.delete().catch(console.error);
                 deleted++;
-                await new Promise(res => setTimeout(res, 1000 * 5));
+                await new Promise(res => setTimeout(res, 1000 * 2));
             }
         }
         reply.content = deleted > 0 ? `Se borraron **${deleted} mensajes**.` : 'Este usuario no tiene ningún mensaje directo.';
