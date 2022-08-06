@@ -17,7 +17,7 @@ module.exports = {
         const user = await client.users.fetch(targetId).catch(console.error);
         const dmChannel = await user.createDM().catch(console.error);
         const messages = await dmChannel.messages.fetch().catch(console.error);
-        for (const m of messages) {
+        for (const [_, m] of messages) {
             if (m.author.id === ids.users.bot) {
                 await m.delete().catch(console.error);
                 deleted++;
