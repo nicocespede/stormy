@@ -58,7 +58,7 @@ module.exports = {
                     if (ctx.measureText(aux2).width >= 182)
                         aux2 = timeField.value + `${timeToString('short', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
                 }).catch(() => console.log(`> El usuario con ID ${key} ya no está en el servidor.`));
-                if (aux1.length <= 1024 || aux2.length <= 1024) {
+                if (aux1.length <= 1024 && aux2.length <= 1024) {
                     usersField.value = aux1;
                     timeField.value = aux2;
                 } else {
