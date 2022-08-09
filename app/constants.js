@@ -22,6 +22,7 @@ module.exports = {
             anunciosUcm: !testing ? "981291223522357298" : '1004802478556069890',
             anunciosJuegos: !testing ? "981291298310991872" : '1004802478556069889',
             cine: !testing ? "981291579769753660" : '1004802478556069888',
+            familia: !testing ? "596591726991507466" : "1004802478556069896"
         },
         guilds: {
             default: !testing ? '479523718368854027' : '1004802478522519682'
@@ -70,77 +71,92 @@ module.exports = {
         '4g': [
             "Elon Muskardo#p3te",
             "candebe",
-            "enero2001"
+            "enero2001",
+            false
         ],
         notsassy: [
             "Elon Muskardo#2840",
             "nottsassy",
-            "enero2001"
+            "enero2001",
+            false
         ],
         elon: [
             "Elon Musk#8938",
             "candeebe",
-            "enero2001"
+            "enero2001",
+            false
         ],
         cande: [
             "JoseCuchilloPaz#1337",
             "candeeebe",
-            "enero2001"
+            "enero2001",
+            false
         ],
         maria: [
             "MariaBecerra#7850",
             "mariabecerrapa",
-            "enero2001"
+            "enero2001",
+            false
         ],
         pou: [
             "pou#3228",
             "candeberru",
-            "enero2001"
+            "enero2001",
+            false
         ],
         marito: [
             "Marito#4090",
             "maritovl",
-            "enero2001"
+            "enero2001",
+            false
         ],
         pitufowilly: [
             "MonsterZeroUltra#6256",
             "pitufowilly",
-            "valorant123*"
+            "valorant123*",
+            true
         ],
         pipeline: [
             "Pipeline Punch#8234",
             "punchpipe",
-            "enero2001"
+            "enero2001",
+            false
         ],
         monster: [
             "Monster Original#GOD",
             "monsteroriginalpa",
-            "monsterpapi123"
+            "monsterpapi123",
+            true
         ],
         mango: [
             "MangoLoco#9935",
             "Karuchasmurf",
-            "karucha123"
+            "karucha123",
+            true
         ],
         stormy: [
             "StormY#7157",
             "StormeRSmurf",
-            "stormersmurf97"
+            "stormersmurf97",
+            true
         ],
         stormersmurf: [
             "StormY#8935",
             "StormeRSmurf2",
-            "stormersmurf2"
+            "stormersmurf2",
+            true
         ],
         ysya: [
             "Ysy A#11111",
             "R4zeMain",
-            "valorant123"
+            "valorant123",
+            true
         ],
         tomi: [
             "Tomi04#2004",
             "BenicioMartin012",
-            "Gatumas10"
+            "Gatumas10",
+            true
         ]
     },
 
