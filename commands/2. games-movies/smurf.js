@@ -56,7 +56,7 @@ module.exports = {
             return reply;
         } else {
             const familyRole = await guild.roles.fetch(ids.roles.familia).catch(console.error);
-            const isFamilyMember = familyRole.members.has(user.id);
+            const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
             const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
                 : await interaction.deferReply({ ephemeral: true });
             var accountsField = { name: 'Cuenta', value: '', inline: true };
@@ -65,7 +65,7 @@ module.exports = {
             for (var acc in smurf) {
                 const aux = acc;
                 acc = smurf[acc];
-                if (!acc[3] || isFamilyMember) {
+                if (!acc[3] || isVip) {
                     const accInfo = acc[0].split('#');
                     await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
                         accountsField.value += `${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${acc[0]}`}\n\n`;

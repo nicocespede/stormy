@@ -18,7 +18,7 @@ module.exports = {
     slash: false,
     hidden: true,
 
-    callback: async ({ message, client }) => {
+    callback: async ({ message, client, user }) => {
         const cmd = message.content.toLowerCase().split(' ')[0].substring(1);
         const account = smurf[cmd];
         var reply = { custom: true };
@@ -26,12 +26,13 @@ module.exports = {
         const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
         if (message.channel.type != 'DM')
             reply.content = 'Este comando solo se puede utilizar por mensajes directos.';
-        else if (!smurfRole.members.has(message.author.id))
-            reply.content = `Hola <@${message.author.id}>, no estás autorizado a usar este comando.`;
+        else if (!smurfRole.members.has(user.id))
+            reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
         else {
             const familyRole = await guild.roles.fetch(ids.roles.familia).catch(console.error);
-            if (account[3] && !familyRole.members.has(message.author.id))
-                reply.content = `Hola <@${message.author.id}>, no estás autorizado a usar este comando.`;
+            const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
+            if (account[3] && !isVip)
+                reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
             else {
                 const accInfo = account[0].split('#');
                 await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
