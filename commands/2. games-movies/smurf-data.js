@@ -1,16 +1,11 @@
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
-const { ids, smurf } = require('../../app/constants');
-
-function getAliases() {
-    var aliases = [];
-    for (const key in smurf)
-        aliases.push(key);
-    return aliases;
-}
+const { getSmurfs, updateSmurfs } = require('../../app/cache');
+const { ids } = require('../../app/constants');
 
 module.exports = {
-    aliases: getAliases(),
+    aliases: ['4g', 'notsassy', 'elon', 'cande', 'maria', 'pou', 'marito', 'pitufowilly', 'pipeline', 'monster', 'mango', 'stormy',
+        'stormersmurf', 'ysya', 'tomi'],
     category: 'Juegos/Películas',
     description: 'Responde con los datos de la cuenta smurf seleccionada.',
 
@@ -20,7 +15,8 @@ module.exports = {
 
     callback: async ({ message, client, user }) => {
         const cmd = message.content.toLowerCase().split(' ')[0].substring(1);
-        const account = smurf[cmd];
+        const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
+        const account = smurfs[cmd];
         var reply = { custom: true };
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
@@ -31,19 +27,21 @@ module.exports = {
         else {
             const familyRole = await guild.roles.fetch(ids.roles.familia).catch(console.error);
             const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
-            if (account[3] && !isVip)
+            if (account.vip && !isVip)
                 reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
             else {
-                const accInfo = account[0].split('#');
+                const accInfo = account.name.split('#');
                 await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
                     const thumb = mmr.data.currenttierpatched === null ? `assets/thumbs/ranks/unranked.png`
                         : `assets/thumbs/ranks/${mmr.data.currenttierpatched.toLowerCase()}.png`;
                     reply.embeds = [new MessageEmbed()
-                        .setTitle(`**${account[0]}**`)
+                        .setTitle(`**${account.name}**`)
                         .setColor([7, 130, 169])
-                        .addFields([{ name: 'Nombre de usuario:', value: account[1], inline: true },
-                        { name: 'Contraseña:', value: account[2], inline: true }])
+                        .addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
+                        { name: 'Contraseña:', value: account.password, inline: true }])
                         .setThumbnail(`attachment://rank.png`)];
+                    if (account.bannedUntil != '')
+                        reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
                     reply.files = [new MessageAttachment(thumb, 'rank.png')];
                 }).catch(console.error);
             }

@@ -263,4 +263,32 @@ module.exports = {
             console.log('> Mira eliminada de la base de datos');
         });
     },
+
+    addSmurf: (command, name, user, password, vip) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`INSERT INTO "smurfs" VALUES('${command}', '${name}', '${user}', '${password}', '${vip}', '');`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Cuenta smurf agregada a la base de datos');
+        });
+    },
+    deleteSmurf: (command) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`DELETE FROM "smurfs" WHERE "command" = '${command}';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log('> Cuenta smurf eliminada de la base de datos');
+        });
+    },
+    updateSmurf: (command, ban) => {
+        return new Promise(function (resolve, reject) {
+            dbClient.query(`UPDATE "smurfs" SET "bannedUntil" = '${ban}' WHERE "command" = '${command}';`, (err, res) => {
+                if (err) throw err;
+            });
+            setTimeout(function () { resolve(); }, 1000);
+            console.log(`> Ban de cuenta smurf actualizada en la base de datos`);
+        });
+    }
 };

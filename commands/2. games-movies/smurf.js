@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
-const { prefix, ids, smurf } = require('../../app/constants');
+const { getSmurfs, updateSmurfs } = require('../../app/cache');
+const { prefix, ids } = require('../../app/constants');
 
 function translateRank(rank) {
     if (rank == null)
@@ -62,18 +63,19 @@ module.exports = {
             var accountsField = { name: 'Cuenta', value: '', inline: true };
             var commandsField = { name: 'Comando', value: ``, inline: true };
             var ranksField = { name: 'Rango', value: ``, inline: true };
-            for (var acc in smurf) {
-                const aux = acc;
-                acc = smurf[acc];
-                if (!acc[3] || isVip) {
-                    const accInfo = acc[0].split('#');
-                    await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                        accountsField.value += `${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${acc[0]}`}\n\n`;
-                        commandsField.value += `${prefix}${aux}\n\n`;
-                        ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
-                    }).catch(console.error);
+            const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
+            for (const command in smurfs)
+                if (Object.hasOwnProperty.call(smurfs, command)) {
+                    const account = smurfs[command];
+                    if (!account.vip || isVip) {
+                        const accInfo = account.name.split('#');
+                        await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
+                            accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${acc[0]}`}\n\n`;
+                            commandsField.value += `${prefix}${command}\n\n`;
+                            ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
+                        }).catch(console.error);
+                    }
                 }
-            }
             member.send({
                 embeds: [new MessageEmbed()
                     .setTitle(`**Cuentas smurf**`)

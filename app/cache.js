@@ -19,6 +19,7 @@ var minutesUp = 0;
 var thermalPasteDates;
 var bansResponsibles = {};
 var crosshairs;
+var smurfs;
 
 module.exports = {
     getFilters: () => filters,
@@ -202,5 +203,21 @@ module.exports = {
             console.log('> Caché de miras actualizado');
         }).catch(console.error);
         return crosshairs;
+    },
+
+    getSmurfs: () => smurfs,
+    updateSmurfs: async () => {
+        await executeQuery('SELECT * FROM "smurfs";').then(json => {
+            smurfs = {};
+            json.forEach(account => smurfs[account['command']] = {
+                name: account['name'],
+                user: account['user'],
+                password: account['password'],
+                vip: account['vip'],
+                bannedUntil: account['bannedUntil']
+            });
+            console.log('> Caché de smurfs actualizado');
+        }).catch(console.error);
+        return smurfs;
     },
 };
