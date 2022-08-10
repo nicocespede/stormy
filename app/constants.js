@@ -820,11 +820,8 @@ module.exports = {
         {
             name: "Ms. Marvel Season 1 (2022)",
             type: "Serie",
-            lastUpdate: {
-                '720p': "13/07/2022",
-                '1080p': "17/06/2022"
-            },
-            updateInfo: "agregado el episodio 6 (episodio final)",
+            lastUpdate: { '1080p': "10/08/2022" },
+            updateInfo: "subida la serie completa",
             thumbURL: "ms-marvel.png"
         }
     ],
