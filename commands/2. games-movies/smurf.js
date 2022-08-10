@@ -70,7 +70,7 @@ module.exports = {
                     if (!account.vip || isVip) {
                         const accInfo = account.name.split('#');
                         await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                            accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${acc[0]}`}\n\n`;
+                            accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${account.name}`}\n\n`;
                             commandsField.value += `${prefix}${command}\n\n`;
                             ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
                         }).catch(console.error);
