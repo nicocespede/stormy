@@ -124,7 +124,7 @@ module.exports = {
     getAvatar: () => avatar,
     updateAvatar: async () => {
         await executeQuery(`SELECT * FROM "avatar";`).then(async json => {
-            avatar = json;
+            avatar = (json[0])['avatar_url'];
             console.log('> Caché de avatar actualizado');
         }).catch(console.error);
         return avatar;

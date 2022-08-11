@@ -20,9 +20,8 @@ module.exports = {
                 ephemeral: true
             };
         else {
-            var actualAvatar = !getAvatar() ? await updateAvatar() : getAvatar();
-            actualAvatar = actualAvatar[0];
-            if (actualAvatar['avatar_url'] === kruAvatarUrl) {
+            const actualAvatar = !getAvatar() ? await updateAvatar() : getAvatar();
+            if (actualAvatar === kruAvatarUrl) {
                 await general.updateAvatar(client);
                 await general.updateUsername(client);
                 return {

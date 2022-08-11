@@ -2,7 +2,8 @@ const { MessageAttachment } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
-const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat, deleteBan, executeQuery, updateMovies, updateGames } = require('./postgres');
+const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat, deleteBan,
+    executeQuery, updateMovies, updateGames, updateSmurf } = require('./postgres');
 const Canvas = require('canvas');
 const { ids, relativeSpecialDays, currencies, mcu, games } = require('./constants');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -148,10 +149,9 @@ async function sendAnniversaryAlert(client) {
 };
 
 async function updateAvatar(client) {
-    var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-    actualAvatar = actualAvatar[0];
-    var newAvatar = `./assets/kgprime${getImageType()}.png`;
-    if (actualAvatar['avatar_url'] != newAvatar)
+    const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
+    const newAvatar = `./assets/kgprime${getImageType()}.png`;
+    if (actualAvatar != newAvatar)
         await client.user.setAvatar(newAvatar).then(() => {
             updateAvatarString(newAvatar).catch(console.error);
         }).catch(console.error);
@@ -238,6 +238,25 @@ const getMembersStatus = channel => {
     return { size: membersSize, valid: valid };
 };
 
+const checkValorantBansExpiration = async () => {
+    const smurfs = !cache.getSmurfs() ? await cache.updateSmurfs() : cache.getSmurfs();
+    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    var updated = false;
+    for (const command in smurfs)
+        if (Object.hasOwnProperty.call(smurfs, command)) {
+            const account = smurfs[command];
+            if (account.bannedUntil != '') {
+                const splitDate = account.bannedUntil.split('/');
+                if (today > convertTZ(`${splitDate[1]}/${splitDate[0]}/${splitDate[2]}`, 'America/Argentina/Buenos_Aires')) {
+                    updated = true;
+                    await updateSmurf(command, '').catch(console.log);
+                }
+            }
+        }
+    if (updated)
+        await cache.updateSmurfs();
+};
+
 module.exports = {
     needsTranslation: (string) => {
         var probabilities = lngDetector.detect(string);
@@ -268,9 +287,9 @@ module.exports = {
         sendBdayAlert(client);
         sendSpecialDayMessage(client);
         sendAnniversaryAlert(client);
-        var actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-        actualAvatar = actualAvatar[0];
-        if (actualAvatar['avatar_url'] != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {
+        checkValorantBansExpiration();
+        const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
+        if (actualAvatar != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {
             updateAvatar(client);
             updateUsername(client);
         }
