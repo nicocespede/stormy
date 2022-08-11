@@ -378,6 +378,12 @@ module.exports = {
             thumbURL: "guardians-of-the-galaxy.png"
         },
         {
+            name: "I Am Groot (2022)",
+            type: "Miniserie",
+            lastUpdate: { '1080p': "11/08/2022" },
+            thumbURL: "guardians-of-the-galaxy.png"
+        },
+        {
             name: "Daredevil Season 1 (2015)",
             type: "Serie",
             lastUpdate: { '720p': "12/01/2022" },
