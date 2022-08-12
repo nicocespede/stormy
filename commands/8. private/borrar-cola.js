@@ -1,3 +1,5 @@
+const { executeQuery } = require("../../app/postgres");
+
 module.exports = {
     category: 'Privados',
     description: 'Elimina la cola de reproducción previa de la base de datos.',
