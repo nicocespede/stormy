@@ -53,14 +53,16 @@ module.exports = {
     maxArgs: 1,
     expectedArgs: '<id>',
     slash: 'both',
-    guildOnly: true,
 
-    callback: async ({ guild, member, user, message, interaction, client, args }) => {
+    callback: async ({ guild, member, user, message, interaction, client, args, channel }) => {
         const id = message ? args[0] : interaction.options.getString('id');
         var reply = { custom: true, ephemeral: true };
         if (!id) {
             const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
-            if (!smurfRole.members.has(user.id)) {
+            if (channel.type === 'DM') {
+                reply.content = 'Este comando solo se puede utilizar en un servidor.';
+                return reply;
+            } else if (!smurfRole.members.has(user.id)) {
                 reply.content = `Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`;
                 reply.ephemeral = false;
                 return reply;
@@ -106,7 +108,7 @@ module.exports = {
             const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
             const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
             const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
-            if (message.channel.type != 'DM')
+            if (channel.type != 'DM')
                 reply.content = 'Este comando solo se puede utilizar por mensajes directos.';
             else if (!smurfRole.members.has(user.id))
                 reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
