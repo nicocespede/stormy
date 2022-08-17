@@ -1,5 +1,5 @@
 const { getBanned, updateBanned } = require("../app/cache");
-const { ids, unbanned } = require("../app/constants");
+const { ids, unbanned, gifs } = require("../app/constants");
 const { deleteBan } = require("../app/postgres");
 
 module.exports = client => {
@@ -9,7 +9,10 @@ module.exports = client => {
             await deleteBan(ban.user.id).then(async () => await updateBanned()).catch(console.error);
         client.channels.fetch(ids.channels.welcome).then(channel => {
             var random = Math.floor(Math.random() * (unbanned.length));
-            channel.send(unbanned[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`));
+            const msg = { content: unbanned[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`), files: [] };
+            random = Math.floor(Math.random() * (gifs.unbanned.length));
+            msg.files.push(gifs.unbanned[random]);
+            channel.send(msg);
         }).catch(console.error);
     });
 };

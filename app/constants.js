@@ -25,7 +25,8 @@ module.exports = {
             familia: !testing ? "596591726991507466" : "1004802478556069896"
         },
         guilds: {
-            default: !testing ? '479523718368854027' : '1004802478522519682'
+            default: !testing ? '479523718368854027' : '1004802478522519682',
+            testing: '1004802478522519682'
         },
         channels: {
             anuncios: !testing ? "881187176216395826" : '1004802479935991831',
@@ -212,6 +213,20 @@ module.exports = {
         "Le aflojaron las esposas a **%USERNAME%**.",
         "Liberaron a **%USERNAME%**."
     ],
+
+    gifs: {
+        banned: ['https://c.tenor.com/-WXHweWBiyYAAAAC/ban-banned.gif',
+            'https://c.tenor.com/cUHL6Bm8tbQAAAAd/thanos-is-banned-banned-forever.gif',
+            'https://c.tenor.com/_rMM5ICPEukAAAAC/thor-strike.gif',
+            'https://c.tenor.com/fnSef5C1i2cAAAAd/banned.gif',
+            'https://c.tenor.com/iC1tuZvV5GwAAAAd/fravalgar-ban.gif',
+            'https://c.tenor.com/ZYbX8jyoDr4AAAAC/banned-hulk.gif'],
+        unbanned: ['https://c.tenor.com/XenSpjtAqgMAAAAC/im-back.gif',
+            'https://c.tenor.com/hmbRl4-fvdAAAAAC/captain-america-chris-evans.gif',
+            'https://c.tenor.com/6yksaPPCz5UAAAAd/im-back-back.gif',
+            'https://c.tenor.com/Wi8gMpYJJ7QAAAAC/im-back.gif',
+            'https://c.tenor.com/rtLrct9w1XkAAAAC/avengers-endgame-endgame.gif']
+    },
 
     relativeSpecialDays: {
         easter: 17
@@ -1243,7 +1258,7 @@ module.exports = {
         version: 'Build 13082022',
         lastUpdate: '16/08/2022',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1943950/header.jpg'
-    },{
+    }, {
         name: 'Green Hell (2019)',
         version: 'V0.11.4',
         lastUpdate: '23/11/2021',

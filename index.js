@@ -116,7 +116,7 @@ client.on('ready', async () => {
         disabledDefaultCommands: ['channelonly', 'command', 'help', 'language', 'prefix', 'requiredrole'],
         ephemeral: true,
         ignoreBots: true,
-        testServers: ['962233256433029180']
+        testServers: [ids.guilds.testing]
     }).setDefaultPrefix(prefix)
         .setCategorySettings(categorySettings)
         .setColor([142, 89, 170]);
