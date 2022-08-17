@@ -1239,6 +1239,11 @@ module.exports = {
         lastUpdate: '27/03/2022',
         imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/960990/header.jpg'
     }, {
+        name: 'Escape the Backrooms (2022)',
+        version: 'Build 13082022',
+        lastUpdate: '16/08/2022',
+        imageURL: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1943950/header.jpg'
+    },{
         name: 'Green Hell (2019)',
         version: 'V0.11.4',
         lastUpdate: '23/11/2021',
