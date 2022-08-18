@@ -1,8 +1,7 @@
 const { createCanvas } = require('canvas');
 const { MessageEmbed, Constants, MessageActionRow, MessageButton } = require('discord.js');
-const fs = require('fs');
-const { getMcuMovies, updateMcuMovies, getFilters, updateFilters } = require('../../app/cache');
-const { prefix, texts } = require('../../app/constants');
+const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
+const { prefix, texts, githubRawURL } = require('../../app/constants');
 const { updateMcuFilters } = require('../../app/postgres');
 const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
 
@@ -18,28 +17,18 @@ function areEqual(oldFilters, newFilters) {
     return false;
 }
 
-async function getMovieInfo(path) {
-    var info = {};
-    return new Promise(function (resolve, reject) {
-        //passsing directoryPath and callback function
-        fs.readdir(path, function (err, files) {
-            //handling error
-            if (err)
-                return console.log('Unable to scan directory: ' + err);
-            //listing all files using forEach
-            files.forEach(file => {
-                // Do whatever you want to do with the file
-                fs.readFile(`${path}/${file}`, 'utf8', function readFileCallback(err, data) {
-                    if (err) console.log(err);
-                    if (file != 'image.jpg')
-                        info[file.substring(0, file.length - 4)] = data;
-                });
-            });
-        });
-        setTimeout(function () { resolve(); }, 1000);
-    }).then(function () {
-        return info;
-    });
+async function getMovieInfo(movieName) {
+    const fetch = require('node-fetch');
+    const info = {};
+    const mcu = !getMcu() ? await updateMcu() : getMcu();
+    const movie = mcu.filter(element => element.name === movieName)[0];
+    const filteredName = movieName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
+    for (const version in movie.lastUpdate)
+        await fetch(`${githubRawURL}/mcu/${filteredName}/${version}.txt`)
+            .then(res => res.text()).then(data => {
+                info[version] = data;
+            }).catch(err => console.log(`> Error al cargar ${version}.txt`, err));
+    return info;
 }
 
 function lastUpdateToString(lastUpdate) {
@@ -70,19 +59,20 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ user, message, args, interaction, channel }) => {
+        if (interaction) interaction.deferReply({ ephemeral: true });
         const color = [181, 2, 22];
         const number = message ? args[0] : interaction.options.getInteger('numero');
         var reply = { custom: true, ephemeral: true };
         if (number) {
             var filters = !getFilters() ? await updateFilters() : getFilters();
-            var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
+            const mcuMovies = !getMcuMovies() ? await updateMcuMovies(filters) : getMcuMovies();
             const index = parseInt(number) - 1;
             if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
                 reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}ucm [numero]"**.`;
                 return reply;
             }
-            var name = mcuMovies[index].name;
-            await getMovieInfo(`./assets/movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}`).then(async info => {
+            const name = mcuMovies[index].name;
+            await getMovieInfo(name).then(async info => {
                 var nowShowing = '';
                 const getVersionsRow = () => {
                     const row = new MessageActionRow();
@@ -100,9 +90,9 @@ module.exports = {
 
                 reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
                 reply.components = [getVersionsRow()];
-                reply.files = [`./assets/movies/${name.replace(/[:]/g, '').replace(/[?]/g, '')}/image.jpg`];
+                reply.files = [`${githubRawURL}/mcu/${name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')}/image.jpg`];
 
-                const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
+                const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
                 const filter = (btnInt) => {
                     const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
@@ -206,7 +196,7 @@ module.exports = {
             }).catch(console.error);
         } else {
             var filters = !getFilters() ? await updateFilters() : getFilters();
-            var mcuMovies = !getMcuMovies() ? updateMcuMovies(filters) : getMcuMovies();
+            var mcuMovies = !getMcuMovies() ? await updateMcuMovies(filters) : getMcuMovies();
 
             const getFiltersRow = (array) => {
                 const row = new MessageActionRow();
@@ -241,7 +231,7 @@ module.exports = {
             reply.components = [getFiltersRow(filters), secondaryRow];
             reply.files = [`./assets/mcu.jpg`];
 
-            const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
+            const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
             const filter = (btnInt) => {
                 const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
@@ -268,7 +258,7 @@ module.exports = {
                         if (!areEqual(filters, selected)) {
                             await updateMcuFilters(selected);
                             filters = await updateFilters();
-                            mcuMovies = updateMcuMovies(filters);
+                            mcuMovies = await updateMcuMovies(filters);
                         }
                         status = 'CONFIRMED';
                         update.components = [];

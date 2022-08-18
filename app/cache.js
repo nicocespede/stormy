@@ -24,16 +24,20 @@ var bansResponsibles = {};
 var crosshairs;
 var smurfs;
 
+const getMcu = () => mcu;
+
+const updateMcu = async () => {
+    await fetch(`${githubRawURL}/mcu.json`)
+        .then(res => res.text()).then(data => {
+            mcu = JSON.parse(data);
+            console.log('> mcu.json cargado');
+        }).catch(err => console.log('> Error al cargar mcu.json', err));
+    return mcu;
+};
+
 module.exports = {
-    getMcu: () => mcu,
-    updateMcu: async () => {
-        await fetch(`${githubRawURL}/mcu.json`)
-            .then(res => res.text()).then(data => {
-                mcu = JSON.parse(data);
-                console.log('> mcu.json cargado');
-            }).catch(err => console.log('> Error al cargar mcu.json', err));
-        return mcu;
-    },
+    getMcu,
+    updateMcu,
 
     getFilters: () => filters,
     updateFilters: async () => {
@@ -46,7 +50,8 @@ module.exports = {
     },
 
     getMcuMovies: () => mcuMovies,
-    updateMcuMovies: (filters) => {
+    updateMcuMovies: async (filters) => {
+        const mcu = !getMcu() ? await updateMcu() : getMcu();
         if (filters.includes('all'))
             mcuMovies = mcu;
         else {

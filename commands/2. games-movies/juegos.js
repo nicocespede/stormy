@@ -1,33 +1,20 @@
 const { MessageEmbed, Constants } = require('discord.js');
-const fs = require('fs');
 const { getGames, updateGames } = require('../../app/cache');
-const { prefix, texts } = require('../../app/constants');
+const { prefix, texts, githubRawURL } = require('../../app/constants');
 
-async function getGameInfo(path) {
-    var info = { links: '' };
-    return new Promise(function (resolve, reject) {
-        //passsing directoryPath and callback function
-        fs.readdir(path, function (err, files) {
-            //handling error
-            if (err)
-                return console.log('Unable to scan directory: ' + err);
-            //listing all files using forEach
-            files.forEach(file => {
-                // Do whatever you want to do with the file
-                fs.readFile(`${path}/${file}`, 'utf8', function readFileCallback(err, data) {
-                    if (err) console.log(err);
-                    else
-                        if (file == 'links.txt')
-                            info.links = data;
-                        else
-                            info[file.substring(2, file.length - 4)] = data;
-                });
-            });
-        });
-        setTimeout(function () { resolve(); }, 1000);
-    }).then(function () {
-        return info;
-    });
+async function getGameInfo(gameName) {
+    const fetch = require('node-fetch');
+    const info = {};
+    const games = !getGames() ? await updateGames() : getGames();
+    const game = games.filter(element => element.name === gameName)[0];
+    const files = game.instructions ? game.instructions.concat('links') : ['links'];
+    const filteredName = gameName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
+    for (const file of files)
+        await fetch(`${githubRawURL}/games/${filteredName}/${file}.txt`)
+            .then(res => res.text()).then(data => {
+                info[file] = data;
+            }).catch(err => console.log(`> Error al cargar ${file}.txt`, err));
+    return info;
 }
 
 module.exports = {
@@ -74,7 +61,7 @@ module.exports = {
                 reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}juegos [numero]"**.`;
             else {
                 const game = games[index];
-                await getGameInfo(`./assets/games/${game.name.replace(/:/g, '')}`).then(info => {
+                await getGameInfo(game.name).then(info => {
                     var fields = [];
                     for (const key in info)
                         if (Object.hasOwnProperty.call(info, key))
