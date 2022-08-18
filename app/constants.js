@@ -844,6 +844,13 @@ module.exports = {
             lastUpdate: { '1080p': "10/08/2022" },
             updateInfo: "subida la serie completa",
             thumbURL: "ms-marvel.png"
+        },
+        {
+            name: "She-Hulk: Attorney at Law Season 1 (2022)",
+            type: "Serie",
+            lastUpdate: { '1080p': "18/08/2022" },
+            updateInfo: "subido el capítulo 1",
+            thumbURL: "hulk.png"
         }
     ],
 
