@@ -5,7 +5,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
-const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, checkMoviesAndGamesUpdates, countMembers, countConnectedMembers } = require('./app/general');
+const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
+    countConnectedMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue } = require('./app/music');
 const { testing, prefix, ids, musicActions, categorySettings } = require('./app/constants');
 const { dbClient } = require('./app/postgres');
@@ -103,8 +104,6 @@ client.on('ready', async () => {
     }).on('error', (queue, error) => console.log(error));
 
     playInterruptedQueue(client);
-
-    await checkMoviesAndGamesUpdates(client);
 
     console.log(`¡Loggeado como ${client.user.tag}!`);
 

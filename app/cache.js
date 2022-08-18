@@ -1,8 +1,11 @@
-const { mcu } = require('./constants');
+const { githubRawURL } = require('./constants');
 const { executeQuery } = require('./postgres');
+const fetch = require('node-fetch');
 
+var mcu;
 var mcuMovies;
 var filters;
+var games;
 var birthdays;
 var banned = {};
 var sombraBans;
@@ -22,6 +25,16 @@ var crosshairs;
 var smurfs;
 
 module.exports = {
+    getMcu: () => mcu,
+    updateMcu: async () => {
+        await fetch(`${githubRawURL}/mcu.json`)
+            .then(res => res.text()).then(data => {
+                mcu = JSON.parse(data);
+                console.log('> mcu.json cargado');
+            }).catch(err => console.log('> Error al cargar mcu.json', err));
+        return mcu;
+    },
+
     getFilters: () => filters,
     updateFilters: async () => {
         await executeQuery('SELECT * FROM "mcuFilters";').then(async json => {
@@ -46,6 +59,16 @@ module.exports = {
         }
         console.log('> Caché de UCM actualizado');
         return mcuMovies;
+    },
+
+    getGames: () => games,
+    updateGames: async () => {
+        await fetch(`${githubRawURL}/games.json`)
+            .then(res => res.text()).then(data => {
+                games = JSON.parse(data);
+                console.log('> games.json cargado');
+            }).catch(err => console.log('> Error al cargar games.json', err));
+        return games;
     },
 
     getBirthdays: () => birthdays,

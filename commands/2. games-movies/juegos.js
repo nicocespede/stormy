@@ -1,6 +1,7 @@
 const { MessageEmbed, Constants } = require('discord.js');
 const fs = require('fs');
-const { prefix, texts, games } = require('../../app/constants');
+const { getGames, updateGames } = require('../../app/cache');
+const { prefix, texts } = require('../../app/constants');
 
 async function getGameInfo(path) {
     var info = { links: '' };
@@ -46,8 +47,9 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, args, interaction, user }) => {
-        var reply = { custom: true, ephemeral: true };
         const number = message ? args[0] : interaction.options.getInteger('numero');
+        const games = !getGames() ? await updateGames() : getGames();
+        var reply = { custom: true, ephemeral: true };
         var color = [234, 61, 78];
         if (!number) {
             var gamesField = { name: 'Juego', value: '', inline: true };
