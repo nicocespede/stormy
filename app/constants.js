@@ -62,10 +62,10 @@ module.exports = {
 
     texts: {
         movies: {
-            description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%ucm` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas JDownloader 2 (https://jdownloader.org/jdownloader2).\n\nPor cualquier error o links caídos, por favor avisar a @StormeR.\n\nLas películas (en orden cronológico) disponibles para descargar son:\n\n"
+            description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%ucm` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2).\n\nPor cualquier error o links caídos, por favor avisar a @StormeR.\n\nLas películas (en [orden cronológico](https://docs.google.com/spreadsheets/d/1Xfe--9Wshbb3ru0JplA2PnEwN7mVawazKmhWJjr_wKs/edit#gid=0)) disponibles para descargar son:\n\n"
         },
         games: {
-            description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%juegos` seguido de un espacio y el número del juego que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas JDownloader 2 (https://jdownloader.org/jdownloader2).\n\nLos juegos disponibles para descargar son:",
+            description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%juegos` seguido de un espacio y el número del juego que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2).\n\nLos juegos disponibles para descargar son:",
             footer: "Si querés sugerir algún juego para agregar o querés saber si hay nuevas actualizaciones de los juegos actuales, no dudes en hablar con @StormeR."
         }
     },
