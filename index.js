@@ -101,7 +101,21 @@ client.on('ready', async () => {
         }
     }).on('connectionError', (queue, error) => {
         console.log(error);
-    }).on('error', (queue, error) => console.log(error));
+        queue.metadata.send({
+            embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
+            .setThumbnail(`attachment://icons8-delete-64.png`)],
+            files: [`./assets/thumbs/music/icons8-delete-64.png`]
+        });
+        queue.destroy();
+    }).on('error', (queue, error) => {
+        console.log(error);
+        queue.metadata.send({
+            embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
+                .setThumbnail(`attachment://icons8-delete-64.png`)],
+            files: [`./assets/thumbs/music/icons8-delete-64.png`]
+        });
+        queue.destroy();
+    });
 
     playInterruptedQueue(client);
 
