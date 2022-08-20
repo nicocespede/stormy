@@ -102,14 +102,16 @@ client.on('ready', async () => {
     }).on('connectionError', (queue, error) => {
         console.log(error);
         queue.metadata.send({
+            content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-            .setThumbnail(`attachment://icons8-delete-64.png`)],
+                .setThumbnail(`attachment://icons8-delete-64.png`)],
             files: [`./assets/thumbs/music/icons8-delete-64.png`]
         });
         queue.destroy();
     }).on('error', (queue, error) => {
         console.log(error);
         queue.metadata.send({
+            content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
                 .setThumbnail(`attachment://icons8-delete-64.png`)],
             files: [`./assets/thumbs/music/icons8-delete-64.png`]
