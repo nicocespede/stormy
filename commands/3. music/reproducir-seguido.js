@@ -45,7 +45,6 @@ module.exports = {
             return reply;
         }
 
-        if (interaction) interaction.deferReply();
         const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
         if (playlists.names.includes(song.toLowerCase()))
             song = playlists.urls[playlists.names.indexOf(song.toLowerCase())];
@@ -74,6 +73,7 @@ module.exports = {
             return reply;
         }
 
+        if (interaction) interaction.deferReply();
         reply.embeds = [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
             .setThumbnail(`attachment://icons8-sand-timer-64.png`)];
         reply.ephemeral = false;
