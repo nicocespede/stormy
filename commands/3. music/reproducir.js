@@ -59,7 +59,7 @@ module.exports = {
             reply.files = [success ? `./assets/thumbs/music/icons8-resume-button-64.png` : `./assets/thumbs/music/icons8-no-entry-64.png`];
             return reply;
         } else {
-            if (interaction) interaction.deferReply();
+            if (interaction) await interaction.deferReply();
             const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
             if (playlists.names.includes(song.toLowerCase()))
                 song = playlists.urls[playlists.names.indexOf(song.toLowerCase())];

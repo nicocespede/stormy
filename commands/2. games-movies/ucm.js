@@ -59,7 +59,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ user, message, args, interaction, channel }) => {
-        if (interaction) interaction.deferReply({ ephemeral: true });
+        if (interaction) await interaction.deferReply({ ephemeral: true });
         const color = [181, 2, 22];
         const number = message ? args[0] : interaction.options.getInteger('numero');
         var reply = { custom: true, ephemeral: true };
