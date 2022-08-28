@@ -81,7 +81,7 @@ module.exports = {
 
     addBan: (array) => {
         return new Promise(function (resolve, reject) {
-            dbClient.query(`INSERT INTO "bans" VALUES('${array[0]}', '${array[1]}', '${array[2]}', '${array[3]}');`, (err, res) => {
+            dbClient.query(`INSERT INTO "bans" VALUES('${array[0]}', '${array[1]}', ${array[2] ? `'${array[2]}'` : array[2]}, '${array[3]}');`, (err, res) => {
                 if (err) throw err;
             });
             setTimeout(function () { resolve(); }, 1000);

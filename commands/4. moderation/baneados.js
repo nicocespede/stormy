@@ -25,7 +25,7 @@ module.exports = {
                     await guild.members.fetch(ban.responsible).then(member => {
                         responsiblesField.value += `${member.user.username}\n\n`;
                     }).catch(async () => responsiblesField.value += "Desconocido\n\n");
-                reasonsField.value += `${ban.reason != null && ban.reason != 'null' ? ban.reason : `No se proporcionó razón`}\n\n`;
+                reasonsField.value += `${ban.reason ? ban.reason : `No se proporcionó razón`}\n\n`;
             }
 
         return {

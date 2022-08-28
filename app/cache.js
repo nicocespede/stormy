@@ -100,7 +100,7 @@ module.exports = {
             json.forEach(element => {
                 banned.ids.push(element['bans_id']);
                 banned.bans[element['bans_id']] = {
-                    reason: element['bans_responsible'],
+                    reason: element['bans_reason'],
                     responsible: element['bans_responsible'],
                     user: element['bans_user']
                 };
