@@ -26,7 +26,7 @@ module.exports = {
             - fullToSeconds(parseInt(argsDays), parseInt(argsHours), parseInt(argsMinutes), parseInt(argsSeconds));
         if (!isNaN(totalTime)) {
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
-            await updateStat(id, days, hours, minutes, Math.trunc(seconds));
+            await updateStat(id, days, hours, minutes, seconds);
         }
         await updateStats();
         return '¡Tiempo restado!';

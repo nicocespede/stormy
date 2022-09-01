@@ -380,7 +380,7 @@ module.exports = {
         var totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
         if (!isNaN(totalTime)) {
             var { days, hours, minutes, seconds } = secondsToFull(totalTime);
-            await updateStat(id, days, hours, minutes, Math.trunc(seconds), username);
+            await updateStat(id, days, hours, minutes, seconds, username);
         }
         await cache.updateStats();
     },
