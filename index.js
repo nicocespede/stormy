@@ -163,8 +163,6 @@ client.on('ready', async () => {
 
 client.on('rateLimit', data => console.log('> Se recibió un límite de tarifa:\n', data));
 
-client.login(process.env.TOKEN);
-
 process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
     console.log('> Reinicio inminente...');
     // disconnects music bot
@@ -178,14 +176,16 @@ process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
             if (Object.hasOwnProperty.call(timestamps, key))
                 await pushDifference(key);
     }
-
+    
     //clears 1 minute interval
     if (interval) {
         console.log('> Terminando intervalo de 1 minuto');
         clearInterval(interval);
     }
-
+    
     //ends discord client
     console.log('> Desconectando bot');
     client.destroy();
 });
+
+client.login(process.env.TOKEN);
