@@ -18,7 +18,7 @@ const timeToString = (version, seconds, minutes, hours, days) => {
     if (minutes != 0)
         ret += (ret != '' ? ', ' : '') + minutes + ` ${strings[2]}${version === 'full' && minutes > 1 ? 's' : ''}`;
     if (seconds != 0)
-        ret += (ret != '' ? ', ' : '') + Math.trunc(seconds) + ` ${strings[3]}${version === 'full' && seconds > 1 ? 's' : ''}`;
+        ret += (ret != '' ? ', ' : '') + seconds + ` ${strings[3]}${version === 'full' && seconds > 1 ? 's' : ''}`;
     return ret;
 }
 
