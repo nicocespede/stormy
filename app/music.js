@@ -79,10 +79,8 @@ module.exports = {
                     .setThumbnail(`attachment://icons8-shutdown-64.png`)],
                 files: [`./assets/thumbs/music/icons8-shutdown-64.png`]
             });
-            if (queue.tracks.length < 500) {
-                const previousTracks = queue.previousTracks.slice();
-                await addQueue(previousTracks.pop(), queue.guild.id, queue.metadata.id, previousTracks, queue.tracks, queue.connection.channel.id);
-            }
+            const previousTracks = queue.previousTracks.slice();
+            await addQueue(previousTracks.pop(), queue.guild.id, queue.metadata.id, previousTracks, queue.tracks, queue.connection.channel.id);
             queue.destroy(true);
         }
     },

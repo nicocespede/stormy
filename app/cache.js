@@ -101,7 +101,7 @@ module.exports = {
         results.forEach(element => {
             banned.ids.push(element._id);
             banned.bans[element._id] = {
-                reason: element.reason ? element.reason : null,
+                reason: element.reason,
                 responsible: element.responsibleId,
                 user: element.tag
             };
@@ -116,7 +116,7 @@ module.exports = {
         const results = await sombraBanSchema.find({});
         sombraBans = [];
         results.forEach(element => {
-            sombraBans.push(element.reason ? element.reason : null);
+            sombraBans.push(element.reason);
         });
         console.log('> Caché de baneos de Sombra actualizado');
         return sombraBans;
