@@ -22,7 +22,7 @@ module.exports = {
         if (name === 'games-and-movies') {
             var oldGames;
             var oldMovies;
-            const moviesAndGamesSchema = require('../models/moviesAndGames-schema');
+            const moviesAndGamesSchema = require('../../models/moviesAndGames-schema');
             const results = await moviesAndGamesSchema.find({});
             results.forEach(element => {
                 if (element._id === 'movies')
