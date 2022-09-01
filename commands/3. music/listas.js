@@ -1,7 +1,7 @@
 const { MessageEmbed, Constants } = require('discord.js');
 const { getPlaylists, updatePlaylists } = require('../../app/cache');
 const { prefix, ids } = require('../../app/constants');
-const { addPlaylist, deletePlaylist } = require('../../app/postgres');
+const { addPlaylist, deletePlaylist } = require('../../app/mongodb');
 
 module.exports = {
     category: 'Música',
@@ -67,7 +67,7 @@ module.exports = {
 
             reply.embeds = [new MessageEmbed()
                 .setTitle(`**Listas de reproducción**`)
-                .setDescription(description)
+                .setDescription(description + `${playlists.names.length === 0 ? '_No hay ninguna lista de reproducción guardada aún._' : ''}`)
                 .setColor([195, 36, 255])
                 .setThumbnail(`attachment://icons8-playlist-64.png`)];
             reply.files = ['./assets/thumbs/music/icons8-playlist-64.png'];
@@ -90,7 +90,7 @@ module.exports = {
             else if (playlists.names.includes(name))
                 reply.content = `Ya hay una lista de reproducción guardada con ese nombre.`;
             else
-                await addPlaylist([name, url]).then(async () => {
+                await addPlaylist(name, url).then(async () => {
                     await updatePlaylists();
                     reply.content = `Se agregó la lista de reproducción **${name}**.`;
                     reply.ephemeral = false;

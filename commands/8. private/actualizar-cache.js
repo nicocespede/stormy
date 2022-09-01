@@ -1,7 +1,7 @@
 const { Constants } = require("discord.js");
 const { updateMcu, updateGames: updateGamesCache } = require("../../app/cache");
 const { ids } = require("../../app/constants");
-const { executeQuery, updateMovies, updateGames } = require("../../app/postgres");
+const { updateMovies, updateGames } = require("../../app/mongodb");
 
 module.exports = {
     category: 'Privados',
@@ -22,14 +22,14 @@ module.exports = {
         if (name === 'games-and-movies') {
             var oldGames;
             var oldMovies;
-            await executeQuery('SELECT * FROM "moviesAndGames";').then(json => {
-                json.forEach(element => {
-                    if (element['identifier'] === 'movies')
-                        oldMovies = JSON.parse(element['data'].replace(/APOSTROFE/g, "'"));
-                    else if (element['identifier'] === 'games')
-                        oldGames = JSON.parse(element['data'].replace(/APOSTROFE/g, "'"));
-                });
-            }).catch(console.error);
+            const moviesAndGamesSchema = require('../models/moviesAndGames-schema');
+            const results = await moviesAndGamesSchema.find({});
+            results.forEach(element => {
+                if (element._id === 'movies')
+                    oldMovies = element.data;
+                else if (element._id === 'games')
+                    oldGames = element.data;
+            });
             const newStuff = { movies: [], games: [] };
             const updatedStuff = { movies: [], games: [] };
             const mcu = await updateMcu();
@@ -85,7 +85,7 @@ module.exports = {
                             content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} ${element.versions.join(', ')} de ${element.name}: ${element.updateInfo}.\n`;
                         }
                         content += '```';
-                        await updateMovies(JSON.stringify(mcu).replace(/'/g, 'APOSTROFE'));
+                        await updateMovies(mcu);
                     }
                     if (updatedStuff.games.length != 0 || newStuff.games.length != 0) {
                         content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\`\`\``;
@@ -94,7 +94,7 @@ module.exports = {
                         for (let i = 0; i < updatedStuff.games.length; i++)
                             content += `• Se actualizó el juego ${updatedStuff.games[i]}.\n`;
                         content += '```';
-                        await updateGames(JSON.stringify(games).replace(/'/g, 'APOSTROFE'));
+                        await updateGames(games);
                     }
                     channel.send(content).catch(console.error);
                 }).catch(console.error);

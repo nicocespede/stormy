@@ -87,10 +87,9 @@ module.exports = {
         const text = args.join(' ');
 
         const data = !getRolesMessageInfo() ? await updateRolesMessageInfo() : getRolesMessageInfo();
-        const aux = data[0];
 
-        const channelId = aux['channelId'];
-        const messageId = aux['messageId'];
+        const channelId = data.channelId;
+        const messageId = data.messageId;
         const channel = guild.channels.cache.get(channelId);
         const roleMessage = await channel.messages.fetch(messageId);
 

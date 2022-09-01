@@ -1,7 +1,7 @@
 const { getAvatar, updateAvatar } = require("../../app/cache");
 const general = require("../../app/general");
 const { ids } = require("../../app/constants");
-const { updateAvatarString } = require("../../app/postgres");
+const { updateAvatarString } = require("../../app/mongodb");
 const kruAvatarUrl = './assets/kgprime-kru.png';
 
 module.exports = {

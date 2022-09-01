@@ -1,5 +1,3 @@
-const { executeQuery } = require('../../app/postgres');
-
 module.exports = {
     category: 'Privados',
     description: 'Reinicia por completo las estadísticas.',
@@ -10,7 +8,8 @@ module.exports = {
     ownerOnly: true,
 
     callback: async () => {
-        await executeQuery(`DELETE FROM "stats";`).catch(console.error);
+        const statSchema = require('../../models/stat-schema');
+        await statSchema.deleteMany({});
         return '¡Estadísticas reiniciadas!';
     }
 }

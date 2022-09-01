@@ -2,7 +2,7 @@ const { Constants } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../app/cache');
 const { ids } = require('../../app/constants');
 const { convertTZ } = require('../../app/general');
-const { addSmurf, deleteSmurf, updateSmurf } = require('../../app/postgres');
+const { addSmurf, deleteSmurf, updateSmurf } = require('../../app/mongodb');
 
 const validateDate = (date) => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

@@ -1,6 +1,6 @@
 const { updateCrosshairs } = require('../../app/cache');
 const { prefix } = require('../../app/constants');
-const { addCrosshair } = require('../../app/postgres');
+const { addCrosshair } = require('../../app/mongodb');
 
 module.exports = {
     category: 'Juegos/Películas',

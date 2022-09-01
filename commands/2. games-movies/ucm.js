@@ -2,7 +2,7 @@ const { createCanvas } = require('canvas');
 const { MessageEmbed, Constants, MessageActionRow, MessageButton } = require('discord.js');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
 const { prefix, texts, githubRawURL } = require('../../app/constants');
-const { updateMcuFilters } = require('../../app/postgres');
+const { updateMcuFilters } = require('../../app/mongodb');
 const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
 
 function areEqual(oldFilters, newFilters) {

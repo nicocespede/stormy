@@ -1,8 +1,8 @@
 const { MessageEmbed, MessageButton, MessageActionRow, Constants } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../app/cache');
-const { addBday, deleteBday } = require('../../app/postgres');
 const { prefix } = require('../../app/constants');
 const { sendBdayAlert } = require('../../app/general');
+const { addBirthday, deleteBirthday } = require('../../app/mongodb');
 
 const validateDate = (date) => {
     var ret = { valid: false, reason: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}cumples agregar <@amigo> <DD/MM>"**.` };
@@ -82,17 +82,17 @@ module.exports = {
                 if (Object.hasOwnProperty.call(birthdays, key)) {
                     const bday = birthdays[key];
                     await guild.members.fetch(key).then(member => {
-                        const month = parseInt(bday.date.substring(3, 5)) - 1;
+                        const month = parseInt(bday.month) - 1;
                         if (previousMonth != month) {
                             usersField.value += `\n**${months[month]}**\n`;
                             datesField.value += `\n\u200b\n`;
                         }
                         usersField.value += `${member.user.username}\n`;
-                        datesField.value += `${bday.date}\n`;
+                        datesField.value += `${bday.day}/${bday.month}\n`;
                         previousMonth = month;
-                    }).catch(() => deleteBday(key).then(async () => {
+                    }).catch(() => deleteBirthday(key).then(async () => {
                         await updateBirthdays();
-                        channel.send(`Se eliminó el cumpleaños de **${bday.user}** (el **${bday.date}**) ya que el usuario no está más en el servidor.`);
+                        channel.send(`Se eliminó el cumpleaños de **${bday.user}** (el **${bday.day}/${bday.month}**) ya que el usuario no está más en el servidor.`);
                     }).catch(console.error));
                 }
 
@@ -145,8 +145,7 @@ module.exports = {
                     if (!collection.first())
                         edit.content = 'La acción expiró.';
                     else if (collection.first().customId === 'add_yes') {
-                        const newArray = [target.user.id, target.user.username, date, false];
-                        await addBday(newArray).then(async () => {
+                        await addBirthday(target.user.id, target.user.username, date.split('/')[0], date.split('/')[1]).then(async () => {
                             edit.content = 'La acción fue completada.';
                             channel.send({ content: `Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
                             await updateBirthdays();
@@ -194,7 +193,7 @@ module.exports = {
                     if (!collection.first())
                         edit.content = 'La acción expiró.';
                     else if (collection.first().customId === 'delete_yes')
-                        await deleteBday(target.user.id).then(async () => {
+                        await deleteBirthday(target.user.id).then(async () => {
                             edit.content = 'La acción fue completada.';
                             channel.send({ content: `El cumpleaños fue borrado de manera exitosa.` });
                             updateBirthdays();

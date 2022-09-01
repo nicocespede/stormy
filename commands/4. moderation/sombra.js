@@ -12,9 +12,8 @@ module.exports = {
         const bans = !getSombraBans() ? await updateSombraBans() : getSombraBans();
         var description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
         for (var i = 0; i < bans.length; i++) {
-            const actual = bans[i];
-            description += `**${i + 1}:** ${actual['sombraBans_reason'] === "" || actual['sombraBans_reason'] === null
-                ? 'Sin razón de baneo.' : actual['sombraBans_reason']}\n`;
+            const reason = bans[i];
+            description += `**${i + 1}:** ${!reason || reason === '' ? 'Sin razón de baneo.' : reason}\n`;
         }
         description = description.replace(/[\\\n]+n/g, '\n');
         return {

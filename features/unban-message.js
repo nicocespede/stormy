@@ -1,6 +1,6 @@
 const { getBanned, updateBanned } = require("../app/cache");
 const { ids, unbanned, gifs } = require("../app/constants");
-const { deleteBan } = require("../app/postgres");
+const { deleteBan } = require("../app/mongodb");
 
 module.exports = client => {
     client.on('guildBanRemove', async ban => {

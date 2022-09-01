@@ -1,7 +1,7 @@
 const { getReactionCollectorInfo, updateReactionCollectorInfo } = require('../../app/cache');
 const { ids } = require('../../app/constants');
 const { stopReactionCollector } = require('../../app/general');
-const { updateCollectorMessage } = require('../../app/postgres');
+const { updateBillboardCollectorMessage } = require('../../app/mongodb');
 
 module.exports = {
     category: 'Privados',
@@ -12,12 +12,11 @@ module.exports = {
     ownerOnly: true,
 
     callback: async ({ guild, message }) => {
-        var aux = !getReactionCollectorInfo() ? await updateReactionCollectorInfo() : getReactionCollectorInfo();
-        aux = aux[0];
-        if (!aux['activeCollector'])
+        const aux = !getReactionCollectorInfo() ? await updateReactionCollectorInfo() : getReactionCollectorInfo();
+        if (!aux.isActive)
             message.author.send({ content: 'El recolector de reacciones no está activo.' });
         else
-            updateCollectorMessage(false, aux['messageId']).then(async () => {
+            updateBillboardCollectorMessage(false, aux.messageId).then(async () => {
                 await updateReactionCollectorInfo();
                 stopReactionCollector();
                 guild.roles.fetch(ids.roles.funcion).then(role => {

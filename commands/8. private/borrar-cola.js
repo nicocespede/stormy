@@ -1,5 +1,3 @@
-const { executeQuery } = require("../../app/postgres");
-
 module.exports = {
     category: 'Privados',
     description: 'Elimina la cola de reproducción previa de la base de datos.',
@@ -10,8 +8,10 @@ module.exports = {
 
     callback: async () => {
         const reply = { custom: true };
-        await executeQuery('DELETE FROM "previousQueue";').catch(console.error);
-        reply.content = `> Cola de reproducción previa eliminada de la base de datos`;
+        const previousQueueSchema = require('../../models/previousQueue-schema');
+        const result = await previousQueueSchema.deleteMany({});
+        reply.content = result.deletedCount > 0 ? `Cola de reproducción previa eliminada de la base de datos`
+            : `No hay cola de reproducción previa para eliminar`;
         return reply;
     }
 }

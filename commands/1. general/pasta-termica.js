@@ -1,8 +1,8 @@
 const { getThermalPasteDates, updateThermalPasteDates } = require('../../app/cache');
-const { addThermalPasteDate, updateThermalPasteDate } = require('../../app/postgres');
 const { convertTZ } = require('../../app/general');
 const { MessageActionRow, MessageButton, Constants } = require('discord.js');
 const { prefix } = require('../../app/constants');
+const { addThermalPasteDate, updateThermalPasteDate } = require('../../app/mongodb');
 
 const validateDate = (date) => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

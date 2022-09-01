@@ -21,7 +21,7 @@
     "ffmpeg-static": "^4.4.1",
     "genius-lyrics": "^4.3.6",
     "languagedetect": "^2.0.0",
-    "pg": "^8.7.3",
+    "mongoose": "^6.5.3",
     "translate": "^1.4.1",
     "unofficial-valorant-api": "^1.0.4",
     "wokcommands": "^1.5.3",

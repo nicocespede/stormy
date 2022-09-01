@@ -1,15 +1,13 @@
 const { Client, Intents, MessageEmbed } = require('discord.js');
 const WOKCommands = require('wokcommands');
 const path = require('path');
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
     countConnectedMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue } = require('./app/music');
-const { testing, prefix, ids, musicActions, categorySettings } = require('./app/constants');
-const { dbClient } = require('./app/postgres');
+const { prefix, ids, musicActions, categorySettings } = require('./app/constants');
 var interval;
 
 const client = new Client({
@@ -34,13 +32,27 @@ client.on('ready', async () => {
     countMembers(client);
     countConnectedMembers(client);
 
+    new WOKCommands(client, {
+        botOwners: ids.users.stormer,
+        commandDir: path.join(__dirname, 'commands'),
+        featuresDir: path.join(__dirname, 'features'),
+        defaultLanguage: 'spanish',
+        disabledDefaultCommands: ['channelonly', 'command', 'help', 'language', 'prefix', 'requiredrole'],
+        ephemeral: true,
+        ignoreBots: true,
+        testServers: [ids.guilds.testing],
+        mongoUri: process.env.MONGO_URI,
+        dbOptions: { keepAlive: true }
+    }).setDefaultPrefix(prefix)
+        .setCategorySettings(categorySettings)
+        .setColor([142, 89, 170]);
+
     await checkBansCorrelativity(client);
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client);
-    var reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
-    reactionCollectorInfo = reactionCollectorInfo[0];
-    if (reactionCollectorInfo['activeCollector'])
+    const reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
+    if (reactionCollectorInfo.isActive)
         initiateReactionCollector(client);
 
     var musicEmbed = new MessageEmbed().setColor([195, 36, 255]);
@@ -107,7 +119,8 @@ client.on('ready', async () => {
                 .setThumbnail(`attachment://icons8-delete-64.png`)],
             files: [`./assets/thumbs/music/icons8-delete-64.png`]
         });
-        queue.destroy();
+        if (!queue.destroyed)
+            queue.destroy();
     }).on('error', (queue, error) => {
         console.log(error);
         queue.metadata.send({
@@ -116,25 +129,13 @@ client.on('ready', async () => {
                 .setThumbnail(`attachment://icons8-delete-64.png`)],
             files: [`./assets/thumbs/music/icons8-delete-64.png`]
         });
-        queue.destroy();
+        if (!queue.destroyed)
+            queue.destroy();
     });
 
     playInterruptedQueue(client);
 
     console.log(`¡Loggeado como ${client.user.tag}!`);
-
-    new WOKCommands(client, {
-        botOwners: ids.users.stormer,
-        commandDir: path.join(__dirname, 'commands'),
-        featuresDir: path.join(__dirname, 'features'),
-        defaultLanguage: 'spanish',
-        disabledDefaultCommands: ['channelonly', 'command', 'help', 'language', 'prefix', 'requiredrole'],
-        ephemeral: true,
-        ignoreBots: true,
-        testServers: [ids.guilds.testing]
-    }).setDefaultPrefix(prefix)
-        .setCategorySettings(categorySettings)
-        .setColor([142, 89, 170]);
 
     interval = setInterval(async function () {
         cache.addMinuteUp();
@@ -148,12 +149,11 @@ client.on('ready', async () => {
             const timestamps = cache.getTimestamps();
             if (Object.keys(timestamps).length > 0) {
                 console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
-                for (const key in timestamps) {
+                for (const key in timestamps)
                     if (Object.hasOwnProperty.call(timestamps, key)) {
                         await pushDifference(key);
                         cache.addTimestamp(key, new Date());
                     }
-                }
             }
         }
         if (minutesUp % 5 === 0)
@@ -163,7 +163,7 @@ client.on('ready', async () => {
 
 client.on('rateLimit', data => console.log('> Se recibió un límite de tarifa:\n', data));
 
-client.login(!testing ? process.env.TOKEN : process.env.TESTING_TOKEN);
+client.login(process.env.TOKEN);
 
 process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
     console.log('> Reinicio inminente...');
@@ -185,9 +185,7 @@ process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
         clearInterval(interval);
     }
 
-    //ends postgres client and discord client
-    console.log('> Terminando cliente de postgres');
-    await dbClient.end();
+    //ends discord client
     console.log('> Desconectando bot');
     client.destroy();
 });

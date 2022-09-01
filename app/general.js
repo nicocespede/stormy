@@ -2,10 +2,10 @@ const { MessageAttachment } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
-const { updateBday, deleteBday, updateCollectorMessage, updateAnniversary, updateAvatarString, addStat, updateStat, deleteBan,
-    updateSmurf } = require('./postgres');
 const Canvas = require('canvas');
 const { ids, relativeSpecialDays, currencies } = require('./constants');
+const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,
+    addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -123,26 +123,24 @@ function sendSpecialDayMessage(client) {
 async function sendAnniversaryAlert(client) {
     var anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
     anniversaries.forEach(anniversary => {
-        if (anniversary['anniversaries_date'].substring(0, 5) == getToday() && !anniversary['anniversaries_flag']) {
+        if (anniversary.date.substring(0, 5) == getToday() && !anniversary.flag) {
             client.channels.fetch(ids.channels.anuncios).then(channel => {
                 client.guilds.fetch(ids.guilds.default).then(guild => {
-                    guild.members.fetch(anniversary['anniversaries_id1']).then(member1 => {
-                        guild.members.fetch(anniversary['anniversaries_id2']).then(member2 => {
-                            const years = (new Date().getFullYear()) - parseInt(anniversary['anniversaries_date'].substring(6));
+                    guild.members.fetch(anniversary.id1).then(member1 => {
+                        guild.members.fetch(anniversary.id2).then(member2 => {
+                            const years = (new Date().getFullYear()) - parseInt(anniversary.date.substring(6));
                             channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).then(m => {
-                                m.react('🥰');
-                                m.react('😍');
-                                m.react('💏');
+                                ['🥰', '😍', '💏'].forEach(emoji => m.react(emoji));
                             }).catch(console.error);
                         }).catch(console.error);
                     }).catch(console.error);
                 }).catch(console.error);
             }).catch(console.error);
-            updateAnniversary(anniversary['anniversaries_id1'], anniversary['anniversaries_id2'], true).then(async () => {
+            updateAnniversary(anniversary.id1, anniversary.id2, true).then(async () => {
                 await cache.updateAnniversaries();
             }).catch(console.error);
-        } else if (anniversary['anniversaries_date'] != getToday() && anniversary['anniversaries_flag'])
-            updateAnniversary(anniversary['anniversaries_id1'], anniversary['anniversaries_id2'], false).then(async () => {
+        } else if (anniversary.date != getToday() && anniversary.flag)
+            updateAnniversary(anniversary.id1, anniversary.id2, false).then(async () => {
                 await cache.updateAnniversaries();
             }).catch(console.error);
     });
@@ -182,7 +180,8 @@ const sendBdayAlert = async (client) => {
     for (const key in birthdays)
         if (Object.hasOwnProperty.call(birthdays, key)) {
             const bday = birthdays[key];
-            if (bday.date === getToday() && !bday.flag) {
+            const bdayDate = `${bday.day}/${bday.month}`;
+            if (bdayDate === getToday() && !bday.flag) {
                 client.channels.fetch(ids.channels.anuncios).then(channel => {
                     client.guilds.fetch(ids.guilds.default).then(async guild => {
                         await guild.members.fetch(key).then(member => {
@@ -193,15 +192,15 @@ const sendBdayAlert = async (client) => {
                                     ['🎈', '🥳', '🎉', '🎂'].forEach(async emoji => await m.react(emoji));
                                 }).catch(console.error);
                             }).catch(console.error);
-                        }).catch(() => deleteBday(key).then(async () => {
+                        }).catch(() => deleteBirthday(key).then(async () => {
                             await cache.updateBirthdays();
                             channel.send({ content: `Se eliminó el cumpleaños de **${bday.user}** (**Hoy**) ya que el usuario no está más en el servidor.` });
                         }));
                     }).catch(console.error);
                 }).catch(console.error);
-                updateBday(key, true).then(async () => await cache.updateBirthdays()).catch(console.error);
-            } else if (bday.date != getToday() && bday.flag)
-                updateBday(key, false).then(async () => await cache.updateBirthdays()).catch(console.error);
+                updateBirthday(key, true).then(async () => await cache.updateBirthdays()).catch(console.error);
+            } else if (bdayDate != getToday() && bday.flag)
+                updateBirthday(key, false).then(async () => await cache.updateBirthdays()).catch(console.error);
         }
 };
 
@@ -303,12 +302,11 @@ module.exports = {
         client.channels.fetch(ids.channels.cartelera).then(async channel => {
             if (message)
                 await channel.send(message).then(async msg => {
-                    await updateCollectorMessage(true, msg.id).catch(console.error);
+                    await updateBillboardCollectorMessage(true, msg.id).catch(console.error);
                     await cache.updateReactionCollectorInfo();
                 });
-            var aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
-            aux = aux[0];
-            channel.messages.fetch(aux['messageId']).then(m => {
+            const aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
+            channel.messages.fetch(aux.messageId).then(m => {
                 if (message)
                     m.react('✅');
                 const filter = (reaction) => reaction.emoji.name === '✅';

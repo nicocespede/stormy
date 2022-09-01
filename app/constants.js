@@ -1,9 +1,7 @@
-const testing = false;
+const testing = process.env.TESTING ? true : false;
 
 module.exports = {
     prefix: '-',
-
-    testing,
 
     githubRawURL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
 

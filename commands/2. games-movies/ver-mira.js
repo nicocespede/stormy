@@ -39,7 +39,7 @@ module.exports = {
                 .setDescription(`Código de importación de la mira:\n\n` + selectedCrosshair.code)
                 .setColor([255, 70, 85])
                 .setThumbnail(`attachment://valorant.png`)];
-            if (selectedCrosshair.imageUrl != 'null')
+            if (selectedCrosshair.imageUrl)
                 reply.embeds[0].setImage(selectedCrosshair.imageUrl);
             reply.files = ['./assets/thumbs/valorant.png'];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);

@@ -1,7 +1,7 @@
 const { Constants } = require('discord.js');
 const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
 const { prefix } = require('../../app/constants');
-const { deleteCrosshair } = require('../../app/postgres');
+const { deleteCrosshair } = require('../../app/mongodb');
 
 module.exports = {
     category: 'Juegos/Películas',

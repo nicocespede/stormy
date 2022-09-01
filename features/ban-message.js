@@ -1,7 +1,7 @@
 const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible } = require("../app/cache");
 const { ids, bannedWithoutReason, bannedWithReason, gifs } = require("../app/constants");
 const { countMembers } = require("../app/general");
-const { addBan, addSombraBan } = require("../app/postgres");
+const { addBan, addSombraBan } = require("../app/mongodb");
 
 module.exports = client => {
     client.on('guildBanAdd', async ban => {
@@ -13,7 +13,7 @@ module.exports = client => {
             removeBanResponsible(ban.user.id);
         }
         const reason = !ban.reason || ban.reason.trim().length === 0 ? null : ban.reason;
-        await addBan([ban.user.id, ban.user.tag, reason, responsible]).then(async () => {
+        await addBan(ban.user.id, ban.user.tag, responsible, reason).then(async () => {
             await updateBanned();
             client.channels.fetch(ids.channels.welcome).then(channel => {
                 const msg = { content: '', files: [] }

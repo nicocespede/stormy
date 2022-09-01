@@ -1,6 +1,6 @@
 const { githubRawURL } = require('./constants');
-const { executeQuery } = require('./postgres');
 const fetch = require('node-fetch');
+const collectorMessageSchema = require('../models/collectorMessage-schema');
 
 var mcu;
 var mcuMovies;
@@ -41,11 +41,10 @@ module.exports = {
 
     getFilters: () => filters,
     updateFilters: async () => {
-        await executeQuery('SELECT * FROM "mcuFilters";').then(async json => {
-            var aux = json[0]
-            filters = aux['mcuFilters_filters'];
-            console.log('> Caché de filtros actualizado');
-        }).catch(console.error);
+        const mcuFiltersSchema = require('../models/mcuFilters-schema');
+        const result = await mcuFiltersSchema.findById(1, 'filters');
+        filters = result.filters;
+        console.log('> Caché de filtros actualizado');
         return filters;
     },
 
@@ -78,44 +77,48 @@ module.exports = {
 
     getBirthdays: () => birthdays,
     updateBirthdays: async () => {
-        await executeQuery('SELECT * FROM "bdays" ORDER BY substring("bdays_date", 4, 5), substring("bdays_date", 1, 2);').then(async json => {
-            birthdays = {};
-            json.forEach(element => {
-                birthdays[element['bdays_id']] = {
-                    date: element['bdays_date'],
-                    flag: element['bdays_flag'],
-                    user: element['bdays_user']
-                };
-            });
-            console.log('> Caché de cumpleaños actualizado');
-        }).catch(console.error);
+        const birthdaySchema = require('../models/birthday-schema');
+        const results = await birthdaySchema.find({}).sort({ month: 'asc', day: 'asc' });
+        birthdays = {};
+        results.forEach(element => {
+            birthdays[element._id] = {
+                day: element.day,
+                month: element.month,
+                flag: element.flag,
+                user: element.username
+            };
+        });
+        console.log('> Caché de cumpleaños actualizado');
         return birthdays;
     },
 
     getBanned: () => banned,
     updateBanned: async () => {
-        await executeQuery('SELECT * FROM "bans";').then(async json => {
-            banned.bans = {};
-            banned.ids = [];
-            json.forEach(element => {
-                banned.ids.push(element['bans_id']);
-                banned.bans[element['bans_id']] = {
-                    reason: element['bans_reason'],
-                    responsible: element['bans_responsible'],
-                    user: element['bans_user']
-                };
-            });
-            console.log('> Caché de baneados actualizado');
-        }).catch(console.error);
+        const banSchema = require('../models/ban-schema');
+        const results = await banSchema.find({});
+        banned.bans = {};
+        banned.ids = [];
+        results.forEach(element => {
+            banned.ids.push(element._id);
+            banned.bans[element._id] = {
+                reason: element.reason ? element.reason : null,
+                responsible: element.responsibleId,
+                user: element.tag
+            };
+        });
+        console.log('> Caché de baneados actualizado');
         return banned;
     },
 
     getSombraBans: () => sombraBans,
     updateSombraBans: async () => {
-        await executeQuery('SELECT * FROM "sombraBans";').then(json => {
-            sombraBans = json;
-            console.log('> Caché de baneos de Sombra actualizado');
-        }).catch(console.error);
+        const sombraBanSchema = require('../models/sombraBan-schema');
+        const results = await sombraBanSchema.find({});
+        sombraBans = [];
+        results.forEach(element => {
+            sombraBans.push(element.reason ? element.reason : null);
+        });
+        console.log('> Caché de baneos de Sombra actualizado');
         return sombraBans;
     },
 
@@ -124,37 +127,41 @@ module.exports = {
 
     getReactionCollectorInfo: () => reactionCollectorInfo,
     updateReactionCollectorInfo: async () => {
-        await executeQuery('SELECT * FROM "messages" WHERE "id" = \'billboard_message\';').then(async json => {
-            reactionCollectorInfo = json;
-            console.log('> Caché de recolector de reacciones actualizado');
-        }).catch(console.error);
+        const result = await collectorMessageSchema.findById('billboard_message');
+        reactionCollectorInfo = {
+            isActive: result.isActive,
+            messageId: result.messageId
+        };
+        console.log('> Caché de recolector de reacciones actualizado');
         return reactionCollectorInfo;
     },
 
     getRolesMessageInfo: () => rolesMessageInfo,
     updateRolesMessageInfo: async () => {
-        await executeQuery('SELECT * FROM "messages" WHERE "id" = \'roles_message\';').then(async json => {
-            rolesMessageInfo = json;
-            console.log('> Caché de mensaje de roles actualizado');
-        }).catch(console.error);
+        const result = await collectorMessageSchema.findById('roles_message');
+        rolesMessageInfo = {
+            messageId: result.messageId,
+            channelId: result.channelId
+        };
+        console.log('> Caché de mensaje de roles actualizado');
         return rolesMessageInfo;
     },
 
     getAnniversaries: () => anniversaries,
     updateAnniversaries: async () => {
-        await executeQuery('SELECT * FROM "anniversaries";').then(async json => {
-            anniversaries = json;
-            console.log('> Caché de aniversarios actualizado');
-        }).catch(console.error);
+        const anniversarySchema = require('../models/anniversary-schema');
+        const results = await anniversarySchema.find({});
+        anniversaries = results;
+        console.log('> Caché de aniversarios actualizado');
         return anniversaries;
     },
 
     getAvatar: () => avatar,
     updateAvatar: async () => {
-        await executeQuery(`SELECT * FROM "avatar";`).then(async json => {
-            avatar = (json[0])['avatar_url'];
-            console.log('> Caché de avatar actualizado');
-        }).catch(console.error);
+        const avatarSchema = require('../models/avatar-schema');
+        const result = await avatarSchema.findById(1, 'url');
+        avatar = result.url;
+        console.log('> Caché de avatar actualizado');
         return avatar;
     },
 
@@ -163,34 +170,34 @@ module.exports = {
 
     getPlaylists: () => playlists,
     updatePlaylists: async () => {
-        await executeQuery('SELECT * FROM "playlists" ORDER BY "playlists_name";').then(async json => {
-            var newNames = [];
-            var newUrls = [];
-            json.forEach(pl => {
-                newNames.push(pl['playlists_name']);
-                newUrls.push(pl['playlists_url']);
-            });
-            playlists.names = newNames;
-            playlists.urls = newUrls;
-            console.log('> Caché de playlists actualizado');
-        }).catch(console.error);
+        const newNames = [];
+        const newUrls = [];
+        const playlistSchema = require('../models/playlist-schema');
+        const results = await playlistSchema.find({});
+        results.forEach(pl => {
+            newNames.push(pl._id);
+            newUrls.push(pl.url);
+        });
+        playlists.names = newNames;
+        playlists.urls = newUrls;
+        console.log('> Caché de playlists actualizado');
         return playlists;
     },
 
     getStats: () => stats,
     updateStats: async () => {
-        await executeQuery('SELECT * FROM "stats" ORDER BY "stats_days" DESC, "stats_hours" DESC, "stats_minutes" DESC, "stats_seconds" DESC;').then(json => {
-            stats = {};
-            json.forEach(element => {
-                stats[element['stats_id']] = {
-                    days: element['stats_days'],
-                    hours: element['stats_hours'],
-                    minutes: element['stats_minutes'],
-                    seconds: element['stats_seconds']
-                };
-            });
-            console.log('> Caché de estadísticas actualizado');
-        }).catch(console.error);
+        const statSchema = require('../models/stat-schema');
+        const results = await statSchema.find({}).sort({ days: 'desc', hours: 'desc', minutes: 'desc', seconds: 'desc' });
+        stats = {};
+        results.forEach(element => {
+            stats[element._id] = {
+                days: element.days,
+                hours: element.hours,
+                minutes: element.minutes,
+                seconds: element.seconds
+            };
+        });
+        console.log('> Caché de estadísticas actualizado');
         return stats;
     },
     getTimestamps: () => timestamps,
@@ -202,15 +209,11 @@ module.exports = {
 
     getThermalPasteDates: () => thermalPasteDates,
     updateThermalPasteDates: async () => {
-        await executeQuery('SELECT * FROM "thermalPasteDates";').then(json => {
-            thermalPasteDates = {};
-            json.forEach(element => {
-                const id = element['tpd_id'];
-                const date = element['tpd_date'];
-                thermalPasteDates[id] = date;
-            });
-            console.log('> Caché de fechas de cambio de pasta térmica actualizado');
-        }).catch(console.error);
+        const thermalPasteDateSchema = require('../models/stat-schema');
+        const results = await thermalPasteDateSchema.find({});
+        thermalPasteDates = {};
+        results.forEach(element => thermalPasteDates[element._id] = element.date);
+        console.log('> Caché de fechas de cambio de pasta térmica actualizado');
         return thermalPasteDates;
     },
 
@@ -220,32 +223,32 @@ module.exports = {
 
     getCrosshairs: () => crosshairs,
     updateCrosshairs: async () => {
-        await executeQuery('SELECT * FROM "crosshairs";').then(async json => {
-            crosshairs = {};
-            json.forEach(ch => crosshairs[ch['crosshair_id']] = {
-                name: ch['crosshair_name'],
-                code: ch['crosshair_code'],
-                owner: ch['crosshair_owner'],
-                imageUrl: ch['crosshair_imageUrl']
-            });
-            console.log('> Caché de miras actualizado');
-        }).catch(console.error);
+        const crosshairSchema = require('../models/crosshair-schema');
+        const results = await crosshairSchema.find({}).sort({ id: 'asc' });
+        crosshairs = {};
+        results.forEach(ch => crosshairs[`${ch.id}`] = {
+            name: ch.name,
+            code: ch.code,
+            owner: ch.ownerId,
+            imageUrl: ch.imageUrl
+        });
+        console.log('> Caché de miras actualizado');
         return crosshairs;
     },
 
     getSmurfs: () => smurfs,
     updateSmurfs: async () => {
-        await executeQuery('SELECT * FROM "smurfs";').then(json => {
-            smurfs = {};
-            json.forEach(account => smurfs[account['command']] = {
-                name: account['name'],
-                user: account['user'],
-                password: account['password'],
-                vip: account['vip'],
-                bannedUntil: account['bannedUntil']
-            });
-            console.log('> Caché de smurfs actualizado');
-        }).catch(console.error);
+        const smurfSchema = require('../models/smurf-schema');
+        const results = await smurfSchema.find({});
+        smurfs = {};
+        results.forEach(account => smurfs[account._id] = {
+            name: account.name,
+            user: account.user,
+            password: account.password,
+            vip: account.vip,
+            bannedUntil: account.bannedUntil
+        });
+        console.log('> Caché de smurfs actualizado');
         return smurfs;
     },
 };

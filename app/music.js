@@ -2,7 +2,7 @@ const { QueryType } = require("discord-player");
 const { MessageEmbed } = require("discord.js");
 const { updateLastAction } = require("./cache");
 const { musicActions } = require("./constants");
-const { addQueue, executeQuery } = require("./postgres");
+const { addQueue } = require("./mongodb");
 
 module.exports = {
     setNewVoiceChannel: (client, guild, channel) => {
@@ -80,92 +80,86 @@ module.exports = {
                 files: [`./assets/thumbs/music/icons8-shutdown-64.png`]
             });
             if (queue.tracks.length < 500) {
-                var previousTracks = queue.previousTracks.slice();
-                await addQueue(
-                    JSON.stringify(previousTracks.pop()).replace(/'/g, 'APOSTROFE'),
-                    JSON.stringify(queue.guild),
-                    JSON.stringify(queue.metadata),
-                    JSON.stringify(previousTracks).replace(/'/g, 'APOSTROFE'),
-                    JSON.stringify(queue.tracks).replace(/'/g, 'APOSTROFE'),
-                    JSON.stringify(queue.connection.channel)
-                );
+                const previousTracks = queue.previousTracks.slice();
+                await addQueue(previousTracks.pop(), queue.guild.id, queue.metadata.id, previousTracks, queue.tracks, queue.connection.channel.id);
             }
             queue.destroy(true);
         }
     },
 
     playInterruptedQueue: async client => {
-        await executeQuery('SELECT * FROM "previousQueue";').then(async json => {
-            if (json.length > 0) {
-                const current = JSON.parse(json[0]['current'].replace(/APOSTROFE/g, "'"));
-                const guild = await client.guilds.fetch(JSON.parse(json[0]['guild']).id).catch(console.error);
-                const metadata = await guild.channels.fetch(JSON.parse(json[0]['metadata']).id).catch(console.error);
-                const previousTracks = JSON.parse(json[0]['previousTracks'].replace(/APOSTROFE/g, "'"));
-                const tracks = JSON.parse(json[0]['tracks'].replace(/APOSTROFE/g, "'"));
-                const voiceChannel = await guild.channels.fetch(JSON.parse(json[0]['voiceChannel']).id).catch(console.error);
+        const previousQueueSchema = require('../models/previousQueue-schema');
+        const results = await previousQueueSchema.find({});
+        if (results.length > 0) {
+            const previousQueue = results[0];
+            const current = previousQueue.current;
+            const guild = await client.guilds.fetch(previousQueue.guildId).catch(console.error);
+            const metadata = await guild.channels.fetch(previousQueue.metadataId).catch(console.error);
+            const previousTracks = previousQueue.previousTracks;
+            const tracks = previousQueue.tracks;
+            const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId).catch(console.error);
 
-                if (voiceChannel.members.size > 0) {
-                    console.log('> Reanudando reproducción interrumpida por el reinicio');
+            if (voiceChannel.members.size > 0) {
+                console.log('> Reanudando reproducción interrumpida por el reinicio');
 
-                    var res = await client.player.search(current.url, {
-                        requestedBy: await guild.members.fetch(current.requestedBy),
+                var res = await client.player.search(current.url, {
+                    requestedBy: await guild.members.fetch(current.requestedBy),
+                    searchEngine: QueryType.AUTO
+                });
+
+                const queue = await client.player.createQueue(guild, {
+                    metadata: metadata
+                });
+
+                var embed = new MessageEmbed().setColor([195, 36, 255]);
+                var message = { files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+
+                try {
+                    if (!queue.connection) await queue.connect(voiceChannel)
+                } catch {
+                    await client.player.deleteQueue(guild.id);
+                    message.embeds = [embed.setDescription(`🛑 No me puedo unir al canal de voz.`)
+                        .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                    metadata.send(message);
+                }
+
+                message.embeds = [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
+                    .setThumbnail(`attachment://icons8-sand-timer-64.png`)];
+                message.files = [`./assets/thumbs/music/icons8-sand-timer-64.png`];
+                await metadata.send(message);
+
+                const { joinVoiceChannel } = require('@discordjs/voice');
+                joinVoiceChannel({
+                    channelId: voiceChannel.id,
+                    guildId: voiceChannel.guild.id,
+                    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+                    selfDeaf: true
+                });
+
+                queue.addTrack(res.tracks[0]);
+
+                for (let i = 0; i < previousTracks.length; i++) {
+                    const element = previousTracks[i];
+                    res = await client.player.search(element.url, {
+                        requestedBy: await guild.members.fetch(element.requestedBy),
                         searchEngine: QueryType.AUTO
                     });
+                    queue.previousTracks.push(res.tracks[0]);
+                }
 
-                    const queue = await client.player.createQueue(guild, {
-                        metadata: metadata
+                for (let i = 0; i < tracks.length; i++) {
+                    const element = tracks[i];
+                    res = await client.player.search(element.url, {
+                        requestedBy: await guild.members.fetch(element.requestedBy),
+                        searchEngine: QueryType.AUTO
                     });
+                    queue.tracks.push(res.tracks[0]);
+                }
 
-                    var embed = new MessageEmbed().setColor([195, 36, 255]);
-                    var message = { files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
-
-                    try {
-                        if (!queue.connection) await queue.connect(voiceChannel)
-                    } catch {
-                        await client.player.deleteQueue(guild.id);
-                        message.embeds = [embed.setDescription(`🛑 No me puedo unir al canal de voz.`)
-                            .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                        metadata.send(message);
-                    }
-
-                    message.embeds = [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
-                        .setThumbnail(`attachment://icons8-sand-timer-64.png`)];
-                    message.files = [`./assets/thumbs/music/icons8-sand-timer-64.png`];
-                    await metadata.send(message);
-
-                    const { joinVoiceChannel } = require('@discordjs/voice');
-                    joinVoiceChannel({
-                        channelId: voiceChannel.id,
-                        guildId: voiceChannel.guild.id,
-                        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-                        selfDeaf: true
-                    });
-
-                    queue.addTrack(res.tracks[0]);
-
-                    for (let i = 0; i < previousTracks.length; i++) {
-                        const element = previousTracks[i];
-                        res = await client.player.search(element.url, {
-                            requestedBy: await guild.members.fetch(element.requestedBy),
-                            searchEngine: QueryType.AUTO
-                        });
-                        queue.previousTracks.push(res.tracks[0]);
-                    }
-
-                    for (let i = 0; i < tracks.length; i++) {
-                        const element = tracks[i];
-                        res = await client.player.search(element.url, {
-                            requestedBy: await guild.members.fetch(element.requestedBy),
-                            searchEngine: QueryType.AUTO
-                        });
-                        queue.tracks.push(res.tracks[0]);
-                    }
-
-                    if (!queue.playing) await queue.play();
-                } else
-                    console.log('> No hay usuarios para reanudar la reproducción interrumpida');
-                await executeQuery('DELETE FROM "previousQueue";').catch(console.error);
-            }
-        }).catch(console.error);
+                if (!queue.playing) await queue.play();
+            } else
+                console.log('> No hay usuarios para reanudar la reproducción interrumpida');
+            await previousQueueSchema.deleteMany({});
+        }
     }
 }

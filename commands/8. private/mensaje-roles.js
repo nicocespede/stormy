@@ -1,6 +1,6 @@
 const { Constants } = require("discord.js");
 const { updateRolesMessageInfo } = require("../../app/cache");
-const { updateRolesMessage } = require("../../app/postgres");
+const { updateRolesMessage } = require("../../app/mongodb");
 
 module.exports = {
     category: 'Privados',
