@@ -209,7 +209,7 @@ module.exports = {
 
     getThermalPasteDates: () => thermalPasteDates,
     updateThermalPasteDates: async () => {
-        const thermalPasteDateSchema = require('../models/stat-schema');
+        const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
         const results = await thermalPasteDateSchema.find({});
         thermalPasteDates = {};
         results.forEach(element => thermalPasteDates[element._id] = element.date);
