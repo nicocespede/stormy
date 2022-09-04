@@ -7,7 +7,7 @@ const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
     countConnectedMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue } = require('./app/music');
-const { prefix, ids, musicActions, categorySettings } = require('./app/constants');
+const { prefix, ids, musicActions, categorySettings, testing } = require('./app/constants');
 var interval;
 
 const client = new Client({
@@ -163,7 +163,7 @@ client.on('ready', async () => {
 
 client.on('rateLimit', data => console.log('> Se recibió un límite de tarifa:\n', data));
 
-process.on(process.env.DATABASE_URL ? 'SIGTERM' : 'SIGINT', async () => {
+process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log('> Reinicio inminente...');
     // disconnects music bot
     await emergencyShutdown(client, ids.guilds.default);

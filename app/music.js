@@ -73,14 +73,24 @@ module.exports = {
         const queue = client.player.getQueue(guildId);
         if (queue) {
             console.log('> Guardando cola de reproducción actual');
-            queue.metadata.send({
+            await queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
-                    .setDescription(`⚠ Lo siento, tengo que reiniciarme 👋 ¡${queue.tracks.length < 500 ? 'ya vuelvo' : 'adiós'}!`)
+                    .setDescription(`⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`)
                     .setThumbnail(`attachment://icons8-shutdown-64.png`)],
                 files: [`./assets/thumbs/music/icons8-shutdown-64.png`]
             });
             const previousTracks = queue.previousTracks.slice();
-            await addQueue(previousTracks.pop(), queue.guild.id, queue.metadata.id, previousTracks, queue.tracks, queue.connection.channel.id);
+            const currenTrack = previousTracks.pop();
+            const current = { url: currenTrack.url, requestedBy: currenTrack.requestedBy };
+            const previous = [];
+            const tracks = [];
+            previousTracks.forEach(track => {
+                previous.push({ url: track.url, requestedBy: track.requestedBy });
+            });
+            queue.tracks.forEach(track => {
+                tracks.push({ url: track.url, requestedBy: track.requestedBy });
+            });
+            await addQueue(current, queue.guild.id, queue.metadata.id, previous, tracks, queue.connection.channel.id);
             queue.destroy(true);
         }
     },
