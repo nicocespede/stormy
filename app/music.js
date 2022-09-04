@@ -106,6 +106,7 @@ module.exports = {
             const previousTracks = previousQueue.previousTracks;
             const tracks = previousQueue.tracks;
             const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId).catch(console.error);
+            const embed = new MessageEmbed().setColor([195, 36, 255]);
 
             if (voiceChannel.members.size > 0) {
                 console.log('> Reanudando reproducción interrumpida por el reinicio');
@@ -119,8 +120,7 @@ module.exports = {
                     metadata: metadata
                 });
 
-                var embed = new MessageEmbed().setColor([195, 36, 255]);
-                var message = { files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+                const message = { files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
 
                 try {
                     if (!queue.connection) await queue.connect(voiceChannel)
@@ -146,6 +146,8 @@ module.exports = {
 
                 queue.addTrack(res.tracks[0]);
 
+                if (!queue.playing) await queue.play();
+
                 for (let i = 0; i < previousTracks.length; i++) {
                     const element = previousTracks[i];
                     res = await client.player.search(element.url, {
@@ -164,9 +166,13 @@ module.exports = {
                     queue.tracks.push(res.tracks[0]);
                 }
 
-                if (!queue.playing) await queue.play();
-            } else
-                console.log('> No hay usuarios para reanudar la reproducción interrumpida');
+            } else {
+                await metadata.send({
+                    embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
+                        .setThumbnail(`attachment://icons8-so-so-64.png`)],
+                    files: [`./assets/thumbs/music/icons8-so-so-64.png`]
+                });
+            }
             await previousQueueSchema.deleteMany({});
         }
     }
