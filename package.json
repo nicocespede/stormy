@@ -25,7 +25,6 @@
     "translate": "^1.4.1",
     "unofficial-valorant-api": "^1.0.4",
     "wokcommands": "^1.5.3",
-    "xml-js": "^1.6.11",
-    "ytdl-core": "github:GreepTheSheep/node-ytdl-core"
+    "xml-js": "^1.6.11"
   }
 }
