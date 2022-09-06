@@ -23,6 +23,7 @@ var thermalPasteDates;
 var bansResponsibles = {};
 var crosshairs;
 var smurfs;
+var tracksNameExtras;
 
 const getMcu = () => mcu;
 
@@ -251,4 +252,14 @@ module.exports = {
         console.log('> Caché de smurfs actualizado');
         return smurfs;
     },
+
+    getTracksNameExtras: () => tracksNameExtras,
+    updateTracksNameExtras: async () => {
+        await fetch(`${githubRawURL}/tracksNameExtras.json`)
+            .then(res => res.text()).then(data => {
+                tracksNameExtras = JSON.parse(data);
+                console.log('> tracksNameExtras.json cargado');
+            }).catch(err => console.log('> Error al cargar tracksNameExtras.json', err));
+        return tracksNameExtras;
+    }
 };

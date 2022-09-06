@@ -1,6 +1,6 @@
 const { MessageEmbed } = require("discord.js");
 const { ids } = require("../../app/constants");
-const { containsAuthor } = require("../../app/music");
+const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -12,7 +12,7 @@ module.exports = {
     maxArgs: 0,
     guildOnly: true,
 
-    callback: ({ guild, member, user, channel, client }) => {
+    callback: async ({ guild, member, user, channel, client }) => {
         var errorEmbed = new MessageEmbed().setColor([195, 36, 255]);
         var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
         if (!ids.channels.musica.includes(channel.id)) {
@@ -49,11 +49,13 @@ module.exports = {
 
         const songs = queue.tracks.length;
 
-        var description = `**▶️ Ahora reproduciendo:**\n\n${queue.current.title}${!queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` | ${queue.current.author}` : ''} - **${queue.current.duration}**\n\n**📄 Cola de reproducción:**\n\n`
+        const filteredTitle = await cleanTitle(queue.current.title);
+        var description = `**▶️ Ahora reproduciendo:**\n\n${filteredTitle}${!queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` | ${queue.current.author}` : ''} - **${queue.current.duration}**\n\n**📄 Cola de reproducción:**\n\n`
         var songsShown;
         for (let i = 0; i < tracks.length; i++) {
             const track = tracks[i];
-            var aux = description + track + '\n';
+            const filteredTitle = await cleanTitle(track);
+            var aux = description + filteredTitle + '\n';
             if (aux.length <= 4096)
                 description = aux;
             else {

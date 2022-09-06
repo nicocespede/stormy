@@ -1,6 +1,6 @@
 const { MessageEmbed, Constants } = require("discord.js");
 const { ids } = require("../../app/constants");
-const { containsAuthor } = require("../../app/music");
+const { containsAuthor, cleanTitle } = require("../../app/music");
 
 function orderArgs(array) {
     var uniqueArray = array.filter(function (item, pos, self) {
@@ -44,7 +44,7 @@ module.exports = {
     expectedArgs: '<números>',
     guildOnly: true,
 
-    callback: ({ guild, member, user, message, channel, args, client, interaction }) => {
+    callback: async ({ guild, member, user, message, channel, args, client, interaction }) => {
         var embed = new MessageEmbed().setColor([195, 36, 255]);
         const numbers = message ? args : interaction.options.getString('números').split(' ');
         var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
@@ -84,7 +84,8 @@ module.exports = {
         var description = [];
         for (let i = 0; i < ordered.length; i++) {
             const track = queue.remove(ordered[i]);
-            description.push(`[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**\n`);
+            const filteredTitle = await cleanTitle(track.title);
+            description.push(`[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**\n`);
         }
 
         reply.embeds = [embed.setDescription('❌ Se quitó de la cola de reproducción:\n\n' + description.reverse().join(''))

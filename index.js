@@ -6,7 +6,7 @@ const { Player } = require('discord-player');
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
     countConnectedMembers } = require('./app/general');
-const { containsAuthor, emergencyShutdown, playInterruptedQueue } = require('./app/music');
+const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
 const { prefix, ids, musicActions, categorySettings, testing } = require('./app/constants');
 var interval;
 
@@ -65,26 +65,30 @@ client.on('ready', async () => {
             quality: 'highestaudio',
             highWaterMark: 1 << 25
         }
-    }).on('trackStart', (queue, track) => {
+    }).on('trackStart', async (queue, track) => {
         if (cache.getLastAction() === musicActions.CHANGING_CHANNEL)
             cache.updateLastAction(musicActions.STARTING_TRACK);
-        else
+        else {
+            const filteredTitle = await cleanTitle(track.title);
             queue.metadata.send({
                 embeds: [new MessageEmbed().setColor([195, 36, 255])
-                    .setDescription(`▶️ Comenzando a reproducir:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
+                    .setDescription(`▶️ Comenzando a reproducir:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
                     .setThumbnail(`attachment://icons8-circled-play-64.png`)
                     .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })],
                 files: [`./assets/thumbs/music/icons8-circled-play-64.png`]
             });
+        }
     }).on('trackAdd', async (queue, track) => {
         var lastAction = cache.getLastAction();
-        if (queue.playing && lastAction != musicActions.MOVING_SONG && lastAction != musicActions.ADDING_NEXT)
+        if (queue.playing && lastAction != musicActions.MOVING_SONG && lastAction != musicActions.ADDING_NEXT) {
+            const filteredTitle = await cleanTitle(track.title);
             queue.metadata.send({
-                embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
+                embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
             });
+        }
     }).on('tracksAdd', async (queue, tracks) => {
         if (cache.getLastAction() != musicActions.ADDING_NEXT)
             queue.metadata.send({
@@ -176,13 +180,13 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
             if (Object.hasOwnProperty.call(timestamps, key))
                 await pushDifference(key);
     }
-    
+
     //clears 1 minute interval
     if (interval) {
         console.log('> Terminando intervalo de 1 minuto');
         clearInterval(interval);
     }
-    
+
     //ends discord client
     console.log('> Desconectando bot');
     client.destroy();

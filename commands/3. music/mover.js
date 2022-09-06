@@ -1,7 +1,7 @@
 const { MessageEmbed, Constants } = require("discord.js");
 const { updateLastAction } = require("../../app/cache");
 const { ids, musicActions } = require("../../app/constants");
-const { containsAuthor } = require("../../app/music");
+const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -29,7 +29,7 @@ module.exports = {
     expectedArgs: '<número> <posición>',
     guildOnly: true,
 
-    callback: ({ guild, member, user, message, channel, args, client, interaction }) => {
+    callback: async ({ guild, member, user, message, channel, args, client, interaction }) => {
         var embed = new MessageEmbed().setColor([195, 36, 255]);
         const number = message ? args[0] : interaction.options.getInteger('número');
         const position = message ? args[1] : interaction.options.getInteger('posición');
@@ -93,7 +93,8 @@ module.exports = {
         updateLastAction(musicActions.MOVING_SONG);
         queue.insert(song, positionIndex);
 
-        reply.embeds = [embed.setDescription(`🔁 **${song.title}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
+        const filteredTitle = await cleanTitle(song.title);
+        reply.embeds = [embed.setDescription(`🔁 **${filteredTitle}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
             .setThumbnail(`attachment://icons8-repeat-64.png`)];
         reply.ephemeral = false;
         reply.files = [`./assets/thumbs/music/icons8-repeat-64.png`];

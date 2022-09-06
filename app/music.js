@@ -1,6 +1,6 @@
 const { QueryType } = require("discord-player");
 const { MessageEmbed } = require("discord.js");
-const { updateLastAction } = require("./cache");
+const { updateLastAction, getTracksNameExtras, updateTracksNameExtras } = require("./cache");
 const { musicActions } = require("./constants");
 const { addQueue } = require("./mongodb");
 
@@ -175,5 +175,14 @@ module.exports = {
             }
             await previousQueueSchema.deleteMany({});
         }
+    },
+
+    cleanTitle: async title => {
+        var newTitle = title;
+        const tracksNameExtras = !getTracksNameExtras() ? await updateTracksNameExtras() : getTracksNameExtras();
+        for (const extra of tracksNameExtras)
+            if (newTitle.includes(extra))
+                newTitle = newTitle.replace(extra, '');
+        return newTitle;
     }
 }

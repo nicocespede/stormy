@@ -1,7 +1,12 @@
 const { Constants } = require("discord.js");
-const { updateMcu, updateGames: updateGamesCache } = require("../../app/cache");
+const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras } = require("../../app/cache");
 const { ids } = require("../../app/constants");
 const { updateMovies, updateGames } = require("../../app/mongodb");
+
+const choices = [
+    { name: 'Juegos y películas', value: 'games-and-movies' },
+    { name: 'Extras de nombres de pistas', value: 'tracks-name-extras' }
+];
 
 module.exports = {
     category: 'Privados',
@@ -12,7 +17,7 @@ module.exports = {
         description: 'El nombre del caché que se quiere actualizar.',
         type: Constants.ApplicationCommandOptionTypes.STRING,
         required: true,
-        choices: [{ name: 'Juegos y películas', value: 'games-and-movies' }]
+        choices: choices
     }],
     slash: true,
     ownerOnly: true,
@@ -99,7 +104,8 @@ module.exports = {
                     channel.send(content).catch(console.error);
                 }).catch(console.error);
             }
-        }
+        } else if (name === 'tracks-name-extras')
+            await updateTracksNameExtras();
         return 'Caché actualizado.';
     }
 }

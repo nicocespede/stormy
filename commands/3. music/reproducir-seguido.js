@@ -2,7 +2,7 @@ const { QueryType } = require('discord-player');
 const { MessageEmbed, Constants } = require('discord.js');
 const { updateLastAction, getPlaylists, updatePlaylists } = require('../../app/cache');
 const { ids, musicActions } = require('../../app/constants');
-const { containsAuthor } = require("../../app/music");
+const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -101,7 +101,8 @@ module.exports = {
             } else {
                 const track = res.tracks[0];
                 queue.insert(track, 0);
-                description = `☑️ Agregado a la cola como siguiente:\n\n[${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''}](${track.url}) - **${track.duration}**`;
+                const filteredTitle = await cleanTitle(track.title);
+                description = `☑️ Agregado a la cola como siguiente:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''}](${track.url}) - **${track.duration}**`;
             }
             const edit = {
                 embeds: [embed.setDescription(description)

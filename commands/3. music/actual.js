@@ -1,6 +1,6 @@
 const { MessageEmbed } = require("discord.js");
 const { ids } = require("../../app/constants");
-const { containsAuthor } = require("../../app/music");
+const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -12,7 +12,7 @@ module.exports = {
     maxArgs: 0,
     guildOnly: true,
 
-    callback: ({ guild, member, user, channel, client }) => {
+    callback: async ({ guild, member, user, channel, client }) => {
         var errorEmbed = new MessageEmbed().setColor([195, 36, 255]);
         var reply = { custom: true, ephemeral: true };
         if (!ids.channels.musica.includes(channel.id)) {
@@ -40,11 +40,12 @@ module.exports = {
         const progress = queue.createProgressBar();
         const timestamp = queue.getPlayerTimestamp();
 
+        const filteredTitle = await cleanTitle(track.title);
         reply.embeds = [new MessageEmbed()
             .setColor([195, 36, 255])
             .setDescription(`${progress}\n\n**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}`)
             .setImage(track.thumbnail)
-            .setTitle(track.title + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))];
+            .setTitle(filteredTitle + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))];
         reply.ephemeral = false;
         return reply;
     }
