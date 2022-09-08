@@ -392,7 +392,9 @@
             ]
         },
         "JIMMY": {
-            "spanish": "<@{ID}> tu nivel de nene down supera los límites conocidos."
+            "spanish": [
+                "<@{ID}> tu nivel de nene down supera los límites conocidos."
+            ]
         }
     },
     "GREETINGS": {

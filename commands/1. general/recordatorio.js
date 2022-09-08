@@ -30,14 +30,11 @@ module.exports = {
                 ARGUMENTS: "`<@amigo>`"
             });
             return options;
-        } else if (target.user.id === ids.users.sombra) {
-            const reminders = instance.messageHandler.getEmbed(guild, 'REMINDERS', 'SOMBRA');
-            var random = Math.floor(Math.random() * (reminders.length));
-            options.content = reminders[random].replace('{ID}', target.user.id);
-        } else if (target.user.id == ids.users.jimmy)
-            options.content = instance.messageHandler.getEmbed(guild, 'REMINDERS', 'JIMMY').replace('{ID}', target.user.id);
-        else {
-            const reminders = instance.messageHandler.getEmbed(guild, 'REMINDERS', 'EVERYONE');
+        } else {
+            var key = 'EVERYONE';
+            if (target.user.id === ids.users.sombra) key = 'SOMBRA';
+            else if (target.user.id === ids.users.jimmy) key = 'JIMMY';
+            const reminders = instance.messageHandler.getEmbed(guild, 'REMINDERS', key);
             var random = Math.floor(Math.random() * (reminders.length));
             options.content = reminders[random].replace('{ID}', target.user.id).replace('{NUMBER}', Math.floor(Math.random() * 101));
             options.ephemeral = false;
