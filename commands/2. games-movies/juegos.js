@@ -1,6 +1,6 @@
 const { MessageEmbed, Constants } = require('discord.js');
 const { getGames, updateGames } = require('../../app/cache');
-const { prefix, texts, githubRawURL } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 
 async function getGameInfo(gameName) {
     const fetch = require('node-fetch');
@@ -33,7 +33,7 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
-    callback: async ({ message, args, interaction, user }) => {
+    callback: async ({ message, args, interaction, user, instance, guild }) => {
         const number = message ? args[0] : interaction.options.getInteger('numero');
         const games = !getGames() ? await updateGames() : getGames();
         var reply = { custom: true, ephemeral: true };
@@ -49,16 +49,16 @@ module.exports = {
             }
             reply.embeds = [new MessageEmbed()
                 .setTitle(`**Juegos crackeados**`)
-                .setDescription(texts.games.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix))
+                .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: prefix }))
                 .setColor(color)
                 .addFields([gamesField, updatesField])
-                .setFooter({ text: texts.games.footer })
+                .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
                 .setThumbnail(`attachment://games.png`)];
             reply.files = [`assets/thumbs/games.png`];
         } else {
             const index = parseInt(number) - 1;
             if (index < 0 || index >= games.length || isNaN(index))
-                reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}juegos [numero]"**.`;
+                reply.content = `⚠ El número ingresado es inválido.`;
             else {
                 const game = games[index];
                 await getGameInfo(game.name).then(info => {

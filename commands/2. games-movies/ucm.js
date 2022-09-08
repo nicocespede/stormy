@@ -1,7 +1,7 @@
 const { createCanvas } = require('canvas');
 const { MessageEmbed, Constants, MessageActionRow, MessageButton } = require('discord.js');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
-const { prefix, texts, githubRawURL } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 const { updateMcuFilters } = require('../../app/mongodb');
 const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
 
@@ -58,7 +58,7 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
-    callback: async ({ user, message, args, interaction, channel }) => {
+    callback: async ({ user, message, args, interaction, channel, guild, instance }) => {
         if (interaction) await interaction.deferReply({ ephemeral: true });
         const color = [181, 2, 22];
         const number = message ? args[0] : interaction.options.getInteger('numero');
@@ -68,7 +68,7 @@ module.exports = {
             const mcuMovies = !getMcuMovies() ? await updateMcuMovies(filters) : getMcuMovies();
             const index = parseInt(number) - 1;
             if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
-                reply.content = `¡Uso incorrecto! El número ingresado es inválido. Usá **"${prefix}ucm [numero]"**.`;
+                reply.content = `⚠ El número ingresado es inválido.`;
                 return reply;
             }
             const name = mcuMovies[index].name;
@@ -321,7 +321,10 @@ module.exports = {
                         const msg = embeds[i];
                         msg.setFooter({ text: `Página ${i + 1} | ${embeds.length}` });
                         if (i === 0)
-                            msg.setDescription(texts.movies.description.replace(/%USER_ID%/g, user.id).replace(/%PREFIX%/g, prefix));
+                            msg.setDescription(instance.messageHandler.get(guild, 'MCU', {
+                                ID: user.id,
+                                PREFIX: prefix
+                            }));
                     }
 
                     const getRow = id => {

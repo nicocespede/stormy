@@ -26,7 +26,7 @@ module.exports = {
     expectedArgs: '<@amigo> [razón]',
     minArgs: 1,
 
-    callback: async ({ guild, user, message, args, interaction, channel }) => {
+    callback: async ({ guild, user, message, args, interaction, channel, instance }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const aux = args.splice(1).join(' ');
         const banReason = message ? (aux === '' ? null : aux) : interaction.options.getString('razón');
@@ -36,7 +36,12 @@ module.exports = {
             reply.content = `Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`;
             return reply;
         } else if (!target) {
-            reply.content = `¡Uso incorrecto! Debe haber una mención y (opcionalmente) la razón del baneo luego del comando. Usá **"${prefix}banear <@amigo> [razón]"**.`;
+            reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                REASON: "Debe haber una mención y (opcionalmente) la razón del baneo luego del comando.",
+                PREFIX: prefix,
+                COMMAND: "banear",
+                ARGUMENTS: "`<@amigo>` `[razón]`"
+            });
             return reply;
         } else if (target.user.id === user.id) {
             reply.content = `Lo siento <@${user.id}>, ¡no podés banearte a vos mismo!`;

@@ -70,7 +70,7 @@ module.exports = {
         const number = message ? args[0] : interaction.options.getInteger('cantidad');
         const parsedNumber = parseInt(number);
         if (parsedNumber <= 0 || parsedNumber > quiz.length - 1 || isNaN(parsedNumber))
-            return { content: `¡Uso incorrecto! El número debe estar entre 1 y ${quiz.length - 1}. Usá **"${prefix}quiz <cantidad>"**.`, custom: true, ephemeral: true };
+            return { content: `⚠ El número debe estar entre 1 y ${quiz.length - 1}.`, custom: true, ephemeral: true };
         else {
             var participants = [user.id];
             var readyToStart = false;

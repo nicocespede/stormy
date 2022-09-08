@@ -8,8 +8,8 @@ module.exports = {
     testOnly: true,
     ownerOnly: true,
 
-    callback: ({ user, client }) => {
-        client.emit('guildBanRemove', { user: user });
+    callback: ({ user, client, guild }) => {
+        client.emit('guildBanRemove', { user: user, guild: guild });
         return '¡Desbaneo simulado!';
     }
 }

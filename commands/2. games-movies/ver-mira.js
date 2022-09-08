@@ -27,7 +27,7 @@ module.exports = {
         const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
 
         if (isNaN(id) || !Object.keys(crosshairs).includes(id.toString())) {
-            reply.content = `¡Uso incorrecto! El ID es inválido.`;
+            reply.content = `⚠ El ID es inválido.`;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         } else {

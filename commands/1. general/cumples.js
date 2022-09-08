@@ -4,8 +4,16 @@ const { prefix } = require('../../app/constants');
 const { sendBdayAlert } = require('../../app/general');
 const { addBirthday, deleteBirthday } = require('../../app/mongodb');
 
-const validateDate = (date) => {
-    var ret = { valid: false, reason: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}cumples agregar <@amigo> <DD/MM>"**.` };
+const validateDate = (instance, guild, date) => {
+    var ret = {
+        valid: false,
+        reason: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+            REASON: "Debe haber una fecha luego de la mención.",
+            PREFIX: prefix,
+            COMMAND: "cumples agregar",
+            ARGUMENTS: "`<@amigo>` `<DD/MM>`"
+        })
+    };
     if (!date) return ret;
     ret.reason = 'La fecha debe estar en el formato DD/MM.';
     if (date.length != 5) return ret;
@@ -69,7 +77,7 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: async ({ guild, user, channel, message, interaction, args, client }) => {
+    callback: async ({ guild, user, channel, message, interaction, args, client, instance }) => {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
 
         if (subCommand === 'ver') {
@@ -112,58 +120,79 @@ module.exports = {
             const date = message ? args[1] : interaction.options.getString('fecha');
             const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
             if (!target)
-                return { content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}cumples agregar <@amigo> <DD/MM>"**.`, custom: true, ephemeral: true }
-            else if (!validateDate(date).valid)
-                return { content: validateDate(date).reason, custom: true, ephemeral: true }
-            else if (Object.keys(birthdays).includes(target.user.id))
-                return { content: `Este usuario ya tiene registrado su cumpleaños.`, custom: true, ephemeral: true }
-            else {
-                const row = new MessageActionRow()
-                    .addComponents(new MessageButton().setCustomId('add_yes')
-                        .setEmoji('✔️')
-                        .setLabel('Confirmar')
-                        .setStyle('SUCCESS'))
-                    .addComponents(new MessageButton().setCustomId('add_no')
-                        .setEmoji('❌')
-                        .setLabel('Cancelar')
-                        .setStyle('DANGER'));
-                const messageOrInteraction = message ? message : interaction;
-                const reply = await messageOrInteraction.reply({
-                    components: [row],
-                    content: `¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
+                return {
+                    content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                        REASON: "Debe haber una mención luego del comando.",
+                        PREFIX: prefix,
+                        COMMAND: "cumples agregar",
+                        ARGUMENTS: "`<@amigo>` `<DD/MM>`"
+                    }),
+                    custom: true,
                     ephemeral: true
-                });
-
-                const filter = (btnInt) => {
-                    return user.id === btnInt.user.id;
                 }
+            else {
+                const validDate = validateDate(instance, guild, date);
+                if (!validDate.valid)
+                    return { content: validDate.reason, custom: true, ephemeral: true }
+                else if (Object.keys(birthdays).includes(target.user.id))
+                    return { content: `⚠ Este usuario ya tiene registrado su cumpleaños.`, custom: true, ephemeral: true }
+                else {
+                    const row = new MessageActionRow()
+                        .addComponents(new MessageButton().setCustomId('add_yes')
+                            .setEmoji('✔️')
+                            .setLabel('Confirmar')
+                            .setStyle('SUCCESS'))
+                        .addComponents(new MessageButton().setCustomId('add_no')
+                            .setEmoji('❌')
+                            .setLabel('Cancelar')
+                            .setStyle('DANGER'));
+                    const messageOrInteraction = message ? message : interaction;
+                    const reply = await messageOrInteraction.reply({
+                        components: [row],
+                        content: `¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
+                        ephemeral: true
+                    });
 
-                const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
+                    const filter = (btnInt) => {
+                        return user.id === btnInt.user.id;
+                    }
 
-                collector.on('end', async collection => {
-                    var edit = { components: [] };
-                    if (!collection.first())
-                        edit.content = 'La acción expiró.';
-                    else if (collection.first().customId === 'add_yes') {
-                        await addBirthday(target.user.id, target.user.username, date.split('/')[0], date.split('/')[1]).then(async () => {
-                            edit.content = 'La acción fue completada.';
-                            channel.send({ content: `Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
-                            await updateBirthdays();
-                            sendBdayAlert(client);
-                        }).catch(console.error);
-                    } else
-                        edit.content = 'La acción fue cancelada.';
-                    message ? await reply.edit(edit) : await interaction.editReply(edit);
-                });
+                    const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
+
+                    collector.on('end', async collection => {
+                        var edit = { components: [] };
+                        if (!collection.first())
+                            edit.content = 'La acción expiró.';
+                        else if (collection.first().customId === 'add_yes') {
+                            await addBirthday(target.user.id, target.user.username, date.split('/')[0], date.split('/')[1]).then(async () => {
+                                edit.content = 'La acción fue completada.';
+                                channel.send({ content: `Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
+                                await updateBirthdays();
+                                sendBdayAlert(client);
+                            }).catch(console.error);
+                        } else
+                            edit.content = 'La acción fue cancelada.';
+                        message ? await reply.edit(edit) : await interaction.editReply(edit);
+                    });
+                }
             }
             return;
         } else if (subCommand === 'borrar' || subCommand === 'eliminar') {
             const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
             const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
             if (!target)
-                return { content: `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}cumples borrar <@amigo>"**.`, custom: true, ephemeral: true };
+                return {
+                    content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                        REASON: "Debe haber una mención luego del comando.",
+                        PREFIX: prefix,
+                        COMMAND: "cumples borrar",
+                        ARGUMENTS: "`<@amigo>`"
+                    }),
+                    custom: true,
+                    ephemeral: true
+                };
             else if (!Object.keys(birthdays).includes(target.user.id))
-                return { content: `El cumpleaños que intentás borrar no existe.`, custom: true, ephemeral: true };
+                return { content: `⚠ El cumpleaños que intentás borrar no existe.`, custom: true, ephemeral: true };
             else {
                 const row = new MessageActionRow()
                     .addComponents(new MessageButton().setCustomId('delete_yes')
@@ -206,7 +235,7 @@ module.exports = {
             return;
         } else
             return {
-                content: 'Comando inválido, los comandos válidos son: _ver, agregar, borrar, eliminar_',
+                content: '⚠ Comando inválido, los comandos válidos son: _ver, agregar, borrar, eliminar_',
                 custom: true
             };
     }

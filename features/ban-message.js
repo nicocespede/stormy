@@ -1,9 +1,9 @@
 const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible } = require("../app/cache");
-const { ids, bannedWithoutReason, bannedWithReason, gifs } = require("../app/constants");
+const { ids, gifs } = require("../app/constants");
 const { countMembers } = require("../app/general");
 const { addBan, addSombraBan } = require("../app/mongodb");
 
-module.exports = client => {
+module.exports = (client, instance) => {
     client.on('guildBanAdd', async ban => {
         await new Promise(res => setTimeout(res, 1000 * 1));
         const bansResponsibles = getBansResponsibles();
@@ -17,13 +17,10 @@ module.exports = client => {
             await updateBanned();
             client.channels.fetch(ids.channels.welcome).then(channel => {
                 const msg = { content: '', files: [] }
-                if (!reason) {
-                    var random = Math.floor(Math.random() * (bannedWithoutReason.length));
-                    msg.content = bannedWithoutReason[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`);
-                } else {
-                    var random = Math.floor(Math.random() * (bannedWithReason.length));
-                    msg.content = bannedWithReason[random].replace(/%USERNAME%/g, `**${ban.user.tag}**`).replace(/%REASON%/g, `${reason}`);
-                }
+                const { guild } = ban;
+                const bannedMessages = instance.messageHandler.getEmbed(guild, 'BANS', reason ? 'BANNED_WITH_REASON' : 'BANNED_WITHOUT_REASON');
+                var random = Math.floor(Math.random() * (bannedMessages.length));
+                msg.content = bannedMessages[random].replace('{TAG}', ban.user.tag).replace('{REASON}', reason);
                 random = Math.floor(Math.random() * (gifs.banned.length));
                 msg.files.push(gifs.banned[random]);
                 channel.send(msg);

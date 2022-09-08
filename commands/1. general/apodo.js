@@ -24,7 +24,7 @@ module.exports = {
     expectedArgs: '<@amigo> [apodo]',
     minArgs: 1,
 
-    callback: async ({ guild, user, message, args, interaction }) => {
+    callback: async ({ guild, user, message, args, interaction, instance }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         var reply = { custom: true, ephemeral: true };
         await guild.roles.fetch(ids.roles.banear).then(async role => {
@@ -32,17 +32,22 @@ module.exports = {
             if (!role.members.has(user.id))
                 reply.content = `Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`;
             else if (!target)
-                reply.content = `¡Uso incorrecto! Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando. Usá **"${prefix}apodo <@amigo> [apodo]"**.`;
+                reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                    REASON: "Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando.",
+                    PREFIX: prefix,
+                    COMMAND: "apodo",
+                    ARGUMENTS: "`<@amigo>` `[apodo]`"
+                });
             else if (target.user.id === ids.users.bot)
-                reply.content = `¡No podés cambiarme el apodo a mí!`;
+                reply.content = `⚠ ¡No podés cambiarme el apodo a mí!`;
             else if (newNickname.length > 32)
-                reply.content = `El apodo no puede contener más de 32 caracteres.`;
+                reply.content = `⚠ El apodo no puede contener más de 32 caracteres.`;
             else {
                 await target.setNickname(newNickname).then(() => {
                     reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
                     reply.ephemeral = false;
                 }).catch(() => {
-                    reply.content = 'Lo siento, no se pudo cambiar el apodo.';
+                    reply.content = '❌ Lo siento, no se pudo cambiar el apodo.';
                 })
             }
         }).catch(console.error);

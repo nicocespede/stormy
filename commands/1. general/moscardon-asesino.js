@@ -20,14 +20,19 @@ module.exports = {
     minArgs: 1,
     maxArgs: 1,
 
-    callback: async ({ user, message, interaction }) => {
+    callback: async ({ instance, user, message, interaction, guild }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         var type = 'asesino';
         const cmd = message ? message.content.toLowerCase().split(' ')[0].substring(1) : 'moscardon-asesino';
         if (cmd === 'moscardondelamuerte') type = 'de la muerte';
         var reply = { custom: true, ephemeral: true };
         if (!target)
-            reply.content = `¡Uso incorrecto! Debe haber una mención luego del comando. Usá **"${prefix}${cmd} <@amigo>"**.`;
+            reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                REASON: "Debe haber una mención luego del comando.",
+                PREFIX: prefix,
+                COMMAND: cmd,
+                ARGUMENTS: "`<@amigo>`"
+            });
         else if (target.user.id === user.id)
             reply.content = `¡Lo siento <@${user.id}>, no podés enviarte un moscardón ${type} a vos mismo!`;
         else if (target.user.id === ids.users.bot)

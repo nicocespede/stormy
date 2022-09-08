@@ -47,7 +47,7 @@ module.exports = {
     expectedArgs: '<subcomando>',
     slash: 'both',
 
-    callback: async ({ user, channel, message, interaction, args }) => {
+    callback: async ({ user, channel, message, interaction, args, instance, guild }) => {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
@@ -78,7 +78,12 @@ module.exports = {
             const argsName = message ? args.join(' ') : interaction.options.getString('nombre');
 
             if (!argsName) {
-                reply.content = `¡Uso incorrecto! Debés introducir un nombre para la lista. Usá **"${prefix}listas agregar <nombre> <url>"**.`;
+                reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                    REASON: "Debés introducir un nombre para la lista.",
+                    PREFIX: prefix,
+                    COMMAND: "listas agregar",
+                    ARGUMENTS: "`<nombre>` `<url>`"
+                });
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                 return;
             }
@@ -86,7 +91,12 @@ module.exports = {
             const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
             const name = argsName.toLowerCase();
             if (!url || !url.includes('http') || !url.includes('www'))
-                reply.content = `¡Uso incorrecto! Debés introducir una URL válida. Usá **"${prefix}listas agregar <nombre> <url>"**.`;
+                reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                    REASON: "Debés introducir una URL válida.",
+                    PREFIX: prefix,
+                    COMMAND: "listas agregar",
+                    ARGUMENTS: "`<nombre>` `<url>`"
+                });
             else if (playlists.names.includes(name))
                 reply.content = `Ya hay una lista de reproducción guardada con ese nombre.`;
             else
@@ -101,7 +111,12 @@ module.exports = {
             const argsName = message ? args.join(' ') : interaction.options.getString('nombre');
 
             if (!argsName) {
-                reply.content = `¡Uso incorrecto! Debés introducir el nombre de la lista. Usá **"${prefix}listas borrar <nombre> <url>"**.`;
+                reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                    REASON: "Debés introducir un nombre para la lista.",
+                    PREFIX: prefix,
+                    COMMAND: "listas borrar",
+                    ARGUMENTS: "`<nombre>`"
+                });
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                 return;
             }
@@ -109,7 +124,7 @@ module.exports = {
             const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
             const name = argsName.toLowerCase();
             if (!playlists.names.includes(name))
-                reply.content = `La lista que intentás borrar no existe.`;
+                reply.content = `⚠ La lista que intentás borrar no existe.`;
             else
                 await deletePlaylist(name).then(async () => {
                     await updatePlaylists();

@@ -45,31 +45,6 @@ module.exports = {
         }
     },
 
-    reminders: {
-        everyone: [
-            "estás re cogido amigo.",
-            "sos muy wachin.",
-            "te re tiembla pibe.",
-            "te falta calle papi."
-        ],
-        sombra: [
-            "tu nivel de nene down es 100%.",
-            "no la ponés más.",
-            "tu hermana alta puta.",
-            "abandonaste un 1v1 ¡CAGÓN!"
-        ]
-    },
-
-    texts: {
-        movies: {
-            description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%ucm` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2).\n\nPor cualquier error o links caídos, por favor avisar a @StormeR.\n\nLas películas (en [orden cronológico](https://docs.google.com/spreadsheets/d/1Xfe--9Wshbb3ru0JplA2PnEwN7mVawazKmhWJjr_wKs/edit#gid=0)) disponibles para descargar son:\n\n"
-        },
-        games: {
-            description: "Hola <@%USER_ID%>, para obtener los links usá nuevamente el comando `%PREFIX%juegos` seguido de un espacio y el número del juego que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2).\n\nLos juegos disponibles para descargar son:",
-            footer: "Si querés sugerir algún juego para agregar o querés saber si hay nuevas actualizaciones de los juegos actuales, no dudes en hablar con @StormeR."
-        }
-    },
-
     currencies: {
         slp: {
             id: "smooth-love-potion",
@@ -164,56 +139,6 @@ module.exports = {
             emoji: '🔒',
             hidden: true
         }
-    ],
-
-    welcome: [
-        "<@%USER_ID%> está aquí.",
-        "<@%USER_ID%> acaba de aterrizar.",
-        "<@%USER_ID%> se ha unido al grupo.",
-        "Hola, <@%USER_ID%>. ¡Saluda!",
-        "¡Dad todos la bienvenida a <@%USER_ID%>!",
-        "<@%USER_ID%> ha saltado al servidor.",
-        "Te damos la bienvenida, <@%USER_ID%>. Esperamos que hayas traído pizza.",
-        "Me alegra que estés aquí, <@%USER_ID%>.",
-        "¡<@%USER_ID%> acaba de aparecer!",
-        "<@%USER_ID%> acaba de dejarse caer en el servidor.",
-        "Un <@%USER_ID%> salvaje apareció.",
-        "¡Sííí, has llegado, <@%USER_ID%>!"
-    ],
-
-    goodbye: [
-        "**%USERNAME%** se fue al pingo.",
-        "**%USERNAME%** se tomó el palo.",
-        "**%USERNAME%** se tomó el buque.",
-        "**%USERNAME%** se fue al choto.",
-        "**%USERNAME%** se fue a la verga.",
-        "**%USERNAME%** se borró.",
-        "**%USERNAME%** tiró la de humo.",
-        "**%USERNAME%** se fue a comprar cigarrillos."
-    ],
-
-    bannedWithReason: [
-        "**%USERNAME%** fue baneado del servidor. Razón: **'%REASON%'**.",
-        "**%USERNAME%** fue baneado del servidor por **'%REASON%'**.",
-        "Banearon a **%USERNAME%** por **'%REASON%'**.",
-        "**%USERNAME%** se fue baneado por **'%REASON%'**.",
-        "Cagaron baneando a **%USERNAME%** por **'%REASON%'**.",
-        "Funaron a **%USERNAME%** por **'%REASON%'**."
-    ],
-
-    bannedWithoutReason: [
-        "**%USERNAME%** fue baneado del servidor.",
-        "Banearon a **%USERNAME%**.",
-        "**%USERNAME%** se fue baneado.",
-        "Cagaron baneando a **%USERNAME%**.",
-        "Funaron a **%USERNAME%**."
-    ],
-
-    unbanned: [
-        "**%USERNAME%** fue desbaneado del servidor.",
-        "Desbanearon a **%USERNAME%**.",
-        "Le aflojaron las esposas a **%USERNAME%**.",
-        "Liberaron a **%USERNAME%**."
     ],
 
     gifs: {

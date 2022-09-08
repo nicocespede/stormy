@@ -19,7 +19,7 @@ module.exports = {
     expectedArgs: '<id>',
     slash: 'both',
 
-    callback: async ({ message, interaction, args, user }) => {
+    callback: async ({ message, interaction, args, user, instance, guild }) => {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
 
         var reply = { ephemeral: true };
@@ -27,13 +27,12 @@ module.exports = {
         const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
 
         if (!id) {
-            reply.content = `¡Uso incorrecto! Debés introducir el ID de la mira. Usá **"${prefix}borrar-mira <id>"**.`;
-            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
-        }
-
-        if (isNaN(id)) {
-            reply.content = `¡Uso incorrecto! El ID es inválido. Usá **"${prefix}borrar-mira <id>"**.`;
+            reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                REASON: "Debés introducir el ID de la mira.",
+                PREFIX: prefix,
+                COMMAND: "borrar-mira",
+                ARGUMENTS: "`<id>`"
+            });
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         }

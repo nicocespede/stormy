@@ -36,6 +36,7 @@ client.on('ready', async () => {
         botOwners: ids.users.stormer,
         commandDir: path.join(__dirname, 'commands'),
         featuresDir: path.join(__dirname, 'features'),
+        messagesPath: path.join(__dirname, 'messages.json'),
         defaultLanguage: 'spanish',
         disabledDefaultCommands: ['channelonly', 'command', 'help', 'language', 'prefix', 'requiredrole'],
         ephemeral: true,

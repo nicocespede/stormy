@@ -43,9 +43,9 @@ module.exports = {
         const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
         var reply = { custom: true, ephemeral: true };
         if (!availableCurrencies.includes(argsCurrency))
-            reply.content = `¡Uso incorrecto! La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _${availableCurrencies.join(', ')}_. Si querés la cotización de otra moneda, no dudes en pedirla.`;
+            reply.content = `⚠ La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _${availableCurrencies.join(', ')}_. Si querés la cotización de otra moneda, no dudes en pedirla.`;
         else if (isNaN(quantity) || quantity < 0)
-            reply.content = `¡Uso incorrecto! La cantidad ingresada es inválida.`;
+            reply.content = `⚠ La cantidad ingresada es inválida.`;
         else {
             const canvas = Canvas.createCanvas(500, 250);
             const context = canvas.getContext('2d');
