@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageAttachment, Constants } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, ApplicationCommandOptionType } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 const { currencies } = require('../../app/constants');
@@ -24,13 +24,13 @@ module.exports = {
             name: 'moneda',
             description: 'La moneda desde la que se quiere convertir a pesos argentinos.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING,
+            type: ApplicationCommandOptionType.String,
             choices: availableCurrencies.map(currency => ({ name: currency, value: currency }))
         }, {
             name: 'cantidad',
             description: 'La cantidad que se quiere convertir a pesos argentinos.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.NUMBER
+            type: ApplicationCommandOptionType.Number
         }],
 
     minArgs: 2,
@@ -78,13 +78,13 @@ module.exports = {
             context.drawImage(pesoImage, canvas.width - 175, (canvas.height / 2) - 75, 150, 150);
             context.drawImage(coinImage, 25, (canvas.height / 2) - 75, 150, 150);
 
-            reply.embeds = [new MessageEmbed()
+            reply.embeds = [new EmbedBuilder()
                 .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
                 .setDescription(`Hola <@${user.id}>, la conversión de **${quantity} ${currency}** a Pesos Argentinos es: **ARS$ ${finalPrice}**.\n\nValores tomados en cuenta:\n\n${coinID ? '**• ' + currency + ':** USD$ ' + coinPrice + '\n' : ''}**• Dólar blue (venta):** ARS$ ${usdPrice}`)
                 .setColor(color)
                 .setImage('attachment://image.png')
                 .setThumbnail(client.user.avatarURL())];
-            reply.files = [new MessageAttachment(canvas.toBuffer('image/png'), 'image.png')];
+            reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
         }
         return reply;
     }

@@ -1,4 +1,4 @@
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const { ids } = require("../../app/constants");
 
 module.exports = {
@@ -12,7 +12,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, channel, client }) => {
-        var errorEmbed = new MessageEmbed().setColor([195, 36, 255]);
+        var errorEmbed = new EmbedBuilder().setColor([195, 36, 255]);
         var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
@@ -24,7 +24,7 @@ module.exports = {
                 .setThumbnail(`attachment://icons8-no-entry-64.png`)];
             return reply;
         }
-        if (guild.me.voice.channel && member.voice.channel.id !== guild.me.voice.channel.id) {
+        if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [errorEmbed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para limpiar la cola!")
                 .setThumbnail(`attachment://icons8-no-entry-64.png`)];
             return reply;
@@ -46,7 +46,7 @@ module.exports = {
 
         await queue.clear();
 
-        reply.embeds = [new MessageEmbed()
+        reply.embeds = [new EmbedBuilder()
             .setDescription(`❌ La cola de reproducción fue limpiada.`)
             .setColor([195, 36, 255])
             .setThumbnail(`attachment://icons8-delete-64.png`)];

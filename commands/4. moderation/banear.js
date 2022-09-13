@@ -1,4 +1,4 @@
-const { MessageButton, MessageActionRow, Constants } = require('discord.js');
+const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { addBanResponsible } = require('../../app/cache');
 const { prefix, ids } = require('../../app/constants');
 
@@ -11,13 +11,13 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el ban.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.USER
+            type: ApplicationCommandOptionType.User
         },
         {
             name: 'razón',
             description: 'La razón del baneo.',
             required: false,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
     slash: 'both',
@@ -50,15 +50,15 @@ module.exports = {
             reply.content = `Lo siento <@${user.id}>, los dueños de casa no pueden ser baneados.`;
             return reply;
         } else {
-            const row = new MessageActionRow()
-                .addComponents(new MessageButton().setCustomId('ban_yes')
+            const row = new ActionRowBuilder()
+                .addComponents(new ButtonBuilder().setCustomId('ban_yes')
                     .setEmoji('✔️')
                     .setLabel('Confirmar')
-                    .setStyle('SUCCESS'))
-                .addComponents(new MessageButton().setCustomId('ban_no')
+                    .setStyle(ButtonStyle.Success))
+                .addComponents(new ButtonBuilder().setCustomId('ban_no')
                     .setEmoji('❌')
                     .setLabel('Cancelar')
-                    .setStyle('DANGER'));
+                    .setStyle(ButtonStyle.Danger));
             const messageOrInteraction = message ? message : interaction;
             const replyMessage = await messageOrInteraction.reply({
                 components: [row],

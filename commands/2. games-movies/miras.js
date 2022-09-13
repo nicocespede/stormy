@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
 const { prefix } = require('../../app/constants');
 
@@ -28,7 +28,7 @@ module.exports = {
         if (userCrosshairsField.value === '') userCrosshairsField.value = 'No hay miras guardadas.';
         if (crosshairsField.value === '') crosshairsField.value = 'No hay miras guardadas.';
 
-        reply.embeds = [new MessageEmbed()
+        reply.embeds = [new EmbedBuilder()
             .setTitle(`**Miras**`)
             .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${prefix}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
             .setFields([userCrosshairsField, crosshairsField])

@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 const { currencies } = require('../../app/constants');
@@ -28,7 +28,7 @@ module.exports = {
         const date = new Date(data.last_updated);
         return {
             custom: true,
-            embeds: [new MessageEmbed()
+            embeds: [new EmbedBuilder()
                 .setTitle(`**${currency}**`)
                 .setDescription(`Hola <@${user.id}>, la cotización del **${currency}** es **US$ ${price}**.\n\n*Actualizado por última vez el ${date.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}.*`)
                 .setColor(color)

@@ -1,5 +1,5 @@
 const { createCanvas } = require('canvas');
-const { MessageEmbed, Constants, MessageActionRow, MessageButton } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { updateMcuFilters } = require('../../app/mongodb');
@@ -51,7 +51,7 @@ module.exports = {
             name: 'numero',
             description: 'El número del elemento que se quiere ver.',
             required: false,
-            type: Constants.ApplicationCommandOptionTypes.INTEGER
+            type: ApplicationCommandOptionType.Integer
         }
     ],
     maxArgs: 1,
@@ -75,13 +75,13 @@ module.exports = {
             await getMovieInfo(name).then(async info => {
                 var nowShowing = '';
                 const getVersionsRow = () => {
-                    const row = new MessageActionRow();
+                    const row = new ActionRowBuilder();
                     for (const ver in info) {
                         if (Object.hasOwnProperty.call(info, ver)) {
-                            row.addComponents(new MessageButton().setCustomId(ver)
+                            row.addComponents(new ButtonBuilder().setCustomId(ver)
                                 .setEmoji('📽')
                                 .setLabel(ver)
-                                .setStyle('PRIMARY')
+                                .setStyle(ButtonStyle.Primary)
                                 .setDisabled(ver === nowShowing));
                         }
                     }
@@ -116,7 +116,7 @@ module.exports = {
                         const lines = server.split('\n');
                         const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
                         const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
-                        embeds.push(new MessageEmbed()
+                        embeds.push(new EmbedBuilder()
                             .setTitle(`${title} - ${i.customId} (${serverName})`)
                             .setColor(color)
                             .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId])}.\n` + lines.join('\n') + `\n${password}`)
@@ -129,18 +129,18 @@ module.exports = {
                     }
 
                     const getRow = id => {
-                        const row = new MessageActionRow();
+                        const row = new ActionRowBuilder();
 
-                        row.addComponents(new MessageButton()
+                        row.addComponents(new ButtonBuilder()
                             .setCustomId('prev_page')
-                            .setStyle('SECONDARY')
+                            .setStyle(ButtonStyle.Secondary)
                             .setEmoji('⬅')
                             .setLabel('Anterior')
                             .setDisabled(pages[id] === 0));
 
-                        row.addComponents(new MessageButton()
+                        row.addComponents(new ButtonBuilder()
                             .setCustomId('next_page')
-                            .setStyle('SECONDARY')
+                            .setStyle(ButtonStyle.Secondary)
                             .setEmoji('➡')
                             .setLabel('Siguiente')
                             .setDisabled(pages[id] === embeds.length - 1));
@@ -199,33 +199,33 @@ module.exports = {
             var mcuMovies = !getMcuMovies() ? await updateMcuMovies(filters) : getMcuMovies();
 
             const getFiltersRow = (array) => {
-                const row = new MessageActionRow();
-                row.addComponents(new MessageButton()
+                const row = new ActionRowBuilder();
+                row.addComponents(new ButtonBuilder()
                     .setCustomId('all')
                     .setEmoji(!array.includes('all') ? '🔳' : '✅')
                     .setLabel('Todo')
-                    .setStyle('SECONDARY'));
+                    .setStyle(ButtonStyle.Secondary));
                 validFilters.forEach(f => {
-                    row.addComponents(new MessageButton()
+                    row.addComponents(new ButtonBuilder()
                         .setCustomId(f)
                         .setEmoji(!array.includes(f) ? '🔳' : '✅')
                         .setLabel(f + 's')
-                        .setStyle('SECONDARY'));
+                        .setStyle(ButtonStyle.Secondary));
                 });
                 return row;
             };
 
-            const secondaryRow = new MessageActionRow()
-                .addComponents(new MessageButton()
+            const secondaryRow = new ActionRowBuilder()
+                .addComponents(new ButtonBuilder()
                     .setCustomId('confirm')
                     .setEmoji('✔')
                     .setLabel('Confirmar')
-                    .setStyle('SUCCESS'))
-                .addComponents(new MessageButton()
+                    .setStyle(ButtonStyle.Success))
+                .addComponents(new ButtonBuilder()
                     .setCustomId('cancel')
                     .setEmoji('❌')
                     .setLabel('Cancelar')
-                    .setStyle('DANGER'));
+                    .setStyle(ButtonStyle.Danger));
 
             reply.content = `**Universo Cinematográfico de Marvel**\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
             reply.components = [getFiltersRow(filters), secondaryRow];
@@ -303,7 +303,7 @@ module.exports = {
                             if (ctx.measureText(newName).width > 288)
                                 typesField.value += `\n`;
                         } else {
-                            embeds.push(new MessageEmbed()
+                            embeds.push(new EmbedBuilder()
                                 .setColor(color)
                                 .addFields([moviesField, typesField])
                                 .setThumbnail(`attachment://mcu-logo.png`));
@@ -313,7 +313,7 @@ module.exports = {
                                 typesField.value += `\n`;
                         }
                     }
-                    embeds.push(new MessageEmbed()
+                    embeds.push(new EmbedBuilder()
                         .setColor(color)
                         .addFields([moviesField, typesField])
                         .setThumbnail(`attachment://mcu-logo.png`));
@@ -328,25 +328,25 @@ module.exports = {
                     }
 
                     const getRow = id => {
-                        const row = new MessageActionRow();
+                        const row = new ActionRowBuilder();
 
-                        row.addComponents(new MessageButton()
+                        row.addComponents(new ButtonBuilder()
                             .setCustomId('prev_page')
-                            .setStyle('SECONDARY')
+                            .setStyle(ButtonStyle.Secondary)
                             .setEmoji('⬅')
                             .setLabel('Anterior')
                             .setDisabled(pages[id] === 0));
 
-                        row.addComponents(new MessageButton()
+                        row.addComponents(new ButtonBuilder()
                             .setCustomId('next_page')
-                            .setStyle('SECONDARY')
+                            .setStyle(ButtonStyle.Secondary)
                             .setEmoji('➡')
                             .setLabel('Siguiente')
                             .setDisabled(pages[id] === embeds.length - 1));
 
-                        row.addComponents(new MessageButton()
+                        row.addComponents(new ButtonBuilder()
                             .setCustomId('quit')
-                            .setStyle('DANGER')
+                            .setStyle(ButtonStyle.Danger)
                             .setEmoji('🚪')
                             .setLabel('Salir'));
 

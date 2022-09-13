@@ -1,4 +1,4 @@
-const { MessageEmbed, Constants } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getGames, updateGames } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 
@@ -26,7 +26,7 @@ module.exports = {
             name: 'numero',
             description: 'El número del juego que se quiere ver.',
             required: false,
-            type: Constants.ApplicationCommandOptionTypes.INTEGER
+            type: ApplicationCommandOptionType.Integer
         }
     ],
     maxArgs: 1,
@@ -47,7 +47,7 @@ module.exports = {
                 gamesField.value += `** ${i + 1}.** ${name}\n\n`;
                 updatesField.value += `*${date}*\n\n`;
             }
-            reply.embeds = [new MessageEmbed()
+            reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Juegos crackeados**`)
                 .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: prefix }))
                 .setColor(color)
@@ -81,7 +81,7 @@ module.exports = {
                                 fields.push(field);
                             } else
                                 fields.push({ name: key, value: info[key] });
-                    reply.embeds = [new MessageEmbed()
+                    reply.embeds = [new EmbedBuilder()
                         .setTitle(`${game.name} ${game.version}`)
                         .setColor(color)
                         .addFields(fields)

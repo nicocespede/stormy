@@ -24,6 +24,8 @@ var bansResponsibles = {};
 var crosshairs;
 var smurfs;
 var tracksNameExtras;
+//TEMP SOLUTION
+var blacklistedSongs;//
 
 const getMcu = () => mcu;
 
@@ -261,5 +263,16 @@ module.exports = {
                 console.log('> tracksNameExtras.json cargado');
             }).catch(err => console.log('> Error al cargar tracksNameExtras.json', err));
         return tracksNameExtras;
-    }
+    },
+
+    //TEMP SOLUTION
+    getBlacklistedSongs: () => blacklistedSongs,
+    updateBlacklistedSongs: async () => {
+        await fetch(`${githubRawURL}/blacklistedTracks.json`)
+            .then(res => res.text()).then(data => {
+                blacklistedSongs = JSON.parse(data);
+                console.log('> blacklistedTracks.json cargado');
+            }).catch(err => console.log('> Error al cargar blacklistedTracks.json', err));
+        return blacklistedSongs;
+    }//
 };

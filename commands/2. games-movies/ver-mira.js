@@ -1,4 +1,4 @@
-const { MessageEmbed, Constants } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
         name: 'id',
         description: 'El ID de la mira que se quiere ver.',
         required: true,
-        type: Constants.ApplicationCommandOptionTypes.INTEGER
+        type: ApplicationCommandOptionType.Integer
     }
     ],
     minArgs: 1,
@@ -34,7 +34,7 @@ module.exports = {
             const selectedCrosshair = crosshairs[id];
             var owner = '';
             await guild.members.fetch(selectedCrosshair.owner).then(member => owner = ` de ${member.user.username}`).catch(_ => owner = ` de usuario desconocido`);
-            reply.embeds = [new MessageEmbed()
+            reply.embeds = [new EmbedBuilder()
                 .setTitle(selectedCrosshair.name + owner)
                 .setDescription(`Código de importación de la mira:\n\n` + selectedCrosshair.code)
                 .setColor([255, 70, 85])

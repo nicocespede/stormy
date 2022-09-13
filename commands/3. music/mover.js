@@ -1,4 +1,4 @@
-const { MessageEmbed, Constants } = require("discord.js");
+const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction } = require("../../app/cache");
 const { ids, musicActions } = require("../../app/constants");
 const { containsAuthor, cleanTitle } = require("../../app/music");
@@ -13,13 +13,13 @@ module.exports = {
             name: 'número',
             description: 'El número de la canción que se quiere mover.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.INTEGER
+            type: ApplicationCommandOptionType.Integer
         },
         {
             name: 'posición',
             description: 'El número de la posición a la que se quiere mover la canción.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.INTEGER
+            type: ApplicationCommandOptionType.Integer
         }
     ],
     slash: 'both',
@@ -30,7 +30,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, message, channel, args, client, interaction }) => {
-        var embed = new MessageEmbed().setColor([195, 36, 255]);
+        var embed = new EmbedBuilder().setColor([195, 36, 255]);
         const number = message ? args[0] : interaction.options.getInteger('número');
         const position = message ? args[1] : interaction.options.getInteger('posición');
         var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
@@ -45,7 +45,7 @@ module.exports = {
             return reply;
         }
 
-        if (guild.me.voice.channel && member.voice.channel.id !== guild.me.voice.channel.id) {
+        if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
                 .setThumbnail(`attachment://icons8-no-entry-64.png`)];
             return reply;

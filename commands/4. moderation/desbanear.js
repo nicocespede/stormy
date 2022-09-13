@@ -1,4 +1,4 @@
-const { MessageButton, MessageActionRow, Constants } = require('discord.js');
+const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBanned, updateBanned } = require('../../app/cache');
 const { prefix, ids } = require('../../app/constants');
 
@@ -11,7 +11,7 @@ module.exports = {
             name: 'indice',
             description: `El índice otorgado por el comando \`${prefix}baneados\`).`,
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.INTEGER
+            type: ApplicationCommandOptionType.Integer
         }
     ],
     slash: 'both',
@@ -40,15 +40,15 @@ module.exports = {
                 reply.content = `Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`;
                 return reply;
             } else {
-                const row = new MessageActionRow()
-                    .addComponents(new MessageButton().setCustomId('unban_yes')
+                const row = new ActionRowBuilder()
+                    .addComponents(new ButtonBuilder().setCustomId('unban_yes')
                         .setEmoji('✔️')
                         .setLabel('Confirmar')
-                        .setStyle('SUCCESS'))
-                    .addComponents(new MessageButton().setCustomId('unban_no')
+                        .setStyle(ButtonStyle.Success))
+                    .addComponents(new ButtonBuilder().setCustomId('unban_no')
                         .setEmoji('❌')
                         .setLabel('Cancelar')
-                        .setStyle('DANGER'));
+                        .setStyle(ButtonStyle.Danger));
 
                 const messageOrInteraction = message ? message : interaction;
                 const replyMessage = await messageOrInteraction.reply({

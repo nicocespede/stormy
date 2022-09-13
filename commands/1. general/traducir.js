@@ -1,5 +1,6 @@
-const { Util, Constants } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const translate = require("translate");
+const { splitMessage } = require('../../app/general');
 
 module.exports = {
     category: 'General',
@@ -9,7 +10,7 @@ module.exports = {
             name: 'texto',
             description: 'El texto a traducir.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
     slash: 'both',
@@ -20,7 +21,7 @@ module.exports = {
     callback: async ({ message, channel, args, interaction }) => {
         const text = message ? args.join(' ') : interaction.options.getString('texto');
         const translation = await translate(text.replace(/[&]/g, 'and'), "es");
-        var chunks = Util.splitMessage(`**Texto traducido al español:**\n\n${translation}`, { char: ' ' });
+        var chunks = splitMessage(`**Texto traducido al español:**\n\n${translation}`, { char: ' ' });
         const messageOrInteraction = message ? message : interaction;
         await messageOrInteraction.reply({ content: chunks[0] });
         chunks.shift();

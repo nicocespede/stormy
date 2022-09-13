@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { getSombraBans, updateSombraBans } = require('../../app/cache');
 
 module.exports = {
@@ -18,7 +18,7 @@ module.exports = {
         description = description.replace(/[\\\n]+n/g, '\n');
         return {
             custom: true,
-            embeds: [new MessageEmbed()
+            embeds: [new EmbedBuilder()
                 .setTitle('Bans de **Sombra#9370**')
                 .setDescription(description)
                 .setColor(instance.color)

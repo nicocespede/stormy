@@ -1,4 +1,4 @@
-const { Constants } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
 const { prefix } = require('../../app/constants');
 const { deleteCrosshair } = require('../../app/mongodb');
@@ -12,7 +12,7 @@ module.exports = {
         name: 'id',
         description: 'El ID de la mira que se quiere borrar.',
         required: true,
-        type: Constants.ApplicationCommandOptionTypes.INTEGER
+        type: ApplicationCommandOptionType.Integer
     }],
     minArgs: 1,
     maxArgs: 1,

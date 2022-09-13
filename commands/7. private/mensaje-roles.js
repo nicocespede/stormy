@@ -1,4 +1,4 @@
-const { Constants } = require("discord.js");
+const { ApplicationCommandOptionType } = require("discord.js");
 const { updateRolesMessageInfo } = require("../../app/cache");
 const { updateRolesMessage } = require("../../app/mongodb");
 
@@ -18,13 +18,13 @@ module.exports = {
             name: 'canal',
             description: 'El canal al que se envía el mensaje.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.CHANNEL
+            type: ApplicationCommandOptionType.Channel
         },
         {
             name: 'mensaje',
             description: 'El mensaje.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
 

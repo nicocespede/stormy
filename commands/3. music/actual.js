@@ -1,4 +1,4 @@
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const { ids } = require("../../app/constants");
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
@@ -13,7 +13,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, channel, client }) => {
-        var errorEmbed = new MessageEmbed().setColor([195, 36, 255]);
+        var errorEmbed = new EmbedBuilder().setColor([195, 36, 255]);
         var reply = { custom: true, ephemeral: true };
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
@@ -41,7 +41,7 @@ module.exports = {
         const timestamp = queue.getPlayerTimestamp();
 
         const filteredTitle = await cleanTitle(track.title);
-        reply.embeds = [new MessageEmbed()
+        reply.embeds = [new EmbedBuilder()
             .setColor([195, 36, 255])
             .setDescription(`${progress}\n\n**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}`)
             .setImage(track.thumbnail)

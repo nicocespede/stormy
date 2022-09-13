@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const convert = require('xml-js');
 const axios = require('axios');
 
@@ -31,7 +31,7 @@ module.exports = {
                 { name: 'COMPRA', value: `ARS$ ${ofBidPrice}\n\nARS$ ${blBidPrice}`, inline: true },
                 { name: 'VENTA', value: `ARS$ ${ofAskPrice}\n\nARS$ ${blAskPrice}`, inline: true }
             ];
-            reply.embeds = [new MessageEmbed()
+            reply.embeds = [new EmbedBuilder()
                 .setTitle(`**COTIZACIÓN DEL DÓLAR**`)
                 .setDescription(`Hola <@${user.id}>, la cotización del dólar es:`)
                 .setColor([76, 175, 80])

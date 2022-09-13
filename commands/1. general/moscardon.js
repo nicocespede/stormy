@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { Constants } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const { prefix, ids } = require('../../app/constants');
 
 async function getRandomMoscardon() {
@@ -28,7 +28,7 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el moscardón.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.USER
+            type: ApplicationCommandOptionType.User
         }
     ],
     slash: 'both',

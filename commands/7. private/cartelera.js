@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
 const fs = require('fs');
 const { ids } = require('../../app/constants');
@@ -35,7 +35,7 @@ module.exports = {
         getRandomThumb('movies').then(fileName => {
             const msg = {
                 content: `<@&${ids.roles.cine}>`,
-                embeds: [new MessageEmbed()
+                embeds: [new EmbedBuilder()
                     .setDescription(args.join(" "))
                     .setColor([255, 0, 6])
                     .setThumbnail(`attachment://${fileName}`)

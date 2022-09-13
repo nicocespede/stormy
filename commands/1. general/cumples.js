@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageButton, MessageActionRow, Constants } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../app/cache');
 const { prefix } = require('../../app/constants');
 const { sendBdayAlert } = require('../../app/general');
@@ -39,35 +39,35 @@ module.exports = {
     options: [{
         name: 'ver',
         description: 'Responde con la lista de cumpleaños almacenados.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND
+        type: ApplicationCommandOptionType.Subcommand
     }, {
         name: 'agregar',
         description: 'Guarda el cumpleaños de un amigo.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'amigo',
                 description: 'La mención del cumpleañero.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.USER
+                type: ApplicationCommandOptionType.User
             },
             {
                 name: 'fecha',
                 description: 'La fecha (DD/MM) del cumpleaños.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             }
         ]
     }, {
         name: 'borrar',
         description: 'Borra el cumpleaños de un amigo.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'amigo',
                 description: 'La mención del cumpleañero.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.USER
+                type: ApplicationCommandOptionType.User
             }
         ]
     }],
@@ -106,7 +106,7 @@ module.exports = {
 
             return {
                 custom: true,
-                embeds: [new MessageEmbed()
+                embeds: [new EmbedBuilder()
                     .setTitle(`**Cumpleaños**`)
                     .setDescription(`Hola <@${user.id}>, los cumpleaños registrados son:\n\n`)
                     .setColor([237, 0, 0])
@@ -137,15 +137,15 @@ module.exports = {
                 else if (Object.keys(birthdays).includes(target.user.id))
                     return { content: `⚠ Este usuario ya tiene registrado su cumpleaños.`, custom: true, ephemeral: true }
                 else {
-                    const row = new MessageActionRow()
-                        .addComponents(new MessageButton().setCustomId('add_yes')
+                    const row = new ActionRowBuilder()
+                        .addComponents(new ButtonBuilder().setCustomId('add_yes')
                             .setEmoji('✔️')
                             .setLabel('Confirmar')
-                            .setStyle('SUCCESS'))
-                        .addComponents(new MessageButton().setCustomId('add_no')
+                            .setStyle(ButtonStyle.Success))
+                        .addComponents(new ButtonBuilder().setCustomId('add_no')
                             .setEmoji('❌')
                             .setLabel('Cancelar')
-                            .setStyle('DANGER'));
+                            .setStyle(ButtonStyle.Danger));
                     const messageOrInteraction = message ? message : interaction;
                     const reply = await messageOrInteraction.reply({
                         components: [row],
@@ -194,15 +194,15 @@ module.exports = {
             else if (!Object.keys(birthdays).includes(target.user.id))
                 return { content: `⚠ El cumpleaños que intentás borrar no existe.`, custom: true, ephemeral: true };
             else {
-                const row = new MessageActionRow()
-                    .addComponents(new MessageButton().setCustomId('delete_yes')
+                const row = new ActionRowBuilder()
+                    .addComponents(new ButtonBuilder().setCustomId('delete_yes')
                         .setEmoji('✔️')
                         .setLabel('Confirmar')
-                        .setStyle('SUCCESS'))
-                    .addComponents(new MessageButton().setCustomId('delete_no')
+                        .setStyle(ButtonStyle.Success))
+                    .addComponents(new ButtonBuilder().setCustomId('delete_no')
                         .setEmoji('❌')
                         .setLabel('Cancelar')
-                        .setStyle('DANGER'));
+                        .setStyle(ButtonStyle.Danger));
 
                 const messageOrInteraction = message ? message : interaction;
                 const reply = await messageOrInteraction.reply({

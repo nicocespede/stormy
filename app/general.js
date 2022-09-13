@@ -1,8 +1,10 @@
-const { MessageAttachment } = require('discord.js')
+const { AttachmentBuilder, ChannelType } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
 const Canvas = require('canvas');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const { ids, relativeSpecialDays, currencies } = require('./constants');
 const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,
     addStat, updateStat } = require('./mongodb');
@@ -64,7 +66,7 @@ async function generateBirthdayImage(user) {
     const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
     // Draw a shape onto the main canvas
     context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
-    return new MessageAttachment(canvas.toBuffer());
+    return new AttachmentBuilder(canvas.toBuffer());
 };
 
 function applyText(canvas, text) {
@@ -151,7 +153,7 @@ async function updateAvatar(client) {
     const newAvatar = `./assets/kgprime${getImageType()}.png`;
     if (actualAvatar != newAvatar)
         await client.user.setAvatar(newAvatar).then(() => {
-            updateAvatarString(newAvatar).catch(console.error);
+            updateAvatarString(newAvatar).then(async _ => await cache.updateAvatar()).catch(console.error);
         }).catch(console.error);
 };
 
@@ -256,6 +258,53 @@ const checkValorantBansExpiration = async () => {
         await cache.updateSmurfs();
 };
 
+const getUpcomingMatches = async () => {
+    const urlBase = 'https://www.vlr.gg';
+    const url = urlBase + '/team/matches/2355/kr-esports/?group=upcoming';
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
+    const a = $('.wf-card.fc-flex.m-item');
+    const matches = [];
+    a.each((_, el) => {
+        const match = {
+            team1Name: '', team1Tag: '',
+            team2Name: '', team2Tag: '',
+            remaining: '',
+            date: '',
+            time: '',
+            url: urlBase + el.attribs['href']
+        };
+        const teams = $(el).children('.m-item-team.text-of');
+        teams.each((i, team) => {
+            const names = $(team).children().get();
+            const name = $(names[0]).text().trim();
+            match[`team${i + 1}Name`] = name != 'TBD' ? name : 'A determinar';
+            match[`team${i + 1}Tag`] = name != 'TBD' ? $(names[1]).text().trim() : name;
+        });
+        match.remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text();
+        const date = $(el).children('.m-item-date').text().trim();
+        const split = date.split(`\t`);
+        match.date = split.shift();
+        match.time = split.pop()
+        matches.push(match);
+    });
+    return matches;
+};
+
+const convertTime = time => {
+    let split = time.split(' ');
+    const indicator = split.pop();
+    split = split[0].split(':');
+    switch (indicator) {
+        case 'am':
+            return `${split[0] === '12' ? '00' : split[0]}:${split[1]}`;
+        case 'pm':
+            const parsedMinutes = parseInt(split[0]);
+            const finalMinutes = parsedMinutes + 12;
+            return `${finalMinutes === 24 ? '12' : `${finalMinutes}`}:${split[1]}`;
+    }
+};
+
 module.exports = {
     needsTranslation: (string) => {
         var probabilities = lngDetector.detect(string);
@@ -306,7 +355,7 @@ module.exports = {
                     await cache.updateReactionCollectorInfo();
                 });
             const aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
-            channel.messages.fetch(aux.messageId).then(m => {
+            channel.messages.fetch({ message: aux.messageId }).then(m => {
                 if (message)
                     m.react('✅');
                 const filter = (reaction) => reaction.emoji.name === '✅';
@@ -365,7 +414,7 @@ module.exports = {
         const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
         // Draw a shape onto the main canvas
         context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
-        return new MessageAttachment(canvas.toBuffer());
+        return new AttachmentBuilder(canvas.toBuffer());
     },
 
     pushDifference: async (id, username) => {
@@ -418,7 +467,7 @@ module.exports = {
     startStatsCounters: client => {
         client.guilds.fetch(ids.guilds.default).then(guild => {
             guild.channels.cache.each(channel => {
-                if (channel.isVoice() && channel.id != ids.channels.afk) {
+                if (channel.type === ChannelType.GuildVoice && channel.id != ids.channels.afk) {
                     const membersInChannel = getMembersStatus(channel);
                     if (membersInChannel.size >= 2)
                         membersInChannel.valid.forEach(member => {
@@ -455,5 +504,43 @@ module.exports = {
 
     updateAvatar,
 
-    updateUsername
+    updateUsername,
+
+    splitMessage: message => {
+        const split = message.split(' ');
+        const ret = [];
+        let chunk = '';
+        split.forEach(word => {
+            const aux = chunk + word + ' ';
+            if (aux.length <= 2000)
+                chunk += word + ' ';
+            else {
+                ret.push(chunk);
+                chunk = '';
+            }
+        });
+        ret.push(chunk);
+        return ret;
+    },
+
+    getUpcomingMatches,
+
+    checkKruUpcomingMatches: async client => {
+        const oneDay = 1000 * 60 * 60 * 24;
+        const oneMinute = 1000 * 60;
+        const matches = await getUpcomingMatches();
+        matches.forEach(element => {
+            const date = convertTZ(`${element.date} ${element.time}`, 'America/Argentina/Buenos_Aires');
+            const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+            const difference = date - today;
+            const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
+            if (difference <= oneDay && difference >= (oneDay - oneMinute)
+                || difference <= (oneMinute * 10) && difference >= (oneMinute * 9))
+                client.channels.fetch(ids.channels.anuncios).then(channel => {
+                    channel.send(`<@&${ids.roles.kru}>\n\nMañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)}**. ¡Vamos KRÜ! 🤟🏼`).catch(console.error);
+                }).catch(console.error);
+        });
+    },
+
+    convertTime
 }

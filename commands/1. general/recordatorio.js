@@ -1,4 +1,4 @@
-const { Constants } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const { prefix, ids } = require('../../app/constants');
 
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el recordatorio.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.USER
+            type: ApplicationCommandOptionType.User
         }
     ],
     slash: 'both',

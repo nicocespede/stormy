@@ -1,27 +1,28 @@
-const { Client, Intents, MessageEmbed } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
 const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
-    countConnectedMembers } = require('./app/general');
+    countConnectedMembers, checkKruUpcomingMatches } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
 const { prefix, ids, musicActions, categorySettings, testing } = require('./app/constants');
 var interval;
 
 const client = new Client({
     intents: [
-        Intents.FLAGS.DIRECT_MESSAGES,
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_BANS,
-        Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_PRESENCES,
-        Intents.FLAGS.GUILD_VOICE_STATES
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildBans,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.MessageContent
     ],
-    partials: ["CHANNEL"]
+    partials: [Partials.Channel]
 });
 
 client.on('ready', async () => {
@@ -52,11 +53,12 @@ client.on('ready', async () => {
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client);
+    checkKruUpcomingMatches(client);
     const reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
     if (reactionCollectorInfo.isActive)
         initiateReactionCollector(client);
 
-    var musicEmbed = new MessageEmbed().setColor([195, 36, 255]);
+    var musicEmbed = new EmbedBuilder().setColor([195, 36, 255]);
     client.player = new Player(client, {
         leaveOnEnd: false,
         leaveOnStop: true,
@@ -72,7 +74,7 @@ client.on('ready', async () => {
         else {
             const filteredTitle = await cleanTitle(track.title);
             queue.metadata.send({
-                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription(`▶️ Comenzando a reproducir:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
                     .setThumbnail(`attachment://icons8-circled-play-64.png`)
@@ -136,7 +138,9 @@ client.on('ready', async () => {
         });
         if (!queue.destroyed)
             queue.destroy();
-    });
+    })/*.on('debug', (queue, message) => {
+        console.log(message)
+    })*/;
 
     playInterruptedQueue(client);
 
@@ -163,10 +167,11 @@ client.on('ready', async () => {
         }
         if (minutesUp % 5 === 0)
             countConnectedMembers(client);
+        checkKruUpcomingMatches(client);
     }, 60 * 1000);
 });
 
-client.on('rateLimit', data => console.log('> Se recibió un límite de tarifa:\n', data));
+client.rest.on('rateLimited', data => console.log('> Se recibió un límite de tarifa:\n', data));
 
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log('> Reinicio inminente...');

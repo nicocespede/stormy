@@ -1,4 +1,7 @@
 "use strict";
+
+const { ChannelType } = require("discord.js");
+
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -56,7 +59,7 @@ class ReactionHandler {
      * @returns If the bot has access to remove reactions from the help menu
      */
     canBotRemoveReaction = () => {
-        return (this.message.channel.type !== 'DM' &&
+        return (this.message.channel.type !== ChannelType.DM &&
             this.message.member?.permissions.has('MANAGE_MESSAGES'));
     };
     /**

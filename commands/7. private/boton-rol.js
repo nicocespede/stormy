@@ -1,4 +1,4 @@
-const { Constants, MessageButton, MessageActionRow } = require("discord.js");
+const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require("discord.js");
 const { getRolesMessageInfo, updateRolesMessageInfo } = require("../../app/cache");
 
 const buttonStyles = ['primary', 'secondary', 'success', 'danger'];
@@ -20,32 +20,32 @@ module.exports = {
             name: 'rol',
             description: 'El rol para el botón.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.ROLE
+            type: ApplicationCommandOptionType.Role
         },
         {
             name: 'emoji',
             description: 'El emoji para el botón.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         },
         {
             name: 'estilo',
             description: 'El estilo para el botón.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING,
+            type: ApplicationCommandOptionType.String,
             choices: buttonStyles.map(style => ({ name: style, value: style.toUpperCase() }))
         },
         {
             name: 'etiqueta',
             description: 'La etiqueta para el botón.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         },
         {
             name: 'texto',
             description: 'El texto que se agregará al mensaje.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
 
@@ -78,9 +78,24 @@ module.exports = {
 
         const emoji = args.shift();
 
-        const buttonStyle = args.shift() || 'primary';
+        let buttonStyle = args.shift() || 'primary';
         if (!buttonStyles.includes(buttonStyle.toLowerCase()))
             return `Estilo de botón desconocido. Los estilos válidos son: _"${buttonStyles.join('", "')}"_.`;
+
+        switch (buttonStyle) {
+            case 'primary':
+                buttonStyle = ButtonStyle.Primary;
+                break;
+            case 'secondary':
+                buttonStyle = ButtonStyle.Secondary;
+                break;
+            case 'success':
+                buttonStyle = ButtonStyle.Success;
+                break;
+            case 'danger':
+                buttonStyle = ButtonStyle.Danger;
+                break;
+        }
 
         const buttonLabel = args.shift();
 
@@ -91,10 +106,10 @@ module.exports = {
         const channelId = data.channelId;
         const messageId = data.messageId;
         const channel = guild.channels.cache.get(channelId);
-        const roleMessage = await channel.messages.fetch(messageId);
+        const roleMessage = await channel.messages.fetch({ message: messageId });
 
         const rows = roleMessage.components;
-        const button = new MessageButton()
+        const button = new ButtonBuilder()
             .setLabel(buttonLabel)
             .setEmoji(emoji)
             .setStyle(buttonStyle)
@@ -116,7 +131,7 @@ module.exports = {
                 return { custom: true, ephemeral: true, content: 'No puedo agregar más botones a este mensaje.' };
 
             content += `\n${rows.length === 0 ? '\n' : ''}${text}`;
-            rows.push(new MessageActionRow().addComponents(button));
+            rows.push(new ActionRowBuilder().addComponents(button));
         }
 
         roleMessage.edit({ content: content, components: rows });

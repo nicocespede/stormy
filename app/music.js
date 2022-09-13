@@ -1,5 +1,5 @@
 const { QueryType } = require("discord-player");
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras } = require("./cache");
 const { musicActions } = require("./constants");
 const { addQueue } = require("./mongodb");
@@ -10,7 +10,7 @@ module.exports = {
         const queue = client.player.getQueue(guild.id);
         if (queue)
             queue.metadata.send({
-                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription(`🔃 Fui movido al canal de voz **${channel.name}**.`)
                     .setThumbnail(`attachment://icons8-change-64.png`)],
                 files: [`./assets/thumbs/music/icons8-change-64.png`]
@@ -22,7 +22,7 @@ module.exports = {
         const queue = client.player.getQueue(guild.id);
         if (queue) {
             queue.metadata.send({
-                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription("⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!")
                     .setThumbnail(`attachment://icons8-disconnected-64.png`)],
                 files: [`./assets/thumbs/music/icons8-disconnected-64.png`]
@@ -59,7 +59,7 @@ module.exports = {
         const queue = client.player.getQueue(guild.id);
         if (queue) {
             queue.metadata.send({
-                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
                     .setThumbnail(`attachment://icons8-no-audio-64.png`)],
                 files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
@@ -74,7 +74,7 @@ module.exports = {
         if (queue) {
             console.log('> Guardando cola de reproducción actual');
             await queue.metadata.send({
-                embeds: [new MessageEmbed().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription(`⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`)
                     .setThumbnail(`attachment://icons8-shutdown-64.png`)],
                 files: [`./assets/thumbs/music/icons8-shutdown-64.png`]
@@ -106,7 +106,7 @@ module.exports = {
             const previousTracks = previousQueue.previousTracks;
             const tracks = previousQueue.tracks;
             const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId).catch(console.error);
-            const embed = new MessageEmbed().setColor([195, 36, 255]);
+            const embed = new EmbedBuilder().setColor([195, 36, 255]);
 
             if (voiceChannel.members.size > 0) {
                 console.log('> Reanudando reproducción interrumpida por el reinicio');

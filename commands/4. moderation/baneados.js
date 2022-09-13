@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { getBanned, updateBanned } = require('../../app/cache');
 
 module.exports = {
@@ -30,7 +30,7 @@ module.exports = {
 
         return {
             custom: true,
-            embeds: [new MessageEmbed()
+            embeds: [new EmbedBuilder()
                 .setTitle(`**Usuarios baneados**`)
                 .setDescription(`Hola <@${user.id}>, los usuarios actualmente baneados son:\n\n${usersField.value.length === 0 ? '_No hay usuarios baneados actualmente._' : ''}`)
                 .addFields(usersField.value.length > 0 ? [usersField, responsiblesField, reasonsField] : [])

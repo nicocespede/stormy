@@ -1,4 +1,4 @@
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
     category: 'General',
@@ -8,10 +8,10 @@ module.exports = {
     slash: 'both',
 
     callback: () => {
-        const row = new MessageActionRow()
-            .addComponents(new MessageButton()
+        const row = new ActionRowBuilder()
+            .addComponents(new ButtonBuilder()
                 .setLabel('Watch 2gether')
-                .setStyle('LINK')
+                .setStyle(ButtonStyle.Link)
                 .setURL('https://www.watch2gether.com/rooms/nckg-le03mozzfc19nz7uuf?lang=es'));
 
         return {

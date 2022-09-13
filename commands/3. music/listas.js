@@ -1,4 +1,4 @@
-const { MessageEmbed, Constants } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getPlaylists, updatePlaylists } = require('../../app/cache');
 const { prefix, ids } = require('../../app/constants');
 const { addPlaylist, deletePlaylist } = require('../../app/mongodb');
@@ -11,35 +11,35 @@ module.exports = {
     options: [{
         name: 'ver',
         description: 'Responde con las listas de reproducción guardadas.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND
+        type: ApplicationCommandOptionType.Subcommand
     }, {
         name: 'agregar',
         description: 'Guarda una lista de reproducción.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'nombre',
                 description: 'El nombre que tendrá la lista de reproducción.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             },
             {
                 name: 'url',
                 description: 'La URL de la lista de reproducción.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             }
         ]
     }, {
         name: 'borrar',
         description: 'Borra una lista de reproducción guardada.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'nombre',
                 description: 'El nombre de la lista de reproducción que se quiere borrar.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             }
         ]
     }],
@@ -65,7 +65,7 @@ module.exports = {
             for (var i = 0; i < playlists.names.length; i++)
                 description += `**${i + 1}.** ${playlists.names[i]} - ${playlists.urls[i]}\n\n`;
 
-            reply.embeds = [new MessageEmbed()
+            reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Listas de reproducción**`)
                 .setDescription(description + `${playlists.names.length === 0 ? '_No hay ninguna lista de reproducción guardada aún._' : ''}`)
                 .setColor([195, 36, 255])

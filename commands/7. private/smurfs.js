@@ -1,4 +1,4 @@
-const { Constants } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../app/cache');
 const { ids } = require('../../app/constants');
 const { convertTZ } = require('../../app/general');
@@ -31,66 +31,66 @@ module.exports = {
     options: [{
         name: 'agregar',
         description: 'Guarda una cuenta smurf.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'comando',
                 description: 'El comando que utilizará esta cuenta.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             },
             {
                 name: 'nombre',
                 description: 'El nombre de la cuenta.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             },
             {
                 name: 'usuario',
                 description: 'El usuario de la cuenta.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             },
             {
                 name: 'contraseña',
                 description: 'La contraseña de la cuenta.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             },
             {
                 name: 'vip',
                 description: 'Si es para usuarios VIP o no.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.BOOLEAN
+                type: ApplicationCommandOptionType.Boolean
             }
         ]
     }, {
         name: 'borrar',
         description: 'Borra una cuenta guardada.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'comando',
                 description: 'El comando de la cuenta que se quiere borrar.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             }
         ]
     }, {
         name: 'ban',
         description: 'Actualiza el ban de una cuenta guardada.',
-        type: Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
             {
                 name: 'comando',
                 description: 'El comando de la cuenta que se quiere actualizar.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             }, {
                 name: 'fecha',
                 description: 'La fecha hasta que la cuenta se encuentra banneada.',
                 required: true,
-                type: Constants.ApplicationCommandOptionTypes.STRING
+                type: ApplicationCommandOptionType.String
             }
         ]
     }],

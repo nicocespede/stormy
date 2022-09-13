@@ -50,11 +50,11 @@ module.exports = {
     callback: (options) => {
         const { message, channel, instance, args, interaction } = options;
         const { guild } = channel;
-        if (guild && !guild.me?.permissions.has('SEND_MESSAGES')) {
+        if (guild && !guild.members.me?.permissions.has('SEND_MESSAGES')) {
             console.warn(`WOKCommands > Could not send message due to no permissions in channel for ${guild.name}`);
             return;
         }
-        if (guild && !guild.me?.permissions.has('ADD_REACTIONS')) {
+        if (guild && !guild.members.me?.permissions.has('ADD_REACTIONS')) {
             return instance.messageHandler.get(guild, 'NO_REACT_PERMS');
         }
         // Typical "!help" syntax for the menu
@@ -72,7 +72,7 @@ module.exports = {
             });
         }
         const description = _ReactionListener_1.default.getHelp(command, instance, guild);
-        const embed = new discord_js_1.MessageEmbed()
+        const embed = new discord_js_1.EmbedBuilder()
             .setTitle(`${instance.displayName} ${instance.messageHandler.getEmbed(guild, 'HELP_MENU', 'TITLE')} - ${arg}`)
             .setDescription(description);
         if (instance.color) {

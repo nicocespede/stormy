@@ -1,5 +1,5 @@
-const { MessageActionRow, MessageButton, Constants, MessageAttachment } = require("discord.js");
-const { prefix, quiz } = require('../../app/constants');
+const { ActionRowBuilder, ButtonBuilder, AttachmentBuilder, ApplicationCommandOptionType, ButtonStyle, ChannelType } = require("discord.js");
+const { quiz } = require('../../app/constants');
 
 function until(conditionFunction) {
     const poll = resolve => {
@@ -58,7 +58,7 @@ module.exports = {
             name: 'cantidad',
             description: 'El número de preguntas que se quieren para el quiz.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.INTEGER
+            type: ApplicationCommandOptionType.Integer
         }
     ],
     slash: 'both',
@@ -74,24 +74,24 @@ module.exports = {
         else {
             var participants = [user.id];
             var readyToStart = false;
-            const row = new MessageActionRow()
-                .addComponents(new MessageButton().setCustomId('join')
+            const row = new ActionRowBuilder()
+                .addComponents(new ButtonBuilder().setCustomId('join')
                     .setEmoji('✋🏼')
                     .setLabel('Participo')
-                    .setStyle('PRIMARY'))
-                .addComponents(new MessageButton().setCustomId('ready')
+                    .setStyle(ButtonStyle.Primary))
+                .addComponents(new ButtonBuilder().setCustomId('ready')
                     .setEmoji('✔️')
                     .setLabel('Comenzar')
-                    .setStyle('SUCCESS'))
-                .addComponents(new MessageButton().setCustomId('cancel')
+                    .setStyle(ButtonStyle.Success))
+                .addComponents(new ButtonBuilder().setCustomId('cancel')
                     .setEmoji('❌')
                     .setLabel('Cancelar')
-                    .setStyle('DANGER'));
+                    .setStyle(ButtonStyle.Danger));
 
-            const newChannel = await guild.channels.create('❓┃QUIZ', 'text');
-            newChannel.permissionOverwrites.edit(client.user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
-            newChannel.permissionOverwrites.edit(user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
-            newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { VIEW_CHANNEL: false });
+            const newChannel = await guild.channels.create({ name: '❓┃QUIZ', type: ChannelType.GuildText });
+            newChannel.permissionOverwrites.edit(client.user.id, { 'ViewChannel': true, SEND_MESSAGES: true });
+            newChannel.permissionOverwrites.edit(user.id, { 'ViewChannel': true, SEND_MESSAGES: true });
+            newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { 'ViewChannel': false });
 
             var msg = {
                 components: [row],
@@ -140,10 +140,10 @@ module.exports = {
                         selectedQuestions.push(element[0]);
                     }
                     await reply.edit({
-                        components: [new MessageActionRow()
-                            .addComponents(new MessageButton()
+                        components: [new ActionRowBuilder()
+                            .addComponents(new ButtonBuilder()
                                 .setLabel('IR AL QUIZ')
-                                .setStyle('LINK')
+                                .setStyle(ButtonStyle.Link)
                                 .setURL(`https://discord.com/channels/${guild.id}/${newChannel.id}`))],
                         content: '🏁 **¡Comienza el quiz!** Prepárense...\n\u200b'
                     });
@@ -167,7 +167,7 @@ module.exports = {
                         await new Promise(res => setTimeout(res, 1000 * 2));
                         newChannel.send({
                             content: `❓ **Pregunta ${i + 1}:** ${actualQuestion.question}\n\u200b`,
-                            files: [new MessageAttachment(actualQuestion.file)]
+                            files: [new AttachmentBuilder(actualQuestion.file)]
                         });
 
                         const messagesCollector = newChannel.createMessageCollector({ filter, time: 1000 * maxTime });
@@ -198,7 +198,7 @@ module.exports = {
                         await new Promise(res => setTimeout(res, 1000 * 3));
                         newChannel.send({
                             content: `⁉ **Pregunta de desempate:** ${actualQuestion.question}\n\u200b`,
-                            files: [new MessageAttachment(actualQuestion.file)]
+                            files: [new AttachmentBuilder(actualQuestion.file)]
                         });
 
                         const messagesCollector = newChannel.createMessageCollector({ filter, time: 1000 * maxTime });
@@ -224,10 +224,10 @@ module.exports = {
 
                     await newChannel.send({
                         content: '📊 Quiz finalizado...\n\u200b',
-                        components: [new MessageActionRow()
-                            .addComponents(new MessageButton()
+                        components: [new ActionRowBuilder()
+                            .addComponents(new ButtonBuilder()
                                 .setLabel('VER RESULTADOS')
-                                .setStyle('LINK')
+                                .setStyle(ButtonStyle.Link)
                                 .setURL(`https://discord.com/channels/${guild.id}/${channel.id}/${reply.id}`))]
                     });
 

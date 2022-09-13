@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
@@ -67,7 +67,7 @@ module.exports = {
                 }
             }
         }
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
             .setTitle(`**Estadísticas**`)
             .setDescription(`Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n${usersField.value.length === 0 ? '_No hay estadísticas actualmente._' : ''}`)
             .addFields(usersField.value.length != 0 ? [usersField, timeField] : [])

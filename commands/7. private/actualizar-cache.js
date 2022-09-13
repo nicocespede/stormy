@@ -1,11 +1,16 @@
-const { Constants } = require("discord.js");
-const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras } = require("../../app/cache");
+const { ApplicationCommandOptionType } = require("discord.js");
+const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras,
+    //TEMP SOLUTION
+    updateBlacklistedSongs//
+} = require("../../app/cache");
 const { ids } = require("../../app/constants");
 const { updateMovies, updateGames } = require("../../app/mongodb");
 
 const choices = [
-    { name: 'Juegos y películas', value: 'games-and-movies' },
-    { name: 'Extras de nombres de pistas', value: 'tracks-name-extras' }
+    { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },
+    { name: '🎮 Juegos y películas', value: 'games-and-movies' }
+    //TEMP SOLUTION
+    , { name: '❌ Lista negra de pistas', value: 'tracks-blacklist' }//
 ];
 
 module.exports = {
@@ -15,7 +20,7 @@ module.exports = {
     options: [{
         name: 'nombre',
         description: 'El nombre del caché que se quiere actualizar.',
-        type: Constants.ApplicationCommandOptionTypes.STRING,
+        type: ApplicationCommandOptionType.String,
         required: true,
         choices: choices
     }],
@@ -106,6 +111,9 @@ module.exports = {
             }
         } else if (name === 'tracks-name-extras')
             await updateTracksNameExtras();
+        //TEMP SOLUTION
+        else if (name === 'tracks-blacklist')
+            await updateBlacklistedSongs();//
         return 'Caché actualizado.';
     }
 }

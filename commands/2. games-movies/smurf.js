@@ -1,4 +1,4 @@
-const { MessageAttachment, MessageEmbed, Constants } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
 const { getSmurfs, updateSmurfs } = require('../../app/cache');
 const { prefix, ids } = require('../../app/constants');
@@ -48,7 +48,7 @@ module.exports = {
         name: 'id',
         description: 'El ID de la cuenta de la que se quiere obtener la información.',
         required: false,
-        type: Constants.ApplicationCommandOptionTypes.STRING
+        type: ApplicationCommandOptionType.String
     }],
     maxArgs: 1,
     expectedArgs: '<id>',
@@ -58,7 +58,7 @@ module.exports = {
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
         if (!id) {
-            if (channel.type === 'DM') {
+            if (channel.type === ChannelType.DM) {
                 reply.content = 'Este comando solo se puede utilizar en un servidor.';
                 return reply;
             } else {
@@ -89,7 +89,7 @@ module.exports = {
                             }
                         }
                     member.send({
-                        embeds: [new MessageEmbed()
+                        embeds: [new EmbedBuilder()
                             .setTitle(`**Cuentas smurf**`)
                             .setDescription(`Hola <@${user.id}>, para obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`)
                             .setColor([7, 130, 169])
@@ -110,7 +110,7 @@ module.exports = {
             const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
             const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
             const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
-            if (channel.type != 'DM')
+            if (channel.type != ChannelType.DM)
                 reply.content = 'Este comando solo se puede utilizar por mensajes directos.';
             else if (!smurfRole.members.has(user.id))
                 reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
@@ -126,13 +126,13 @@ module.exports = {
                     const accInfo = account.name.split('#');
                     await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
                         if (!mmr.data.currenttierpatched)
-                            reply.embeds = [new MessageEmbed()
+                            reply.embeds = [new EmbedBuilder()
                                 .setColor([7, 130, 169])
                                 .setDescription('❌ Lo siento, ocurrió un error, intentá de nuevo.')];
                         else {
                             const thumb = mmr.data.currenttierpatched === null ? `assets/thumbs/ranks/unranked.png`
                                 : `assets/thumbs/ranks/${mmr.data.currenttierpatched.toLowerCase()}.png`;
-                            reply.embeds = [new MessageEmbed()
+                            reply.embeds = [new EmbedBuilder()
                                 .setTitle(`**${account.name}**`)
                                 .setColor([7, 130, 169])
                                 .addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
@@ -140,7 +140,7 @@ module.exports = {
                                 .setThumbnail(`attachment://rank.png`)];
                             if (account.bannedUntil != '')
                                 reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
-                            reply.files = [new MessageAttachment(thumb, 'rank.png')];
+                            reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                         }
                     }).catch(console.error);
                 }

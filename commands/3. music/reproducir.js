@@ -1,6 +1,9 @@
 const { QueryType } = require('discord-player');
-const { MessageEmbed, Constants } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists } = require('../../app/cache');
+const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
+const { updateLastAction, getPlaylists, updatePlaylists,
+    //TEMP SOLUTION
+    getBlacklistedSongs, updateBlacklistedSongs//
+} = require('../../app/cache');
 const { ids, musicActions } = require('../../app/constants');
 
 module.exports = {
@@ -12,7 +15,7 @@ module.exports = {
             name: 'canción',
             description: 'La URL o el nombre de la canción que se quiere reproducir.',
             required: false,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
     slash: 'both',
@@ -21,7 +24,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, message, channel, client, interaction, text }) => {
-        var embed = new MessageEmbed().setColor([195, 36, 255]);
+        var embed = new EmbedBuilder().setColor([195, 36, 255]);
         var song = message ? text : interaction.options.getString('canción');
         var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
         if (!ids.channels.musica.includes(channel.id)) {
@@ -36,7 +39,7 @@ module.exports = {
             return reply;
         }
 
-        if (guild.me.voice.channel && member.voice.channel.id !== guild.me.voice.channel.id) {
+        if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!`)
                 .setThumbnail(`attachment://icons8-no-entry-64.png`)];
             return reply;
@@ -64,6 +67,12 @@ module.exports = {
             if (playlists.names.includes(song.toLowerCase()))
                 song = playlists.urls[playlists.names.indexOf(song.toLowerCase())];
 
+            //TEMP SOLUTION
+            const blacklistedSongs = !getBlacklistedSongs() ? await updateBlacklistedSongs() : getBlacklistedSongs();
+            if (Object.keys(blacklistedSongs).includes(song)) {
+                song = blacklistedSongs[song];
+            }//
+
             const res = await client.player.search(song, {
                 requestedBy: member,
                 searchEngine: QueryType.AUTO
@@ -72,7 +81,8 @@ module.exports = {
             if (!res || !res.tracks.length) {
                 reply.embeds = [embed.setDescription(`🛑 ¡${user}, no se encontraron resultados! `)
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                return reply;
+                message ? await message.reply(reply) : await interaction.editReply(reply);
+                return;
             }
 
             const queue = await client.player.createQueue(guild, {
@@ -85,7 +95,8 @@ module.exports = {
                 await client.player.deleteQueue(guild.id);
                 reply.embeds = [embed.setDescription(`🛑 ${user}, no me puedo unir al canal de voz.`)
                     .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                return reply;
+                message ? await message.reply(reply) : await interaction.editReply(reply);
+                return;
             }
 
             reply.embeds = [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
@@ -104,6 +115,26 @@ module.exports = {
             });
 
             updateLastAction(musicActions.ADDING);
+
+            //TEMP SOLUTION
+            if (res.playlist)
+                for (let i = 0; i < res.tracks.length; i++) {
+                    const track = res.tracks[i];
+                    if (Object.keys(blacklistedSongs).includes(track.url)) {
+                        const auxRes = await client.player.search(blacklistedSongs[track.url], {
+                            requestedBy: member,
+                            searchEngine: QueryType.AUTO
+                        });
+                        res.tracks[i] = auxRes.tracks[0];
+                    }
+                }
+            else if (Object.keys(blacklistedSongs).includes(res.tracks[0].url)) {
+                const auxRes = await client.player.search(blacklistedSongs[res.tracks[0].url], {
+                    requestedBy: member,
+                    searchEngine: QueryType.AUTO
+                });
+                res.tracks[0] = auxRes.tracks[0];
+            }//
 
             res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
 

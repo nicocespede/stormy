@@ -1,14 +1,13 @@
-const { Util } = require("discord.js");
 const translate = require("translate");
 const { ids } = require("../app/constants");
-const { needsTranslation, getNextMessage } = require("../app/general");
+const { needsTranslation, getNextMessage, splitMessage } = require("../app/general");
 
 module.exports = client => {
     client.on('messageCreate', async message => {
         if (message.channel.id === ids.channels.anuncios && message.author.id != ids.users.bot && !message.author.bot)
             if (needsTranslation(message.content)) {
                 var text = await translate(message.content.replace(/[&]/g, 'and'), "es");
-                var messages = Util.splitMessage(`**Mensaje de <@${message.author.id}> traducido al español:**\n\n${text}`);
+                const messages = splitMessage(`**Mensaje de <@${message.author.id}> traducido al español:**\n\n${text}`);
                 messages.forEach(m => message.channel.send({ content: m }));
             }
     });

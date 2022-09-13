@@ -1,6 +1,6 @@
 const { getThermalPasteDates, updateThermalPasteDates } = require('../../app/cache');
 const { convertTZ } = require('../../app/general');
-const { MessageActionRow, MessageButton, Constants } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { prefix } = require('../../app/constants');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../app/mongodb');
 
@@ -61,7 +61,7 @@ module.exports = {
             name: 'fecha',
             description: 'La fecha (DD/MM/AAAA) en que se cambió la pasta por última vez.',
             required: false,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
 
@@ -85,15 +85,15 @@ module.exports = {
                 reply.content = validateDate(date).reason;
                 return reply;
             } else {
-                const row = new MessageActionRow()
-                    .addComponents(new MessageButton().setCustomId('add_yes')
+                const row = new ActionRowBuilder()
+                    .addComponents(new ButtonBuilder().setCustomId('add_yes')
                         .setEmoji('✔️')
                         .setLabel('Confirmar')
-                        .setStyle('SUCCESS'))
-                    .addComponents(new MessageButton().setCustomId('add_no')
+                        .setStyle(ButtonStyle.Success))
+                    .addComponents(new ButtonBuilder().setCustomId('add_no')
                         .setEmoji('❌')
                         .setLabel('Cancelar')
-                        .setStyle('DANGER'));
+                        .setStyle(ButtonStyle.Danger));
 
                 const messageOrInteraction = message ? message : interaction;
                 const replyMessage = await messageOrInteraction.reply({

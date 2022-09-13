@@ -1,4 +1,4 @@
-const { Constants } = require('discord.js');
+const { ApplicationCommandOptionType } = require('discord.js');
 const { prefix, ids } = require('../../app/constants');
 
 module.exports = {
@@ -9,13 +9,13 @@ module.exports = {
             name: 'amigo',
             description: 'La mención de quien recibe el nuevo apodo.',
             required: true,
-            type: Constants.ApplicationCommandOptionTypes.USER
+            type: ApplicationCommandOptionType.User
         },
         {
             name: 'apodo',
             description: 'El apodo nuevo (si no se ingresa nada, el apodo se resetea).',
             required: false,
-            type: Constants.ApplicationCommandOptionTypes.STRING
+            type: ApplicationCommandOptionType.String
         }
     ],
     slash: 'both',
@@ -47,8 +47,8 @@ module.exports = {
                     reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
                     reply.ephemeral = false;
                 }).catch(() => {
-                    reply.content = '❌ Lo siento, no se pudo cambiar el apodo.';
-                })
+                    reply.content = `❌ Lo siento, no se pudo cambiar el apodo.${target.id === ids.users.stormer ? ' Discord no me permite cambiarle el apodo al dueño del servidor. ☹' : ''}`;
+                });
             }
         }).catch(console.error);
         return reply;
