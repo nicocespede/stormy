@@ -108,7 +108,11 @@ module.exports = {
         const channel = guild.channels.cache.get(channelId);
         const roleMessage = await channel.messages.fetch({ message: messageId });
 
-        const rows = ActionRowBuilder.from(roleMessage.components);
+        const rows = [];
+        roleMessage.components.forEach(c => {
+            rows.push(ActionRowBuilder.from(c));
+        });
+
         const button = new ButtonBuilder()
             .setLabel(buttonLabel)
             .setEmoji(emoji)
