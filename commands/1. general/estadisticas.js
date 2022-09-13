@@ -73,7 +73,9 @@ module.exports = {
             .addFields(usersField.value.length != 0 ? [usersField, timeField] : [])
             .setColor([255, 205, 52])
             .setThumbnail(`attachment://stats.jpg`)
-            .setFooter({ text: needsFooter ? 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' : '' });
+
+        if (needsFooter)
+            embed.setFooter({ text: 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' });
 
         const reply = { content: null, embeds: [embed], files: ['./assets/thumbs/stats.jpg'] };
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);

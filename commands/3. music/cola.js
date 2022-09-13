@@ -66,7 +66,8 @@ module.exports = {
 
         embed.setDescription(description);
 
-        embed.setFooter({ text: songs > songsShown ? `+otra${songs - songsShown > 1 ? 's' : ''} ${songs - songsShown === 1 ? 'canción' : `${songs - songsShown} canciones`}...` : `` });
+        if (songs > songsShown)
+            embed.setFooter({ text: `+otra${songs - songsShown > 1 ? 's' : ''} ${songs - songsShown === 1 ? 'canción' : `${songs - songsShown} canciones`}...` });
 
         reply.embeds = [embed];
         reply.ephemeral = false;
