@@ -4,6 +4,25 @@ const { getRolesMessageInfo, updateRolesMessageInfo } = require("../../app/cache
 const buttonStyles = ['primary', 'secondary', 'success', 'danger'];
 const prefix = 'button-roles-';
 
+const getButtonStyle = string => {
+    let buttonStyle;
+    switch (string) {
+        case 'primary':
+            buttonStyle = ButtonStyle.Primary;
+            break;
+        case 'secondary':
+            buttonStyle = ButtonStyle.Secondary;
+            break;
+        case 'success':
+            buttonStyle = ButtonStyle.Success;
+            break;
+        case 'danger':
+            buttonStyle = ButtonStyle.Danger;
+            break;
+    }
+    return buttonStyle;
+};
+
 module.exports = {
     category: 'Privados',
     description: 'Agrega un botón al mensaje de roles.',
@@ -33,7 +52,7 @@ module.exports = {
             description: 'El estilo para el botón.',
             required: true,
             type: ApplicationCommandOptionType.String,
-            choices: buttonStyles.map(style => ({ name: style, value: style.toUpperCase() }))
+            choices: buttonStyles.map(style => ({ name: style, value: getButtonStyle(style) }))
         },
         {
             name: 'etiqueta',
@@ -82,20 +101,7 @@ module.exports = {
         if (!buttonStyles.includes(buttonStyle.toLowerCase()))
             return `Estilo de botón desconocido. Los estilos válidos son: _"${buttonStyles.join('", "')}"_.`;
 
-        switch (buttonStyle) {
-            case 'primary':
-                buttonStyle = ButtonStyle.Primary;
-                break;
-            case 'secondary':
-                buttonStyle = ButtonStyle.Secondary;
-                break;
-            case 'success':
-                buttonStyle = ButtonStyle.Success;
-                break;
-            case 'danger':
-                buttonStyle = ButtonStyle.Danger;
-                break;
-        }
+        buttonStyle = getButtonStyle(buttonStyle);
 
         const buttonLabel = args.shift();
 
