@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActivityType } = require('discord.js');
 const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
@@ -26,7 +26,7 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: 'LISTENING' }] });
+    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
 
     startStatsCounters(client);
 
