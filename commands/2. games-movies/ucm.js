@@ -60,7 +60,6 @@ module.exports = {
 
     callback: async ({ user, message, args, interaction, channel, guild, instance }) => {
         if (interaction) await interaction.deferReply({ ephemeral: true });
-        const color = [181, 2, 22];
         const number = message ? args[0] : interaction.options.getInteger('numero');
         var reply = { custom: true, ephemeral: true };
         if (number) {
@@ -76,7 +75,7 @@ module.exports = {
                 var nowShowing = '';
                 const getVersionsRow = () => {
                     const row = new ActionRowBuilder();
-                    for (const ver in info) {
+                    for (const ver in info)
                         if (Object.hasOwnProperty.call(info, ver)) {
                             row.addComponents(new ButtonBuilder().setCustomId(ver)
                                 .setEmoji('📽')
@@ -84,13 +83,14 @@ module.exports = {
                                 .setStyle(ButtonStyle.Primary)
                                 .setDisabled(ver === nowShowing));
                         }
-                    }
                     return row;
                 };
 
+                const moviePath = `${githubRawURL}/mcu/${name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')}`;
+
                 reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
                 reply.components = [getVersionsRow()];
-                reply.files = [`${githubRawURL}/mcu/${name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')}/image.jpg`];
+                reply.files = [`${moviePath}/image.jpg`];
 
                 const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
@@ -111,16 +111,16 @@ module.exports = {
                     nowShowing = i.customId;
                     await i.update({ components: [getVersionsRow()] });
                     const serverOptions = info[i.customId].split('\n**');
-                    const password = '**' + serverOptions.pop();
+                    const password = serverOptions.length > 1 ? '**' + serverOptions.pop() : '';
                     serverOptions.forEach(server => {
                         const lines = server.split('\n');
                         const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
                         const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
                         embeds.push(new EmbedBuilder()
                             .setTitle(`${title} - ${i.customId} (${serverName})`)
-                            .setColor(color)
+                            .setColor(mcuMovies[index].color)
                             .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId])}.\n` + lines.join('\n') + `\n${password}`)
-                            .setThumbnail(`attachment://${mcuMovies[index].thumbURL}`));
+                            .setThumbnail(`attachment://thumb.png`));
                     });
 
                     for (let i = 0; i < embeds.length; i++) {
@@ -154,7 +154,7 @@ module.exports = {
                     var msg = {
                         components: [getRow(id)],
                         embeds: [embeds[pages[id]]],
-                        files: [`./assets/thumbs/mcu/${mcuMovies[index].thumbURL}`]
+                        files: [`${moviePath}/thumb.png`]
                     };
 
                     versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
@@ -288,6 +288,7 @@ module.exports = {
                 if (status === 'CONFIRMED') {
                     const canvas = createCanvas(200, 200);
                     const ctx = canvas.getContext('2d');
+                    const color = [181, 2, 22];
                     const embeds = [];
                     const pages = {};
                     var moviesField = { name: 'Nombre', value: '', inline: true };
