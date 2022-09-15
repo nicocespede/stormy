@@ -125,12 +125,8 @@ module.exports = {
                 else {
                     const accInfo = account.name.split('#');
                     await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                        if (!mmr.data.currenttierpatched)
-                            reply.embeds = [new EmbedBuilder()
-                                .setColor([7, 130, 169])
-                                .setDescription('❌ Lo siento, ocurrió un error, intentá de nuevo.')];
-                        else {
-                            const thumb = mmr.data.currenttierpatched === null ? `assets/thumbs/ranks/unranked.png`
+                        try {
+                            const thumb = !mmr.data.currenttierpatched ? `assets/thumbs/ranks/unranked.png`
                                 : `assets/thumbs/ranks/${mmr.data.currenttierpatched.toLowerCase()}.png`;
                             reply.embeds = [new EmbedBuilder()
                                 .setTitle(`**${account.name}**`)
@@ -141,6 +137,10 @@ module.exports = {
                             if (account.bannedUntil != '')
                                 reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
                             reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
+                        } catch {
+                            reply.embeds = [new EmbedBuilder()
+                                .setColor([7, 130, 169])
+                                .setDescription('❌ Lo siento, ocurrió un error, intentá de nuevo.')];
                         }
                     }).catch(console.error);
                 }
