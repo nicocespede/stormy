@@ -71,8 +71,29 @@ module.exports = {
     getGames: () => games,
     updateGames: async () => {
         await fetch(`${githubRawURL}/games.json`)
-            .then(res => res.text()).then(data => {
-                games = JSON.parse(data);
+            .then(res => res.text()).then(async data => {
+                const SteamAPI = require('steamapi');
+                const steam = new SteamAPI(process.env.STEAM_API_KEY);
+                games = [];
+                const parsed = JSON.parse(data);
+                for (const key in parsed)
+                    if (Object.hasOwnProperty.call(parsed, key)) {
+                        const element = parsed[key];
+                        if (key === 'steam') {
+                            for (const game of element)
+                                await steam.getGameDetails(game.id).then(data => {
+                                    games.push({
+                                        id: game.id,
+                                        name: `${data.name} (${data.release_date.date.split(',').pop().trim()})`,
+                                        version: game.version,
+                                        lastUpdate: game.lastUpdate,
+                                        imageURL: data.header_image,
+                                        instructions: game.instructions
+                                    });
+                                }).catch(console.error);
+                        } else
+                            games.concat(element);
+                    }
                 console.log('> games.json cargado');
             }).catch(err => console.log('> Error al cargar games.json', err));
         return games;

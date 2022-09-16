@@ -2,15 +2,14 @@ const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getGames, updateGames } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 
-async function getGameInfo(gameName) {
+async function getGameInfo(gameId) {
     const fetch = require('node-fetch');
     const info = {};
     const games = !getGames() ? await updateGames() : getGames();
-    const game = games.filter(element => element.name === gameName)[0];
+    const game = games.filter(element => element.id === gameId)[0];
     const files = game.instructions ? game.instructions.concat('links') : ['links'];
-    const filteredName = gameName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
     for (const file of files)
-        await fetch(`${githubRawURL}/games/${filteredName}/${file}.txt`)
+        await fetch(`${githubRawURL}/games/${gameId}/${file}.txt`)
             .then(res => res.text()).then(data => {
                 info[file] = data;
             }).catch(err => console.log(`> Error al cargar ${file}.txt`, err));
@@ -62,7 +61,7 @@ module.exports = {
                 reply.content = `⚠ El número ingresado es inválido.`;
             else {
                 const game = games[index];
-                await getGameInfo(game.name).then(info => {
+                await getGameInfo(game.id).then(info => {
                     const fields = [];
                     for (const key in info)
                         if (Object.hasOwnProperty.call(info, key))
