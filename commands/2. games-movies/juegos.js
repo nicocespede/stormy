@@ -34,6 +34,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, args, interaction, user, instance, guild }) => {
+        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
         const number = message ? args[0] : interaction.options.getInteger('numero');
         const games = !getGames() ? await updateGames() : getGames();
         var reply = { custom: true, ephemeral: true };
@@ -62,15 +63,15 @@ module.exports = {
             else {
                 const game = games[index];
                 await getGameInfo(game.name).then(info => {
-                    var fields = [];
+                    const fields = [];
                     for (const key in info)
                         if (Object.hasOwnProperty.call(info, key))
                             if (key === 'links') {
                                 const element = info[key];
                                 var field = { name: '\u200b', value: '' };
-                                var fullString = element.split('\n');
+                                const fullString = element.split('\n');
                                 fullString.forEach(line => {
-                                    var aux = field.value + line + '\n';
+                                    const aux = field.value + line + '\n';
                                     if (aux.length <= 1024)
                                         field.value += line + '\n';
                                     else {
@@ -91,6 +92,7 @@ module.exports = {
                 }).catch(console.error);
             }
         }
-        return reply;
+        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        return;
     }
 }

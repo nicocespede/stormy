@@ -10,20 +10,24 @@ module.exports = client => {
 
             // check for streaming or deafen/undeafen updates
             if (oldState.member.id != ids.users.bot && oldState.channelId === newState.channelId && oldState.channelId != ids.channels.afk) {
-                const membersInChannel = getMembersStatus(oldState.channel);
-
                 // start counter if user undeafens or starts streaming while being deafened,
                 // and stop counter if user deafens and is not streaming
                 if ((oldState.serverDeaf != newState.serverDeaf) || (oldState.selfDeaf != newState.selfDeaf)
                     || (oldState.streaming != newState.streaming)) {
-                    if (membersInChannel.size === 2)
+
+                    const membersInChannel = getMembersStatus(oldState.channel);
+
+                    if (membersInChannel.size >= 2) {
                         membersInChannel.valid.forEach(member => {
                             if (!timestamps[member.id])
                                 addTimestamp(member.id, new Date());
                         });
-                    else if (membersInChannel.size > 2) {
-                        if (!timestamps[oldState.member.id])
-                            addTimestamp(oldState.member.id, new Date());
+                        membersInChannel.invalid.forEach(async member => {
+                            if (timestamps[member.id]) {
+                                await pushDifference(member.id, member.user.tag);
+                                removeTimestamp(member.id);
+                            }
+                        });
                     } else
                         oldState.channel.members.each(async member => {
                             if (member.id != ids.users.bot)
@@ -52,8 +56,8 @@ module.exports = client => {
                     removeTimestamp(newState.member.id);
                 }
             } else {
-                var id = newState.member ? newState.member.id : newState.id;
-                var tag = newState.member ? newState.member.user.tag : newState.id;
+                const id = newState.member ? newState.member.id : newState.id;
+                const tag = newState.member ? newState.member.user.tag : newState.id;
                 if (timestamps[id]) {
                     await pushDifference(id, tag);
                     removeTimestamp(id);

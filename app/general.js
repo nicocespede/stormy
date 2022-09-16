@@ -226,17 +226,20 @@ const secondsToFull = (seconds) => {
 
 const getMembersStatus = channel => {
     var membersSize = channel.members.size;
-    var valid = [];
+    const valid = [];
+    const invalid = [];
     channel.members.each(member => {
         if (member.id === ids.users.bot) {
             membersSize--;
             valid.push(member);
-        } else if (member.voice.deaf && !member.voice.streaming)
+        } else if (member.voice.deaf && !member.voice.streaming) {
             membersSize--;
+            invalid.push(member);
+        }
         else
             valid.push(member);
     });
-    return { size: membersSize, valid: valid };
+    return { size: membersSize, valid: valid, invalid: invalid };
 };
 
 const checkValorantBansExpiration = async () => {
