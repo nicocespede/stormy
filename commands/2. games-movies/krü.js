@@ -12,7 +12,7 @@ module.exports = {
     callback: async ({ message, interaction }) => {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
-        var reply = { ephemeral: true };
+        const reply = { ephemeral: true };
         const duelsField = { name: 'Enfrentamiento', value: '', inline: true };
         const datesField = { name: 'Fecha', value: '', inline: true };
         const urlsField = { name: 'Detalles', value: '', inline: true };
@@ -39,7 +39,14 @@ module.exports = {
         else
             reply.embeds[0].setDescription('_No hay partidos programados por el momento._');
         reply.files = ['./assets/thumbs/kru.png'];
-        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        try {
+            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        } catch {
+            reply.content = '❌ Lo siento, ocurrió un error al obtener la información de los partidos.'
+            reply.embeds = [];
+            reply.files = [];
+            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        }
         return;
     }
 }

@@ -264,7 +264,7 @@ const checkValorantBansExpiration = async () => {
 const getUpcomingMatches = async () => {
     const urlBase = 'https://www.vlr.gg';
     const url = urlBase + '/team/matches/2355/kr-esports/?group=upcoming';
-    const { data } = await axios.get(url);
+    const { data } = await axios.get(url).catch(_ => console.log("> Error al obtener información de partidos programados de KRÜ"));
     const $ = cheerio.load(data);
     const a = $('.wf-card.fc-flex.m-item');
     const matches = [];
@@ -537,10 +537,15 @@ module.exports = {
             const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
             const difference = date - today;
             const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
-            if (difference <= oneDay && difference >= (oneDay - oneMinute)
-                || difference <= (oneMinute * 10) && difference >= (oneMinute * 9))
+            if (difference <= oneDay && difference >= (oneDay - oneMinute))
                 client.channels.fetch(ids.channels.anuncios).then(channel => {
-                    channel.send(`<@&${ids.roles.kru}>\n\nMañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)}**. ¡Vamos KRÜ! 🤟🏼`).catch(console.error);
+                    channel.send(`<@&${ids.roles.kru}>\n\nMañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)}**.`)
+                        .catch(_ => console.log("> Error al enviar alerta de partido de KRÜ"));
+                }).catch(console.error);
+            if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9))
+                client.channels.fetch(ids.channels.anuncios).then(channel => {
+                    channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! 🤟🏼`)
+                        .catch(_ => console.log("> Error al enviar alerta de partido de KRÜ"));
                 }).catch(console.error);
         });
     },
