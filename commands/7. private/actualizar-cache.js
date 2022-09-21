@@ -28,6 +28,7 @@ module.exports = {
     ownerOnly: true,
 
     callback: async ({ client, interaction }) => {
+        await interaction.deferReply({ ephemeral: false });
         const name = interaction.options.getString('nombre');
         if (name === 'games-and-movies') {
             var oldGames;
@@ -48,8 +49,8 @@ module.exports = {
                 oldMovies.forEach(element => {
                     if (movie.name === element.name) {
                         found = true;
-                        var updated = [];
-                        var added = [];
+                        const updated = [];
+                        const added = [];
                         for (const key in movie.lastUpdate)
                             if (Object.hasOwnProperty.call(movie.lastUpdate, key))
                                 if (!element.lastUpdate[key])
@@ -114,6 +115,8 @@ module.exports = {
         //TEMP SOLUTION
         else if (name === 'tracks-blacklist')
             await updateBlacklistedSongs();//
-        return 'Caché actualizado.';
+
+        await interaction.editReply({ content: 'Caché actualizado.' });
+        return;
     }
 }
