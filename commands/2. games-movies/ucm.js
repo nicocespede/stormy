@@ -2,6 +2,7 @@ const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
+const { lastUpdateToString } = require('../../app/general');
 const { updateMcuFilters } = require('../../app/mongodb');
 const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
 
@@ -29,17 +30,6 @@ async function getMovieInfo(movieName) {
                 info[version] = data;
             }).catch(err => console.log(`> Error al cargar ${version}.txt`, err));
     return info;
-}
-
-function lastUpdateToString(lastUpdate) {
-    var date = new Date(`${lastUpdate.substring(6, 10)}/${lastUpdate.substring(3, 5)}/${lastUpdate.substring(0, 2)}`);
-    var today = new Date();
-    if (date.getMonth() == today.getMonth() && date.getFullYear() == today.getFullYear())
-        if (date.getDate() == today.getDate())
-            return 'hoy';
-        else if (date.getDate() == today.getDate() - 1)
-            return 'ayer';
-    return 'el ' + lastUpdate;
 }
 
 module.exports = {
@@ -119,7 +109,7 @@ module.exports = {
                         embeds.push(new EmbedBuilder()
                             .setTitle(`${title} - ${i.customId} (${serverName})`)
                             .setColor(mcuMovies[index].color)
-                            .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId])}.\n` + lines.join('\n') + `\n${password}`)
+                            .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId], false)}.\n` + lines.join('\n') + `\n${password}`)
                             .setThumbnail(`attachment://thumb.png`));
                     });
 

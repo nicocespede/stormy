@@ -96,7 +96,7 @@ module.exports = {
                     }
                 console.log('> games.json cargado');
             }).catch(err => console.log('> Error al cargar games.json', err));
-        return games;
+        return games.sort((a, b) => a.name.localeCompare(b.name));
     },
 
     getBirthdays: () => birthdays,

@@ -28,7 +28,7 @@ module.exports = {
     ownerOnly: true,
 
     callback: async ({ client, interaction }) => {
-        await interaction.deferReply({ ephemeral: false });
+        await interaction.deferReply({ ephemeral: true });
         const name = interaction.options.getString('nombre');
         if (name === 'games-and-movies') {
             var oldGames;
@@ -69,7 +69,7 @@ module.exports = {
             });
             const games = await updateGamesCache();
             games.forEach(game => {
-                var found = false;
+                let found = false;
                 oldGames.forEach(element => {
                     if (game.name === element.name) {
                         found = true;

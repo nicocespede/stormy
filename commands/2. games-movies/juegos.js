@@ -1,6 +1,8 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
+const { createCanvas } = require('canvas');
 const { getGames, updateGames } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
+const { lastUpdateToString } = require('../../app/general');
 
 async function getGameInfo(gameId) {
     const fetch = require('node-fetch');
@@ -36,16 +38,21 @@ module.exports = {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
         const number = message ? args[0] : interaction.options.getInteger('numero');
         const games = !getGames() ? await updateGames() : getGames();
-        var reply = { custom: true, ephemeral: true };
-        var color = [234, 61, 78];
+        const reply = { custom: true, ephemeral: true };
+        const color = [234, 61, 78];
         if (!number) {
-            var gamesField = { name: 'Juego', value: '', inline: true };
-            var updatesField = { name: 'Última actualización', value: ``, inline: true };
+            const canvas = createCanvas(200, 200);
+            const ctx = canvas.getContext('2d');
+            const gamesField = { name: 'Juego', value: '', inline: true };
+            const updatesField = { name: 'Última actualización', value: ``, inline: true };
             for (var i = 0; i < games.length; i++) {
                 const name = games[i].name;
                 const date = games[i].lastUpdate;
-                gamesField.value += `** ${i + 1}.** ${name}\n\n`;
-                updatesField.value += `*${date}*\n\n`;
+                const newGame = `** ${i + 1}.** ${name}\n\n`;
+                gamesField.value += newGame;
+                updatesField.value += `*${lastUpdateToString(date, true)}*\n\n`;
+                if (ctx.measureText(newGame).width >= 254)
+                    updatesField.value += `\n`;
             }
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Juegos crackeados**`)

@@ -550,5 +550,16 @@ module.exports = {
         });
     },
 
-    convertTime
+    convertTime,
+
+    lastUpdateToString: (lastUpdate, upperCase) => {
+        const date = new Date(`${lastUpdate.substring(6, 10)}/${lastUpdate.substring(3, 5)}/${lastUpdate.substring(0, 2)}`);
+        const today = new Date();
+        if (date.getMonth() == today.getMonth() && date.getFullYear() == today.getFullYear())
+            if (date.getDate() == today.getDate())
+                return !upperCase ? 'hoy' : 'Hoy';
+            else if (date.getDate() == today.getDate() - 1)
+                return !upperCase ? 'ayer' : 'Ayer';
+        return `${(!upperCase ? 'el ' : '')}` + lastUpdate;
+    }
 }
