@@ -110,6 +110,8 @@ module.exports = {
             const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
             const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
             const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
+            const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo la información de la cuenta...` })
+                : await interaction.deferReply({ ephemeral: true });
             if (channel.type != ChannelType.DM)
                 reply.content = 'Este comando solo se puede utilizar por mensajes directos.';
             else if (!smurfRole.members.has(user.id))
@@ -145,7 +147,8 @@ module.exports = {
                     }).catch(console.error);
                 }
             }
-            return reply;
+            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+            return;
         }
     }
 }

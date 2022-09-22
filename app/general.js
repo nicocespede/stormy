@@ -63,7 +63,7 @@ async function generateBirthdayImage(user) {
     context.closePath();
     // Clip off the region you drew on
     context.clip();
-    const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
+    const avatar = await Canvas.loadImage(user.displayAvatarURL().replace('.webp', '.jpg'));
     // Draw a shape onto the main canvas
     context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
     return new AttachmentBuilder(canvas.toBuffer());
@@ -383,7 +383,7 @@ module.exports = {
         console.log('> Recolector de reacciones desactivado');
     },
 
-    generateWelcomeImage: async (user) => {
+    generateWelcomeImage: async user => {
         const canvas = Canvas.createCanvas(1170, 720);
         const context = canvas.getContext('2d');
         var background = await Canvas.loadImage(`./assets/welcome${getImageType()}.png`);
@@ -414,7 +414,7 @@ module.exports = {
         context.closePath();
         // Clip off the region you drew on
         context.clip();
-        const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'jpg' }));
+        const avatar = await Canvas.loadImage(user.displayAvatarURL().replace('.webp', '.jpg'));
         // Draw a shape onto the main canvas
         context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
         return new AttachmentBuilder(canvas.toBuffer());
