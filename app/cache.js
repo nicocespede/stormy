@@ -347,10 +347,10 @@ module.exports = {
             });
             kruMatches = matches;
             console.log(chalk.green("> Caché de partidos programados de KRÜ actualizado"));
-        } catch {
+        } catch (e) {
             if (!kruMatches)
                 kruMatches = [];
-            console.log(chalk.red("> Error al obtener información de partidos programados de KRÜ"));
+            console.log(chalk.red(`> Error al obtener información de partidos programados de KRÜ\n${e}`));
         }
         return kruMatches;
     }
