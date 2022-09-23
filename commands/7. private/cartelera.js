@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
 const fs = require('fs');
 const chalk = require('chalk');
+chalk.level = 1;
 const { getIds, updateIds } = require('../../app/cache');
 
 async function getRandomThumb(path) {

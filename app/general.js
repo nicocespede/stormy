@@ -3,6 +3,7 @@ const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
 const chalk = require('chalk');
+chalk.level = 1;
 const cache = require('./cache');
 const { relativeSpecialDays, currencies } = require('./constants');
 const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,

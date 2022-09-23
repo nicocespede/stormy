@@ -1,4 +1,5 @@
 const chalk = require('chalk');
+chalk.level = 1;
 const { getReactionCollectorInfo, updateReactionCollectorInfo, getIds, updateIds } = require('../../app/cache');
 const { stopReactionCollector } = require('../../app/general');
 const { updateBillboardCollectorMessage } = require('../../app/mongodb');

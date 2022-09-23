@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const convert = require('xml-js');
 const axios = require('axios');
 const chalk = require('chalk');
+chalk.level = 1;
 
 function formatNumber(value, decimalPlaces) {
     let decimals = decimalPlaces || 2;

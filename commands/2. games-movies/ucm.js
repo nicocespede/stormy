@@ -1,6 +1,7 @@
 const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
+chalk.level = 1;
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');

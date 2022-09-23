@@ -1,6 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
+chalk.level = 1;
 const { getGames, updateGames } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');

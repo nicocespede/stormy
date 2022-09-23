@@ -1,4 +1,5 @@
 const chalk = require('chalk');
+chalk.level = 1;
 const banSchema = require('../models/ban-schema');
 const birthdaySchema = require('../models/birthday-schema');
 const crosshairSchema = require('../models/crosshair-schema');

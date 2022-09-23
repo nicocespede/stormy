@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { ApplicationCommandOptionType } = require('discord.js');
 const chalk = require('chalk');
+chalk.level = 1;
 const { prefix } = require('../../app/constants');
 const { getIds, updateIds } = require('../../app/cache');
 

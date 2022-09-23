@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
+chalk.level = 1;
 const { getStats, updateStats, addTimestamp, getTimestamps, getIds, updateIds } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
 const Versions = {

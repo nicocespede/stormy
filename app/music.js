@@ -1,6 +1,7 @@
 const { QueryType } = require("discord-player");
 const { EmbedBuilder } = require("discord.js");
 const chalk = require('chalk');
+chalk.level = 1;
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras } = require("./cache");
 const { musicActions } = require("./constants");
 const { addQueue } = require("./mongodb");
