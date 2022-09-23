@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
 const chalk = require('chalk');
-chalk.level = 1;
+console.log(chalk.supportsColor)
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
     countConnectedMembers, checkKruUpcomingMatches } = require('./app/general');
