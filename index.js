@@ -3,6 +3,7 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
+const chalk = require('chalk');
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
     countConnectedMembers, checkKruUpcomingMatches } = require('./app/general');
@@ -122,7 +123,7 @@ client.on('ready', async () => {
             });
         }
     }).on('connectionError', (queue, error) => {
-        console.log(error);
+        console.log(chalk.red(error));
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -132,7 +133,7 @@ client.on('ready', async () => {
         if (!queue.destroyed)
             queue.destroy();
     }).on('error', (queue, error) => {
-        console.log(error);
+        console.log(chalk.red(error));
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -147,7 +148,7 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    console.log(`¡Loggeado como ${client.user.tag}!`);
+    console.log(chalk.green(`¡Loggeado como ${client.user.tag}!`));
 
     interval = setInterval(async function () {
         cache.addMinuteUp();
@@ -160,7 +161,7 @@ client.on('ready', async () => {
         if (minutesUp % 60 === 0) {
             const timestamps = cache.getTimestamps();
             if (Object.keys(timestamps).length > 0) {
-                console.log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`);
+                console.log(chalk.blue(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`));
                 for (const key in timestamps)
                     if (Object.hasOwnProperty.call(timestamps, key)) {
                         await pushDifference(key);
@@ -175,10 +176,10 @@ client.on('ready', async () => {
     }, 60 * 1000);
 });
 
-client.rest.on('rateLimited', data => console.log('> Se recibió un límite de tarifa:\n', data));
+client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un límite de tarifa:\n${data}`)));
 
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
-    console.log('> Reinicio inminente...');
+    console.log(chalk.yellow('> Reinicio inminente...'));
     // disconnects music bot
     const ids = !getIds() ? await updateIds() : getIds();
     await emergencyShutdown(client, ids.guilds.default);
@@ -186,7 +187,7 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     // send stats
     const timestamps = cache.getTimestamps();
     if (Object.keys(timestamps).length > 0) {
-        console.log('> Enviando estadísticas a la base de datos');
+        console.log(chalk.yellow('> Enviando estadísticas a la base de datos'));
         for (const key in timestamps)
             if (Object.hasOwnProperty.call(timestamps, key))
                 await pushDifference(key);
@@ -194,12 +195,12 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
 
     //clears 1 minute interval
     if (interval) {
-        console.log('> Terminando intervalo de 1 minuto');
+        console.log(chalk.yellow('> Terminando intervalo de 1 minuto'));
         clearInterval(interval);
     }
 
     //ends discord client
-    console.log('> Desconectando bot');
+    console.log(chalk.yellow('> Desconectando bot'));
     client.destroy();
 });
 

@@ -1,8 +1,9 @@
 const { AttachmentBuilder, ChannelType } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
-const cache = require('./cache');
 const Canvas = require('canvas');
+const chalk = require('chalk');
+const cache = require('./cache');
 const { relativeSpecialDays, currencies } = require('./constants');
 const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,
     addStat, updateStat } = require('./mongodb');
@@ -256,7 +257,7 @@ const checkValorantBansExpiration = async () => {
                 const splitDate = account.bannedUntil.split('/');
                 if (today > convertTZ(`${splitDate[1]}/${splitDate[0]}/${splitDate[2]}`, 'America/Argentina/Buenos_Aires')) {
                     updated = true;
-                    await updateSmurf(command, '').catch(console.log);
+                    await updateSmurf(command, '').catch(console.error);
                 }
             }
         }
@@ -339,19 +340,19 @@ module.exports = {
                         reactionCollector.on('collect', (r, user) => {
                             guild.members.fetch(user.id).then(member => {
                                 member.roles.add(role.id);
-                                console.log(`> Rol 'función' asignado a ${member.user.tag}`);
+                                console.log(chalk.green(`> Rol 'función' asignado a ${member.user.tag}`));
                             }).catch(console.error);
                         });
                     }).catch(console.error);
                 }).catch(console.error);
-                console.log('> Recolector de reacciones activado');
+                console.log(chalk.green('> Recolector de reacciones activado'));
             }).catch(console.error);
         }).catch(console.error);
     },
 
     stopReactionCollector: () => {
         reactionCollector.stop();
-        console.log('> Recolector de reacciones desactivado');
+        console.log(chalk.yellow('> Recolector de reacciones desactivado'));
     },
 
     generateWelcomeImage: async user => {
@@ -430,7 +431,7 @@ module.exports = {
                 for (const key in banned.bans)
                     if (!bans.has(key)) {
                         needUpdate = true;
-                        console.log(`> El ban de ${banned.bans[key].user} no corresponde a este servidor`);
+                        console.log(chalk.yellow(`> El ban de ${banned.bans[key].user} no corresponde a este servidor`));
                         await deleteBan(key);
                     }
                 if (needUpdate)
@@ -462,7 +463,7 @@ module.exports = {
             const totalMembersName = `👥 Totales: ${membersCounter}`;
             guild.channels.fetch(ids.channels.members).then(channel => {
                 if (channel.name !== totalMembersName)
-                    channel.setName(totalMembersName).then(_ => console.log('> Contador de miembros actualizado')).catch(console.error);
+                    channel.setName(totalMembersName).then(_ => console.log(chalk.blue('> Contador de miembros actualizado'))).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
     },
@@ -475,7 +476,7 @@ module.exports = {
             const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
             guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
                 if (channel.name !== connectedMembersName)
-                    channel.setName(connectedMembersName).then(_ => console.log('> Contador de miembros conectados actualizado')).catch(console.error);
+                    channel.setName(connectedMembersName).then(_ => console.log(chalk.blue('> Contador de miembros conectados actualizado'))).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
     },
@@ -514,12 +515,12 @@ module.exports = {
             if (difference <= oneDay && difference >= (oneDay - oneMinute))
                 client.channels.fetch(ids.channels.anuncios).then(channel => {
                     channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)} hs**.`)
-                        .catch(_ => console.log("> Error al enviar alerta de partido de KRÜ"));
+                        .catch(_ => console.log(chalk.red("> Error al enviar alerta de partido de KRÜ")));
                 }).catch(console.error);
             if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9))
                 client.channels.fetch(ids.channels.anuncios).then(channel => {
                     channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
-                        .catch(_ => console.log("> Error al enviar alerta de partido de KRÜ"));
+                        .catch(_ => console.log(chalk.red("> Error al enviar alerta de partido de KRÜ")));
                 }).catch(console.error);
         });
     },

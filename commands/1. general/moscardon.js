@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { ApplicationCommandOptionType } = require('discord.js');
+const chalk = require('chalk');
 const { prefix } = require('../../app/constants');
 const { getIds, updateIds } = require('../../app/cache');
 
@@ -10,7 +11,7 @@ async function getRandomMoscardon() {
         fs.readdir('./assets/moscas', function (err, files) {
             //handling error
             if (err)
-                return console.log('Unable to scan directory: ' + err);
+                return console.log(chalk.red('Unable to scan directory: ' + err));
             var random = Math.floor(Math.random() * 4);
             fileName = files[random];
         });

@@ -1,5 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { createCanvas } = require('canvas');
+const chalk = require('chalk');
 const { getGames, updateGames } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
@@ -14,7 +15,7 @@ async function getGameInfo(gameId) {
         await fetch(`${githubRawURL}/games/${gameId}/${file}.txt`)
             .then(res => res.text()).then(data => {
                 info[file] = data;
-            }).catch(err => console.log(`> Error al cargar ${file}.txt`, err));
+            }).catch(err => console.log(chalk.red(`> Error al cargar ${file}.txt\n${err}`)));
     return info;
 }
 

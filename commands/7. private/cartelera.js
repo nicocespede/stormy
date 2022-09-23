@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
 const fs = require('fs');
+const chalk = require('chalk');
 const { getIds, updateIds } = require('../../app/cache');
 
 async function getRandomThumb(path) {
@@ -10,7 +11,7 @@ async function getRandomThumb(path) {
         fs.readdir(`./assets/thumbs/${path}`, function (err, files) {
             //handling error
             if (err)
-                return console.log('Unable to scan directory: ' + err);
+                return console.log(chalk.red('Unable to scan directory: ' + err));
             var random = Math.floor(Math.random() * files.length);
             fileName = files[random];
         });

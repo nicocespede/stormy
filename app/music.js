@@ -1,5 +1,6 @@
 const { QueryType } = require("discord-player");
 const { EmbedBuilder } = require("discord.js");
+const chalk = require('chalk');
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras } = require("./cache");
 const { musicActions } = require("./constants");
 const { addQueue } = require("./mongodb");
@@ -72,7 +73,7 @@ module.exports = {
         updateLastAction(musicActions.RESTARTING);
         const queue = client.player.getQueue(guildId);
         if (queue) {
-            console.log('> Guardando cola de reproducción actual');
+            console.log(chalk.yellow('> Guardando cola de reproducción actual'));
             await queue.metadata.send({
                 embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription(`⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`)
@@ -109,7 +110,7 @@ module.exports = {
             const embed = new EmbedBuilder().setColor([195, 36, 255]);
 
             if (voiceChannel.members.size > 0) {
-                console.log('> Reanudando reproducción interrumpida por el reinicio');
+                console.log(chalk.yellow('> Reanudando reproducción interrumpida por el reinicio'));
 
                 var res = await client.player.search(current.url, {
                     requestedBy: await guild.members.fetch(current.requestedBy),

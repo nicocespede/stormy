@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const { getReactionCollectorInfo, updateReactionCollectorInfo, getIds, updateIds } = require('../../app/cache');
 const { stopReactionCollector } = require('../../app/general');
 const { updateBillboardCollectorMessage } = require('../../app/mongodb');
@@ -23,7 +24,7 @@ module.exports = {
                     guild.members.fetch().then(members => {
                         members.forEach(member => {
                             if (member.roles.cache.has(role.id))
-                                member.roles.remove(role).then(() => console.log(`> Rol 'función' quitado a ${member.user.tag}`)).catch(console.error);
+                                member.roles.remove(role).then(() => console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`))).catch(console.error);
                         });
                     }).catch(console.error);
                 }).catch(console.error);

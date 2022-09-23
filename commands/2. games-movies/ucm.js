@@ -1,5 +1,6 @@
 const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
+const chalk = require('chalk');
 const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
@@ -28,7 +29,7 @@ async function getMovieInfo(movieName) {
         await fetch(`${githubRawURL}/mcu/${filteredName}/${version}.txt`)
             .then(res => res.text()).then(data => {
                 info[version] = data;
-            }).catch(err => console.log(`> Error al cargar ${version}.txt`, err));
+            }).catch(err => console.log(chalk.red(`> Error al cargar ${version}.txt\n${err}`)));
     return info;
 }
 

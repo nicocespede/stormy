@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
+const chalk = require('chalk');
 const { getStats, updateStats, addTimestamp, getTimestamps, getIds, updateIds } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
 const Versions = {
@@ -57,7 +58,7 @@ module.exports = {
                     aux2 = timeField.value + `${timeToString('full', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
                     if (ctx.measureText(aux2).width >= 182)
                         aux2 = timeField.value + `${timeToString('short', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
-                }).catch(() => console.log(`> El usuario con ID ${key} ya no está en el servidor.`));
+                }).catch(() => console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`)));
                 if (aux1.length <= 1024 && aux2.length <= 1024) {
                     usersField.value = aux1;
                     timeField.value = aux2;

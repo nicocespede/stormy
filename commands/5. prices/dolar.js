@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const convert = require('xml-js');
 const axios = require('axios');
+const chalk = require('chalk');
 
 function formatNumber(value, decimalPlaces) {
     let decimals = decimalPlaces || 2;
@@ -40,7 +41,7 @@ module.exports = {
             reply.files = [`assets/thumbs/dolar.png`];
         } catch (e) {
             reply.content = `Lo siento <@${user.id}>, pero algo salió mal.`;
-            console.log(e);
+            console.log(chalk.red(e));
         }
         return reply;
     }

@@ -4,6 +4,7 @@ const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
 const axios = require('axios');
 const cheerio = require('cheerio');
+const chalk = require('chalk');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
 var mcu;
@@ -39,8 +40,8 @@ const updateMcu = async () => {
     await fetch(`${githubRawURL}/mcu.json`)
         .then(res => res.text()).then(data => {
             mcu = JSON.parse(data);
-            console.log('> mcu.json cargado');
-        }).catch(err => console.log('> Error al cargar mcu.json', err));
+            console.log(chalk.green('> mcu.json cargado'));
+        }).catch(err => console.log(chalk.red(`> Error al cargar mcu.json\n${err}`)));
     return mcu;
 };
 
@@ -53,7 +54,7 @@ module.exports = {
         const mcuFiltersSchema = require('../models/mcuFilters-schema');
         const result = await mcuFiltersSchema.findById(1, 'filters');
         filters = result.filters;
-        console.log('> Caché de filtros actualizado');
+        console.log(chalk.green('> Caché de filtros actualizado'));
         return filters;
     },
 
@@ -70,7 +71,7 @@ module.exports = {
             });
             mcuMovies = newArray;
         }
-        console.log('> Caché de UCM actualizado');
+        console.log(chalk.green('> Caché de UCM actualizado'));
         return mcuMovies;
     },
 
@@ -98,8 +99,8 @@ module.exports = {
                         } else
                             games.concat(element);
                     }
-                console.log('> games.json cargado');
-            }).catch(err => console.log('> Error al cargar games.json', err));
+                console.log(chalk.green('> games.json cargado'));
+            }).catch(err => console.log(chalk.red(`> Error al cargar games.json\n${err}`)));
         return games.sort((a, b) => a.name.localeCompare(b.name));
     },
 
@@ -116,7 +117,7 @@ module.exports = {
                 user: element.username
             };
         });
-        console.log('> Caché de cumpleaños actualizado');
+        console.log(chalk.green('> Caché de cumpleaños actualizado'));
         return birthdays;
     },
 
@@ -134,7 +135,7 @@ module.exports = {
                 user: element.tag
             };
         });
-        console.log('> Caché de baneados actualizado');
+        console.log(chalk.green('> Caché de baneados actualizado'));
         return banned;
     },
 
@@ -146,7 +147,7 @@ module.exports = {
         results.forEach(element => {
             sombraBans.push(element.reason);
         });
-        console.log('> Caché de baneos de Sombra actualizado');
+        console.log(chalk.green('> Caché de baneos de Sombra actualizado'));
         return sombraBans;
     },
 
@@ -160,7 +161,7 @@ module.exports = {
             isActive: result.isActive,
             messageId: result.messageId
         };
-        console.log('> Caché de recolector de reacciones actualizado');
+        console.log(chalk.green('> Caché de recolector de reacciones actualizado'));
         return reactionCollectorInfo;
     },
 
@@ -171,7 +172,7 @@ module.exports = {
             messageId: result.messageId,
             channelId: result.channelId
         };
-        console.log('> Caché de mensaje de roles actualizado');
+        console.log(chalk.green('> Caché de mensaje de roles actualizado'));
         return rolesMessageInfo;
     },
 
@@ -180,7 +181,7 @@ module.exports = {
         const anniversarySchema = require('../models/anniversary-schema');
         const results = await anniversarySchema.find({});
         anniversaries = results;
-        console.log('> Caché de aniversarios actualizado');
+        console.log(chalk.green('> Caché de aniversarios actualizado'));
         return anniversaries;
     },
 
@@ -189,7 +190,7 @@ module.exports = {
         const avatarSchema = require('../models/avatar-schema');
         const result = await avatarSchema.findById(1, 'url');
         avatar = result.url;
-        console.log('> Caché de avatar actualizado');
+        console.log(chalk.green('> Caché de avatar actualizado'));
         return avatar;
     },
 
@@ -208,7 +209,7 @@ module.exports = {
         });
         playlists.names = newNames;
         playlists.urls = newUrls;
-        console.log('> Caché de playlists actualizado');
+        console.log(chalk.green('> Caché de playlists actualizado'));
         return playlists;
     },
 
@@ -225,7 +226,7 @@ module.exports = {
                 seconds: element.seconds
             };
         });
-        console.log('> Caché de estadísticas actualizado');
+        console.log(chalk.green('> Caché de estadísticas actualizado'));
         return stats;
     },
     getTimestamps: () => timestamps,
@@ -241,7 +242,7 @@ module.exports = {
         const results = await thermalPasteDateSchema.find({});
         thermalPasteDates = {};
         results.forEach(element => thermalPasteDates[element._id] = element.date);
-        console.log('> Caché de fechas de cambio de pasta térmica actualizado');
+        console.log(chalk.green('> Caché de fechas de cambio de pasta térmica actualizado'));
         return thermalPasteDates;
     },
 
@@ -260,7 +261,7 @@ module.exports = {
             owner: ch.ownerId,
             imageUrl: ch.imageUrl
         });
-        console.log('> Caché de miras actualizado');
+        console.log(chalk.green('> Caché de miras actualizado'));
         return crosshairs;
     },
 
@@ -276,7 +277,7 @@ module.exports = {
             vip: account.vip,
             bannedUntil: account.bannedUntil
         });
-        console.log('> Caché de smurfs actualizado');
+        console.log(chalk.green('> Caché de smurfs actualizado'));
         return smurfs;
     },
 
@@ -285,8 +286,8 @@ module.exports = {
         await fetch(`${githubRawURL}/tracksNameExtras.json`)
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
-                console.log('> tracksNameExtras.json cargado');
-            }).catch(err => console.log('> Error al cargar tracksNameExtras.json', err));
+                console.log(chalk.green('> tracksNameExtras.json cargado'));
+            }).catch(err => console.log(chalk.red(`> Error al cargar tracksNameExtras.json'\n${err}`)));
         return tracksNameExtras;
     },
 
@@ -307,8 +308,8 @@ module.exports = {
         await fetch(`${githubRawURL}/${fileName}`)
             .then(res => res.text()).then(data => {
                 ids = JSON.parse(data);
-                console.log(`> ${fileName} cargado`);
-            }).catch(err => console.log(`> Error al cargar ${fileName}`, err));
+                console.log(chalk.green(`> ${fileName} cargado`));
+            }).catch(err => console.log(chalk.red(`> Error al cargar ${fileName}\n${err}`)));
         return ids;
     },
 
@@ -345,11 +346,11 @@ module.exports = {
                 matches.push(match);
             });
             kruMatches = matches;
-            console.log("> Caché de partidos programados de KRÜ actualizado")
+            console.log(chalk.green("> Caché de partidos programados de KRÜ actualizado"));
         } catch {
             if (!kruMatches)
                 kruMatches = [];
-            console.log("> Error al obtener información de partidos programados de KRÜ")
+            console.log(chalk.red("> Error al obtener información de partidos programados de KRÜ"));
         }
         return kruMatches;
     }
