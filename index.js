@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
 const chalk = require('chalk');
+chalk.enabled = true;
 chalk.level = 3;
 const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
