@@ -1,4 +1,4 @@
-const { githubRawURL } = require('./constants');
+const { githubRawURL, testing } = require('./constants');
 const fetch = require('node-fetch');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
@@ -26,6 +26,7 @@ var smurfs;
 var tracksNameExtras;
 //TEMP SOLUTION
 var blacklistedSongs;//
+var ids;
 
 const getMcu = () => mcu;
 
@@ -295,5 +296,16 @@ module.exports = {
                 console.log('> blacklistedTracks.json cargado');
             }).catch(err => console.log('> Error al cargar blacklistedTracks.json', err));
         return blacklistedSongs;
-    }//
+    },//
+
+    getIds: () => ids,
+    updateIds: async () => {
+        const fileName = !testing ? 'ids.json' : 'testingIds.json';
+        await fetch(`${githubRawURL}/${fileName}`)
+            .then(res => res.text()).then(data => {
+                ids = JSON.parse(data);
+                console.log(`> ${fileName} cargado`);
+            }).catch(err => console.log(`> Error al cargar ${fileName}`, err));
+        return ids;
+    }
 };

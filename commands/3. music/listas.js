@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { getPlaylists, updatePlaylists } = require('../../app/cache');
-const { prefix, ids } = require('../../app/constants');
+const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../app/cache');
+const { prefix } = require('../../app/constants');
 const { addPlaylist, deletePlaylist } = require('../../app/mongodb');
 
 module.exports = {
@@ -51,8 +51,9 @@ module.exports = {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
-        var reply = { ephemeral: true };
+        const reply = { ephemeral: true };
 
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);

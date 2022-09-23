@@ -1,5 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix, ids } = require('../../app/constants');
+const { prefix } = require('../../app/constants');
+const { getIds, updateIds } = require('../../app/cache');
 
 module.exports = {
     category: 'General',
@@ -26,9 +27,10 @@ module.exports = {
 
     callback: async ({ guild, user, message, args, interaction, instance }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
-        var reply = { custom: true, ephemeral: true };
+        const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         await guild.roles.fetch(ids.roles.banear).then(async role => {
-            var newNickname = args.slice(1).join(' ');
+            const newNickname = args.slice(1).join(' ');
             if (!role.members.has(user.id))
                 reply.content = `Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`;
             else if (!target)

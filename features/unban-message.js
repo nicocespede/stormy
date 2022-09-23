@@ -1,5 +1,5 @@
-const { getBanned, updateBanned } = require("../app/cache");
-const { ids, gifs } = require("../app/constants");
+const { getBanned, updateBanned, getIds, updateIds } = require("../app/cache");
+const { gifs } = require("../app/constants");
 const { deleteBan } = require("../app/mongodb");
 
 module.exports = (client, instance) => {
@@ -7,6 +7,7 @@ module.exports = (client, instance) => {
         const banned = !getBanned().ids ? await updateBanned() : getBanned();
         if (banned.ids.includes(ban.user.id))
             await deleteBan(ban.user.id).then(async () => await updateBanned()).catch(console.error);
+        const ids = !getIds() ? await updateIds() : getIds();
         client.channels.fetch(ids.channels.welcome).then(channel => {
             const { guild } = ban;
             const unbannedMessages = instance.messageHandler.getEmbed(guild, 'BANS', 'UNBANNED');

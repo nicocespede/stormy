@@ -1,8 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
-const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
+const { getStats, updateStats, addTimestamp, getTimestamps, getIds, updateIds } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
-const { ids } = require('../../app/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
@@ -49,6 +48,7 @@ module.exports = {
         const canvas = createCanvas(200, 200);
         const ctx = canvas.getContext('2d');
         var counter = 1;
+        const ids = !getIds() ? await updateIds() : getIds();
         for (const key in stats) {
             if (Object.hasOwnProperty.call(stats, key)) {
                 const stat = stats[key];

@@ -1,8 +1,9 @@
-const { ids } = require("../app/constants");
+const { getIds, updateIds } = require("../app/cache");
 const { generateWelcomeImage, countMembers } = require("../app/general");
 
 module.exports = (client, instance) => {
-    client.on('guildMemberAdd', member => {
+    client.on('guildMemberAdd', async member => {
+        const ids = !getIds() ? await updateIds() : getIds();
         client.channels.fetch(ids.channels.welcome).then(channel => {
             generateWelcomeImage(member.user).then(attachment => {
                 const { guild } = member;

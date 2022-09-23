@@ -1,6 +1,6 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { addBanResponsible } = require('../../app/cache');
-const { prefix, ids } = require('../../app/constants');
+const { addBanResponsible, getIds, updateIds } = require('../../app/cache');
+const { prefix } = require('../../app/constants');
 
 module.exports = {
     category: 'Moderación',
@@ -30,7 +30,8 @@ module.exports = {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const aux = args.splice(1).join(' ');
         const banReason = message ? (aux === '' ? null : aux) : interaction.options.getString('razón');
-        var reply = { custom: true, ephemeral: true };
+        const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         const banRole = await guild.roles.fetch(ids.roles.banear).catch(console.error);
         if (!banRole.members.has(user.id)) {
             reply.content = `Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`;

@@ -5,7 +5,7 @@ const cache = require('./cache');
 const Canvas = require('canvas');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { ids, relativeSpecialDays, currencies } = require('./constants');
+const { relativeSpecialDays, currencies } = require('./constants');
 const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,
     addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -30,10 +30,10 @@ async function generateBirthdayImage(user) {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
     const background = await Canvas.loadImage('./assets/happy-bday.png');
-    var avatarWidth = 300;
-    var avatarHeight = avatarWidth;
-    var avatarX = (background.width / 2) - (avatarWidth / 2);
-    var avatarY = (background.height / 2) - (avatarHeight / 2);
+    const avatarWidth = 300;
+    const avatarHeight = avatarWidth;
+    const avatarX = (background.width / 2) - (avatarWidth / 2);
+    const avatarY = (background.height / 2) - (avatarHeight / 2);
     context.strokeStyle = '#151515';
     context.lineWidth = 2;
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
@@ -41,7 +41,8 @@ async function generateBirthdayImage(user) {
     context.font = applyText(canvas, user.username);
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
-    var usernameWidth = context.measureText(user.username).width;
+    const usernameWidth = context.measureText(user.username).width;
+    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
     if (user.id == ids.users.stormer || user.id == ids.users.darkness) {
         var crownWidth = 60;
         var gapWidth = 5;
@@ -100,10 +101,11 @@ function getImageType() {
     return ``;
 };
 
-function sendSpecialDayMessage(client) {
+const sendSpecialDayMessage = async client => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     const date = today.getDate();
     const month = today.getMonth() + 1;
+    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
     client.channels.fetch(ids.channels.anuncios).then(channel => {
         if (today.getHours() === 0 && today.getMinutes() === 0) {
             if (date === 1 && month === 1)
@@ -123,7 +125,8 @@ function sendSpecialDayMessage(client) {
 };
 
 async function sendAnniversaryAlert(client) {
-    var anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
+    const anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
+    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
     anniversaries.forEach(anniversary => {
         if (anniversary.date.substring(0, 5) == getToday() && !anniversary.flag) {
             client.channels.fetch(ids.channels.anuncios).then(channel => {
@@ -179,6 +182,7 @@ async function updateUsername(client) {
 
 const sendBdayAlert = async (client) => {
     const birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
+    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
     for (const key in birthdays)
         if (Object.hasOwnProperty.call(birthdays, key)) {
             const bday = birthdays[key];
@@ -224,10 +228,11 @@ const secondsToFull = (seconds) => {
     return { days, hours, minutes, seconds };
 };
 
-const getMembersStatus = channel => {
+const getMembersStatus = async channel => {
     var membersSize = channel.members.size;
     const valid = [];
     const invalid = [];
+    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
     channel.members.each(member => {
         if (member.id === ids.users.bot) {
             membersSize--;
@@ -350,7 +355,8 @@ module.exports = {
 
     convertTZ,
 
-    initiateReactionCollector: (client, message) => {
+    initiateReactionCollector: async (client, message) => {
+        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         client.channels.fetch(ids.channels.cartelera).then(async channel => {
             if (message)
                 await channel.send(message).then(async msg => {
@@ -386,11 +392,11 @@ module.exports = {
     generateWelcomeImage: async user => {
         const canvas = Canvas.createCanvas(1170, 720);
         const context = canvas.getContext('2d');
-        var background = await Canvas.loadImage(`./assets/welcome${getImageType()}.png`);
-        var avatarWidth = 250;
-        var avatarHeight = avatarWidth
-        var avatarX = 450;
-        var avatarY = 275;
+        const background = await Canvas.loadImage(`./assets/welcome${getImageType()}.png`);
+        const avatarWidth = 250;
+        const avatarHeight = avatarWidth
+        const avatarX = 450;
+        const avatarY = 275;
         context.strokeStyle = '#151515';
         context.lineWidth = 2;
         context.drawImage(background, 0, 0, canvas.width, canvas.height);
@@ -451,6 +457,7 @@ module.exports = {
     getMembersStatus,
 
     checkBansCorrelativity: async client => {
+        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         await client.guilds.fetch(ids.guilds.default).then(async guild => {
             await guild.bans.fetch().then(async bans => {
                 const banned = !cache.getBanned().ids ? await cache.updateBanned() : cache.getBanned();
@@ -467,11 +474,12 @@ module.exports = {
         }).catch(console.error);
     },
 
-    startStatsCounters: client => {
+    startStatsCounters: async client => {
+        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         client.guilds.fetch(ids.guilds.default).then(guild => {
-            guild.channels.cache.each(channel => {
+            guild.channels.cache.each(async channel => {
                 if (channel.type === ChannelType.GuildVoice && channel.id != ids.channels.afk) {
-                    const membersInChannel = getMembersStatus(channel);
+                    const membersInChannel = await getMembersStatus(channel);
                     if (membersInChannel.size >= 2)
                         membersInChannel.valid.forEach(member => {
                             cache.addTimestamp(member.id, new Date());
@@ -481,10 +489,11 @@ module.exports = {
         }).catch(console.error);
     },
 
-    countMembers: client => {
+    countMembers: async client => {
+        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         client.guilds.fetch(ids.guilds.default).then(async guild => {
             const members = await guild.members.fetch();
-            let membersCounter = members.filter(m => !m.user.bot).size;
+            const membersCounter = members.filter(m => !m.user.bot).size;
             const totalMembersName = `👥 Totales: ${membersCounter}`;
             guild.channels.fetch(ids.channels.members).then(channel => {
                 if (channel.name !== totalMembersName)
@@ -493,10 +502,11 @@ module.exports = {
         }).catch(console.error);
     },
 
-    countConnectedMembers: client => {
+    countConnectedMembers: async client => {
+        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         client.guilds.fetch(ids.guilds.default).then(async guild => {
             const members = await guild.members.fetch();
-            let membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
+            const membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
             const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
             guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
                 if (channel.name !== connectedMembersName)
@@ -532,6 +542,7 @@ module.exports = {
         const oneDay = 1000 * 60 * 60 * 24;
         const oneMinute = 1000 * 60;
         const matches = await getUpcomingMatches();
+        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         matches.forEach(element => {
             const date = convertTZ(`${element.date} ${element.time}`, 'America/Argentina/Buenos_Aires');
             const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

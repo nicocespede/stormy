@@ -1,6 +1,5 @@
-const { getAvatar, updateAvatar } = require("../../app/cache");
+const { getAvatar, updateAvatar, getIds, updateIds } = require("../../app/cache");
 const general = require("../../app/general");
-const { ids } = require("../../app/constants");
 const { updateAvatarString } = require("../../app/mongodb");
 const kruAvatarUrl = './assets/kgprime-kru.png';
 
@@ -14,6 +13,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ client, user, guild }) => {
+        const ids = !getIds() ? await updateIds() : getIds();
         if (user.id != ids.users.stormer && user.id != ids.users.darkness)
             return {
                 content: `Lo siento <@${user.id}>, este comando solo puede ser utilizado por los Dueños de casa.`,

@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-const { ids } = require("../../app/constants");
+const { getIds, updateIds } = require("../../app/cache");
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
@@ -13,8 +13,9 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, channel, client }) => {
-        var errorEmbed = new EmbedBuilder().setColor([195, 36, 255]);
-        var reply = { custom: true, ephemeral: true };
+        const errorEmbed = new EmbedBuilder().setColor([195, 36, 255]);
+        const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;

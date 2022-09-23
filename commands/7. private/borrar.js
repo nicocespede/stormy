@@ -1,4 +1,4 @@
-const { ids } = require("../../app/constants");
+const { getIds, updateIds } = require("../../app/cache");
 
 module.exports = {
     category: 'Privados',
@@ -17,6 +17,7 @@ module.exports = {
         const user = await client.users.fetch(targetId).catch(console.error);
         const dmChannel = await user.createDM().catch(console.error);
         const messages = await dmChannel.messages.fetch().catch(console.error);
+        const ids = !getIds() ? await updateIds() : getIds();
         for (const [_, m] of messages)
             if (m.author.id === ids.users.bot) {
                 await m.delete().catch(console.error);

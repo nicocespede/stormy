@@ -1,6 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { getSmurfs, updateSmurfs } = require('../../app/cache');
-const { ids } = require('../../app/constants');
+const { getSmurfs, updateSmurfs, getIds, updateIds } = require('../../app/cache');
 const { convertTZ } = require('../../app/general');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../app/mongodb');
 
@@ -102,6 +101,7 @@ module.exports = {
 
         const reply = { ephemeral: true };
 
+        const ids = !getIds() ? await updateIds() : getIds();
         if (user.id != ids.users.stormer && user.id != ids.users.darkness) {
             reply.content = `Hola <@${user.id}>, no tenés autorización para usar este comando.`;
             interaction.editReply(reply);

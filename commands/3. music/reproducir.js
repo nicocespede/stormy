@@ -1,6 +1,6 @@
 const { QueryType } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../app/cache');
@@ -24,9 +24,11 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, message, channel, client, interaction, text }) => {
-        var embed = new EmbedBuilder().setColor([195, 36, 255]);
+        const embed = new EmbedBuilder().setColor([195, 36, 255]);
         var song = message ? text : interaction.options.getString('canción');
-        var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+        const reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             reply.files = [];

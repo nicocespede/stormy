@@ -1,9 +1,9 @@
-const { addTimestamp, getTimestamps, removeTimestamp } = require("../app/cache");
-const { ids } = require("../app/constants");
+const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds } = require("../app/cache");
 const { pushDifference, getMembersStatus } = require("../app/general");
 
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
+        const ids = !getIds() ? await updateIds() : getIds();
         if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
 
             const timestamps = getTimestamps();
@@ -15,7 +15,7 @@ module.exports = client => {
                 if ((oldState.serverDeaf != newState.serverDeaf) || (oldState.selfDeaf != newState.selfDeaf)
                     || (oldState.streaming != newState.streaming)) {
 
-                    const membersInChannel = getMembersStatus(oldState.channel);
+                    const membersInChannel = await getMembersStatus(oldState.channel);
 
                     if (membersInChannel.size >= 2) {
                         membersInChannel.valid.forEach(member => {
@@ -42,7 +42,7 @@ module.exports = client => {
 
             //check for new channel
             if (newState.channelId != null && newState.channelId != ids.channels.afk && newState.guild.id === ids.guilds.default) {
-                const membersInNewChannel = getMembersStatus(newState.channel);
+                const membersInNewChannel = await getMembersStatus(newState.channel);
                 if (membersInNewChannel.size === 2)
                     membersInNewChannel.valid.forEach(member => {
                         if (!timestamps[member.id])
@@ -66,7 +66,7 @@ module.exports = client => {
 
             //check for old channel
             if (oldState.channelId != null && oldState.channelId != ids.channels.afk && oldState.guild.id === ids.guilds.default) {
-                const membersInOldChannel = getMembersStatus(oldState.channel);
+                const membersInOldChannel = await getMembersStatus(oldState.channel);
                 if (membersInOldChannel.size < 2)
                     oldState.channel.members.each(async member => {
                         if (member.id != ids.users.bot)

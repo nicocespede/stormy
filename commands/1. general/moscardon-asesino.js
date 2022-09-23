@@ -1,5 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix, ids } = require('../../app/constants');
+const { prefix } = require('../../app/constants');
+const { getIds, updateIds } = require('../../app/cache');
 
 module.exports = {
     aliases: ['moscardondelamuerte', 'moscardóndelamuerte', 'moscardón-asesino'],
@@ -25,7 +26,8 @@ module.exports = {
         var type = 'asesino';
         const cmd = message ? message.content.toLowerCase().split(' ')[0].substring(1) : 'moscardon-asesino';
         if (cmd === 'moscardondelamuerte') type = 'de la muerte';
-        var reply = { custom: true, ephemeral: true };
+        const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",

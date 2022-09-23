@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { ids } = require("../../app/constants");
+const { getIds, updateIds } = require("../../app/cache");
 
 module.exports = {
     category: 'Música',
@@ -21,10 +21,12 @@ module.exports = {
     expectedArgs: '<número>',
     guildOnly: true,
 
-    callback: ({ guild, member, user, message, channel, args, client, interaction }) => {
-        var embed = new EmbedBuilder().setColor([195, 36, 255]);
+    callback: async ({ guild, member, user, message, channel, args, client, interaction }) => {
+        const embed = new EmbedBuilder().setColor([195, 36, 255]);
         const number = message ? args[0] : interaction.options.getInteger('número');
-        var reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+        const reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             reply.files = [];

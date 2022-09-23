@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
 const fs = require('fs');
-const { ids } = require('../../app/constants');
+const { getIds, updateIds } = require('../../app/cache');
 
 async function getRandomThumb(path) {
     var fileName;
@@ -32,7 +32,8 @@ module.exports = {
     callback: ({ message, args, client }) => {
         const url = args[0];
         args = args.splice(1);
-        getRandomThumb('movies').then(fileName => {
+        getRandomThumb('movies').then(async fileName => {
+            const ids = !getIds() ? await updateIds() : getIds();
             const msg = {
                 content: `<@&${ids.roles.cine}>`,
                 embeds: [new EmbedBuilder()

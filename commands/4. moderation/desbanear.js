@@ -1,6 +1,6 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { getBanned, updateBanned } = require('../../app/cache');
-const { prefix, ids } = require('../../app/constants');
+const { getBanned, updateBanned, getIds, updateIds } = require('../../app/cache');
+const { prefix } = require('../../app/constants');
 
 module.exports = {
     category: 'Moderación',
@@ -23,7 +23,8 @@ module.exports = {
 
     callback: async ({ guild, user, message, args, interaction, channel }) => {
         const number = message ? args[0] : interaction.options.getInteger('indice');
-        var reply = { custom: true, ephemeral: true };
+        const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         const banRole = await guild.roles.fetch(ids.roles.banear).catch(console.error);
         const index = parseInt(number) - 1;
         const bans = !getBanned().ids ? await updateBanned() : getBanned();

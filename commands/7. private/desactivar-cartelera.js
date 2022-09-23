@@ -1,5 +1,4 @@
-const { getReactionCollectorInfo, updateReactionCollectorInfo } = require('../../app/cache');
-const { ids } = require('../../app/constants');
+const { getReactionCollectorInfo, updateReactionCollectorInfo, getIds, updateIds } = require('../../app/cache');
 const { stopReactionCollector } = require('../../app/general');
 const { updateBillboardCollectorMessage } = require('../../app/mongodb');
 
@@ -19,6 +18,7 @@ module.exports = {
             updateBillboardCollectorMessage(false, aux.messageId).then(async () => {
                 await updateReactionCollectorInfo();
                 stopReactionCollector();
+                const ids = !getIds() ? await updateIds() : getIds();
                 guild.roles.fetch(ids.roles.funcion).then(role => {
                     guild.members.fetch().then(members => {
                         members.forEach(member => {

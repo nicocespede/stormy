@@ -1,7 +1,7 @@
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
-const { getSmurfs, updateSmurfs } = require('../../app/cache');
-const { prefix, ids } = require('../../app/constants');
+const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../app/cache');
+const { prefix } = require('../../app/constants');
 
 function translateRank(rank) {
     if (rank == null)
@@ -57,6 +57,7 @@ module.exports = {
     callback: async ({ guild, member, user, message, interaction, client, args, channel }) => {
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!id) {
             if (channel.type === ChannelType.DM) {
                 reply.content = 'Este comando solo se puede utilizar en un servidor.';

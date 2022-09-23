@@ -1,8 +1,10 @@
 const translate = require("translate");
-const { ids } = require("../app/constants");
+const { getIds, updateIds } = require("../app/cache");
 const { needsTranslation, getNextMessage, splitMessage } = require("../app/general");
 
-module.exports = client => {
+module.exports = async client => {
+    const ids = !getIds() ? await updateIds() : getIds();
+
     client.on('messageCreate', async message => {
         if (message.channel.id === ids.channels.anuncios && message.author.id != ids.users.bot && !message.author.bot)
             if (needsTranslation(message.content)) {

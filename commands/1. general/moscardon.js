@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix, ids } = require('../../app/constants');
+const { prefix } = require('../../app/constants');
+const { getIds, updateIds } = require('../../app/cache');
 
 async function getRandomMoscardon() {
     var fileName;
@@ -40,7 +41,8 @@ module.exports = {
 
     callback: async ({ user, message, interaction, instance, guild }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
-        var reply = { custom: true, ephemeral: true };
+        const reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",

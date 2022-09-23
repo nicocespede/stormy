@@ -1,5 +1,5 @@
-const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible } = require("../app/cache");
-const { ids, gifs } = require("../app/constants");
+const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible, getIds, updateIds } = require("../app/cache");
+const { gifs } = require("../app/constants");
 const { countMembers } = require("../app/general");
 const { addBan, addSombraBan } = require("../app/mongodb");
 
@@ -15,6 +15,7 @@ module.exports = (client, instance) => {
         const reason = !ban.reason || ban.reason.trim().length === 0 ? null : ban.reason;
         await addBan(ban.user.id, ban.user.tag, responsible, reason).then(async () => {
             await updateBanned();
+            const ids = !getIds() ? await updateIds() : getIds();
             client.channels.fetch(ids.channels.welcome).then(channel => {
                 const msg = { content: '', files: [] }
                 const { guild } = ban;

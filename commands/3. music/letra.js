@@ -1,8 +1,9 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { prefix, ids } = require('../../app/constants');
+const { prefix } = require('../../app/constants');
 const { containsAuthor, cleanTitle } = require("../../app/music");
 const Genius = require("genius-lyrics");
 const { splitMessage } = require('../../app/general');
+const { getIds, updateIds } = require('../../app/cache');
 const Client = new Genius.Client();
 
 module.exports = {
@@ -27,6 +28,7 @@ module.exports = {
         const messageOrInteraction = message ? message : interaction;
         const song = message ? text : interaction.options.getString('canción');
         var reply = { custom: true, ephemeral: true };
+        const ids = !getIds() ? await updateIds() : getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;

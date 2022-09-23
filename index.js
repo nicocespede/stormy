@@ -7,7 +7,8 @@ const cache = require('./app/cache');
 const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
     countConnectedMembers, checkKruUpcomingMatches } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
-const { prefix, ids, musicActions, categorySettings, testing } = require('./app/constants');
+const { prefix, musicActions, categorySettings, testing } = require('./app/constants');
+const { getIds, updateIds } = require('./app/cache');
 var interval;
 
 const client = new Client({
@@ -27,6 +28,8 @@ const client = new Client({
 
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
+
+    const ids = !getIds() ? await updateIds() : getIds();
 
     startStatsCounters(client);
 
@@ -176,6 +179,7 @@ client.rest.on('rateLimited', data => console.log('> Se recibió un límite de t
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log('> Reinicio inminente...');
     // disconnects music bot
+    const ids = !getIds() ? await updateIds() : getIds();
     await emergencyShutdown(client, ids.guilds.default);
 
     // send stats

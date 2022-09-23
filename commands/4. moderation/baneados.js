@@ -11,9 +11,9 @@ module.exports = {
 
     callback: async ({ guild, client, instance, user }) => {
         const banned = !getBanned().ids ? await updateBanned() : getBanned();
-        var usersField = { name: 'Usuario', value: '', inline: true };
-        var responsiblesField = { name: 'Baneado por', value: ``, inline: true };
-        var reasonsField = { name: 'Razón', value: ``, inline: true };
+        const usersField = { name: 'Usuario', value: '', inline: true };
+        const responsiblesField = { name: 'Baneado por', value: ``, inline: true };
+        const reasonsField = { name: 'Razón', value: ``, inline: true };
         var i = 1;
         for (const key in banned.bans)
             if (Object.hasOwnProperty.call(banned.bans, key)) {
