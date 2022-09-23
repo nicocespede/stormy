@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
-const { getUpcomingMatches, convertTime } = require('../../app/general');
+const { getKruMatches, updateKruMatches } = require('../../app/cache');
+const { convertTime } = require('../../app/general');
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -17,7 +18,7 @@ module.exports = {
         const datesField = { name: 'Fecha', value: '', inline: true };
         const urlsField = { name: 'Detalles', value: '', inline: true };
 
-        const matches = await getUpcomingMatches();
+        const matches = !getKruMatches() ? await updateKruMatches() : getKruMatches();
         for (const m in matches)
             if (Object.hasOwnProperty.call(matches, m)) {
                 const match = matches[m];

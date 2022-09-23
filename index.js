@@ -160,13 +160,14 @@ client.on('ready', async () => {
         if (minutesUp % 60 === 0) {
             const timestamps = cache.getTimestamps();
             if (Object.keys(timestamps).length > 0) {
-                console.log(`> Se cumplió el ciclo de 1 hora, enviando estadísticas a la base de datos`);
+                console.log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`);
                 for (const key in timestamps)
                     if (Object.hasOwnProperty.call(timestamps, key)) {
                         await pushDifference(key);
                         cache.addTimestamp(key, new Date());
                     }
             }
+            await cache.updateKruMatches();
         }
         if (minutesUp % 5 === 0)
             countConnectedMembers(client);

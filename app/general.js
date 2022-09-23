@@ -3,8 +3,6 @@ const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const cache = require('./cache');
 const Canvas = require('canvas');
-const axios = require('axios');
-const cheerio = require('cheerio');
 const { relativeSpecialDays, currencies } = require('./constants');
 const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,
     addStat, updateStat } = require('./mongodb');
@@ -266,39 +264,6 @@ const checkValorantBansExpiration = async () => {
         await cache.updateSmurfs();
 };
 
-const getUpcomingMatches = async () => {
-    const urlBase = 'https://www.vlr.gg';
-    const url = urlBase + '/team/matches/2355/kr-esports/?group=upcoming';
-    const { data } = await axios.get(url).catch(_ => console.log("> Error al obtener información de partidos programados de KRÜ"));
-    const $ = cheerio.load(data);
-    const a = $('.wf-card.fc-flex.m-item');
-    const matches = [];
-    a.each((_, el) => {
-        const match = {
-            team1Name: '', team1Tag: '',
-            team2Name: '', team2Tag: '',
-            remaining: '',
-            date: '',
-            time: '',
-            url: urlBase + el.attribs['href']
-        };
-        const teams = $(el).children('.m-item-team.text-of');
-        teams.each((i, team) => {
-            const names = $(team).children().get();
-            const name = $(names[0]).text().trim();
-            match[`team${i + 1}Name`] = name != 'TBD' ? name : 'A determinar';
-            match[`team${i + 1}Tag`] = name != 'TBD' ? $(names[1]).text().trim() : name;
-        });
-        match.remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text();
-        const date = $(el).children('.m-item-date').text().trim();
-        const split = date.split(`\t`);
-        match.date = split.shift();
-        match.time = split.pop()
-        matches.push(match);
-    });
-    return matches;
-};
-
 const convertTime = time => {
     let split = time.split(' ');
     const indicator = split.pop();
@@ -536,12 +501,10 @@ module.exports = {
         return ret;
     },
 
-    getUpcomingMatches,
-
     checkKruUpcomingMatches: async client => {
         const oneDay = 1000 * 60 * 60 * 24;
         const oneMinute = 1000 * 60;
-        const matches = await getUpcomingMatches();
+        const matches = !cache.getKruMatches() ? await cache.updateKruMatches() : cache.getKruMatches();
         const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
         matches.forEach(element => {
             const date = convertTZ(`${element.date} ${element.time}`, 'America/Argentina/Buenos_Aires');

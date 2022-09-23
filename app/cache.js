@@ -1,5 +1,9 @@
 const { githubRawURL, testing } = require('./constants');
 const fetch = require('node-fetch');
+const SteamAPI = require('steamapi');
+const steam = new SteamAPI(process.env.STEAM_API_KEY);
+const axios = require('axios');
+const cheerio = require('cheerio');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
 var mcu;
@@ -27,6 +31,7 @@ var tracksNameExtras;
 //TEMP SOLUTION
 var blacklistedSongs;//
 var ids;
+var kruMatches;
 
 const getMcu = () => mcu;
 
@@ -73,8 +78,6 @@ module.exports = {
     updateGames: async () => {
         await fetch(`${githubRawURL}/games.json`)
             .then(res => res.text()).then(async data => {
-                const SteamAPI = require('steamapi');
-                const steam = new SteamAPI(process.env.STEAM_API_KEY);
                 games = [];
                 const parsed = JSON.parse(data);
                 for (const key in parsed)
@@ -307,5 +310,47 @@ module.exports = {
                 console.log(`> ${fileName} cargado`);
             }).catch(err => console.log(`> Error al cargar ${fileName}`, err));
         return ids;
+    },
+
+    getKruMatches: () => kruMatches,
+    updateKruMatches: async () => {
+        const urlBase = 'https://www.vlr.gg';
+        const url = urlBase + '/team/matches/2355/kr-esports/?group=upcoming';
+        try {
+            const { data } = await axios.get(url);
+            const $ = cheerio.load(data);
+            const a = $('.wf-card.fc-flex.m-item');
+            const matches = [];
+            a.each((_, el) => {
+                const match = {
+                    team1Name: '', team1Tag: '',
+                    team2Name: '', team2Tag: '',
+                    remaining: '',
+                    date: '',
+                    time: '',
+                    url: urlBase + el.attribs['href']
+                };
+                const teams = $(el).children('.m-item-team.text-of');
+                teams.each((i, team) => {
+                    const names = $(team).children().get();
+                    const name = $(names[0]).text().trim();
+                    match[`team${i + 1}Name`] = name != 'TBD' ? name : 'A determinar';
+                    match[`team${i + 1}Tag`] = name != 'TBD' ? $(names[1]).text().trim() : name;
+                });
+                match.remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text();
+                const date = $(el).children('.m-item-date').text().trim();
+                const split = date.split(`\t`);
+                match.date = split.shift();
+                match.time = split.pop()
+                matches.push(match);
+            });
+            kruMatches = matches;
+            console.log("> Caché de partidos programados de KRÜ actualizado")
+        } catch {
+            if (!kruMatches)
+                kruMatches = [];
+            console.log("> Error al obtener información de partidos programados de KRÜ")
+        }
+        return kruMatches;
     }
 };
