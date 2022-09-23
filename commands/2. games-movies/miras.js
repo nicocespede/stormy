@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -32,9 +32,9 @@ module.exports = {
             .setTitle(`**Miras**`)
             .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${prefix}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
             .setFields([userCrosshairsField, crosshairsField])
-            .setColor([255, 70, 85])
-            .setThumbnail(`attachment://valorant.png`)];
-        reply.files = ['./assets/thumbs/valorant.png'];
+            .setColor([255, 81, 82])
+            .setThumbnail(`attachment://valorant-logo.png`)];
+        reply.files = [`${githubRawURL}/thumbs/valorant-logo.png`];
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
         return;
     }

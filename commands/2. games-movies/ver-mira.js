@@ -1,5 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
+const { githubRawURL } = require('../../app/constants');
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -37,11 +38,11 @@ module.exports = {
             reply.embeds = [new EmbedBuilder()
                 .setTitle(selectedCrosshair.name + owner)
                 .setDescription(`Código de importación de la mira:\n\n` + selectedCrosshair.code)
-                .setColor([255, 70, 85])
-                .setThumbnail(`attachment://valorant.png`)];
+                .setColor([255, 81, 82])
+                .setThumbnail(`attachment://valorant-logo.png`)];
             if (selectedCrosshair.imageUrl)
                 reply.embeds[0].setImage(selectedCrosshair.imageUrl);
-            reply.files = ['./assets/thumbs/valorant.png'];
+            reply.files = [`${githubRawURL}/thumbs/valorant-logo.png`];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
         }
         return;

@@ -1,7 +1,7 @@
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType } = require('discord.js');
 const ValorantAPI = require("unofficial-valorant-api");
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../app/cache');
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 
 function translateRank(rank) {
     if (rank == null)
@@ -93,10 +93,10 @@ module.exports = {
                         embeds: [new EmbedBuilder()
                             .setTitle(`**Cuentas smurf**`)
                             .setDescription(`Hola <@${user.id}>, para obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`)
-                            .setColor([7, 130, 169])
+                            .setColor([255, 81, 82])
                             .addFields([accountsField, commandsField, ranksField])
-                            .setThumbnail(`attachment://smurf.png`)],
-                        files: [`./assets/thumbs/smurf.png`]
+                            .setThumbnail(`attachment://valorant-logo.png`)],
+                        files: [`${githubRawURL}/thumbs/valorant-logo.png`]
                     }).then(() => {
                         reply.content = `Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);

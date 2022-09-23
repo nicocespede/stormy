@@ -550,12 +550,12 @@ module.exports = {
             const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
             if (difference <= oneDay && difference >= (oneDay - oneMinute))
                 client.channels.fetch(ids.channels.anuncios).then(channel => {
-                    channel.send(`<@&${ids.roles.kru}>\n\nMañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)}**.`)
+                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)} hs**.`)
                         .catch(_ => console.log("> Error al enviar alerta de partido de KRÜ"));
                 }).catch(console.error);
             if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9))
                 client.channels.fetch(ids.channels.anuncios).then(channel => {
-                    channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! 🤟🏼`)
+                    channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
                         .catch(_ => console.log("> Error al enviar alerta de partido de KRÜ"));
                 }).catch(console.error);
         });
