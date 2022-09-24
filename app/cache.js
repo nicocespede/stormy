@@ -288,7 +288,7 @@ module.exports = {
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
                 console.log(chalk.green('> tracksNameExtras.json cargado'));
-            }).catch(err => console.log(chalk.red(`> Error al cargar tracksNameExtras.json'\n${err}`)));
+            }).catch(err => console.log(chalk.red(`> Error al cargar tracksNameExtras.json\n${err}`)));
         return tracksNameExtras;
     },
 
@@ -298,8 +298,8 @@ module.exports = {
         await fetch(`${githubRawURL}/blacklistedTracks.json`)
             .then(res => res.text()).then(data => {
                 blacklistedSongs = JSON.parse(data);
-                console.log('> blacklistedTracks.json cargado');
-            }).catch(err => console.log('> Error al cargar blacklistedTracks.json', err));
+                console.log(chalk.green('> blacklistedTracks.json cargado'));
+            }).catch(err => console.log(chalk.red(`> Error al cargar blacklistedTracks.json\n${err}`)));
         return blacklistedSongs;
     },//
 
