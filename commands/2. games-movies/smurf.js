@@ -1,44 +1,64 @@
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType } = require('discord.js');
-const ValorantAPI = require("unofficial-valorant-api");
+const HenrikDevValorantAPI = require("unofficial-valorant-api");
+const ValorantAPI = new HenrikDevValorantAPI();
+const chalk = require('chalk');
+chalk.level = 1;
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 
-function translateRank(rank) {
-    if (rank == null)
+const translateRank = rank => {
+    if (!rank)
         return 'Sin clasificar';
-    var rankName = rank.split(' ');
-    var ret;
-    switch (rankName[0]) {
+    const split = rank.split(' ');
+    const rankName = split[0];
+    const rankDivision = split[1];
+    switch (rankName) {
         case 'Iron':
-            ret = `Hierro ${rankName[1]}`;
-            break;
+            return `Hierro ${rankDivision}`;
         case 'Bronze':
-            ret = `Bronce ${rankName[1]}`;
-            break;
+            return `Bronce ${rankDivision}`;
         case 'Silver':
-            ret = `Plata ${rankName[1]}`;
-            break;
+            return `Plata ${rankDivision}`;
         case 'Gold':
-            ret = `Oro ${rankName[1]}`;
-            break;
+            return `Oro ${rankDivision}`;
         case 'Platinum':
-            ret = `Platino ${rankName[1]}`;
-            break;
+            return `Platino ${rankDivision}`;
         case 'Diamond':
-            ret = `Diamante ${rankName[1]}`;
-            break;
+            return `Diamante ${rankDivision}`;
         case 'Ascendant':
-            ret = `Ascendente ${rankName[1]}`;
-            break;
+            return `Ascendente ${rankDivision}`;
         case 'Immortal':
-            ret = `Inmortal ${rankName[1]}`;
-            break;
+            return `Inmortal ${rankDivision}`;
         case 'Radiant':
-            ret = `Radiante`;
-            break;
+            return `Radiante`;
     }
-    return ret;
-}
+};
+
+const getRankColor = rank => {
+    if (!rank)
+        return [110, 113, 117];
+    const rankName = rank.split(' ')[0];
+    switch (rankName) {
+        case 'Iron':
+            return [148, 147, 148];
+        case 'Bronze':
+            return [137, 91, 0];
+        case 'Silver':
+            return [155, 164, 161];
+        case 'Gold':
+            return [211, 145, 49];
+        case 'Platinum':
+            return [60, 115, 123];
+        case 'Diamond':
+            return [140, 106, 189];
+        case 'Ascendant':
+            return [16, 103, 60];
+        case 'Immortal':
+            return [153, 77, 129];
+        case 'Radiant':
+            return [255, 255, 178];
+    }
+};
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -73,20 +93,30 @@ module.exports = {
                     const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
                     const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
                         : await interaction.deferReply({ ephemeral: true });
-                    var accountsField = { name: 'Cuenta', value: '', inline: true };
-                    var commandsField = { name: 'ID', value: ``, inline: true };
-                    var ranksField = { name: 'Rango', value: ``, inline: true };
+                    const accountsField = { name: 'Cuenta', value: '', inline: true };
+                    const commandsField = { name: 'ID', value: ``, inline: true };
+                    const ranksField = { name: 'Rango', value: ``, inline: true };
                     const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
                     for (const command in smurfs)
                         if (Object.hasOwnProperty.call(smurfs, command)) {
                             const account = smurfs[command];
                             if (!account.vip || isVip) {
                                 const accInfo = account.name.split('#');
-                                await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                                    accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${mmr.data.name != null && mmr.data.tag != null ? `${mmr.data.name}#${mmr.data.tag}` : `${account.name}`}\n\n`;
-                                    commandsField.value += `${command}\n\n`;
-                                    ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
+                                const mmr = await ValorantAPI.getMMR({
+                                    version: 'v1',
+                                    region: 'latam',
+                                    name: accInfo[0],
+                                    tag: accInfo[1],
                                 }).catch(console.error);
+                                if (mmr.error) {
+                                    console.log(chalk.red(`ValorantAPIError:\n${JSON.stringify(mmr.error)}`));
+                                    reply.content = `❌ Lo siento, ocurrió un error al obtener los rangos, intentá de nuevo en unos instantes...`;
+                                    message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+                                    return;
+                                }
+                                accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
+                                commandsField.value += `${command}\n\n`;
+                                ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
                             }
                         }
                     member.send({
@@ -127,25 +157,28 @@ module.exports = {
                     reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
                 else {
                     const accInfo = account.name.split('#');
-                    await ValorantAPI.getMMR('v1', 'na', accInfo[0], accInfo[1]).then(mmr => {
-                        try {
-                            const thumb = !mmr.data.currenttierpatched ? `assets/thumbs/ranks/unranked.png`
-                                : `assets/thumbs/ranks/${mmr.data.currenttierpatched.toLowerCase()}.png`;
-                            reply.embeds = [new EmbedBuilder()
-                                .setTitle(`**${account.name}**`)
-                                .setColor([7, 130, 169])
-                                .addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
-                                { name: 'Contraseña:', value: account.password, inline: true }])
-                                .setThumbnail(`attachment://rank.png`)];
-                            if (account.bannedUntil != '')
-                                reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
-                            reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
-                        } catch {
-                            reply.embeds = [new EmbedBuilder()
-                                .setColor([7, 130, 169])
-                                .setDescription('❌ Lo siento, ocurrió un error, intentá de nuevo.')];
-                        }
+                    const mmr = await ValorantAPI.getMMR({
+                        version: 'v1',
+                        region: 'latam',
+                        name: accInfo[0],
+                        tag: accInfo[1],
                     }).catch(console.error);
+                    if (mmr.error) {
+                        console.log(chalk.red(`ValorantAPIError:\n${JSON.stringify(mmr.error)}`));
+                        reply.content = `❌ Lo siento, ocurrió un error, intentá de nuevo en unos instantes...`;
+                        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+                        return;
+                    }
+                    const thumb = !mmr.data.images ? `${githubRawURL}/thumbs/unranked.png` : mmr.data.images.large;
+                    reply.embeds = [new EmbedBuilder()
+                        .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
+                        .setColor(getRankColor(mmr.data.currenttierpatched))
+                        .addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
+                        { name: 'Contraseña:', value: account.password, inline: true }])
+                        .setThumbnail(`attachment://rank.png`)];
+                    if (account.bannedUntil != '')
+                        reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
+                    reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
             }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
