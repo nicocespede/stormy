@@ -45,8 +45,8 @@ module.exports = {
         console.log(chalk.yellow('> Cumpleaños eliminado de la base de datos'));
     },
 
-    addCrosshair: async (name, code, owner, url) => {
-        await new crosshairSchema({ name: name, code: code, ownerId: owner, imageUrl: url }).save();
+    addCrosshair: async (name, code, owner) => {
+        await new crosshairSchema({ name: name, code: code, ownerId: owner }).save();
         console.log(chalk.green('> Mira agregada a la base de datos'));
     },
     deleteCrosshair: async id => {

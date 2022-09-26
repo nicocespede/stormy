@@ -259,8 +259,7 @@ module.exports = {
         results.forEach(ch => crosshairs[`${ch.id}`] = {
             name: ch.name,
             code: ch.code,
-            owner: ch.ownerId,
-            imageUrl: ch.imageUrl
+            owner: ch.ownerId
         });
         console.log(chalk.green('> Caché de miras actualizado'));
         return crosshairs;

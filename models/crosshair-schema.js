@@ -7,8 +7,7 @@ const schema = new Schema({
     id: { type: Number, required: false },
     name: reqString,
     code: reqString,
-    ownerId: reqString,
-    imageUrl: { type: String, required: false }
+    ownerId: reqString
 });
 
 const name = 'crosshair';

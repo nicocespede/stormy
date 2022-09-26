@@ -97,6 +97,8 @@ module.exports = {
                     const commandsField = { name: 'ID', value: ``, inline: true };
                     const ranksField = { name: 'Rango', value: ``, inline: true };
                     const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
+                    let errorsCounter = 0;
+                    let description = `Hola <@${user.id}>, `;
                     for (const command in smurfs)
                         if (Object.hasOwnProperty.call(smurfs, command)) {
                             const account = smurfs[command];
@@ -104,25 +106,29 @@ module.exports = {
                                 const accInfo = account.name.split('#');
                                 const mmr = await ValorantAPI.getMMR({
                                     version: 'v1',
-                                    region: 'latam',
+                                    region: 'na',
                                     name: accInfo[0],
                                     tag: accInfo[1],
                                 }).catch(console.error);
                                 if (mmr.error) {
-                                    console.log(chalk.red(`ValorantAPIError:\n${JSON.stringify(mmr.error)}`));
-                                    reply.content = `❌ Lo siento, ocurrió un error al obtener los rangos, intentá de nuevo en unos instantes...`;
-                                    message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-                                    return;
+                                    errorsCounter++;
+                                    console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
+                                    accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${account.name}\n\n`;
+                                    ranksField.value += `???\n\n`;
+                                } else {
+                                    accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
+                                    ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
                                 }
-                                accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
                                 commandsField.value += `${command}\n\n`;
-                                ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
                             }
                         }
+
+                    description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`;
+
                     member.send({
                         embeds: [new EmbedBuilder()
                             .setTitle(`**Cuentas smurf**`)
-                            .setDescription(`Hola <@${user.id}>, para obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`)
+                            .setDescription(description)
                             .setColor([255, 81, 82])
                             .addFields([accountsField, commandsField, ranksField])
                             .setThumbnail(`attachment://valorant-logo.png`)],
@@ -159,26 +165,28 @@ module.exports = {
                     const accInfo = account.name.split('#');
                     const mmr = await ValorantAPI.getMMR({
                         version: 'v1',
-                        region: 'latam',
+                        region: 'na',
                         name: accInfo[0],
                         tag: accInfo[1],
                     }).catch(console.error);
                     if (mmr.error) {
-                        console.log(chalk.red(`ValorantAPIError:\n${JSON.stringify(mmr.error)}`));
-                        reply.content = `❌ Lo siento, ocurrió un error, intentá de nuevo en unos instantes...`;
-                        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-                        return;
+                        console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
+                        reply.embeds = [new EmbedBuilder()
+                            .setTitle(account.name)
+                            .setColor(getRankColor(null))];
+                        reply.files = [new AttachmentBuilder(`${githubRawURL}/thumbs/unranked.png`, { name: 'rank.png' })];
+                    } else {
+                        const thumb = !mmr.data.images ? `${githubRawURL}/thumbs/unranked.png` : mmr.data.images.large;
+                        reply.embeds = [new EmbedBuilder()
+                            .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
+                            .setColor(getRankColor(mmr.data.currenttierpatched))];
+                        reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                     }
-                    const thumb = !mmr.data.images ? `${githubRawURL}/thumbs/unranked.png` : mmr.data.images.large;
-                    reply.embeds = [new EmbedBuilder()
-                        .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
-                        .setColor(getRankColor(mmr.data.currenttierpatched))
-                        .addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
-                        { name: 'Contraseña:', value: account.password, inline: true }])
-                        .setThumbnail(`attachment://rank.png`)];
                     if (account.bannedUntil != '')
                         reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
-                    reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
+                    reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
+                    { name: 'Contraseña:', value: account.password, inline: true }])
+                        .setThumbnail(`attachment://rank.png`);
                 }
             }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
