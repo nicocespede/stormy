@@ -65,7 +65,7 @@ module.exports = {
                 .addFields([variantsField, bidField, askField])
                 .setThumbnail(`attachment://dolar.png`)
                 .setFooter({ text: 'Información obtenida de DolarHoy.' })]
-            reply.files = [`${githubRawURL}/thumbs/dolar.png`];
+            reply.files = [`${githubRawURL}/assets/thumbs/dolar.png`];
             reply.content = null;
         }
 

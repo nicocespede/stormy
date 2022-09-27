@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { getKruMatches, updateKruMatches } = require('../../app/cache');
+const { githubRawURL } = require('../../app/constants');
 const { convertTime } = require('../../app/general');
 
 module.exports = {
@@ -39,7 +40,7 @@ module.exports = {
         }
         else
             reply.embeds[0].setDescription('_No hay partidos programados por el momento._');
-        reply.files = ['./assets/thumbs/kru.png'];
+        reply.files = [`${githubRawURL}/assets/thumbs/kru.png`];
         try {
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
         } catch {

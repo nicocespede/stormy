@@ -1,4 +1,4 @@
-const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType, AttachmentBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
 chalk.level = 1;
@@ -41,7 +41,6 @@ module.exports = {
         const number = message ? args[0] : interaction.options.getInteger('numero');
         const games = !getGames() ? await updateGames() : getGames();
         const reply = { custom: true, ephemeral: true };
-        const color = [234, 61, 78];
         if (!number) {
             const canvas = createCanvas(200, 200);
             const ctx = canvas.getContext('2d');
@@ -59,11 +58,11 @@ module.exports = {
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Juegos crackeados**`)
                 .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: prefix }))
-                .setColor(color)
+                .setColor([234, 61, 78])
                 .addFields([gamesField, updatesField])
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
                 .setThumbnail(`attachment://games.png`)];
-            reply.files = [`assets/thumbs/games.png`];
+            reply.files = [`${githubRawURL}/assets/thumbs/games/games.png`];
         } else {
             const index = parseInt(number) - 1;
             if (index < 0 || index >= games.length || isNaN(index))
@@ -92,11 +91,11 @@ module.exports = {
                                 fields.push({ name: key, value: info[key] });
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(`${game.name} ${game.version}`)
-                        .setColor(color)
+                        .setColor(game.embedData.color)
                         .addFields(fields)
-                        .setThumbnail(`attachment://games.png`)
+                        .setThumbnail(`attachment://thumb.png`)
                         .setImage(game.imageURL)];
-                    reply.files = [`assets/thumbs/games.png`];
+                    reply.files = [new AttachmentBuilder(game.embedData.thumb, { name: 'thumb.png' })];
                 }).catch(console.error);
             }
         }

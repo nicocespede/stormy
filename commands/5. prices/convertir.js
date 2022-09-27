@@ -78,8 +78,8 @@ module.exports = {
             else {
                 const canvas = Canvas.createCanvas(500, 250);
                 const context = canvas.getContext('2d');
-                const swapImage = await Canvas.loadImage(`${githubRawURL}/assets/swap.png`);
-                const pesoImage = await Canvas.loadImage(`${githubRawURL}/assets/peso.png`);
+                const swapImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/swap.png`);
+                const pesoImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/peso.png`);
 
                 const variantsField = { name: 'Variante', value: '', inline: true };
                 const valuesField = { name: 'Conversión', value: ``, inline: true };
@@ -87,7 +87,7 @@ module.exports = {
                 let coinID;
                 let color = [76, 175, 80];
                 let currency = 'Dólares';
-                let imageURL = `${githubRawURL}/thumbs/dolar.png`;
+                let imageURL = `${githubRawURL}/assets/thumbs/dolar.png`;
                 let coinPrice;
 
                 if (argsCurrency != 'usd') {

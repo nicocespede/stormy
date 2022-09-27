@@ -132,7 +132,7 @@ module.exports = {
                             .setColor([255, 81, 82])
                             .addFields([accountsField, commandsField, ranksField])
                             .setThumbnail(`attachment://valorant-logo.png`)],
-                        files: [`${githubRawURL}/thumbs/valorant-logo.png`]
+                        files: [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`]
                     }).then(() => {
                         reply.content = `Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -174,9 +174,9 @@ module.exports = {
                         reply.embeds = [new EmbedBuilder()
                             .setTitle(account.name)
                             .setColor(getRankColor(null))];
-                        reply.files = [new AttachmentBuilder(`${githubRawURL}/thumbs/unranked.png`, { name: 'rank.png' })];
+                        reply.files = [new AttachmentBuilder(`${githubRawURL}/assets/thumbs/games/unranked.png`, { name: 'rank.png' })];
                     } else {
-                        const thumb = !mmr.data.images ? `${githubRawURL}/thumbs/unranked.png` : mmr.data.images.large;
+                        const thumb = !mmr.data.images ? `${githubRawURL}/assets/thumbs/games/unranked.png` : mmr.data.images.large;
                         reply.embeds = [new EmbedBuilder()
                             .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
                             .setColor(getRankColor(mmr.data.currenttierpatched))];

@@ -84,7 +84,7 @@ module.exports = {
                 .setFields([userCrosshairsField, crosshairsField])
                 .setColor([255, 81, 82])
                 .setThumbnail(`attachment://valorant-logo.png`)];
-            reply.files = [`${githubRawURL}/thumbs/valorant-logo.png`];
+            reply.files = [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`];
             reply.ephemeral = true;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
@@ -175,7 +175,7 @@ module.exports = {
                     .setColor([255, 81, 82])
                     .setImage(crosshairData.url)
                     .setThumbnail(`attachment://valorant-logo.png`)];
-                reply.files = [`${githubRawURL}/thumbs/valorant-logo.png`];
+                reply.files = [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`];
                 reply.ephemeral = true;
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             }
