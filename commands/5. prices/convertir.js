@@ -1,19 +1,17 @@
 const { EmbedBuilder, AttachmentBuilder, ApplicationCommandOptionType } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
-const { currencies } = require('../../app/constants');
-const convert = require('xml-js');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const Canvas = require('canvas');
-const { getAvailableCurrencies } = require('../../app/general');
+const chalk = require('chalk');
+chalk.level = 1;
+const { currencies, githubRawURL } = require('../../app/constants');
+const { getIds, updateIds } = require('../../app/cache');
 
-const availableCurrencies = ['usd'].concat(getAvailableCurrencies());
+const availableCurrencies = ['usd'].concat(Object.keys(currencies));
 
-function formatNumber(value, decimalPlaces) {
-    let decimals = decimalPlaces || 2;
-    let convertedValue = parseFloat(value.replace('.', '').replace(',', '.'));
-    return !isNaN(convertedValue) ? convertedValue.toFixed(decimals) : 'No cotiza';
-}
+const formatNumber = (value, decimalPlaces) => value.toLocaleString('es-AR', { maximumFractionDigits: decimalPlaces });
 
 module.exports = {
     category: 'Cotizaciones',
@@ -38,54 +36,99 @@ module.exports = {
     expectedArgs: '<moneda> <cantidad>',
     slash: 'both',
 
-    callback: async ({ client, args, user, message, interaction }) => {
+    callback: async ({ client, args, user, message, interaction, instance, guild }) => {
+        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const argsCurrency = message ? args[0] : interaction.options.getString('moneda');
         const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
-        var reply = { custom: true, ephemeral: true };
-        if (!availableCurrencies.includes(argsCurrency))
-            reply.content = `⚠ La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _${availableCurrencies.join(', ')}_. Si querés la cotización de otra moneda, no dudes en pedirla.`;
-        else if (isNaN(quantity) || quantity < 0)
+        const reply = {};
+        if (!availableCurrencies.includes(argsCurrency)) {
+            const ids = !getIds() ? await updateIds() : getIds();
+            reply.content = instance.messageHandler.get(guild, 'INVALID_CURRENCY', {
+                CURRENCIES: availableCurrencies.join(', '),
+                ID: ids.users.stormer
+            });
+        } else if (isNaN(quantity) || quantity < 0)
             reply.content = `⚠ La cantidad ingresada es inválida.`;
         else {
-            const canvas = Canvas.createCanvas(500, 250);
-            const context = canvas.getContext('2d');
-            const dataDolar = await axios.get("https://www.dolarsi.com/api/dolarSiInfo.xml")
-            const json = convert.xml2json(dataDolar.data, { compact: true, spaces: 4 });
-            const jsonParsed = JSON.parse(json);
-            const swapImage = await Canvas.loadImage(`./assets/swap.png`);
-            const pesoImage = await Canvas.loadImage(`./assets/peso.png`);
-
-            var usdPrice = formatNumber(jsonParsed.cotiza.Dolar.casa380.venta._text);
-            if (argsCurrency != 'usd') {
-                var coinID = currencies[argsCurrency].id;
-                var color = currencies[argsCurrency].color;
-                let data = await CoinGeckoClient.coins.fetch(coinID, {});
-                data = data.data;
-                var currency = data.localization.es;
-                var imageURL = data.image.large;
-                data = data.market_data;
-                var coinPrice = data.current_price.usd;
-                var finalPrice = (coinPrice * usdPrice * quantity).toFixed(2);
-            } else {
-                var currency = 'Dólares';
-                var color = [76, 175, 80];
-                var imageURL = './assets/thumbs/dolar.png';
-                var finalPrice = (usdPrice * quantity).toFixed(2);
+            const urlBase = 'https://dolarhoy.com';
+            const variants = {
+                oficial: { title: 'Dólar oficial promedio', url: '/cotizaciondolaroficial' },
+                blue: { title: 'Dólar Blue', url: '/cotizaciondolarblue' },
+                solidario: { title: 'Dólar Solidario', url: '/cotizaciondolarsolidario' }
+            };
+            let error = false;
+            try {
+                for (const variant in variants)
+                    if (Object.hasOwnProperty.call(variants, variant)) {
+                        const element = variants[variant];
+                        const url = urlBase + element.url;
+                        const { data } = await axios.get(url);
+                        const $ = cheerio.load(data);
+                        const values = $('.tile.is-parent.is-8').children();
+                        const filtered = values.filter((_, child) => $(child).children('.topic').text() === 'Venta')[0];
+                        element.ask = parseFloat($(filtered).children('.value').text().substring(1));
+                    }
+            } catch (e) {
+                error = true;
+                console.log(chalk.red(e));
             }
-            const coinImage = await Canvas.loadImage(imageURL);
 
-            context.drawImage(swapImage, (canvas.width / 2) - 50, (canvas.height / 2) - 50, 100, 100);
-            context.drawImage(pesoImage, canvas.width - 175, (canvas.height / 2) - 75, 150, 150);
-            context.drawImage(coinImage, 25, (canvas.height / 2) - 75, 150, 150);
+            if (error)
+                reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+            else {
+                const canvas = Canvas.createCanvas(500, 250);
+                const context = canvas.getContext('2d');
+                const swapImage = await Canvas.loadImage(`${githubRawURL}/assets/swap.png`);
+                const pesoImage = await Canvas.loadImage(`${githubRawURL}/assets/peso.png`);
 
-            reply.embeds = [new EmbedBuilder()
-                .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
-                .setDescription(`Hola <@${user.id}>, la conversión de **${quantity} ${currency}** a Pesos Argentinos es: **ARS$ ${finalPrice}**.\n\nValores tomados en cuenta:\n\n${coinID ? '**• ' + currency + ':** USD$ ' + coinPrice + '\n' : ''}**• Dólar blue (venta):** ARS$ ${usdPrice}`)
-                .setColor(color)
-                .setImage('attachment://image.png')
-                .setThumbnail(client.user.avatarURL())];
-            reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
+                const variantsField = { name: 'Variante', value: '', inline: true };
+                const valuesField = { name: 'Conversión', value: ``, inline: true };
+                const pricesField = { name: 'Valores tomados en cuenta:', value: `` };
+                let coinID;
+                let color = [76, 175, 80];
+                let currency = 'Dólares';
+                let imageURL = `${githubRawURL}/thumbs/dolar.png`;
+                let coinPrice;
+
+                if (argsCurrency != 'usd') {
+                    coinID = currencies[argsCurrency].id;
+                    color = currencies[argsCurrency].color;
+                    let data = await CoinGeckoClient.coins.fetch(coinID, {});
+                    data = data.data;
+                    currency = data.localization.es;
+                    imageURL = data.image.large;
+                    data = data.market_data;
+                    coinPrice = data.current_price.usd;
+                    pricesField.value += '• ' + currency + ': **USD$ ' + formatNumber(coinPrice, 4) + '**\n\n';
+                }
+                const coinImage = await Canvas.loadImage(imageURL);
+
+                context.drawImage(swapImage, (canvas.width / 2) - 50, (canvas.height / 2) - 50, 100, 100);
+                context.drawImage(pesoImage, canvas.width - 175, (canvas.height / 2) - 75, 150, 150);
+                context.drawImage(coinImage, 25, (canvas.height / 2) - 75, 150, 150);
+
+                for (const variant in variants)
+                    if (Object.hasOwnProperty.call(variants, variant)) {
+                        const element = variants[variant];
+                        const finalPrice = coinID ? coinPrice * element.ask * quantity : element.ask * quantity;
+                        variantsField.value += element.title + '\n\n';
+                        valuesField.value += `**ARS$ ` + formatNumber(finalPrice, 2) + `**\n\n`;
+                        pricesField.value += `• ${element.title} (venta): **ARS$ ${formatNumber(element.ask, 2)}**\n\n`;
+                    }
+
+                reply.embeds = [new EmbedBuilder()
+                    .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
+                    .setDescription(`Hola <@${user.id}>, la conversión de **${quantity} ${currency}** a Pesos Argentinos es:`)
+                    .setFields([variantsField, valuesField, pricesField])
+                    .setColor(color)
+                    .setImage('attachment://image.png')
+                    .setThumbnail(client.user.avatarURL())
+                    .setFooter({ text: 'Cotización del dólar obtenida de DolarHoy.' })];
+                reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
+                reply.content = null;
+            }
         }
-        return reply;
+        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        return;
     }
 }

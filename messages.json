@@ -469,5 +469,8 @@
         "FOOTER": {
             "spanish": "Si querés sugerir algún juego para agregar o querés saber si hay nuevas actualizaciones de los juegos actuales, no dudes en hablar con @StormeR."
         }
+    },
+    "INVALID_CURRENCY": {
+        "spanish": "⚠ La moneda seleccionada es inválida.\n\nLas monedas disponibles son: _{CURRENCIES}_. Si querés la cotización de otra moneda, no dudes en pedírsela a <@{ID}>."
     }
 }

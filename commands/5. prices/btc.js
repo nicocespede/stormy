@@ -2,10 +2,9 @@ const { EmbedBuilder } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 const { currencies } = require('../../app/constants');
-const { getAvailableCurrencies } = require('../../app/general');
 
-const availableCurrencies = getAvailableCurrencies();
-availableCurrencies.splice(availableCurrencies.indexOf('btc'), 1)
+const availableCurrencies = Object.keys(currencies);
+availableCurrencies.splice(availableCurrencies.indexOf('btc'), 1);
 
 module.exports = {
     category: 'Cotizaciones',

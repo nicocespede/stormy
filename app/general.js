@@ -414,13 +414,6 @@ module.exports = {
 
     secondsToFull,
 
-    getAvailableCurrencies: () => {
-        var ret = [];
-        for (const currency in currencies)
-            ret.push(currency);
-        return ret;
-    },
-
     getMembersStatus,
 
     checkBansCorrelativity: async client => {
