@@ -1,11 +1,12 @@
 const chalk = require('chalk');
 chalk.level = 1;
 const { updateReminders } = require('../app/cache');
+const { convertTZ } = require('../app/general');
 const reminderSchema = require('../models/reminder-schema');
 
 module.exports = client => {
     const check = async () => {
-        const date = new Date();
+        const date = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
         date.setMinutes(date.getMinutes() + 1);
         date.setSeconds(0);
         date.setMilliseconds(0);

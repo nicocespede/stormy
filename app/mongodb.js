@@ -137,5 +137,5 @@ module.exports = {
     updateThermalPasteDate: async (id, date) => {
         await thermalPasteDateSchema.updateOne({ _id: id }, { date: date });
         console.log(chalk.green('> Fecha de cambio de pasta térmica actualizada en la base de datos'));
-    },
+    }
 };

@@ -4,6 +4,7 @@ chalk.level = 1;
 const { updateReminders, getReminders } = require('../../app/cache');
 const reminderSchema = require('../../models/reminder-schema');
 const { githubRawURL } = require('../../app/constants');
+const { convertTZ } = require('../../app/general');
 
 module.exports = {
     category: 'General',
@@ -107,7 +108,7 @@ module.exports = {
                         totalTime += time;
                 }
 
-                date = new Date();
+                date = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
                 date.setMinutes(date.getMinutes() + totalTime);
 
             } else {
@@ -131,9 +132,9 @@ module.exports = {
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
-                date = new Date(`${split[1]}/${split[0]}/${split[2]} ${timeMatch[0]}`);
+                date = convertTZ(new Date(`${split[1]}/${split[0]}/${split[2]} ${timeMatch[0]}`), 'America/Argentina/Buenos_Aires');
 
-                if (date < new Date()) {
+                if (date < convertTZ(new Date(), 'America/Argentina/Buenos_Aires')) {
                     reply.content = '⚠ La fecha introducida ya pasó.';
                     return reply;
                 }
