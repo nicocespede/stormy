@@ -34,6 +34,7 @@ var tracksNameExtras;
 var blacklistedSongs;//
 var ids;
 var kruMatches;
+let reminders;
 
 const getMcu = () => mcu;
 
@@ -357,5 +358,13 @@ module.exports = {
             console.log(chalk.red(`> Error al obtener información de partidos programados de KRÜ\n${e}`));
         }
         return kruMatches;
+    },
+
+    getReminders: () => reminders,
+    updateReminders: async () => {
+        const reminderSchema = require('../models/reminder-schema');
+        reminders = await reminderSchema.find({});
+        console.log(chalk.green('> Caché de recordatorios actualizado'));
+        return reminders;
     }
 };
