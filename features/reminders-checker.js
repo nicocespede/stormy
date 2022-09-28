@@ -21,7 +21,8 @@ module.exports = client => {
                 continue;
             }
 
-            user.send({ content: `🔔 **RECORDATORIO** ⏰\n\n${description}` });
+            user.send({ content: `🔔 **RECORDATORIO** ⏰\n\n${description}` })
+                .catch(_ => console.log(chalk.red(`> No se pudo enviar el recordatorio a ${user.tag}. `)));
         }
 
         const deletion = await reminderSchema.deleteMany(query);
