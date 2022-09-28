@@ -149,23 +149,10 @@ client.on('ready', async () => {
     console.log(chalk.green(`¡Loggeado como ${client.user.tag}!`));
 
     interval = setInterval(async function () {
-        cache.addMinuteUp();
         const newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
         if (cache.getLastDateChecked().getDate() != newDate.getDate()) {
             periodicFunction(client);
             cache.updateLastDateChecked(newDate);
-        }
-        const minutesUp = cache.getMinutesUp();
-        if (minutesUp % 60 === 0) {
-            const timestamps = cache.getTimestamps();
-            if (Object.keys(timestamps).length > 0) {
-                console.log(chalk.blue(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`));
-                for (const key in timestamps)
-                    if (Object.hasOwnProperty.call(timestamps, key)) {
-                        await pushDifference(key);
-                        cache.addTimestamp(key, new Date());
-                    }
-            }
         }
     }, 60 * 1000);
 });

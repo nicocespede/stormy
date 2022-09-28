@@ -18,12 +18,12 @@ module.exports = client => {
             const { description, userId } = result;
             const user = await client.users.fetch(userId);
             if (!user) {
-                console.log(chalk.red(`> Usuario "${userId}" no encontrado.`));
+                console.log(chalk.red(`> Usuario "${userId}" no encontrado`));
                 continue;
             }
 
             user.send({ content: `🔔 **RECORDATORIO** ⏰\n\n${description}` })
-                .catch(_ => console.log(chalk.red(`> No se pudo enviar el recordatorio a ${user.tag}. `)));
+                .catch(_ => console.log(chalk.red(`> No se pudo enviar el recordatorio a ${user.tag} `)));
         }
 
         const deletion = await reminderSchema.deleteMany(query);

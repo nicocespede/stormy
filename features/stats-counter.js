@@ -1,3 +1,5 @@
+const chalk = require('chalk');
+chalk.level = 1;
 const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds } = require("../app/cache");
 const { pushDifference, getMembersStatus } = require("../app/general");
 
@@ -79,6 +81,24 @@ module.exports = client => {
             return;
         }
     });
+
+    let exec = false;
+    const save = async () => {
+        if (exec) {
+            const timestamps = getTimestamps();
+            if (Object.keys(timestamps).length > 0) {
+                console.log(chalk.blue(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`));
+                for (const key in timestamps)
+                    if (Object.hasOwnProperty.call(timestamps, key)) {
+                        await pushDifference(key);
+                        addTimestamp(key, new Date());
+                    }
+            }
+        } else exec = true;
+
+        setTimeout(save, 1000 * 60 * 60);
+    };
+    save();
 };
 
 module.exports.config = {

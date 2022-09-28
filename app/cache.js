@@ -24,7 +24,6 @@ var lastAction;
 var playlists = { names: [], urls: [] };
 var stats;
 var timestamps = {};
-var minutesUp = 0;
 var thermalPasteDates;
 var bansResponsibles = {};
 var crosshairs;
@@ -238,9 +237,6 @@ module.exports = {
     getTimestamps: () => timestamps,
     addTimestamp: (id, timestamp) => (timestamps[id] = timestamp),
     removeTimestamp: id => (delete timestamps[id]),
-
-    getMinutesUp: () => minutesUp,
-    addMinuteUp: () => minutesUp++,
 
     getThermalPasteDates: () => thermalPasteDates,
     updateThermalPasteDates: async () => {
