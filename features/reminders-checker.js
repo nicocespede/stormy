@@ -29,7 +29,7 @@ module.exports = client => {
         const deletion = await reminderSchema.deleteMany(query);
         if (deletion.deletedCount > 0) {
             const moreThan1 = deletion.deletedCount > 1;
-            console.log(chalk.green(`> ${deletion.deletedCount} recordatorio${moreThan1 ? 's' : ''} eliminado${moreThan1 > 1 ? 's' : ''} de la base de datos`));
+            console.log(chalk.green(`> ${deletion.deletedCount} recordatorio${moreThan1 ? 's' : ''} eliminado${moreThan1 ? 's' : ''} de la base de datos`));
             updateReminders();
         }
 

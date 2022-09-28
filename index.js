@@ -6,8 +6,7 @@ const { Player } = require('discord-player');
 const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./app/cache');
-const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers,
-    countConnectedMembers, checkKruUpcomingMatches } = require('./app/general');
+const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
 const { prefix, musicActions, categorySettings, testing } = require('./app/constants');
 const { getIds, updateIds } = require('./app/cache');
@@ -36,7 +35,6 @@ client.on('ready', async () => {
     startStatsCounters(client);
 
     countMembers(client);
-    countConnectedMembers(client);
 
     new WOKCommands(client, {
         botOwners: ids.users.stormer,
@@ -58,7 +56,6 @@ client.on('ready', async () => {
 
     cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
     periodicFunction(client);
-    checkKruUpcomingMatches(client);
     const reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
     if (reactionCollectorInfo.isActive)
         initiateReactionCollector(client);
@@ -169,11 +166,7 @@ client.on('ready', async () => {
                         cache.addTimestamp(key, new Date());
                     }
             }
-            await cache.updateKruMatches();
         }
-        if (minutesUp % 5 === 0)
-            countConnectedMembers(client);
-        checkKruUpcomingMatches(client);
     }, 60 * 1000);
 });
 

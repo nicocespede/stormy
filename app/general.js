@@ -462,19 +462,6 @@ module.exports = {
         }).catch(console.error);
     },
 
-    countConnectedMembers: async client => {
-        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-        client.guilds.fetch(ids.guilds.default).then(async guild => {
-            const members = await guild.members.fetch();
-            const membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
-            const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
-            guild.channels.fetch(ids.channels.connectedMembers).then(channel => {
-                if (channel.name !== connectedMembersName)
-                    channel.setName(connectedMembersName).then(_ => console.log(chalk.blue('> Contador de miembros conectados actualizado'))).catch(console.error);
-            }).catch(console.error);
-        }).catch(console.error);
-    },
-
     updateAvatar,
 
     updateUsername,
@@ -494,29 +481,6 @@ module.exports = {
         });
         ret.push(chunk);
         return ret;
-    },
-
-    checkKruUpcomingMatches: async client => {
-        const oneDay = 1000 * 60 * 60 * 24;
-        const oneMinute = 1000 * 60;
-        const matches = !cache.getKruMatches() ? await cache.updateKruMatches() : cache.getKruMatches();
-        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-        matches.forEach(element => {
-            const date = convertTZ(`${element.date} ${element.time}`, 'America/Argentina/Buenos_Aires');
-            const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-            const difference = date - today;
-            const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
-            if (difference <= oneDay && difference >= (oneDay - oneMinute))
-                client.channels.fetch(ids.channels.anuncios).then(channel => {
-                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTime(element.time)} hs**.`)
-                        .catch(_ => console.log(chalk.red("> Error al enviar alerta de partido de KRÜ")));
-                }).catch(console.error);
-            if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9))
-                client.channels.fetch(ids.channels.anuncios).then(channel => {
-                    channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
-                        .catch(_ => console.log(chalk.red("> Error al enviar alerta de partido de KRÜ")));
-                }).catch(console.error);
-        });
     },
 
     convertTime,
