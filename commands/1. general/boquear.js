@@ -27,7 +27,7 @@ module.exports = {
             options.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",
                 PREFIX: prefix,
-                COMMAND: "recordatorio",
+                COMMAND: "boquear",
                 ARGUMENTS: "`<@amigo>`"
             });
             return options;
