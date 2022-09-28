@@ -75,37 +75,69 @@ module.exports = {
                 return { custom: true, ephemeral: true, content: '⚠ No tenés ningún recordatorio guardado.' }
         } else if (subCommand === 'agregar') {
             const description = interaction.options.getString('descripcion');
-            const time = interaction.options.getString('tiempo-o-fecha');
+            const arg = interaction.options.getString('tiempo-o-fecha');
 
             const reply = { custom: true, ephemeral: true };
 
-            let totalTime = 0;
-            let number;
-            let type;
-            const split = time.split(' ');
-            for (const arg of split) {
-                try {
-                    const secondSplit = arg.match(/\d+|\D+/g);
-                    number = parseInt(secondSplit[0]);
-                    type = secondSplit[1].toLowerCase();
-                } catch {
-                    reply.content = `⚠ **¡Formato de tiempo inválido!** _Ejemplo de formato: "1d 2h 3m" donde 'd' = días, 'h' =  horas y 'm' = minutos._`;
+            let date;
+
+            if (!/[\-\/\:]/.test(arg)) {
+                let totalTime = 0;
+                let time;
+                let type;
+                const split = arg.split(' ');
+                for (const arg of split) {
+                    try {
+                        const secondSplit = arg.match(/\d+|\D+/g);
+                        time = parseInt(secondSplit[0]);
+                        type = secondSplit[1].toLowerCase();
+                    } catch {
+                        reply.content = `⚠ **¡Formato de tiempo inválido!** _Ejemplo de formato: "1d 2h 3m" donde 'd' = días, 'h' =  horas y 'm' = minutos._`;
+                        return reply;
+                    }
+
+                    if (type === 'h')
+                        totalTime += time * 60;
+                    else if (type === 'd')
+                        totalTime += time * 60 * 24;
+                    else if (type !== 'm') {
+                        reply.content = `⚠ Por favor usá **"m"**, **"h"** o **"d"** para **minutos**, **horas** y **días** respectivamente.`;
+                        return reply;
+                    } else
+                        totalTime += time;
+                }
+
+                date = new Date();
+                date.setMinutes(date.getMinutes() + totalTime);
+
+            } else {
+                const splittedArg = arg.split(' ');
+                if (splittedArg.length != 2) {
+                    reply.content = `⚠ **¡Formato de fecha inválido!** Formatos válidos: _DD/MM/AAAA HH:MM_ o _DD-MM-AAAA HH:MM_.`;
                     return reply;
                 }
 
-                if (type === 'h')
-                    totalTime += number * 60;
-                else if (type === 'd')
-                    totalTime += number * 60 * 24;
-                else if (type !== 'm') {
-                    reply.content = `⚠ Por favor usá **"m"**, **"h"** o **"d"** para **minutos**, **horas** y **días** respectivamente.`;
-                    return reply;
-                } else
-                    totalTime += number;
-            }
+                const dateMatch = splittedArg[0].match(/^(?:(?:31(\/|-)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/);
+                const timeMatch = splittedArg[1].match(/^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/);
 
-            const date = new Date();
-            date.setMinutes(date.getMinutes() + totalTime);
+                if (!dateMatch) {
+                    reply.content = `⚠ La fecha es inválida.`;
+                    return reply;
+                }
+
+                if (!timeMatch) {
+                    reply.content = `⚠ La hora es inválida.`;
+                    return reply;
+                }
+
+                const split = dateMatch[0].split(/[\-\.\/]/);
+                date = new Date(`${split[1]}/${split[0]}/${split[2]} ${timeMatch[0]}`);
+
+                if (date < new Date()) {
+                    reply.content = '⚠ La fecha introducida ya pasó.';
+                    return reply;
+                }
+            }
 
             await new reminderSchema({ description: description, userId: user.id, date: date }).save();
             console.log(chalk.green('> Recordatorio agregado a la base de datos'));
@@ -113,7 +145,8 @@ module.exports = {
 
             reply.content = `✅ Tu recordatorio para el **${date.toLocaleDateString('es-AR')}** a las **${date.toLocaleTimeString('es-AR', { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
             return reply;
-        } else {
+
+        } else if (subCommand === 'borrar') {
             const id = interaction.options.getInteger('id');
             const reminders = getReminders() || await updateReminders();
             const filtered = reminders.filter(r => r.userId === user.id);
