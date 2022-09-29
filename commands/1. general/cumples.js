@@ -1,7 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../app/cache');
 const { prefix } = require('../../app/constants');
-const { sendBdayAlert } = require('../../app/general');
 const { addBirthday, deleteBirthday } = require('../../app/mongodb');
 
 const validateDate = (instance, guild, date) => {
@@ -149,7 +148,7 @@ module.exports = {
                     const messageOrInteraction = message ? message : interaction;
                     const reply = await messageOrInteraction.reply({
                         components: [row],
-                        content: `¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
+                        content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
                         ephemeral: true
                     });
 
@@ -162,16 +161,15 @@ module.exports = {
                     collector.on('end', async collection => {
                         var edit = { components: [] };
                         if (!collection.first())
-                            edit.content = 'La acción expiró.';
+                            edit.content = '⌛ La acción expiró.';
                         else if (collection.first().customId === 'add_yes') {
                             await addBirthday(target.user.id, target.user.username, date.split('/')[0], date.split('/')[1]).then(async () => {
-                                edit.content = 'La acción fue completada.';
+                                edit.content = '✅ La acción fue completada.';
                                 channel.send({ content: `Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
                                 await updateBirthdays();
-                                sendBdayAlert(client);
                             }).catch(console.error);
                         } else
-                            edit.content = 'La acción fue cancelada.';
+                            edit.content = '❌ La acción fue cancelada.';
                         message ? await reply.edit(edit) : await interaction.editReply(edit);
                     });
                 }
@@ -207,7 +205,7 @@ module.exports = {
                 const messageOrInteraction = message ? message : interaction;
                 const reply = await messageOrInteraction.reply({
                     components: [row],
-                    content: `¿Estás seguro de querer borrar el cumpleaños de **${target.user.tag}**?`,
+                    content: `⚠ ¿Estás seguro de querer borrar el cumpleaños de **${target.user.tag}**?`,
                     ephemeral: true
                 });
 
@@ -220,15 +218,15 @@ module.exports = {
                 collector.on('end', async collection => {
                     var edit = { components: [] };
                     if (!collection.first())
-                        edit.content = 'La acción expiró.';
+                        edit.content = '⌛ La acción expiró.';
                     else if (collection.first().customId === 'delete_yes')
                         await deleteBirthday(target.user.id).then(async () => {
-                            edit.content = 'La acción fue completada.';
+                            edit.content = '✅ La acción fue completada.';
                             channel.send({ content: `El cumpleaños fue borrado de manera exitosa.` });
                             updateBirthdays();
                         }).catch(console.error);
                     else
-                        edit.content = 'La acción fue cancelada.';
+                        edit.content = '❌ La acción fue cancelada.';
                     message ? await reply.edit(edit) : await interaction.editReply(edit);
                 });
             }

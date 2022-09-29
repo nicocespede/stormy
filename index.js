@@ -157,7 +157,7 @@ client.on('ready', async () => {
     }, 60 * 1000);
 });
 
-client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un límite de tarifa:\n${data}`)));
+client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`)));
 
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log(chalk.yellow('> Reinicio inminente...'));

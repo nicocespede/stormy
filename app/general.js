@@ -1,13 +1,12 @@
-const { AttachmentBuilder, ChannelType } = require('discord.js')
+const { ChannelType } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
 const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./cache');
-const { relativeSpecialDays, currencies } = require('./constants');
-const { updateAnniversary, updateAvatarString, deleteBan, updateBirthday, deleteBirthday, updateBillboardCollectorMessage, updateSmurf,
-    addStat, updateStat } = require('./mongodb');
+const { relativeSpecialDays } = require('./constants');
+const { updateAvatarString, deleteBan, updateBillboardCollectorMessage, updateSmurf, addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -15,72 +14,6 @@ var reactionCollector = {};
 
 const convertTZ = (date, tzString) => {
     return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
-}
-
-function getToday() {
-    var today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    var dd = today.getDate();
-    var mm = today.getMonth() + 1;
-    if (dd < 10) dd = '0' + dd;
-    if (mm < 10) mm = '0' + mm;
-    return `${dd}/${mm}`;
-};
-
-async function generateBirthdayImage(user) {
-    const canvas = Canvas.createCanvas(1170, 720);
-    const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage('./assets/happy-bday.png');
-    const avatarWidth = 300;
-    const avatarHeight = avatarWidth;
-    const avatarX = (background.width / 2) - (avatarWidth / 2);
-    const avatarY = (background.height / 2) - (avatarHeight / 2);
-    context.strokeStyle = '#151515';
-    context.lineWidth = 2;
-    context.drawImage(background, 0, 0, canvas.width, canvas.height);
-    // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, user.username);
-    // Select the style that will be used to fill the text in
-    context.fillStyle = '#ffffff';
-    const usernameWidth = context.measureText(user.username).width;
-    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-    if (user.id == ids.users.stormer || user.id == ids.users.darkness) {
-        var crownWidth = 60;
-        var gapWidth = 5;
-        const crown = await Canvas.loadImage('./assets/crown.png');
-        // Actually fill the text with a solid color
-        context.fillText(user.username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
-        context.strokeText(user.username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
-        context.drawImage(crown, (background.width / 2) - ((usernameWidth + crownWidth + gapWidth) / 2), canvas.height / (6 / 5) - 74, crownWidth, 64);
-    } else {
-        // Actually fill the text with a solid color
-        context.fillText(user.username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
-        context.strokeText(user.username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
-    }
-    // Pick up the pen
-    context.beginPath();
-    // Start the arc to form a circle
-    context.arc(avatarX + (avatarWidth / 2), avatarY + (avatarHeight / 2), avatarWidth / 2, 0, Math.PI * 2, true);
-    // Put the pen down
-    context.closePath();
-    // Clip off the region you drew on
-    context.clip();
-    const avatar = await Canvas.loadImage(user.displayAvatarURL().replace('.webp', '.jpg'));
-    // Draw a shape onto the main canvas
-    context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
-    return new AttachmentBuilder(canvas.toBuffer());
-};
-
-function applyText(canvas, text) {
-    const context = canvas.getContext('2d');
-    // Declare a base size of the font
-    let fontSize = 100;
-    do {
-        // Assign the font to the context and decrement it so it can be measured again
-        context.font = `${fontSize -= 10}px Titillium Web bold`;
-        // Compare pixel width of the text to the canvas minus the approximate avatar size
-    } while (context.measureText(text).width > canvas.width - 765);
-    // Return the result to use in the actual canvas
-    return context.font;
 };
 
 function getImageType() {
@@ -124,33 +57,6 @@ const sendSpecialDayMessage = async client => {
     }).catch(console.error);
 };
 
-async function sendAnniversaryAlert(client) {
-    const anniversaries = !cache.getAnniversaries() ? await cache.updateAnniversaries() : cache.getAnniversaries();
-    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-    anniversaries.forEach(anniversary => {
-        if (anniversary.date.substring(0, 5) == getToday() && !anniversary.flag) {
-            client.channels.fetch(ids.channels.anuncios).then(channel => {
-                client.guilds.fetch(ids.guilds.default).then(guild => {
-                    guild.members.fetch(anniversary.id1).then(member1 => {
-                        guild.members.fetch(anniversary.id2).then(member2 => {
-                            const years = (new Date().getFullYear()) - parseInt(anniversary.date.substring(6));
-                            channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).then(m => {
-                                ['🥰', '😍', '💏'].forEach(emoji => m.react(emoji));
-                            }).catch(console.error);
-                        }).catch(console.error);
-                    }).catch(console.error);
-                }).catch(console.error);
-            }).catch(console.error);
-            updateAnniversary(anniversary.id1, anniversary.id2, true).then(async () => {
-                await cache.updateAnniversaries();
-            }).catch(console.error);
-        } else if (anniversary.date != getToday() && anniversary.flag)
-            updateAnniversary(anniversary.id1, anniversary.id2, false).then(async () => {
-                await cache.updateAnniversaries();
-            }).catch(console.error);
-    });
-};
-
 async function updateAvatar(client) {
     const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
     const newAvatar = `./assets/kgprime${getImageType()}.png`;
@@ -178,36 +84,6 @@ async function updateUsername(client) {
             newUsername += ' 🎅🏻';
     if (client.user.username != newUsername)
         await client.user.setUsername(newUsername).catch(console.error);
-};
-
-const sendBdayAlert = async (client) => {
-    const birthdays = !cache.getBirthdays() ? await cache.updateBirthdays() : cache.getBirthdays();
-    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-    for (const key in birthdays)
-        if (Object.hasOwnProperty.call(birthdays, key)) {
-            const bday = birthdays[key];
-            const bdayDate = `${bday.day}/${bday.month}`;
-            if (bdayDate === getToday() && !bday.flag) {
-                client.channels.fetch(ids.channels.anuncios).then(channel => {
-                    client.guilds.fetch(ids.guilds.default).then(async guild => {
-                        await guild.members.fetch(key).then(member => {
-                            generateBirthdayImage(member.user).then(attachment => {
-                                const msg = key === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
-                                    : `@everyone\n\nHoy es el cumpleaños de <@${key}>, ¡feliz cumpleaños!`;
-                                channel.send({ content: msg, files: [attachment] }).then(m => {
-                                    ['🎈', '🥳', '🎉', '🎂'].forEach(async emoji => await m.react(emoji));
-                                }).catch(console.error);
-                            }).catch(console.error);
-                        }).catch(() => deleteBirthday(key).then(async () => {
-                            await cache.updateBirthdays();
-                            channel.send({ content: `Se eliminó el cumpleaños de **${bday.user}** (**Hoy**) ya que el usuario no está más en el servidor.` });
-                        }));
-                    }).catch(console.error);
-                }).catch(console.error);
-                updateBirthday(key, true).then(async () => await cache.updateBirthdays()).catch(console.error);
-            } else if (bdayDate != getToday() && bday.flag)
-                updateBirthday(key, false).then(async () => await cache.updateBirthdays()).catch(console.error);
-        }
 };
 
 const fullToSeconds = (days, hours, minutes, seconds) => {
@@ -307,9 +183,7 @@ module.exports = {
     },
 
     periodicFunction: async client => {
-        sendBdayAlert(client);
         sendSpecialDayMessage(client);
-        sendAnniversaryAlert(client);
         checkValorantBansExpiration();
         const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
         if (actualAvatar != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {
@@ -317,8 +191,6 @@ module.exports = {
             updateUsername(client);
         }
     },
-
-    sendBdayAlert,
 
     convertTZ,
 
@@ -354,43 +226,6 @@ module.exports = {
     stopReactionCollector: () => {
         reactionCollector.stop();
         console.log(chalk.yellow('> Recolector de reacciones desactivado'));
-    },
-
-    generateWelcomeImage: async user => {
-        const canvas = Canvas.createCanvas(1170, 720);
-        const context = canvas.getContext('2d');
-        const background = await Canvas.loadImage(`./assets/welcome${getImageType()}.png`);
-        const avatarWidth = 250;
-        const avatarHeight = avatarWidth
-        const avatarX = 450;
-        const avatarY = 275;
-        context.strokeStyle = '#151515';
-        context.lineWidth = 2;
-        context.drawImage(background, 0, 0, canvas.width, canvas.height);
-        // Select the font size and type from one of the natively available fonts
-        context.font = applyText(canvas, user.username);
-        // Select the style that will be used to fill the text in
-        context.fillStyle = '#ffffff';
-        // Actually fill the text with a solid color
-        context.fillText(user.username, 725, canvas.height / 1.875);
-        context.strokeText(user.username, 725, canvas.height / 1.875);
-        // Slightly smaller text placed above the member's display name
-        context.font = '75px Titillium Web';
-        context.fillStyle = '#ffffff';
-        context.fillText(`#${user.discriminator}`, 725, 460);
-        context.strokeText(`#${user.discriminator}`, 725, 460);
-        // Pick up the pen
-        context.beginPath();
-        // Start the arc to form a circle
-        context.arc(avatarX + (avatarWidth / 2), avatarY + (avatarHeight / 2), avatarWidth / 2, 0, Math.PI * 2, true);
-        // Put the pen down
-        context.closePath();
-        // Clip off the region you drew on
-        context.clip();
-        const avatar = await Canvas.loadImage(user.displayAvatarURL().replace('.webp', '.jpg'));
-        // Draw a shape onto the main canvas
-        context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
-        return new AttachmentBuilder(canvas.toBuffer());
     },
 
     pushDifference: async (id, username) => {
@@ -494,5 +329,20 @@ module.exports = {
             else if (date.getDate() == today.getDate() - 1)
                 return !upperCase ? 'ayer' : 'Ayer';
         return `${(!upperCase ? 'el ' : '')}` + lastUpdate;
-    }
+    },
+
+    applyText: (canvas, text) => {
+        const context = canvas.getContext('2d');
+        // Declare a base size of the font
+        let fontSize = 100;
+        do {
+            // Assign the font to the context and decrement it so it can be measured again
+            context.font = `${fontSize -= 10}px Titillium Web bold`;
+            // Compare pixel width of the text to the canvas minus the approximate avatar size
+        } while (context.measureText(text).width > canvas.width - 765);
+        // Return the result to use in the actual canvas
+        return context.font;
+    },
+
+    getImageType
 }
