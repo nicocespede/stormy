@@ -79,8 +79,10 @@ module.exports = client => {
             const msg = id === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
                 : `@everyone\n\nHoy es el cumpleaños de <@${id}>, ¡feliz cumpleaños!`;
             const m = await channel.send({ content: msg, files: [attachment] }).catch(console.error);
-            for (const emoji of ['🎈', '🥳', '🎉', '🎂'])
+            for (const emoji of ['🎈', '🥳', '🎉', '🎂']) {
                 await m.react(emoji);
+                await new Promise(res => setTimeout(res, 1000 * 0.5));
+            }
             await updateBirthday(id, true).catch(console.error);
             await updateBirthdays();
         }
@@ -101,8 +103,10 @@ module.exports = client => {
             const member2 = await guild.members.fetch(anniversary.id2).catch(console.error);
             const years = today.getFullYear() - parseInt(anniversary.date.substring(6));
             const m = await channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).catch(console.error);
-            for (const emoji of ['🥰', '😍', '💏'])
+            for (const emoji of ['🥰', '😍', '💏']) {
                 await m.react(emoji);
+                await new Promise(res => setTimeout(res, 1000 * 0.5));
+            }
             await updateAnniversary(anniversary.id1, anniversary.id2, true).catch(console.error);
             await updateAnniversaries();
         }
@@ -133,8 +137,10 @@ module.exports = client => {
 
             if (msg !== '') {
                 const m = await channel.send(msg);
-                for (const emoji of emojis)
+                for (const emoji of emojis) {
                     await m.react(emoji);
+                    await new Promise(res => setTimeout(res, 1000 * 0.5));
+                }
             }
         }
 
