@@ -6,11 +6,10 @@ const { Player } = require('discord-player');
 const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./app/cache');
-const { convertTZ, initiateReactionCollector, periodicFunction, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
+const { initiateReactionCollector, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
 const { prefix, musicActions, categorySettings, testing } = require('./app/constants');
 const { getIds, updateIds } = require('./app/cache');
-var interval;
 
 const client = new Client({
     intents: [
@@ -54,13 +53,11 @@ client.on('ready', async () => {
 
     await checkBansCorrelativity(client);
 
-    cache.updateLastDateChecked(convertTZ(new Date(), 'America/Argentina/Buenos_Aires'));
-    periodicFunction(client);
     const reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
     if (reactionCollectorInfo.isActive)
         initiateReactionCollector(client);
 
-    var musicEmbed = new EmbedBuilder().setColor([195, 36, 255]);
+    const musicEmbed = new EmbedBuilder().setColor([195, 36, 255]);
     client.player = new Player(client, {
         leaveOnEnd: false,
         leaveOnStop: true,
@@ -147,14 +144,6 @@ client.on('ready', async () => {
     playInterruptedQueue(client);
 
     console.log(chalk.green(`¡Loggeado como ${client.user.tag}!`));
-
-    interval = setInterval(async function () {
-        const newDate = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-        if (cache.getLastDateChecked().getDate() != newDate.getDate()) {
-            periodicFunction(client);
-            cache.updateLastDateChecked(newDate);
-        }
-    }, 60 * 1000);
 });
 
 client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`)));
@@ -172,12 +161,6 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
         for (const key in timestamps)
             if (Object.hasOwnProperty.call(timestamps, key))
                 await pushDifference(key);
-    }
-
-    //clears 1 minute interval
-    if (interval) {
-        console.log(chalk.yellow('> Terminando intervalo de 1 minuto'));
-        clearInterval(interval);
     }
 
     //ends discord client

@@ -4,12 +4,6 @@ const { getKruMatches, updateKruMatches, getIds, updateIds } = require('../app/c
 const { convertTZ } = require('../app/general');
 
 module.exports = async client => {
-    const update = async () => {
-        await updateKruMatches();
-
-        setTimeout(update, 1000 * 60 * 60);
-    };
-
     const check = async () => {
         const oneDay = 1000 * 60 * 60 * 24;
         const oneMinute = 1000 * 60;
@@ -35,8 +29,18 @@ module.exports = async client => {
         setTimeout(check, 1000 * 60);
     };
 
-    await update();
+    let exec = false;
+    const update = async () => {
+        if (exec)
+            await updateKruMatches();
+        else
+            exec = true;
+
+        setTimeout(update, 1000 * 60 * 60);
+    };
+
     check();
+    update();
 };
 
 module.exports.config = {

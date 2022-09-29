@@ -16,51 +16,22 @@ const convertTZ = (date, tzString) => {
     return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
 };
 
-function getImageType() {
+const getImageType = () => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
     const date = today.getDate();
     const month = today.getMonth() + 1;
-    if (month === 1)
-        return `-newyear`;
-    else if (month === 2)
-        return `-love`;
-    else if (month === 4 && date <= relativeSpecialDays.easter)
-        return `-easter`;
-    else if (month === 12) {
-        if (date >= 26)
+    switch (month) {
+        case 1:
             return `-newyear`;
-        return `-xmas`;
+        case 2:
+            return `-love`;
+        case 4:
+            return date <= relativeSpecialDays.easter ? `-easter` : '';
+        case 12:
+            return date >= 26 ? `-newyear` : `-xmas`;
+        default:
+            return ``;
     }
-    return ``;
-};
-
-async function updateAvatar(client) {
-    const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-    const newAvatar = `./assets/kgprime${getImageType()}.png`;
-    if (actualAvatar != newAvatar)
-        await client.user.setAvatar(newAvatar).then(() => {
-            updateAvatarString(newAvatar).then(async _ => await cache.updateAvatar()).catch(console.error);
-        }).catch(console.error);
-};
-
-async function updateUsername(client) {
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    const date = today.getDate();
-    const month = today.getMonth() + 1;
-    var newUsername = 'StormY';
-    if (month === 1)
-        newUsername += ' 🥂';
-    else if (month === 2)
-        newUsername += ' 💘';
-    else if (month === 4 && date <= relativeSpecialDays.easter)
-        newUsername += ' 🐇';
-    else if (month === 12)
-        if (date >= 26)
-            newUsername += ' 🥂';
-        else
-            newUsername += ' 🎅🏻';
-    if (client.user.username != newUsername)
-        await client.user.setUsername(newUsername).catch(console.error);
 };
 
 const fullToSeconds = (days, hours, minutes, seconds) => {
@@ -124,14 +95,6 @@ module.exports = {
                 return false;
             }
             return true;
-        }
-    },
-
-    periodicFunction: async client => {
-        const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
-        if (actualAvatar != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {
-            updateAvatar(client);
-            updateUsername(client);
         }
     },
 
@@ -240,9 +203,40 @@ module.exports = {
         }).catch(console.error);
     },
 
-    updateAvatar,
+    updateAvatar: async client => {
+        const actualAvatar = cache.getAvatar() || await cache.updateAvatar();
+        const newAvatar = `./assets/kgprime${getImageType()}.png`;
+        if (actualAvatar != newAvatar) {
+            await client.user.setAvatar(newAvatar).catch(console.error);
+            await updateAvatarString(newAvatar).catch(console.error);
+            await cache.updateAvatar()
+        }
+    },
 
-    updateUsername,
+    updateUsername: async client => {
+        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const date = today.getDate();
+        const month = today.getMonth() + 1;
+        let newUsername = 'StormY';
+        switch (month) {
+            case 1:
+                newUsername += ' 🥂';
+                break;
+            case 2:
+                newUsername += ' 💘';
+                break;
+            case 4:
+                newUsername += date <= relativeSpecialDays.easter ? ' 🐇' : '';
+                break;
+            case 12:
+                newUsername += date >= 26 ? ' 🥂' : ' 🎅🏻';
+                break;
+        }
+        if (client.user.username != newUsername) {
+            await client.user.setUsername(newUsername).catch(console.error);
+            console.log(chalk.green('> Nombre de usuario actualizado'));
+        }
+    },
 
     splitMessage: message => {
         const split = message.split(' ');

@@ -88,10 +88,10 @@ module.exports = client => {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
                 console.log(chalk.blue(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`));
-                for (const key in timestamps)
-                    if (Object.hasOwnProperty.call(timestamps, key)) {
-                        await pushDifference(key);
-                        addTimestamp(key, new Date());
+                for (const id in timestamps)
+                    if (Object.hasOwnProperty.call(timestamps, id)) {
+                        await pushDifference(id);
+                        addTimestamp(id, new Date());
                     }
             }
         } else exec = true;

@@ -1,7 +1,5 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const chalk = require('chalk');
-chalk.level = 1;
 const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries } = require('../app/cache');
 const { convertTZ, applyText } = require('../app/general');
 const { deleteBirthday, updateBirthday, updateAnniversary } = require('../app/mongodb');

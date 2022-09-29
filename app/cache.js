@@ -15,7 +15,6 @@ var games;
 var birthdays;
 var banned = {};
 var sombraBans;
-var lastDateChecked;
 var reactionCollectorInfo;
 var rolesMessageInfo;
 var anniversaries;
@@ -155,9 +154,6 @@ module.exports = {
         console.log(chalk.green('> Caché de baneos de Sombra actualizado'));
         return sombraBans;
     },
-
-    getLastDateChecked: () => lastDateChecked,
-    updateLastDateChecked: (newDate) => (lastDateChecked = newDate),
 
     getReactionCollectorInfo: () => reactionCollectorInfo,
     updateReactionCollectorInfo: async () => {
