@@ -47,7 +47,7 @@ module.exports = {
             const gamesField = { name: 'Juego', value: '', inline: true };
             const updatesField = { name: 'Última actualización', value: ``, inline: true };
             for (var i = 0; i < games.length; i++) {
-                const name = games[i].name;
+                const name = `${games[i].name} (${games[i].year})`;
                 const date = games[i].lastUpdate;
                 const newGame = `** ${i + 1}.** ${name}\n\n`;
                 gamesField.value += newGame;
@@ -90,7 +90,7 @@ module.exports = {
                             } else
                                 fields.push({ name: key, value: info[key] });
                     reply.embeds = [new EmbedBuilder()
-                        .setTitle(`${game.name} ${game.version}`)
+                        .setTitle(`${game.name} (${game.year}) ${game.version}`)
                         .setColor(game.embedData.color)
                         .addFields(fields)
                         .setThumbnail(`attachment://thumb.png`)

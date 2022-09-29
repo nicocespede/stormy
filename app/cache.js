@@ -91,7 +91,8 @@ module.exports = {
                             await steam.getGameDetails(game.id).then(data => {
                                 games.push({
                                     id: game.id,
-                                    name: `${data.name} (${data.release_date.date.split(',').pop().trim()})`,
+                                    name: data.name,
+                                    year: data.release_date.date.split(',').pop().trim(),
                                     version: game.version,
                                     lastUpdate: game.lastUpdate,
                                     imageURL: data.header_image,
