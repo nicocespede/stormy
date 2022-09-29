@@ -100,25 +100,6 @@ const getMembersStatus = async channel => {
     return { size: membersSize, valid: valid, invalid: invalid };
 };
 
-const checkValorantBansExpiration = async () => {
-    const smurfs = !cache.getSmurfs() ? await cache.updateSmurfs() : cache.getSmurfs();
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    var updated = false;
-    for (const command in smurfs)
-        if (Object.hasOwnProperty.call(smurfs, command)) {
-            const account = smurfs[command];
-            if (account.bannedUntil != '') {
-                const splitDate = account.bannedUntil.split('/');
-                if (today > convertTZ(`${splitDate[1]}/${splitDate[0]}/${splitDate[2]}`, 'America/Argentina/Buenos_Aires')) {
-                    updated = true;
-                    await updateSmurf(command, '').catch(console.error);
-                }
-            }
-        }
-    if (updated)
-        await cache.updateSmurfs();
-};
-
 const convertTime = time => {
     let split = time.split(' ');
     const indicator = split.pop();
@@ -147,7 +128,6 @@ module.exports = {
     },
 
     periodicFunction: async client => {
-        checkValorantBansExpiration();
         const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
         if (actualAvatar != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {
             updateAvatar(client);
