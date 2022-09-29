@@ -34,29 +34,6 @@ function getImageType() {
     return ``;
 };
 
-const sendSpecialDayMessage = async client => {
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
-    const date = today.getDate();
-    const month = today.getMonth() + 1;
-    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-    client.channels.fetch(ids.channels.anuncios).then(channel => {
-        if (today.getHours() === 0 && today.getMinutes() === 0) {
-            if (date === 1 && month === 1)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un muy felíz año nuevo a todos los miembros del servidor! 🥂🌠`)
-                    .then(m => ['🥂', '🌠', '🎆'].forEach(emoji => m.react(emoji)));
-            else if (date === 14 && month === 2)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean un felíz día de los enamorados a todas las parejas del servidor! 💘😍`)
-                    .then(m => ['💘', '😍', '💏'].forEach(emoji => m.react(emoji)));
-            else if (date === relativeSpecialDays.easter && month === 4)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean unas felices pascuas a todos los miembros del servidor! 🐇🥚`)
-                    .then(m => ['🐰', '🥚'].forEach(emoji => m.react(emoji)));
-            else if (date === 25 && month === 12)
-                channel.send(`@everyone\n\n¡Los dueños de **NCKG** les desean una muy felíz navidad a todos los miembros del servidor! 🎅🏻🎄`)
-                    .then(m => ['🎅🏻', '🎄', '🎁'].forEach(emoji => m.react(emoji)));
-        }
-    }).catch(console.error);
-};
-
 async function updateAvatar(client) {
     const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
     const newAvatar = `./assets/kgprime${getImageType()}.png`;
@@ -169,21 +146,7 @@ module.exports = {
         }
     },
 
-    getNextMessage: (id, collection) => {
-        var previousMessage = collection.first();
-        var ret = null;
-        collection.forEach(element => {
-            if (element.id == id) {
-                ret = previousMessage;
-                return;
-            }
-            previousMessage = element;
-        });
-        return ret;
-    },
-
     periodicFunction: async client => {
-        sendSpecialDayMessage(client);
         checkValorantBansExpiration();
         const actualAvatar = !cache.getAvatar() ? await cache.updateAvatar() : cache.getAvatar();
         if (actualAvatar != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {

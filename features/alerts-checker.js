@@ -5,6 +5,7 @@ chalk.level = 1;
 const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries } = require('../app/cache');
 const { convertTZ, applyText } = require('../app/general');
 const { deleteBirthday, updateBirthday, updateAnniversary } = require('../app/mongodb');
+const { relativeSpecialDays } = require('../app/constants');
 
 const getToday = () => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
@@ -70,7 +71,6 @@ module.exports = client => {
         const todayBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` === getToday() && !value.flag);
         const pastBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` !== getToday() && value.flag);
 
-
         for (const [id, bday] of todayBirthdays) {
             const member = await guild.members.fetch(id).catch(async _ => {
                 await deleteBirthday(id);
@@ -96,10 +96,12 @@ module.exports = client => {
         const todayAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) === getToday() && !a.flag);
         const pastAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) !== getToday() && a.flag);
 
+        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+
         for (const anniversary of todayAnniversaries) {
             const member1 = await guild.members.fetch(anniversary.id1).catch(console.error);
             const member2 = await guild.members.fetch(anniversary.id2).catch(console.error);
-            const years = convertTZ(new Date(), 'America/Argentina/Buenos_Aires').getFullYear() - parseInt(anniversary.date.substring(6));
+            const years = today.getFullYear() - parseInt(anniversary.date.substring(6));
             const m = await channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).catch(console.error);
             for (const emoji of ['🥰', '😍', '💏'])
                 await m.react(emoji);
@@ -112,12 +114,38 @@ module.exports = client => {
             await updateAnniversaries();
         }
 
+        if (today.getHours() === 0 && today.getMinutes() === 0) {
+            const date = today.getDate();
+            const month = today.getMonth() + 1;
+            let msg = '';
+            let emojis = [];
+            if (date === 1 && month === 1) {
+                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz año nuevo** a todos los miembros del servidor! 🥂🌠`;
+                emojis = ['🥂', '🌠', '🎆'];
+            } else if (date === 14 && month === 2) {
+                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un **felíz día de los enamorados** a todas las parejas del servidor! 💘😍`;
+                emojis = ['💘', '😍', '💏'];
+            } else if (date === relativeSpecialDays.easter && month === 4) {
+                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean unas **felices pascuas** a todos los miembros del servidor! 🐇🥚`;
+                emojis = ['🐰', '🥚'];
+            } else if (date === 25 && month === 12) {
+                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean una **muy felíz navidad** a todos los miembros del servidor! 🎅🏻🎄`;
+                emojis = ['🎅🏻', '🎄', '🎁'];
+            }
+
+            if (msg !== '') {
+                const m = await channel.send(msg);
+                for (const emoji of emojis)
+                    await m.react(emoji);
+            }
+        }
+
         setTimeout(check, 1000 * 60);
     };
     check();
 };
 
 module.exports.config = {
-    displayName: 'Verificador de cumpleaños y aniversarios',
-    dbName: 'BIRTHDAYS_AND_ANNIVERSARIES_CHECKER'
+    displayName: 'Verificador de alertas',
+    dbName: 'ALERTS_CHECKER'
 };
