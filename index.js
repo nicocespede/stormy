@@ -118,7 +118,7 @@ client.on('ready', async () => {
             });
         }
     }).on('connectionError', (queue, error) => {
-        console.log(chalk.red(error));
+        console.log(chalk.red(`Error in Player.on('connectionError'):\n${error}`));
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -128,7 +128,7 @@ client.on('ready', async () => {
         if (!queue.destroyed)
             queue.destroy();
     }).on('error', (queue, error) => {
-        console.log(chalk.red(error));
+        console.log(chalk.red(`Error in Player.on('error'):\n${error}`));
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
