@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 chalk.level = 1;
-const { getIds, updateIds } = require('../app/cache');
+const { getIds, updateIds, timeouts } = require('../app/cache');
 
 module.exports = client => {
     const check = async () => {
@@ -15,7 +15,7 @@ module.exports = client => {
             }).catch(console.error);
         }).catch(console.error);
 
-        setTimeout(check, 1000 * 60 * 5);
+        timeouts['connected-members-updater'] = setTimeout(check, 1000 * 60 * 5);
     };
     check();
 };

@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 chalk.level = 1;
-const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds } = require("../app/cache");
+const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../app/cache");
 const { pushDifference, getMembersStatus } = require("../app/general");
 
 module.exports = client => {
@@ -96,7 +96,7 @@ module.exports = client => {
             }
         } else exec = true;
 
-        setTimeout(save, 1000 * 60 * 60);
+        timeouts['stats-counter'] = setTimeout(save, 1000 * 60 * 60);
     };
     save();
 };

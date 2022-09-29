@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 chalk.level = 1;
-const { getKruMatches, updateKruMatches, getIds, updateIds } = require('../app/cache');
+const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../app/cache');
 const { convertTZ } = require('../app/general');
 
 module.exports = async client => {
@@ -26,7 +26,7 @@ module.exports = async client => {
                 }).catch(console.error);
         });
 
-        setTimeout(check, 1000 * 60);
+        timeouts['kru-matches-checker'] = setTimeout(check, 1000 * 60);
     };
 
     let exec = false;
@@ -36,7 +36,7 @@ module.exports = async client => {
         else
             exec = true;
 
-        setTimeout(update, 1000 * 60 * 60);
+        timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 60);
     };
 
     check();

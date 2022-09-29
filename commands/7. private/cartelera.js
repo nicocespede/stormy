@@ -1,26 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
 const { initiateReactionCollector } = require('../../app/general');
-const fs = require('fs');
-const chalk = require('chalk');
-chalk.level = 1;
 const { getIds, updateIds } = require('../../app/cache');
+const { githubRawURL } = require('../../app/constants');
 
-async function getRandomThumb(path) {
-    var fileName;
-    return new Promise(function (resolve, reject) {
-        //passsing directoryPath and callback function
-        fs.readdir(`./assets/thumbs/${path}`, function (err, files) {
-            //handling error
-            if (err)
-                return console.log(chalk.red('Unable to scan directory: ' + err));
-            var random = Math.floor(Math.random() * files.length);
-            fileName = files[random];
-        });
-        setTimeout(function () { resolve(); }, 1000);
-    }).then(function () {
-        return fileName;
-    });
-}
+const files = ['camera.png', 'clapper.png', 'popcorn.png'];
 
 module.exports = {
     category: 'Privados',
@@ -31,23 +14,22 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    callback: ({ message, args, client }) => {
+    callback: async ({ message, args, client }) => {
         const url = args[0];
         args = args.splice(1);
-        getRandomThumb('movies').then(async fileName => {
-            const ids = !getIds() ? await updateIds() : getIds();
-            const msg = {
-                content: `<@&${ids.roles.cine}>`,
-                embeds: [new EmbedBuilder()
-                    .setDescription(args.join(" "))
-                    .setColor([255, 0, 6])
-                    .setThumbnail(`attachment://${fileName}`)
-                    .setImage(url)],
-                files: [`./assets/thumbs/movies/${fileName}`]
-            };
-            initiateReactionCollector(client, msg);
-            message.delete();
-        });
+        const ids = getIds() || await updateIds();
+        const random = Math.floor(Math.random() * (files.length));
+        const msg = {
+            content: `<@&${ids.roles.cine}>`,
+            embeds: [new EmbedBuilder()
+                .setDescription(args.join(" "))
+                .setColor([255, 0, 6])
+                .setThumbnail(`attachment://${files[random]}`)
+                .setImage(url)],
+            files: [`${githubRawURL}/assets/thumbs/movies/${files[random]}`]
+        };
+        initiateReactionCollector(client, msg);
+        message.delete();
         return;
     }
 }

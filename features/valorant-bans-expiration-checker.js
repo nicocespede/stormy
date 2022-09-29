@@ -1,4 +1,4 @@
-const { getSmurfs, updateSmurfs } = require('../app/cache');
+const { getSmurfs, updateSmurfs, timeouts } = require('../app/cache');
 const { convertTZ } = require('../app/general');
 const { updateSmurf } = require('../app/mongodb');
 
@@ -26,7 +26,7 @@ module.exports = _ => {
             lastDateChecked = today;
         }
 
-        setTimeout(check, 1000 * 60 * 60);
+        timeouts['valorant-bans-expiration-checker'] = setTimeout(check, 1000 * 60 * 60);
     };
     check();
 };

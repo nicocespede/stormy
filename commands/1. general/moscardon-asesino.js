@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 const { getIds, updateIds } = require('../../app/cache');
 
 module.exports = {
@@ -27,7 +27,7 @@ module.exports = {
         const cmd = message ? message.content.toLowerCase().split(' ')[0].substring(1) : 'moscardon-asesino';
         if (cmd === 'moscardondelamuerte') type = 'de la muerte';
         const reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",
@@ -36,14 +36,14 @@ module.exports = {
                 ARGUMENTS: "`<@amigo>`"
             });
         else if (target.user.id === user.id)
-            reply.content = `¡Lo siento <@${user.id}>, no podés enviarte un moscardón ${type} a vos mismo!`;
+            reply.content = `⚠ ¡Lo siento <@${user.id}>, no podés enviarte un moscardón ${type} a vos mismo!`;
         else if (target.user.id === ids.users.bot)
-            reply.content = `¡Lo siento <@${user.id}>, no podés enviarme un moscardón ${type} a mí!`;
+            reply.content = `⚠ ¡Lo siento <@${user.id}>, no podés enviarme un moscardón ${type} a mí!`;
         else {
-            reply.content = `¡Moscardón ${type} enviado!`;
+            reply.content = `🪰 ¡Moscardón ${type} enviado!`;
             reply.ephemeral = false;
-            await target.send({ files: [{ attachment: `./assets/moscas/moscardon.png` }] }).catch(() => {
-                reply.content = `Lo siento, no pude enviarle el mensaje a este usuario.`;
+            await target.send({ files: [{ attachment: `${githubRawURL}/assets/moscas/moscardon.png` }] }).catch(() => {
+                reply.content = `❌ Lo siento, no pude enviarle el mensaje a este usuario.`;
                 reply.ephemeral = true;
             });
         }

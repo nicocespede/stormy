@@ -1,26 +1,10 @@
-const fs = require('fs');
 const { ApplicationCommandOptionType } = require('discord.js');
 const chalk = require('chalk');
 chalk.level = 1;
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 const { getIds, updateIds } = require('../../app/cache');
 
-async function getRandomMoscardon() {
-    var fileName;
-    return new Promise(function (resolve, reject) {
-        //passsing directoryPath and callback function
-        fs.readdir('./assets/moscas', function (err, files) {
-            //handling error
-            if (err)
-                return console.log(chalk.red('Unable to scan directory: ' + err));
-            var random = Math.floor(Math.random() * 4);
-            fileName = files[random];
-        });
-        setTimeout(function () { resolve(); }, 1000);
-    }).then(function () {
-        return fileName;
-    });
-}
+const files = ['mosca0.png', 'mosca1.png', 'mosca2.png', 'mosca3.gif'];
 
 module.exports = {
     category: 'General',
@@ -44,7 +28,7 @@ module.exports = {
     callback: async ({ user, message, interaction, instance, guild }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",
@@ -53,18 +37,17 @@ module.exports = {
                 ARGUMENTS: "`<@amigo>`"
             });
         else if (target.user.id === user.id)
-            reply.content = `¡Lo siento <@${user.id}>, no podés enviarte un moscardón a vos mismo!`;
+            reply.content = `⚠ ¡Lo siento <@${user.id}>, no podés enviarte un moscardón a vos mismo!`;
         else if (target.user.id === ids.users.bot)
-            reply.content = `¡Lo siento <@${user.id}>, no podés enviarme un moscardón a mí!`;
+            reply.content = `⚠ ¡Lo siento <@${user.id}>, no podés enviarme un moscardón a mí!`;
         else {
-            reply.content = `¡Moscardón enviado!`;
+            reply.content = `🪰 ¡Moscardón enviado!`;
             reply.ephemeral = false;
-            getRandomMoscardon().then(async fileName => {
-                await target.send({ files: [{ attachment: `./assets/moscas/${fileName}` }] }).catch(() => {
-                    reply.content = `Lo siento, no pude enviarle el mensaje a este usuario.`
-                    reply.ephemeral = true;
-                });
-            }).catch(console.error);
+            const random = Math.floor(Math.random() * (files.length));
+            await target.send({ files: [{ attachment: `${githubRawURL}/assets/moscas/${files[random]}` }] }).catch(() => {
+                reply.content = `❌ Lo siento, no pude enviarle el mensaje a este usuario.`
+                reply.ephemeral = true;
+            });
         }
         return reply;
     }

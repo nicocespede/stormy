@@ -1,4 +1,4 @@
-const { updateAvatar: updateAvatarCache, getAvatar } = require('../app/cache');
+const { updateAvatar: updateAvatarCache, getAvatar, timeouts } = require('../app/cache');
 const { convertTZ, updateAvatar, updateUsername } = require('../app/general');
 
 module.exports = client => {
@@ -18,7 +18,7 @@ module.exports = client => {
             lastDateChecked = today;
         }
 
-        setTimeout(check, 1000 * 60);
+        timeouts['avatar-and-username-updater'] = setTimeout(check, 1000 * 60);
     };
     check();
 };

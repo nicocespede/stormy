@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries } = require('../app/cache');
+const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../app/cache');
 const { convertTZ, applyText } = require('../app/general');
 const { deleteBirthday, updateBirthday, updateAnniversary } = require('../app/mongodb');
 const { relativeSpecialDays } = require('../app/constants');
@@ -144,7 +144,7 @@ module.exports = client => {
             }
         }
 
-        setTimeout(check, 1000 * 60);
+        timeouts['alerts-checker'] = setTimeout(check, 1000 * 60);
     };
     check();
 };

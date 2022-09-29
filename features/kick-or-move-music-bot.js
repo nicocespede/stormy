@@ -21,7 +21,7 @@ module.exports = client => {
         if (newState.id != client.user.id) {
             if (oldState.channel.members.has(client.user.id) && (oldState.channelId != newState.channelId ||
                 ((!oldState.serverDeaf && newState.serverDeaf) || (!oldState.selfDeaf && newState.selfDeaf)))) {
-                new Promise(res => setTimeout(res, 60000)).then(() => {
+                new Promise(res => setTimeout(res, 60 * 1000)).then(() => {
                     client.channels.fetch(oldState.channelId).then(async channel => {
                         if (channel.members.has(client.user.id) && (channel.members.size === 1 || await allMembersAreDeafened(channel.members)))
                             leaveEmptyChannel(client, oldState.guild);

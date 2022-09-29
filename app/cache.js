@@ -46,6 +46,8 @@ const updateMcu = async () => {
 };
 
 module.exports = {
+    timeouts: {},
+
     getMcu,
     updateMcu,
 

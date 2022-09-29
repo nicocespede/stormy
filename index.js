@@ -163,6 +163,13 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
                 await pushDifference(key);
     }
 
+    //clears timeouts
+    const { timeouts } = require('./app/cache');
+    console.log(chalk.yellow(`> Terminando ${Object.keys(timeouts).length} loops`));
+    for (const key in timeouts)
+        if (Object.hasOwnProperty.call(timeouts, key))
+            clearTimeout(timeouts[key]);
+
     //ends discord client
     console.log(chalk.yellow('> Desconectando bot'));
     client.destroy();
