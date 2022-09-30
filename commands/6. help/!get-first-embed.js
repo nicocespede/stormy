@@ -6,13 +6,12 @@ const getFirstEmbed = (message, instance) => {
     const { commandHandler: { commands }, messageHandler, } = instance;
     const embed = new discord_js_1.EmbedBuilder()
         .setTitle(`${instance.displayName} ${messageHandler.getEmbed(guild, 'HELP_MENU', 'TITLE')}`)
-        .setDescription(messageHandler.getEmbed(guild, 'HELP_MENU', 'SELECT_A_CATEGORY'))
         .setFooter({ text: `ID #${message.author?.id}` });
     if (instance.color) {
         embed.setColor(instance.color);
     }
     const categories = {};
-    const isAdmin = member && member.permissions.has('ADMINISTRATOR');
+    const isAdmin = member && member.permissions.has(discord_js_1.PermissionFlagsBits.Administrator);
     for (const { category, testOnly } of commands) {
         if (!category ||
             (testOnly && guild && !instance.testServers.includes(guild.id)) ||
@@ -21,8 +20,7 @@ const getFirstEmbed = (message, instance) => {
         }
         if (categories[category]) {
             ++categories[category].amount;
-        }
-        else {
+        } else {
             categories[category] = {
                 amount: 1,
                 emoji: instance.getEmoji(category),
@@ -31,6 +29,7 @@ const getFirstEmbed = (message, instance) => {
     }
     const reactions = [];
     const keys = Object.keys(categories);
+    let desc = messageHandler.getEmbed(guild, 'HELP_MENU', 'SELECT_A_CATEGORY');
     for (let a = 0; a < keys.length; ++a) {
         const key = keys[a];
         const { emoji } = categories[key];
@@ -45,10 +44,10 @@ const getFirstEmbed = (message, instance) => {
         }
         const reaction = emoji;
         reactions.push(reaction);
-        embed.setDescription(embed.description +
-            `\n\n**${reaction} - ${key}** - ${amount} comando${amount === 1 ? '' : 's'}`)
-            .setThumbnail(instance.client.user.avatarURL());
+        desc += `\n\n**${reaction} - ${key}** - ${amount} comando${amount === 1 ? '' : 's'}`;
+        embed.setThumbnail(instance.client.user.avatarURL());
     }
+    embed.setDescription(desc);
     return {
         embed,
         reactions,

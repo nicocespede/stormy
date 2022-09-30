@@ -1,6 +1,6 @@
 "use strict";
 
-const { ChannelType } = require("discord.js");
+const { ChannelType, PermissionsBitField, EmbedBuilder } = require("discord.js");
 
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -46,7 +46,7 @@ class ReactionHandler {
         if (this.user.bot || !embeds || embeds.length !== 1) {
             return;
         }
-        this.embed = embeds[0];
+        this.embed = EmbedBuilder.from(embeds[0]);
         this.guild = guild;
         if (!this.canUserInteract()) {
             return;
@@ -60,24 +60,21 @@ class ReactionHandler {
      */
     canBotRemoveReaction = () => {
         return (this.message.channel.type !== ChannelType.DM &&
-            this.message.member?.permissions.has('MANAGE_MESSAGES'));
+            this.message.member?.permissions.has(PermissionsBitField.Flags.ManageMessages));
     };
     /**
      * @returns If the user is allowed to interact with this help menu
      */
     canUserInteract = () => {
         // Check if the title of the embed is correct
-        const displayName = this.instance.displayName
-            ? this.instance.displayName + ' '
-            : '';
-        const isSameTitle = this.embed.title ===
-            `${displayName}${this.instance.messageHandler.getEmbed(this.guild, 'HELP_MENU', 'TITLE')}`;
+        const displayName = this.instance.displayName ? this.instance.displayName + ' ' : '';
+        const isSameTitle = this.embed.data.title === `${displayName}${this.instance.messageHandler.getEmbed(this.guild, 'HELP_MENU', 'TITLE')}`;
         if (!isSameTitle) {
             return false;
         }
         // Check if the user's ID is in the footer
-        if (this.embed.footer) {
-            const { text } = this.embed.footer;
+        if (this.embed.data.footer) {
+            const { text } = this.embed.data.footer;
             const id = text?.split('#')[1];
             if (id !== this.user.id) {
                 if (this.canBotRemoveReaction()) {
@@ -92,9 +89,12 @@ class ReactionHandler {
      * Invoked when the user returns to the main menu
      */
     returnToMainMenu = () => {
-        const { embed: newEmbed, reactions } = _get_first_embed_1.default(this.message, this.instance);
+        const data = _get_first_embed_1.default(this.message, this.instance);
+        const { reactions } = data;
+        let { embed: newEmbed } = data;
+        newEmbed = EmbedBuilder.from(newEmbed).data;
         this.embed.setDescription(newEmbed.description || '');
-        this.message.edit({ embeds: [this.embed] });
+        this.message.edit({ embeds: [this.embed.data] });
         if (this.canBotRemoveReaction()) {
             this.message.reactions.removeAll();
         }
@@ -106,8 +106,8 @@ class ReactionHandler {
      */
     getMaxPages = (commandLength) => {
         let page = 1;
-        if (this.embed && this.embed.description) {
-            const split = this.embed.description.split('\n');
+        if (this.embed && this.embed.data.description) {
+            const split = this.embed.data.description.split('\n');
             const lastLine = split[split.length - 1];
             if (lastLine.startsWith('Página ')) {
                 page = parseInt(lastLine.split(' ')[1]);
@@ -121,8 +121,8 @@ class ReactionHandler {
     getCommands = () => {
         let category = this.instance.getCategory(this.emojiId || this.emojiName);
         const commandsString = this.instance.messageHandler.getEmbed(this.guild, 'HELP_MENU', 'COMMANDS');
-        if (this.embed.description) {
-            const split = this.embed.description.split('\n');
+        if (this.embed.data.description) {
+            const split = this.embed.data.description.split('\n');
             const cmdStr = ' ' + commandsString;
             if (split[0].endsWith(cmdStr)) {
                 category = split[0].replace(cmdStr, '');
@@ -174,7 +174,7 @@ class ReactionHandler {
         }
         desc += `\n\nPágina ${page} / ${maxPages}.`;
         this.embed.setDescription(desc);
-        this.message.edit({ embeds: [this.embed] });
+        this.message.edit({ embeds: [this.embed.data] });
         if (this.canBotRemoveReaction()) {
             this.message.reactions.removeAll();
         }

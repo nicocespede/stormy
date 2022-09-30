@@ -50,11 +50,11 @@ module.exports = {
     callback: (options) => {
         const { message, channel, instance, args, interaction } = options;
         const { guild } = channel;
-        if (guild && !guild.members.me?.permissions.has('SEND_MESSAGES')) {
+        if (guild && !guild.members.me?.permissions.has(discord_js_1.PermissionFlagsBits.SendMessages)) {
             console.warn(`WOKCommands > Could not send message due to no permissions in channel for ${guild.name}`);
             return;
         }
-        if (guild && !guild.members.me?.permissions.has('ADD_REACTIONS')) {
+        if (guild && !guild.members.me?.permissions.has(discord_js_1.PermissionFlagsBits.AddReactions)) {
             return instance.messageHandler.get(guild, 'NO_REACT_PERMS');
         }
         // Typical "!help" syntax for the menu
@@ -78,7 +78,7 @@ module.exports = {
         if (instance.color) {
             embed.setColor([142, 89, 170]);
         }
-        if(interaction) interaction.reply({content: 'Desplegando menú de ayuda...'});
+        if (interaction) interaction.reply({ content: 'Desplegando menú de ayuda...' });
         return embed;
     },
 };
