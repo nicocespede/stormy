@@ -1,12 +1,12 @@
-const { ChannelType } = require('discord.js')
+const { ChannelType, EmbedBuilder } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
 const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./cache');
-const { relativeSpecialDays } = require('./constants');
-const { updateAvatarString, deleteBan, updateBillboardCollectorMessage, updateSmurf, addStat, updateStat } = require('./mongodb');
+const { relativeSpecialDays, githubRawURL } = require('./constants');
+const { updateAvatarString, deleteBan, updateBillboardCollectorMessage, addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -281,5 +281,22 @@ module.exports = {
         return context.font;
     },
 
-    getImageType
+    getImageType,
+
+    getCharacterEmbed: async (assignmentName, characterName) => {
+        const { info, assignments } = cache.getCharacters() || await cache.updateCharacters();
+        const assignment = assignments[assignmentName];
+        if (!characterName) {
+            const keys = Object.keys(assignment);
+            characterName = keys[Math.floor(Math.random() * keys.length)];
+        }
+        const line = assignment[characterName];
+        return {
+            character: characterName,
+            embed: new EmbedBuilder()
+                .setDescription(`**> ${info[characterName].name}:**\n"${line}"`)
+                .setColor(info[characterName].color)
+                .setThumbnail(`${githubRawURL}/assets/characters/${characterName}.png`)
+        };
+    }
 }

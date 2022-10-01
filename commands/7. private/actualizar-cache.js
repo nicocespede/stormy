@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const chalk = require("chalk");
 chalk.level = 1;
-const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds,
+const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../app/cache");
@@ -10,9 +10,10 @@ const { updateMovies, updateGames } = require("../../app/mongodb");
 const choices = [
     { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },
     { name: '🆔 IDs', value: 'ids' },
-    { name: '🎮 Juegos y películas', value: 'games-and-movies' }
+    { name: '🎮 Juegos y películas', value: 'games-and-movies' },
     //TEMP SOLUTION
-    , { name: '❌ Lista negra de pistas', value: 'tracks-blacklist' }//
+    { name: '❌ Lista negra de pistas', value: 'tracks-blacklist' },//
+    { name: '👥 Personajes', value: 'characters' }
 ];
 
 module.exports = {
@@ -106,6 +107,8 @@ module.exports = {
                 await updateBlacklistedSongs();//
             else if (name === 'ids')
                 await updateIds();
+            else if (name === 'characters')
+                await updateCharacters();
 
             await interaction.editReply({ content: '✅ Caché actualizado.' });
         } catch (e) {

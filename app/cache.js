@@ -33,6 +33,7 @@ var blacklistedSongs;//
 var ids;
 var kruMatches;
 let reminders;
+let characters;
 
 const getMcu = () => mcu;
 
@@ -361,5 +362,14 @@ module.exports = {
         reminders = await reminderSchema.find({});
         console.log(chalk.green('> Caché de recordatorios actualizado'));
         return reminders;
+    },
+
+    getCharacters: () => characters,
+    updateCharacters: async () => {
+        await fetch(`${githubRawURL}/characters.json`).then(res => res.text()).then(data => {
+            characters = JSON.parse(data);
+            console.log(chalk.green('> characters.json cargado'));
+        }).catch(err => console.log(chalk.red(`> Error al cargar characters.json\n${err}`)));
+        return characters;
     }
 };
