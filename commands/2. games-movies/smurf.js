@@ -5,7 +5,6 @@ const chalk = require('chalk');
 chalk.level = 1;
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
-const { getCharacterEmbed } = require('../../app/general');
 
 const translateRank = rank => {
     if (!rank)
@@ -92,9 +91,8 @@ module.exports = {
                 } else {
                     const familyRole = await guild.roles.fetch(ids.roles.familia).catch(console.error);
                     const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
-                    const { character, embed } = await getCharacterEmbed("FETCHING_SMURFS");
-                    const deferringMessage = message ? await message.reply({ embeds: [embed] })
-                        : await interaction.reply({ embeds: [embed], ephemeral: true });
+                    const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
+                        : await interaction.deferReply({ ephemeral: true });
                     const accountsField = { name: 'Cuenta', value: '', inline: true };
                     const commandsField = { name: 'ID', value: ``, inline: true };
                     const ranksField = { name: 'Rango', value: ``, inline: true };
@@ -135,12 +133,10 @@ module.exports = {
                             .addFields([accountsField, commandsField, ranksField])
                             .setThumbnail(`attachment://valorant-logo.png`)],
                         files: [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`]
-                    }).then(async () => {
-                        const { embed } = await getCharacterEmbed("SMURFS_READY", character);
-                        reply.embeds = [embed];
+                    }).then(() => {
+                        reply.content = `Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                     }).catch(() => {
-                        reply.embeds = [];
                         reply.content = `Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                     });
