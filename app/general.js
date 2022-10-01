@@ -294,7 +294,8 @@ module.exports = {
         return {
             character: characterName,
             embed: new EmbedBuilder()
-                .setDescription(`**> ${info[characterName].name}:**\n"${line}"`)
+                .setTitle(`${info[characterName].name}:`)
+                .setDescription(`"${line}"`)
                 .setColor(info[characterName].color)
                 .setThumbnail(`${githubRawURL}/assets/characters/${characterName}.png`)
         };
