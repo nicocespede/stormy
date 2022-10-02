@@ -53,12 +53,11 @@ const secondsToFull = (seconds) => {
 };
 
 const getMembersStatus = async channel => {
-    var membersSize = channel.members.size;
+    let membersSize = channel.members.size;
     const valid = [];
     const invalid = [];
-    const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
     channel.members.each(member => {
-        if (member.id === ids.users.bot) {
+        if (member.user.bot) {
             membersSize--;
             valid.push(member);
         } else if (member.voice.deaf && !member.voice.streaming) {

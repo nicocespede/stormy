@@ -1,12 +1,11 @@
-const { getLastAction, getIds, updateIds } = require("../app/cache");
+const { getLastAction } = require("../app/cache");
 const { musicActions } = require("../app/constants");
 const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/music");
 
 const allMembersAreDeafened = async members => {
-    var ret = true;
-    const ids = !getIds() ? await updateIds() : getIds();
+    let ret = true;
     members.each(member => {
-        if (member.id != ids.users.bot && !member.voice.selfDeaf && !member.voice.serverDeaf) {
+        if (!member.user.bot && !member.voice.selfDeaf && !member.voice.serverDeaf) {
             ret = false;
             return;
         }

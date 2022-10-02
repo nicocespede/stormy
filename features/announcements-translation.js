@@ -19,7 +19,7 @@ module.exports = async client => {
     const ids = !getIds() ? await updateIds() : getIds();
 
     client.on('messageCreate', async message => {
-        if (message.channel.id === ids.channels.anuncios && message.author.id != ids.users.bot && !message.author.bot)
+        if (message.channel.id === ids.channels.anuncios && !message.author.bot)
             if (needsTranslation(message.content)) {
                 const text = await translate(message.content.replace(/[&]/g, 'and'), "es");
                 const messages = splitMessage(`**Mensaje de <@${message.author.id}> traducido al español:**\n\n${text}`);

@@ -5,13 +5,13 @@ const { pushDifference, getMembersStatus } = require("../app/general");
 
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
 
             const timestamps = getTimestamps();
 
             // check for streaming or deafen/undeafen updates
-            if (oldState.member.id != ids.users.bot && oldState.channelId === newState.channelId && oldState.channelId != ids.channels.afk) {
+            if (!oldState.member.user.bot && oldState.channelId === newState.channelId && oldState.channelId != ids.channels.afk) {
                 // start counter if user undeafens or starts streaming while being deafened,
                 // and stop counter if user deafens and is not streaming
                 if ((oldState.serverDeaf != newState.serverDeaf) || (oldState.selfDeaf != newState.selfDeaf)
@@ -32,7 +32,7 @@ module.exports = client => {
                         });
                     } else
                         oldState.channel.members.each(async member => {
-                            if (member.id != ids.users.bot)
+                            if (!member.user.bot)
                                 if (timestamps[member.id]) {
                                     await pushDifference(member.id, member.user.tag);
                                     removeTimestamp(member.id);
@@ -50,7 +50,7 @@ module.exports = client => {
                         if (!timestamps[member.id])
                             addTimestamp(member.id, new Date());
                     });
-                else if (membersInNewChannel.size > 2 || oldState.member.id === ids.users.bot) {
+                else if (membersInNewChannel.size > 2 || oldState.member.user.bot) {
                     if (!timestamps[oldState.member.id])
                         addTimestamp(oldState.member.id, new Date());
                 } else if (timestamps[newState.member.id]) {
@@ -71,7 +71,7 @@ module.exports = client => {
                 const membersInOldChannel = await getMembersStatus(oldState.channel);
                 if (membersInOldChannel.size < 2)
                     oldState.channel.members.each(async member => {
-                        if (member.id != ids.users.bot)
+                        if (!member.user.bot)
                             if (timestamps[member.id]) {
                                 await pushDifference(member.id, member.user.tag);
                                 removeTimestamp(member.id)
