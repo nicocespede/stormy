@@ -4,6 +4,7 @@ const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs');
 const chalk = require('chalk');
 chalk.level = 1;
 const collectorMessageSchema = require('../models/collectorMessage-schema');
@@ -366,10 +367,18 @@ module.exports = {
 
     getCharacters: () => characters,
     updateCharacters: async () => {
-        await fetch(`${githubRawURL}/characters.json`).then(res => res.text()).then(data => {
+        try {
+            let data;
+            if (!testing) {
+                const res = await fetch(`${githubRawURL}/characters.json`);
+                data = await res.text();
+            } else
+                data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
             characters = JSON.parse(data);
             console.log(chalk.green('> characters.json cargado'));
-        }).catch(err => console.log(chalk.red(`> Error al cargar characters.json\n${err}`)));
+        } catch (err) {
+            console.log(chalk.red(`> Error al cargar characters.json\n${err}`));
+        }
         return characters;
     }
 };

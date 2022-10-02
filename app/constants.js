@@ -104,12 +104,6 @@ module.exports = {
     ],
 
     gifs: {
-        banned: ['https://c.tenor.com/-WXHweWBiyYAAAAC/ban-banned.gif',
-            'https://c.tenor.com/cUHL6Bm8tbQAAAAd/thanos-is-banned-banned-forever.gif',
-            'https://c.tenor.com/_rMM5ICPEukAAAAC/thor-strike.gif',
-            'https://c.tenor.com/fnSef5C1i2cAAAAd/banned.gif',
-            'https://c.tenor.com/iC1tuZvV5GwAAAAd/fravalgar-ban.gif',
-            'https://c.tenor.com/ZYbX8jyoDr4AAAAC/banned-hulk.gif'],
         unbanned: ['https://c.tenor.com/XenSpjtAqgMAAAAC/im-back.gif',
             'https://c.tenor.com/hmbRl4-fvdAAAAAC/captain-america-chris-evans.gif',
             'https://c.tenor.com/6yksaPPCz5UAAAAd/im-back-back.gif',

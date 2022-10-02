@@ -431,25 +431,6 @@
         "spanish": "**¡Hola <@{USER_ID}>!** Te invito a **seleccionar los roles que desees** en el canal <#{CHANNEL_ID}>.\n\n_Este mensaje se eliminará en 5 minutos..._"
     },
     "BANS": {
-        "BANNED_WITH_REASON": {
-            "spanish": [
-                "**{TAG}** fue baneado del servidor. Razón: **'{REASON}'**.",
-                "**{TAG}** fue baneado del servidor por **'{REASON}'**.",
-                "Banearon a **{TAG}** por **'{REASON}'**.",
-                "**{TAG}** se fue baneado por **'{REASON}'**.",
-                "Cagaron baneando a **{TAG}** por **'{REASON}'**.",
-                "Funaron a **{TAG}** por **'{REASON}'**."
-            ]
-        },
-        "BANNED_WITHOUT_REASON": {
-            "spanish": [
-                "**{TAG}** fue baneado del servidor.",
-                "Banearon a **{TAG}**.",
-                "**{TAG}** se fue baneado.",
-                "Cagaron baneando a **{TAG}**.",
-                "Funaron a **{TAG}**."
-            ]
-        },
         "UNBANNED": {
             "spanish": [
                 "**{TAG}** fue desbaneado del servidor.",
