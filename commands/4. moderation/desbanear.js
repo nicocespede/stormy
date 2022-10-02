@@ -24,21 +24,22 @@ module.exports = {
     callback: async ({ guild, user, message, args, interaction, channel }) => {
         const number = message ? args[0] : interaction.options.getInteger('indice');
         const reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
-        const banRole = await guild.roles.fetch(ids.roles.banear).catch(console.error);
+        const ids = getIds() || await updateIds();
+        const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
+        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || banRole.members.has(user.id);
         const index = parseInt(number) - 1;
         const bans = !getBanned().ids ? await updateBanned() : getBanned();
-        if (!banRole.members.has(user.id)) {
-            reply.content = `Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`;
+        if (!isAuthorized) {
+            reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`;
             return reply;
         } else if (index < 0 || index >= bans.ids.length || isNaN(index)) {
-            reply.content = `El índice ingresado es inválido.`;
+            reply.content = `⚠ El índice ingresado es inválido.`;
             return reply;
         } else {
             const id = bans.ids[index];
             const ban = bans.bans[id];
             if (user.id != ban.responsible && ban.responsible != "Desconocido") {
-                reply.content = `Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`;
+                reply.content = `⚠ Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`;
                 return reply;
             } else {
                 const row = new ActionRowBuilder()
@@ -54,7 +55,7 @@ module.exports = {
                 const messageOrInteraction = message ? message : interaction;
                 const replyMessage = await messageOrInteraction.reply({
                     components: [row],
-                    content: `¿Estás seguro de querer desbanear a **${ban.user}**?`,
+                    content: `⚠ ¿Estás seguro de querer desbanear a **${ban.user}**?`,
                     ephemeral: true
                 });
 
@@ -65,16 +66,16 @@ module.exports = {
                 const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
                 collector.on('end', async collection => {
-                    var edit = { components: [] };
+                    const edit = { components: [] };
                     if (!collection.first())
-                        edit.content = 'La acción expiró.';
+                        edit.content = '⌛ La acción expiró.';
                     else if (collection.first().customId === 'unban_yes')
                         await guild.members.unban(id).then(async () => {
-                            edit.content = 'La acción fue completada.';
+                            edit.content = '✅ La acción fue completada.';
                             channel.send({ content: `Hola <@${user.id}>, el usuario fue desbaneado correctamente.` });
                         }).catch(console.error);
                     else
-                        edit.content = 'La acción fue cancelada.';
+                        edit.content = '❌ La acción fue cancelada.';
                     message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                 });
             }

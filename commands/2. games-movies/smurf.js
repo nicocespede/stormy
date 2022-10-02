@@ -77,15 +77,16 @@ module.exports = {
     callback: async ({ guild, member, user, message, interaction, client, args, channel }) => {
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (!id) {
             if (channel.type === ChannelType.DM) {
-                reply.content = 'Este comando solo se puede utilizar en un servidor.';
+                reply.content = '⚠ Este comando solo se puede utilizar en un servidor.';
                 return reply;
             } else {
                 const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
-                if (!smurfRole.members.has(user.id)) {
-                    reply.content = `Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`;
+                const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
+                if (!isAuthorized) {
+                    reply.content = `😂 Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`;
                     reply.ephemeral = false;
                     return reply;
                 } else {
@@ -96,7 +97,7 @@ module.exports = {
                     const accountsField = { name: 'Cuenta', value: '', inline: true };
                     const commandsField = { name: 'ID', value: ``, inline: true };
                     const ranksField = { name: 'Rango', value: ``, inline: true };
-                    const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
+                    const smurfs = getSmurfs() || await updateSmurfs();
                     let errorsCounter = 0;
                     let description = `Hola <@${user.id}>, `;
                     for (const command in smurfs)
@@ -134,10 +135,10 @@ module.exports = {
                             .setThumbnail(`attachment://valorant-logo.png`)],
                         files: [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`]
                     }).then(() => {
-                        reply.content = `Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
+                        reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                     }).catch(() => {
-                        reply.content = `Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
+                        reply.content = `❌ Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                     });
                 }
@@ -145,22 +146,23 @@ module.exports = {
             return;
         } else {
             const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-            const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
-            const smurfs = !getSmurfs() ? await updateSmurfs() : getSmurfs();
             const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo la información de la cuenta...` })
                 : await interaction.deferReply({ ephemeral: true });
+            const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
+            const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
+            const smurfs = getSmurfs() || await updateSmurfs();
             if (channel.type != ChannelType.DM)
-                reply.content = 'Este comando solo se puede utilizar por mensajes directos.';
-            else if (!smurfRole.members.has(user.id))
-                reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
+                reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
+            else if (!isAuthorized)
+                reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
             else if (!Object.keys(smurfs).includes(id))
-                reply.content = `Hola <@${user.id}>, la cuenta indicada no existe.`;
+                reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
             else {
                 const familyRole = await defaultGuild.roles.fetch(ids.roles.familia).catch(console.error);
                 const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
                 const account = smurfs[id];
                 if (account.vip && !isVip)
-                    reply.content = `Hola <@${user.id}>, no estás autorizado a usar este comando.`;
+                    reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
                 else {
                     const accInfo = account.name.split('#');
                     const mmr = await ValorantAPI.getMMR({

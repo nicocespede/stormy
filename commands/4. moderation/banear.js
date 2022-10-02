@@ -31,10 +31,11 @@ module.exports = {
         const aux = args.splice(1).join(' ');
         const banReason = message ? (aux === '' ? null : aux) : interaction.options.getString('razón');
         const reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
-        const banRole = await guild.roles.fetch(ids.roles.banear).catch(console.error);
-        if (!banRole.members.has(user.id)) {
-            reply.content = `Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`;
+        const ids = getIds() || await updateIds();
+        const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
+        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || banRole.members.has(user.id);
+        if (!isAuthorized) {
+            reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`;
             return reply;
         } else if (!target) {
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
@@ -45,10 +46,10 @@ module.exports = {
             });
             return reply;
         } else if (target.user.id === user.id) {
-            reply.content = `Lo siento <@${user.id}>, ¡no podés banearte a vos mismo!`;
+            reply.content = `⚠ Lo siento <@${user.id}>, ¡no podés banearte a vos mismo!`;
             return reply;
         } else if (target.user.id === ids.users.stormer || target.user.id === ids.users.darkness) {
-            reply.content = `Lo siento <@${user.id}>, los dueños de casa no pueden ser baneados.`;
+            reply.content = `⚠ Lo siento <@${user.id}>, los dueños de casa no pueden ser baneados.`;
             return reply;
         } else {
             const row = new ActionRowBuilder()
@@ -63,7 +64,7 @@ module.exports = {
             const messageOrInteraction = message ? message : interaction;
             const replyMessage = await messageOrInteraction.reply({
                 components: [row],
-                content: `¿Estás seguro de querer banear a **${target.user.tag}**?`,
+                content: `⚠ ¿Estás seguro de querer banear a **${target.user.tag}**?`,
                 ephemeral: true
             });
 
@@ -74,17 +75,17 @@ module.exports = {
             const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
             collector.on('end', async collection => {
-                var edit = { components: [] };
+                const edit = { components: [] };
                 if (!collection.first())
-                    edit.content = 'La acción expiró.';
+                    edit.content = '⌛ La acción expiró.';
                 else if (collection.first().customId === 'ban_yes')
                     await target.ban({ days: 0, reason: banReason }).then(async () => {
                         addBanResponsible(target.user.id, user.id);
-                        edit.content = 'La acción fue completada.';
+                        edit.content = '✅ La acción fue completada.';
                         channel.send({ content: `Hola <@${user.id}>, el usuario fue baneado correctamente.` });
                     }).catch(console.error);
                 else
-                    edit.content = 'La acción fue cancelada.';
+                    edit.content = '❌ La acción fue cancelada.';
                 message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
             });
         }

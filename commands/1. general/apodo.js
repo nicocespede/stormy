@@ -28,31 +28,31 @@ module.exports = {
     callback: async ({ guild, user, message, args, interaction, instance }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
-        await guild.roles.fetch(ids.roles.banear).then(async role => {
-            const newNickname = args.slice(1).join(' ');
-            if (!role.members.has(user.id))
-                reply.content = `Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`;
-            else if (!target)
-                reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
-                    REASON: "Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando.",
-                    PREFIX: prefix,
-                    COMMAND: "apodo",
-                    ARGUMENTS: "`<@amigo>` `[apodo]`"
-                });
-            else if (target.user.id === ids.users.bot)
-                reply.content = `⚠ ¡No podés cambiarme el apodo a mí!`;
-            else if (newNickname.length > 32)
-                reply.content = `⚠ El apodo no puede contener más de 32 caracteres.`;
-            else {
-                await target.setNickname(newNickname).then(() => {
-                    reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
-                    reply.ephemeral = false;
-                }).catch(() => {
-                    reply.content = `❌ Lo siento, no se pudo cambiar el apodo.${target.id === ids.users.stormer ? ' Discord no me permite cambiarle el apodo al dueño del servidor. ☹' : ''}`;
-                });
-            }
-        }).catch(console.error);
+        const ids = getIds() || await updateIds();
+        const role = await guild.roles.fetch(ids.roles.mod).catch(console.error);
+        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || role.members.has(user.id);
+        const newNickname = args.slice(1).join(' ');
+        if (!isAuthorized)
+            reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`;
+        else if (!target)
+            reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+                REASON: "Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando.",
+                PREFIX: prefix,
+                COMMAND: "apodo",
+                ARGUMENTS: "`<@amigo>` `[apodo]`"
+            });
+        else if (target.user.id === ids.users.bot)
+            reply.content = `⚠ ¡No podés cambiarme el apodo a mí!`;
+        else if (newNickname.length > 32)
+            reply.content = `⚠ El apodo no puede contener más de 32 caracteres.`;
+        else {
+            await target.setNickname(newNickname).then(() => {
+                reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
+                reply.ephemeral = false;
+            }).catch(() => {
+                reply.content = `❌ Lo siento, no se pudo cambiar el apodo.${target.id === ids.users.stormer ? ' Discord no me permite cambiarle el apodo al dueño del servidor. ☹' : ''}`;
+            });
+        }
         return reply;
     }
 }
