@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
 chalk.level = 1;
-const { getStats, updateStats, addTimestamp, getTimestamps, getIds, updateIds } = require('../../app/cache');
+const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
@@ -11,7 +11,7 @@ const Versions = {
 
 const timeToString = (version, seconds, minutes, hours, days) => {
     const strings = Versions[version];
-    var ret = '';
+    let ret = '';
     if (days != 0)
         ret += days + ` ${strings[0]}${days > 1 ? 's' : ''}`;
     if (hours != 0)
@@ -41,25 +41,23 @@ module.exports = {
                 await pushDifference(key);
                 addTimestamp(key, new Date());
             }
-        const stats = !getStats() ? await updateStats() : getStats();
-        var usersField = { name: 'Usuario', value: '', inline: true };
-        var timeField = { name: 'Tiempo', value: ``, inline: true };
-        var aux1 = '';
-        var aux2 = '';
-        var needsFooter = false;
+        const stats = getStats() || await updateStats();
+        const usersField = { name: 'Usuario', value: '', inline: true };
+        const timeField = { name: 'Tiempo', value: ``, inline: true };
+        let needsFooter = false;
         const canvas = createCanvas(200, 200);
         const ctx = canvas.getContext('2d');
-        var counter = 1;
-        const ids = !getIds() ? await updateIds() : getIds();
+        let counter = 1;
         for (const key in stats) {
             if (Object.hasOwnProperty.call(stats, key)) {
                 const stat = stats[key];
-                await guild.members.fetch(key).then(member => {
-                    aux1 = usersField.value + `**${key === ids.users.bot ? '🤖' : `${counter++}.`} **${member.user.tag}\n\n`;
-                    aux2 = timeField.value + `${timeToString('full', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
-                    if (ctx.measureText(aux2).width >= 182)
-                        aux2 = timeField.value + `${timeToString('short', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
-                }).catch(() => console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`)));
+                const member = await guild.members.fetch(key).catch(() => console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`)));
+                if (!member)
+                    continue;
+                const aux1 = usersField.value + `**${member.user.bot ? '🤖' : `${counter++}.`} **${member.user.tag.replace(/_/g, '\\_')}\n\n`;
+                let aux2 = timeField.value + `${timeToString('full', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
+                if (ctx.measureText(aux2).width >= 182)
+                    aux2 = timeField.value + `${timeToString('short', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
                 if (aux1.length <= 1024 && aux2.length <= 1024) {
                     usersField.value = aux1;
                     timeField.value = aux2;
