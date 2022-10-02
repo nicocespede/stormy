@@ -413,18 +413,6 @@
                 "Un <@{ID}> salvaje apareció.",
                 "¡Sííí, has llegado, <@{ID}>!"
             ]
-        },
-        "GOODBYE": {
-            "spanish": [
-                "**{TAG}** se fue al pingo.",
-                "**{TAG}** se tomó el palo.",
-                "**{TAG}** se tomó el buque.",
-                "**{TAG}** se fue al choto.",
-                "**{TAG}** se fue a la verga.",
-                "**{TAG}** se borró.",
-                "**{TAG}** tiró la de humo.",
-                "**{TAG}** se fue a comprar cigarrillos."
-            ]
         }
     },
     "AUTOROLE_ADVICE": {

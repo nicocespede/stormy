@@ -1,21 +1,25 @@
+const { EmbedBuilder } = require("discord.js");
 const { getBanned, updateBanned, getIds, updateIds } = require("../app/cache");
+const { getMemberLeaveEmbedInfo } = require("../app/characters");
 const { countMembers } = require("../app/general");
 
-module.exports = (client, instance) => {
+module.exports = client => {
     client.on('guildMemberRemove', async member => {
         const banned = !getBanned().ids ? await updateBanned() : getBanned();
-        member.guild.bans.fetch().then(async bans => {
-            if (bans.size === banned.ids.length) {
-                const ids = !getIds() ? await updateIds() : getIds();
-                client.channels.fetch(ids.channels.welcome).then(channel => {
-                    const { guild } = member;
-                    const goodbyeMessages = instance.messageHandler.getEmbed(guild, 'GREETINGS', 'GOODBYE');
-                    var random = Math.floor(Math.random() * (goodbyeMessages.length));
-                    channel.send({ content: goodbyeMessages[random].replace('{TAG}', member.user.tag) });
-                    countMembers(client);
-                }).catch(console.error);
-            }
-        }).catch(console.error);
+        const bans = await member.guild.bans.fetch().catch(console.error);
+        if (bans.size === banned.ids.length) {
+            const ids = getIds() || await updateIds();
+            const channel = await client.channels.fetch(ids.channels.welcome).catch(console.error);
+            const embedInfo = await getMemberLeaveEmbedInfo(member.user.tag);
+            channel.send({
+                embeds: [new EmbedBuilder()
+                    .setTitle(embedInfo.title)
+                    .setDescription(embedInfo.description)
+                    .setColor(embedInfo.color)
+                    .setThumbnail(embedInfo.thumbnail)]
+            });
+            countMembers(client);
+        }
     });
 };
 

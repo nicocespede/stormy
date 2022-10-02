@@ -9,13 +9,27 @@ module.exports = {
         const lines = situations["BANNED_MEMBER"];
         const keys = Object.keys(lines);
         const characterName = keys[Math.floor(Math.random() * keys.length)];
-        //const characterName = 'blackbolt';
-        const isVoiceless = voicelessCharacters.includes(characterName);
-        const line = !isVoiceless ? `"${lines[characterName]}"` : `\\*${lines[characterName]}\\*`;
+        const character = (Object.entries(info).filter(([_, names]) => Object.keys(names).includes(characterName)))[0];
+        const line = !voicelessCharacters.includes(characterName) ? `"${lines[characterName]}"` : `\\*${lines[characterName]}\\*`;
         return {
-            color: info[characterName].color,
+            color: (character[1])[characterName],
             description: line.replace('{TAG}', tag).replace('{REASON}', reason ? ` por **${reason}**` : ''),
-            title: `${info[characterName].name}:`,
+            title: `${character[0]}:`,
+            thumbnail: `${githubRawURL}/assets/characters/${characterName}.png`
+        }
+    },
+
+    getMemberLeaveEmbedInfo: async tag => {
+        const { info, situations } = getCharacters() || await updateCharacters();
+        const lines = situations["GONE_MEMBER"];
+        const keys = Object.keys(lines);
+        const characterName = keys[Math.floor(Math.random() * keys.length)];
+        const character = (Object.entries(info).filter(([_, names]) => Object.keys(names).includes(characterName)))[0];
+        const line = !voicelessCharacters.includes(characterName) ? `"${lines[characterName]}"` : `\\*${lines[characterName]}\\*`;
+        return {
+            color: (character[1])[characterName],
+            description: line.replace('{TAG}', tag),
+            title: `${character[0]}:`,
             thumbnail: `${githubRawURL}/assets/characters/${characterName}.png`
         }
     }
