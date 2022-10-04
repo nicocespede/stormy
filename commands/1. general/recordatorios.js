@@ -132,9 +132,9 @@ module.exports = {
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
-                date = convertTZ(new Date(`${split[1]}/${split[0]}/${split[2]} ${timeMatch[0]}`), 'America/Argentina/Buenos_Aires');
+                date = new Date(`${split[1]}/${split[0]}/${split[2]} ${timeMatch[0]}`);
 
-                if (date < convertTZ(new Date(), 'America/Argentina/Buenos_Aires')) {
+                if (date < new Date()) {
                     reply.content = '⚠ La fecha introducida ya pasó.';
                     return reply;
                 }
