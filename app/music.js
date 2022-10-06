@@ -93,7 +93,8 @@ module.exports = {
                 tracks.push({ url: track.url, requestedBy: track.requestedBy });
             });
             await addQueue(current, queue.guild.id, queue.metadata.id, previous, tracks, queue.connection.channel.id);
-            queue.destroy(true);
+            if (!queue.destroyed)
+                queue.destroy(true);
         }
     },
 

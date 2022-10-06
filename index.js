@@ -151,7 +151,7 @@ client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log(chalk.yellow('> Reinicio inminente...'));
     // disconnects music bot
-    const ids = !getIds() ? await updateIds() : getIds();
+    const ids = getIds() || await updateIds();
     await emergencyShutdown(client, ids.guilds.default);
 
     // send stats
