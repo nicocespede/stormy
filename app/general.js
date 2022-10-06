@@ -157,15 +157,15 @@ module.exports = {
     getMembersStatus,
 
     checkBansCorrelativity: async client => {
-        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
+        const ids = cache.getIds() || await cache.updateIds();
         await client.guilds.fetch(ids.guilds.default).then(async guild => {
             await guild.bans.fetch().then(async bans => {
-                const banned = !cache.getBanned().ids ? await cache.updateBanned() : cache.getBanned();
+                const banned = cache.getBanned() || await cache.updateBanned();
                 let needUpdate = false;
-                for (const key in banned.bans)
+                for (const key in banned)
                     if (!bans.has(key)) {
                         needUpdate = true;
-                        console.log(chalk.yellow(`> El ban de ${banned.bans[key].user} no corresponde a este servidor`));
+                        console.log(chalk.yellow(`> El ban de ${banned[key].user} no corresponde a este servidor`));
                         await deleteBan(key);
                     }
                 if (needUpdate)

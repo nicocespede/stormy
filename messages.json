@@ -418,16 +418,6 @@
     "AUTOROLE_ADVICE": {
         "spanish": "**¡Hola <@{USER_ID}>!** Te invito a **seleccionar los roles que desees** en el canal <#{CHANNEL_ID}>.\n\n_Este mensaje se eliminará en 5 minutos..._"
     },
-    "BANS": {
-        "UNBANNED": {
-            "spanish": [
-                "**{TAG}** fue desbaneado del servidor.",
-                "Desbanearon a **{TAG}**.",
-                "Le aflojaron las esposas a **{TAG}**.",
-                "Liberaron a **{TAG}**."
-            ]
-        }
-    },
     "MCU": {
         "spanish": "Hola <@{ID}>, para obtener los links usá nuevamente el comando `{PREFIX}ucm` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2).\n\nPor cualquier error o links caídos, por favor avisar a <@334409923389554699>.\n\nLas películas (en [orden cronológico](https://docs.google.com/spreadsheets/d/1Xfe--9Wshbb3ru0JplA2PnEwN7mVawazKmhWJjr_wKs/edit#gid=0)) disponibles para descargar son:\n\n"
     },

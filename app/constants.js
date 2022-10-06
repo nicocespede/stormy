@@ -103,14 +103,6 @@ module.exports = {
         }
     ],
 
-    gifs: {
-        unbanned: ['https://c.tenor.com/XenSpjtAqgMAAAAC/im-back.gif',
-            'https://c.tenor.com/hmbRl4-fvdAAAAAC/captain-america-chris-evans.gif',
-            'https://c.tenor.com/6yksaPPCz5UAAAAd/im-back-back.gif',
-            'https://c.tenor.com/Wi8gMpYJJ7QAAAAC/im-back.gif',
-            'https://c.tenor.com/rtLrct9w1XkAAAAC/avengers-endgame-endgame.gif']
-    },
-
     relativeSpecialDays: {
         easter: 17
     },

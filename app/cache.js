@@ -14,7 +14,7 @@ var mcuMovies;
 var filters;
 var games;
 var birthdays;
-var banned = {};
+let banned;
 var sombraBans;
 var reactionCollectorInfo;
 var rolesMessageInfo;
@@ -134,15 +134,12 @@ module.exports = {
     updateBanned: async () => {
         const banSchema = require('../models/ban-schema');
         const results = await banSchema.find({});
-        banned.bans = {};
-        banned.ids = [];
-        results.forEach(element => {
-            banned.ids.push(element._id);
-            banned.bans[element._id] = {
-                reason: element.reason,
-                responsible: element.responsibleId,
-                user: element.tag
-            };
+        banned = {};
+        results.forEach(element => banned[element._id] = {
+            reason: element.reason,
+            responsible: element.responsibleId,
+            user: element.tag,
+            character: element.character
         });
         console.log(chalk.green('> Caché de baneados actualizado'));
         return banned;

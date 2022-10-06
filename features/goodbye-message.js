@@ -5,9 +5,9 @@ const { countMembers } = require("../app/general");
 
 module.exports = client => {
     client.on('guildMemberRemove', async member => {
-        const banned = !getBanned().ids ? await updateBanned() : getBanned();
+        const banned = getBanned() || await updateBanned();
         const bans = await member.guild.bans.fetch().catch(console.error);
-        if (bans.size === banned.ids.length) {
+        if (bans.size === Object.keys(banned).length) {
             const ids = getIds() || await updateIds();
             const channel = await client.channels.fetch(ids.channels.welcome).catch(console.error);
             const embedInfo = await getMemberLeaveEmbedInfo(member.user.tag);

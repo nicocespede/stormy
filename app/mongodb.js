@@ -23,8 +23,8 @@ module.exports = {
         console.log(chalk.green('> Avatar actualizado en la base de datos'));
     },
 
-    addBan: async (id, tag, responsible, reason) => {
-        await new banSchema({ _id: id, tag: tag, responsibleId: responsible, reason: reason }).save();
+    addBan: async (id, tag, responsible, character, reason) => {
+        await new banSchema({ _id: id, tag: tag, responsibleId: responsible, reason: reason, character: character }).save();
         console.log(chalk.green('> Ban agregado a la base de datos'));
     },
     deleteBan: async id => {

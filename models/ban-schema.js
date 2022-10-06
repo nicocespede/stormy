@@ -7,7 +7,8 @@ const schema = new Schema({
     _id: reqString,
     tag: reqString,
     reason: { type: String, required: false },
-    responsibleId: reqString
+    responsibleId: reqString,
+    character: reqString
 });
 
 const name = 'ban';

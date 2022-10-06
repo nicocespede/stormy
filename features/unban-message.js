@@ -1,22 +1,25 @@
+const { EmbedBuilder } = require("discord.js");
 const { getBanned, updateBanned, getIds, updateIds } = require("../app/cache");
-const { gifs } = require("../app/constants");
+const { getUnbannedMemberEmbedInfo } = require("../app/characters");
 const { deleteBan } = require("../app/mongodb");
 
-module.exports = (client, instance) => {
+module.exports = client => {
     client.on('guildBanRemove', async ban => {
-        const banned = !getBanned().ids ? await updateBanned() : getBanned();
-        if (banned.ids.includes(ban.user.id))
-            await deleteBan(ban.user.id).then(async () => await updateBanned()).catch(console.error);
-        const ids = !getIds() ? await updateIds() : getIds();
-        client.channels.fetch(ids.channels.welcome).then(channel => {
-            const { guild } = ban;
-            const unbannedMessages = instance.messageHandler.getEmbed(guild, 'BANS', 'UNBANNED');
-            var random = Math.floor(Math.random() * (unbannedMessages.length));
-            const msg = { content: unbannedMessages[random].replace('{TAG}', ban.user.tag), files: [] };
-            random = Math.floor(Math.random() * (gifs.unbanned.length));
-            msg.files.push(gifs.unbanned[random]);
-            channel.send(msg);
-        }).catch(console.error);
+        const banned = getBanned() || await updateBanned();
+        if (Object.keys(banned).includes(ban.user.id)) {
+            await deleteBan(ban.user.id).catch(console.error);
+            await updateBanned();
+            const ids = getIds() || await updateIds();
+            const channel = await client.channels.fetch(ids.channels.welcome).catch(console.error);
+            const embedInfo = await getUnbannedMemberEmbedInfo(ban.user.tag, banned[ban.user.id].character);
+            channel.send({
+                embeds: [new EmbedBuilder()
+                    .setTitle(embedInfo.title)
+                    .setDescription(embedInfo.description)
+                    .setColor(embedInfo.color)
+                    .setThumbnail(embedInfo.thumbnail)]
+            });
+        }
     });
 };
 

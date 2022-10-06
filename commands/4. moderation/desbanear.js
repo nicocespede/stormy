@@ -9,7 +9,7 @@ module.exports = {
     options: [
         {
             name: 'indice',
-            description: `El índice otorgado por el comando \`${prefix}baneados\`).`,
+            description: `El índice otorgado por el comando \`${prefix}baneados\`.`,
             required: true,
             type: ApplicationCommandOptionType.Integer
         }
@@ -28,16 +28,16 @@ module.exports = {
         const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
         const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || banRole.members.has(user.id);
         const index = parseInt(number) - 1;
-        const bans = !getBanned().ids ? await updateBanned() : getBanned();
+        const bans = getBanned() || await updateBanned();
         if (!isAuthorized) {
             reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`;
             return reply;
-        } else if (index < 0 || index >= bans.ids.length || isNaN(index)) {
+        } else if (index < 0 || index >= Object.keys(bans).length || isNaN(index)) {
             reply.content = `⚠ El índice ingresado es inválido.`;
             return reply;
         } else {
-            const id = bans.ids[index];
-            const ban = bans.bans[id];
+            const id = Object.keys(bans)[index];
+            const ban = bans[id];
             if (user.id != ban.responsible && ban.responsible != "Desconocido") {
                 reply.content = `⚠ Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`;
                 return reply;
