@@ -4,7 +4,7 @@ const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../app/cache');
-const { ids, musicActions } = require('../../app/constants');
+const { musicActions } = require('../../app/constants');
 
 module.exports = {
     category: 'Música',
