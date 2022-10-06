@@ -50,9 +50,9 @@ module.exports = {
         }
 
         if (interaction) await interaction.deferReply();
-        const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
-        if (playlists.names.includes(song.toLowerCase()))
-            song = playlists.urls[playlists.names.indexOf(song.toLowerCase())];
+        const playlists = getPlaylists() || await updatePlaylists();
+        if (Object.keys(playlists).includes(song.toLowerCase()))
+            song = playlists[song.toLowerCase()];
 
         //TEMP SOLUTION
         const blacklistedSongs = !getBlacklistedSongs() ? await updateBlacklistedSongs() : getBlacklistedSongs();

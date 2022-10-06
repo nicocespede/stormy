@@ -53,7 +53,7 @@ module.exports = {
 
         const reply = { ephemeral: true };
 
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -61,14 +61,16 @@ module.exports = {
         }
 
         if (subCommand === 'ver') {
-            const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
-            var description = `Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\nLas listas de reproducción guardadas son:\n\n`;
-            for (var i = 0; i < playlists.names.length; i++)
-                description += `**${i + 1}.** ${playlists.names[i]} - ${playlists.urls[i]}\n\n`;
+            const playlists = getPlaylists() || await updatePlaylists();
+            let description = `Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\nLas listas de reproducción guardadas son:\n\n`;
+            let i = 1;
+            for (const name in playlists)
+                if (Object.hasOwnProperty.call(playlists, name))
+                    description += `**${i++}.** ${name} - ${playlists[name]}\n\n`;
 
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Listas de reproducción**`)
-                .setDescription(description + `${playlists.names.length === 0 ? '_No hay ninguna lista de reproducción guardada aún._' : ''}`)
+                .setDescription(description + `${Object.keys(playlists).length === 0 ? '_No hay ninguna lista de reproducción guardada aún._' : ''}`)
                 .setColor([195, 36, 255])
                 .setThumbnail(`attachment://icons8-playlist-64.png`)];
             reply.files = ['./assets/thumbs/music/icons8-playlist-64.png'];
@@ -89,7 +91,7 @@ module.exports = {
                 return;
             }
 
-            const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
+            const playlists = getPlaylists() || await updatePlaylists();
             const name = argsName.toLowerCase();
             if (!url || !url.includes('http') || !url.includes('www'))
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
@@ -98,7 +100,7 @@ module.exports = {
                     COMMAND: "listas agregar",
                     ARGUMENTS: "`<nombre>` `<url>`"
                 });
-            else if (playlists.names.includes(name))
+            else if (Object.keys(playlists).includes(name))
                 reply.content = `Ya hay una lista de reproducción guardada con ese nombre.`;
             else
                 await addPlaylist(name, url).then(async () => {
@@ -122,9 +124,9 @@ module.exports = {
                 return;
             }
 
-            const playlists = getPlaylists().names.length === 0 ? await updatePlaylists() : getPlaylists();
+            const playlists = getPlaylists() || await updatePlaylists();
             const name = argsName.toLowerCase();
-            if (!playlists.names.includes(name))
+            if (!Object.keys(playlists).includes(name))
                 reply.content = `⚠ La lista que intentás borrar no existe.`;
             else
                 await deletePlaylist(name).then(async () => {

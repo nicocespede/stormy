@@ -21,7 +21,7 @@ var rolesMessageInfo;
 var anniversaries;
 var avatar;
 var lastAction;
-var playlists = { names: [], urls: [] };
+let playlists;
 var stats;
 var timestamps = {};
 var thermalPasteDates;
@@ -205,16 +205,10 @@ module.exports = {
 
     getPlaylists: () => playlists,
     updatePlaylists: async () => {
-        const newNames = [];
-        const newUrls = [];
         const playlistSchema = require('../models/playlist-schema');
-        const results = await playlistSchema.find({});
-        results.forEach(pl => {
-            newNames.push(pl._id);
-            newUrls.push(pl.url);
-        });
-        playlists.names = newNames;
-        playlists.urls = newUrls;
+        const results = await playlistSchema.find({}).sort({ _id: 'asc' });
+        playlists = {};
+        results.forEach(pl => playlists[pl._id] = pl.url);
         console.log(chalk.green('> Caché de playlists actualizado'));
         return playlists;
     },
