@@ -122,7 +122,7 @@ module.exports = {
     },
 
     addStat: async id => {
-        await new statSchema({ _id: id }).save();
+        await new statSchema({ _id: id, days: 0, hours: 0, minutes: 0, seconds: 0 }).save();
         console.log(chalk.green('> Estadística agregada a la base de datos'));
     },
     updateStat: async (id, days, hours, minutes, seconds, username) => {

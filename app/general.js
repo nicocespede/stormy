@@ -134,17 +134,18 @@ module.exports = {
     },
 
     pushDifference: async (id, username) => {
-        var stats = !cache.getStats() ? await cache.updateStats() : cache.getStats();
+        let stats = cache.getStats() || await cache.updateStats();
         if (!Object.keys(stats).includes(id)) {
             await addStat(id);
+            await new Promise(res => setTimeout(res, 1000 * 2));
             stats = await cache.updateStats();
         }
         const timestamps = cache.getTimestamps();
         const stat = stats[id];
         const now = new Date();
-        var totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
+        const totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
         if (!isNaN(totalTime)) {
-            var { days, hours, minutes, seconds } = secondsToFull(totalTime);
+            const { days, hours, minutes, seconds } = secondsToFull(totalTime);
             await updateStat(id, days, hours, minutes, seconds, username);
         }
         await cache.updateStats();
@@ -158,20 +159,18 @@ module.exports = {
 
     checkBansCorrelativity: async client => {
         const ids = cache.getIds() || await cache.updateIds();
-        await client.guilds.fetch(ids.guilds.default).then(async guild => {
-            await guild.bans.fetch().then(async bans => {
-                const banned = cache.getBanned() || await cache.updateBanned();
-                let needUpdate = false;
-                for (const key in banned)
-                    if (!bans.has(key)) {
-                        needUpdate = true;
-                        console.log(chalk.yellow(`> El ban de ${banned[key].user} no corresponde a este servidor`));
-                        await deleteBan(key);
-                    }
-                if (needUpdate)
-                    await cache.updateBanned();
-            }).catch(console.error);
-        }).catch(console.error);
+        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+        const bans = await guild.bans.fetch().catch(console.error);
+        const banned = cache.getBanned() || await cache.updateBanned();
+        let needUpdate = false;
+        for (const key in banned)
+            if (!bans.has(key)) {
+                needUpdate = true;
+                console.log(chalk.yellow(`> El ban de ${banned[key].user} no corresponde a este servidor`));
+                await deleteBan(key);
+            }
+        if (needUpdate)
+            await cache.updateBanned();
     },
 
     startStatsCounters: async client => {

@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const notReqNumber = { type: Number, required: false };
+const reqNumber = { type: Number, required: true };
 
 const schema = new Schema({
     _id: { type: String, required: true },
-    seconds: notReqNumber,
-    minutes: notReqNumber,
-    hours: notReqNumber,
-    days: notReqNumber
+    seconds: reqNumber,
+    minutes: reqNumber,
+    hours: reqNumber,
+    days: reqNumber
 });
 
 const name = 'stat';
