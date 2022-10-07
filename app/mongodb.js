@@ -17,10 +17,10 @@ module.exports = {
         console.log(chalk.green('> Aniversario actualizado en la base de datos'));
     },
 
-    updateAvatarString: async url => {
-        const avatarSchema = require('../models/avatar-schema');
-        await avatarSchema.updateOne({ _id: 1 }, { url: url });
-        console.log(chalk.green('> Avatar actualizado en la base de datos'));
+    updateIconString: async name => {
+        const iconSchema = require('../models/icon-schema');
+        await iconSchema.updateOne({ _id: 1 }, { name: name });
+        console.log(chalk.green('> Ícono actualizado en la base de datos'));
     },
 
     addBan: async (id, tag, responsible, character, reason) => {

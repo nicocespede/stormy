@@ -5,8 +5,8 @@ const Canvas = require('canvas');
 const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./cache');
-const { relativeSpecialDays } = require('./constants');
-const { updateAvatarString, deleteBan, updateBillboardCollectorMessage, addStat, updateStat } = require('./mongodb');
+const { relativeSpecialDays, githubRawURL } = require('./constants');
+const { updateIconString, deleteBan, updateBillboardCollectorMessage, addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -202,13 +202,13 @@ module.exports = {
         }).catch(console.error);
     },
 
-    updateAvatar: async client => {
-        const actualAvatar = cache.getAvatar() || await cache.updateAvatar();
-        const newAvatar = `./assets/kgprime${getImageType()}.png`;
-        if (actualAvatar != newAvatar) {
-            await client.user.setAvatar(newAvatar).catch(console.error);
-            await updateAvatarString(newAvatar).catch(console.error);
-            await cache.updateAvatar()
+    updateIcon: async guild => {
+        const actualIcon = cache.getIcon() || await cache.updateIcon();
+        const newIcon = `kgprime${getImageType()}`;
+        if (actualIcon != newIcon) {
+            await guild.setIcon(`${githubRawURL}/assets/icons/${newIcon}.png`).catch(console.error);
+            await updateIconString(newIcon).catch(console.error);
+            await cache.updateIcon()
         }
     },
 

@@ -1,5 +1,5 @@
-const { updateAvatar: updateAvatarCache, getAvatar, timeouts } = require('../app/cache');
-const { convertTZ, updateAvatar, updateUsername } = require('../app/general');
+const { updateIcon: updateIconCache, getIcon, timeouts, getIds, updateIds } = require('../app/cache');
+const { convertTZ, updateIcon, updateUsername } = require('../app/general');
 
 module.exports = client => {
     let lastDateChecked = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
@@ -9,21 +9,23 @@ module.exports = client => {
         const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
 
         if (lastDateChecked.getDate() != today.getDate()) {
-            const actualAvatar = getAvatar() || await updateAvatarCache();
-            if (actualAvatar != `./assets/kgprime-kru.png` && client.user.username != 'KRÜ StormY 🤟🏼') {
-                updateAvatar(client);
+            const actualIcon = getIcon() || await updateIconCache();
+            if (actualIcon != `kgprime-kru` && client.user.username != 'KRÜ StormY 🤟🏼') {
+                const ids = getIds() || await updateIds();
+                const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+                updateIcon(guild);
                 updateUsername(client);
             }
 
             lastDateChecked = today;
         }
 
-        timeouts['avatar-and-username-updater'] = setTimeout(check, 1000 * 60);
+        timeouts['icon-and-username-updater'] = setTimeout(check, 1000 * 60);
     };
     check();
 };
 
 module.exports.config = {
-    displayName: 'Actualizador de avatar y nombre de usuario',
-    dbName: 'AVATAR_AND_USERNAME_UPDATER'
+    displayName: 'Actualizador de ícono y nombre de usuario',
+    dbName: 'ICON_AND_USERNAME_UPDATER'
 };

@@ -19,7 +19,7 @@ var sombraBans;
 var reactionCollectorInfo;
 var rolesMessageInfo;
 var anniversaries;
-var avatar;
+let icon;
 var lastAction;
 let playlists;
 var stats;
@@ -188,13 +188,13 @@ module.exports = {
         return anniversaries;
     },
 
-    getAvatar: () => avatar,
-    updateAvatar: async () => {
-        const avatarSchema = require('../models/avatar-schema');
-        const result = await avatarSchema.findById(1, 'url');
-        avatar = result.url;
-        console.log(chalk.green('> Caché de avatar actualizado'));
-        return avatar;
+    getIcon: () => icon,
+    updateIcon: async () => {
+        const iconSchema = require('../models/icon-schema');
+        const result = await iconSchema.findById(1, 'name');
+        icon = result.name;
+        console.log(chalk.green('> Caché de ícono actualizado'));
+        return icon;
     },
 
     getLastAction: () => lastAction,

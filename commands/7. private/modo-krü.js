@@ -1,7 +1,7 @@
-const { getAvatar, updateAvatar, getIds, updateIds } = require("../../app/cache");
+const { getIcon, updateIcon, getIds, updateIds } = require("../../app/cache");
+const { githubRawURL } = require("../../app/constants");
 const general = require("../../app/general");
-const { updateAvatarString } = require("../../app/mongodb");
-const kruAvatarUrl = './assets/kgprime-kru.png';
+const { updateIconString } = require("../../app/mongodb");
 
 module.exports = {
     category: 'Privados',
@@ -13,7 +13,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ client, user, guild }) => {
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (user.id != ids.users.stormer && user.id != ids.users.darkness)
             return {
                 content: `Lo siento <@${user.id}>, este comando solo puede ser utilizado por los Dueños de casa.`,
@@ -21,9 +21,10 @@ module.exports = {
                 ephemeral: true
             };
         else {
-            const actualAvatar = !getAvatar() ? await updateAvatar() : getAvatar();
-            if (actualAvatar === kruAvatarUrl) {
-                await general.updateAvatar(client);
+            const actualIcon = getIcon() || await updateIcon();
+            const kruIcon = `kgprime-kru`;
+            if (actualIcon === kruIcon) {
+                await general.updateIcon(guild);
                 await general.updateUsername(client);
                 await guild.roles.fetch(ids.roles.kru).then(async role => {
                     role.members.each(async member => {
@@ -36,9 +37,9 @@ module.exports = {
                     custom: true
                 };
             } else {
-                await client.user.setAvatar(kruAvatarUrl).then(() => {
-                    updateAvatarString(kruAvatarUrl).then(async _ => await updateAvatar()).catch(console.error);
-                }).catch(console.error);
+                await guild.setIcon(`${githubRawURL}/assets/icons/${kruIcon}.png`).catch(console.error);
+                await updateIconString(kruIcon).catch(console.error);
+                await updateIcon();
                 await client.user.setUsername('KRÜ StormY 🤟🏼').catch(console.error);
                 await guild.roles.fetch(ids.roles.kru).then(async role => {
                     role.members.each(async member => {
@@ -47,7 +48,7 @@ module.exports = {
                     });
                 }).catch(console.error);
                 return {
-                    content: `Modo KRÜ activado... ¡Vamos KRÜ! 🤟🏼`,
+                    content: `Modo KRÜ activado... ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`,
                     custom: true
                 };
             }
