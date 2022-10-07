@@ -76,19 +76,20 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: async ({ guild, user, channel, message, interaction, args, client, instance }) => {
+    callback: async ({ guild, user, channel, message, interaction, args, instance }) => {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
 
         if (subCommand === 'ver') {
-            const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+            const birthdays = getBirthdays() || await updateBirthdays();
             const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            var usersField = { name: 'Usuario', value: '', inline: true };
-            var datesField = { name: 'Fecha', value: '', inline: true };
-            var previousMonth = -1;
+            const usersField = { name: 'Usuario', value: '', inline: true };
+            const datesField = { name: 'Fecha', value: '', inline: true };
+            let previousMonth = -1;
             for (const key in birthdays)
                 if (Object.hasOwnProperty.call(birthdays, key)) {
                     const bday = birthdays[key];
-                    await guild.members.fetch(key).then(member => {
+                    try {
+                        const member = await guild.members.fetch(key).catch(console.error);
                         const month = parseInt(bday.month) - 1;
                         if (previousMonth != month) {
                             usersField.value += `\n**${months[month]}**\n`;
@@ -97,10 +98,11 @@ module.exports = {
                         usersField.value += `${member.user.username}\n`;
                         datesField.value += `${bday.day}/${bday.month}\n`;
                         previousMonth = month;
-                    }).catch(() => deleteBirthday(key).then(async () => {
+                    } catch {
+                        await deleteBirthday(key).catch(console.error);
                         await updateBirthdays();
                         channel.send(`Se eliminó el cumpleaños de **${bday.user}** (el **${bday.day}/${bday.month}**) ya que el usuario no está más en el servidor.`);
-                    }).catch(console.error));
+                    }
                 }
 
             return {
@@ -117,7 +119,7 @@ module.exports = {
         } else if (subCommand === 'agregar') {
             const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
             const date = message ? args[1] : interaction.options.getString('fecha');
-            const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+            const birthdays = getBirthdays() || await updateBirthdays();
             if (!target)
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
@@ -177,7 +179,7 @@ module.exports = {
             return;
         } else if (subCommand === 'borrar' || subCommand === 'eliminar') {
             const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
-            const birthdays = !getBirthdays() ? await updateBirthdays() : getBirthdays();
+            const birthdays = getBirthdays() || await updateBirthdays();
             if (!target)
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
@@ -216,7 +218,7 @@ module.exports = {
                 const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
                 collector.on('end', async collection => {
-                    var edit = { components: [] };
+                    const edit = { components: [] };
                     if (!collection.first())
                         edit.content = '⌛ La acción expiró.';
                     else if (collection.first().customId === 'delete_yes')
