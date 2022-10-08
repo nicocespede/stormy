@@ -1,5 +1,5 @@
 const { getLastAction } = require("../app/cache");
-const { musicActions } = require("../app/constants");
+const { MusicActions } = require("../app/constants");
 const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/music");
 
 const allMembersAreDeafened = async members => {
@@ -37,8 +37,8 @@ module.exports = client => {
             return;
         }
         // clear the queue if was kicked
-        if (getLastAction() != musicActions.LEAVING_EMPTY_CHANNEL && getLastAction() != musicActions.STOPPING
-            && getLastAction() != musicActions.ENDING && getLastAction() != musicActions.RESTARTING)
+        if (getLastAction() != MusicActions.LEAVING_EMPTY_CHANNEL && getLastAction() != MusicActions.STOPPING
+            && getLastAction() != MusicActions.ENDING && getLastAction() != MusicActions.RESTARTING)
             setKicked(client, oldState.guild);
         return;
     });

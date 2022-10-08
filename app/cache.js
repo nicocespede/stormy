@@ -35,6 +35,7 @@ var ids;
 var kruMatches;
 let reminders;
 let characters;
+let songsInQueue = {};
 
 const getMcu = () => mcu;
 
@@ -371,5 +372,13 @@ module.exports = {
             console.log(chalk.red(`> Error al cargar characters.json\n${err}`));
         }
         return characters;
-    }
+    },
+
+    getSongsInQueue: () => songsInQueue,
+    addSongInQueue: (url, messageType, object) => {
+        songsInQueue[url] = {};
+        const newKey = songsInQueue[url];
+        newKey[messageType] = object;
+    },
+    removeSongInQueue: url => (delete songsInQueue[url]),
 };

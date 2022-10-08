@@ -58,7 +58,7 @@ module.exports = {
         }
     },
 
-    musicActions: {
+    MusicActions: {
         ADDING: 'ADDING',
         ADDING_NEXT: 'ADDING_NEXT',
         BEING_KICKED: 'BEING_KICKED',

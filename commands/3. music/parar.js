@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const { updateLastAction, getIds, updateIds } = require("../../app/cache");
-const { musicActions } = require("../../app/constants");
+const { MusicActions } = require("../../app/constants");
 
 module.exports = {
     category: 'Música',
@@ -42,7 +42,7 @@ module.exports = {
             return reply;
         }
 
-        updateLastAction(musicActions.STOPPING);
+        updateLastAction(MusicActions.STOPPING);
         queue.destroy();
 
         reply.embeds = [embed.setDescription("⏹️ Música parada, 👋 ¡adiós!")

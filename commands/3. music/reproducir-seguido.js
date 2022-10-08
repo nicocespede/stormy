@@ -1,10 +1,10 @@
 const { QueryType } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addSongInQueue,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../app/cache');
-const { musicActions } = require('../../app/constants');
+const { MusicActions } = require('../../app/constants');
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
@@ -100,8 +100,8 @@ module.exports = {
         });
 
         if (queue.tracks.length != 0) {
-            var description;
-            updateLastAction(musicActions.ADDING_NEXT);
+            let description;
+            updateLastAction(MusicActions.ADDING_NEXT);
             if (res.playlist) {
                 //TEMP SOLUTION
                 for (let i = 0; i < res.tracks.length; i++) {
@@ -141,9 +141,9 @@ module.exports = {
             message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
             return;
         } else {
-            updateLastAction(musicActions.ADDING);
+            updateLastAction(MusicActions.ADDING);
+            addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
             res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
-            message ? deferringMessage.delete() : interaction.deleteReply();
         }
 
         if (!queue.playing) await queue.play();

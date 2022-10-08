@@ -8,8 +8,7 @@ chalk.level = 1;
 const cache = require('./app/cache');
 const { initiateReactionCollector, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
-const { prefix, musicActions, categorySettings, testing } = require('./app/constants');
-const { getIds, updateIds } = require('./app/cache');
+const { prefix, MusicActions, categorySettings, testing } = require('./app/constants');
 
 const client = new Client({
     intents: [
@@ -29,7 +28,7 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
 
-    const ids = !getIds() ? await updateIds() : getIds();
+    const ids = cache.getIds() || await cache.updateIds();
 
     startStatsCounters(client);
 
@@ -68,49 +67,63 @@ client.on('ready', async () => {
             highWaterMark: 1 << 25
         }
     }).on('trackStart', async (queue, track) => {
-        if (cache.getLastAction() === musicActions.CHANGING_CHANNEL)
-            cache.updateLastAction(musicActions.STARTING_TRACK);
+        if (cache.getLastAction() === MusicActions.CHANGING_CHANNEL)
+            cache.updateLastAction(MusicActions.STARTING_TRACK);
         else {
+            const songInQueue = (cache.getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
-            queue.metadata.send({
+            const reply = {
                 embeds: [new EmbedBuilder().setColor([195, 36, 255])
                     .setDescription(`▶️ Comenzando a reproducir:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
                     .setThumbnail(`attachment://icons8-circled-play-64.png`)
                     .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })],
                 files: [`./assets/thumbs/music/icons8-circled-play-64.png`]
-            });
+            };
+            if (songInQueue) {
+                const { interaction, message } = songInQueue;
+                message ? await message.edit(reply) : await interaction.editReply(reply);
+                cache.removeSongInQueue(track.url);
+            } else
+                queue.metadata.send(reply);
         }
     }).on('trackAdd', async (queue, track) => {
-        var lastAction = cache.getLastAction();
-        if (queue.playing && lastAction != musicActions.MOVING_SONG && lastAction != musicActions.ADDING_NEXT) {
+        const lastAction = cache.getLastAction();
+        if (queue.playing && lastAction != MusicActions.MOVING_SONG && lastAction != MusicActions.ADDING_NEXT) {
+            const { interaction, message } = (cache.getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
-            queue.metadata.send({
+            const reply = {
                 embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
-            });
+            };
+            message ? await message.edit(reply) : await interaction.editReply(reply);
+            cache.removeSongInQueue(track.url);
         }
-    }).on('tracksAdd', async (queue, tracks) => {
-        if (cache.getLastAction() != musicActions.ADDING_NEXT)
-            queue.metadata.send({
+    }).on('tracksAdd', async (_, tracks) => {
+        if (cache.getLastAction() != MusicActions.ADDING_NEXT) {
+            const { interaction, message } = (cache.getSongsInQueue())[tracks[0].url];
+            const reply = {
                 embeds: [musicEmbed.setDescription(`☑️ **${tracks.length} canciones** agregadas a la cola.`)
                     .setThumbnail(`attachment://icons8-add-song-64.png`)],
                 files: [`./assets/thumbs/music/icons8-add-song-64.png`]
-            });
+            };
+            message ? await message.edit(reply) : await interaction.editReply(reply);
+            cache.removeSongInQueue(tracks[0].url);
+        }
     }).on('channelEmpty', (queue) => {
-        cache.updateLastAction(musicActions.LEAVING_EMPTY_CHANNEL);
+        cache.updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
         queue.metadata.send({
             embeds: [musicEmbed.setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
                 .setThumbnail(`attachment://icons8-no-audio-64.png`)],
             files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
         });
     }).on('queueEnd', (queue) => {
-        if (cache.getLastAction() != musicActions.LEAVING_EMPTY_CHANNEL
-            && cache.getLastAction() != musicActions.STOPPING
-            && cache.getLastAction() != musicActions.BEING_KICKED
-            && cache.getLastAction() != musicActions.RESTARTING) {
-            cache.updateLastAction(musicActions.ENDING);
+        if (cache.getLastAction() != MusicActions.LEAVING_EMPTY_CHANNEL
+            && cache.getLastAction() != MusicActions.STOPPING
+            && cache.getLastAction() != MusicActions.BEING_KICKED
+            && cache.getLastAction() != MusicActions.RESTARTING) {
+            cache.updateLastAction(MusicActions.ENDING);
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
                     .setThumbnail(`attachment://icons8-so-so-64.png`)],
@@ -151,7 +164,7 @@ client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log(chalk.yellow('> Reinicio inminente...'));
     // disconnects music bot
-    const ids = getIds() || await updateIds();
+    const ids = cache.getIds() || await cache.updateIds();
     await emergencyShutdown(client, ids.guilds.default);
 
     // send stats

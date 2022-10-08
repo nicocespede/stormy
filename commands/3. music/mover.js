@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction, getIds, updateIds } = require("../../app/cache");
-const { musicActions } = require("../../app/constants");
+const { MusicActions } = require("../../app/constants");
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
@@ -91,7 +91,7 @@ module.exports = {
             var auxString = 'al final';
         } else
             var auxString = `a la posición ${positionIndex + 1}`;
-        updateLastAction(musicActions.MOVING_SONG);
+        updateLastAction(MusicActions.MOVING_SONG);
         queue.insert(song, positionIndex);
 
         const filteredTitle = await cleanTitle(song.title);

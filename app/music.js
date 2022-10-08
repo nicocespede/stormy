@@ -3,12 +3,12 @@ const { EmbedBuilder } = require("discord.js");
 const chalk = require('chalk');
 chalk.level = 1;
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras } = require("./cache");
-const { musicActions } = require("./constants");
+const { MusicActions } = require("./constants");
 const { addQueue } = require("./mongodb");
 
 module.exports = {
     setNewVoiceChannel: (client, guild, channel) => {
-        updateLastAction(musicActions.CHANGING_CHANNEL);
+        updateLastAction(MusicActions.CHANGING_CHANNEL);
         const queue = client.player.getQueue(guild.id);
         if (queue)
             queue.metadata.send({
@@ -20,7 +20,7 @@ module.exports = {
     },
 
     setKicked: (client, guild) => {
-        updateLastAction(musicActions.BEING_KICKED);
+        updateLastAction(MusicActions.BEING_KICKED);
         const queue = client.player.getQueue(guild.id);
         if (queue) {
             queue.metadata.send({
@@ -57,7 +57,7 @@ module.exports = {
     },
 
     leaveEmptyChannel: (client, guild) => {
-        updateLastAction(musicActions.LEAVING_EMPTY_CHANNEL);
+        updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
         const queue = client.player.getQueue(guild.id);
         if (queue) {
             queue.metadata.send({
@@ -71,7 +71,7 @@ module.exports = {
     },
 
     emergencyShutdown: async (client, guildId) => {
-        updateLastAction(musicActions.RESTARTING);
+        updateLastAction(MusicActions.RESTARTING);
         const queue = client.player.getQueue(guildId);
         if (queue) {
             console.log(chalk.yellow('> Guardando cola de reproducción actual'));

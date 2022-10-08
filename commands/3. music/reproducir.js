@@ -1,10 +1,11 @@
 const { QueryType } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addSongInQueue,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
+
 } = require('../../app/cache');
-const { musicActions } = require('../../app/constants');
+const { MusicActions } = require('../../app/constants');
 
 module.exports = {
     category: 'Música',
@@ -116,7 +117,7 @@ module.exports = {
                 selfDeaf: true
             });
 
-            updateLastAction(musicActions.ADDING);
+            updateLastAction(MusicActions.ADDING);
 
             //TEMP SOLUTION
             if (res.playlist)
@@ -137,11 +138,11 @@ module.exports = {
                 });
                 res.tracks[0] = auxRes.tracks[0];
             }//
+            addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
 
             res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
 
             if (!queue.playing) await queue.play();
-            message ? deferringMessage.delete() : interaction.deleteReply();
         }
         return;
     }
