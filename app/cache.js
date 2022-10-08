@@ -65,17 +65,11 @@ module.exports = {
 
     getMcuMovies: () => mcuMovies,
     updateMcuMovies: async (filters) => {
-        const mcu = !getMcu() ? await updateMcu() : getMcu();
+        const mcu = getMcu() || await updateMcu();
         if (filters.includes('all'))
             mcuMovies = mcu;
-        else {
-            var newArray = [];
-            mcu.forEach(movie => {
-                if (filters.includes(movie.type))
-                    newArray.push(movie);
-            });
-            mcuMovies = newArray;
-        }
+        else
+            mcuMovies = mcu.filter(movie => filters.includes(movie.type));
         console.log(chalk.green('> Caché de UCM actualizado'));
         return mcuMovies;
     },

@@ -6,9 +6,9 @@ const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, update
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
 const { updateMcuFilters } = require('../../app/mongodb');
-const validFilters = ['Película', 'Serie', 'Miniserie', 'Cortometraje'];
+const validFilters = ['Película', 'Serie', 'Miniserie', 'One-Shot', 'Especial'];
 
-function areEqual(oldFilters, newFilters) {
+const areEqual = (oldFilters, newFilters) => {
     if (oldFilters.length === newFilters.length) {
         return oldFilters.every(element => {
             if (newFilters.includes(element)) {
@@ -18,12 +18,12 @@ function areEqual(oldFilters, newFilters) {
         });
     }
     return false;
-}
+};
 
-async function getMovieInfo(movieName) {
+const getMovieInfo = async movieName => {
     const fetch = require('node-fetch');
     const info = {};
-    const mcu = !getMcu() ? await updateMcu() : getMcu();
+    const mcu = getMcu() || await updateMcu();
     const movie = mcu.filter(element => element.name === movieName)[0];
     const filteredName = movieName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
     for (const version in movie.lastUpdate)
@@ -53,18 +53,19 @@ module.exports = {
     callback: async ({ user, message, args, interaction, channel, guild, instance }) => {
         if (interaction) await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
-        var reply = { custom: true, ephemeral: true };
+        const reply = { ephemeral: true };
         if (number) {
-            var filters = !getFilters() ? await updateFilters() : getFilters();
-            const mcuMovies = !getMcuMovies() ? await updateMcuMovies(filters) : getMcuMovies();
+            const filters = getFilters() || await updateFilters();
+            const mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
             const index = parseInt(number) - 1;
             if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
                 reply.content = `⚠ El número ingresado es inválido.`;
-                return reply;
+                message ? await message.reply(reply) : await interaction.editReply(reply);
+                return;
             }
             const name = mcuMovies[index].name;
             await getMovieInfo(name).then(async info => {
-                var nowShowing = '';
+                let nowShowing = '';
                 const getVersionsRow = () => {
                     const row = new ActionRowBuilder();
                     for (const ver in info)
@@ -94,8 +95,8 @@ module.exports = {
 
                 const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
 
-                var versionsMessage;
-                var finalCollector;
+                let versionsMessage;
+                let finalCollector;
 
                 collector.on('collect', async i => {
                     const embeds = [];
@@ -143,7 +144,7 @@ module.exports = {
                     const id = user.id;
                     pages[id] = pages[id] || 0;
 
-                    var msg = {
+                    const msg = {
                         components: [getRow(id)],
                         embeds: [embeds[pages[id]]],
                         files: [`${moviePath}/thumb.png`]
@@ -177,7 +178,7 @@ module.exports = {
 
                 collector.on('end', async _ => {
                     if (versionsMessage) versionsMessage.delete();
-                    var edit = {
+                    const edit = {
                         components: [],
                         content: `**${name}**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
                         embeds: [],
@@ -187,24 +188,30 @@ module.exports = {
                 });
             }).catch(console.error);
         } else {
-            var filters = !getFilters() ? await updateFilters() : getFilters();
-            var mcuMovies = !getMcuMovies() ? await updateMcuMovies(filters) : getMcuMovies();
+            let filters = getFilters() || await updateFilters();
+            let mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
 
-            const getFiltersRow = (array) => {
-                const row = new ActionRowBuilder();
+            const getFiltersRows = array => {
+                const rows = [];
+                let row = new ActionRowBuilder();
                 row.addComponents(new ButtonBuilder()
                     .setCustomId('all')
                     .setEmoji(!array.includes('all') ? '🔳' : '✅')
                     .setLabel('Todo')
                     .setStyle(ButtonStyle.Secondary));
                 validFilters.forEach(f => {
+                    if (row.components.length >= 5) {
+                        rows.push(row);
+                        row = new ActionRowBuilder();
+                    }
                     row.addComponents(new ButtonBuilder()
                         .setCustomId(f)
                         .setEmoji(!array.includes(f) ? '🔳' : '✅')
-                        .setLabel(f + 's')
+                        .setLabel(f + (f.endsWith('l') ? 'es' : 's'))
                         .setStyle(ButtonStyle.Secondary));
                 });
-                return row;
+                rows.push(row);
+                return rows;
             };
 
             const secondaryRow = new ActionRowBuilder()
@@ -220,7 +227,7 @@ module.exports = {
                     .setStyle(ButtonStyle.Danger));
 
             reply.content = `**Universo Cinematográfico de Marvel**\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
-            reply.components = [getFiltersRow(filters), secondaryRow];
+            reply.components = getFiltersRows(filters).concat([secondaryRow]);
             reply.files = [`./assets/mcu.jpg`];
 
             const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
@@ -233,15 +240,15 @@ module.exports = {
 
             const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
 
-            var selected = filters.slice(0);
-            var status = '';
-            var extraMessages = [];
+            let selected = filters.slice(0);
+            let status = '';
+            const extraMessages = [];
 
             collector.on('collect', async i => {
-                var update = {};
+                const update = {};
                 if (i.customId === 'all') {
                     selected = !selected.includes('all') ? [i.customId] : [];
-                    update.components = [getFiltersRow(selected), secondaryRow];
+                    update.components = getFiltersRows(selected).concat([secondaryRow]);
                     await i.update(update);
                 } else if (i.customId === 'confirm') {
                     if (selected.length === 0)
@@ -269,22 +276,22 @@ module.exports = {
                         selected.push(i.customId);
                     else
                         selected.splice(selected.indexOf(i.customId), 1);
-                    update.components = [getFiltersRow(selected), secondaryRow];
+                    update.components = getFiltersRows(selected).concat([secondaryRow]);
                     await i.update(update);
                 }
             });
 
             collector.on('end', async _ => {
                 extraMessages.forEach(m => m.delete());
-                var edit = {};
+                const edit = {};
                 if (status === 'CONFIRMED') {
                     const canvas = createCanvas(200, 200);
                     const ctx = canvas.getContext('2d');
                     const color = [181, 2, 22];
                     const embeds = [];
                     const pages = {};
-                    var moviesField = { name: 'Nombre', value: '', inline: true };
-                    var typesField = { name: 'Tipo', value: ``, inline: true };
+                    let moviesField = { name: 'Nombre', value: '', inline: true };
+                    let typesField = { name: 'Tipo', value: ``, inline: true };
                     for (var i = 0; i < mcuMovies.length; i++) {
                         const name = mcuMovies[i].name;
                         const type = mcuMovies[i].type;

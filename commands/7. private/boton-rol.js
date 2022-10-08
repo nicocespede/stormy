@@ -101,7 +101,7 @@ module.exports = {
 
         const text = args.join(' ');
 
-        const data = !getRolesMessageInfo() ? await updateRolesMessageInfo() : getRolesMessageInfo();
+        const data = getRolesMessageInfo() || await updateRolesMessageInfo();
 
         const channelId = data.channelId;
         const messageId = data.messageId;
