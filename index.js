@@ -48,7 +48,7 @@ client.on('ready', async () => {
         dbOptions: { keepAlive: true }
     }).setDefaultPrefix(prefix)
         .setCategorySettings(categorySettings)
-        .setColor([107, 196, 219]);
+        .setColor([0, 119, 145]);
 
     await checkBansCorrelativity(client);
 

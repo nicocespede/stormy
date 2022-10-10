@@ -24,61 +24,69 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const _get_first_embed_1 = __importDefault(require("./!get-first-embed"));
-const _ReactionListener_1 = __importStar(require("./!ReactionListener"));
-const sendHelpMenu = (message, instance) => {
-    const { embed, reactions } = _get_first_embed_1.default(message, instance);
-    message.channel
-        .send({
-            embeds: [embed],
-        })
-        .then((message) => {
-            _ReactionListener_1.addReactions(message, reactions);
-        });
+const _InteractionListener_1 = __importStar(require("./!InteractionListener"));
+const sendHelpMenu = (messageOrInteraction, instance) => {
+    const { embed, rows } = _get_first_embed_1.default(messageOrInteraction, instance);
+    messageOrInteraction.reply({
+        components: rows,
+        embeds: [embed],
+        ephemeral: true
+    });
 };
 module.exports = {
     description: "Muestra los comandos de este bot.",
     category: 'Ayuda',
-    aliases: ['comandos'],
+    aliases: ['comandos', 'help'],
+    options: [{
+        name: 'comando',
+        description: 'El comando del que se quiere obtener ayuda.',
+        required: false,
+        type: discord_js_1.ApplicationCommandOptionType.String
+    }],
     maxArgs: 1,
     expectedArgs: '[comando]',
-    slash: false,
+    slash: 'both',
+    guildOnly: true,
     init: (client, instance) => {
-        client.on('messageReactionAdd', async (reaction, user) => {
-            new _ReactionListener_1.default(instance, reaction, user);
+        client.on('interactionCreate', async interaction => {
+            if (interaction.isButton())
+                new _InteractionListener_1.default(instance, interaction);
         });
     },
-    callback: (options) => {
+    callback: async options => {
         const { message, channel, instance, args, interaction } = options;
         const { guild } = channel;
         if (guild && !guild.members.me?.permissions.has(discord_js_1.PermissionFlagsBits.SendMessages)) {
             console.warn(`WOKCommands > Could not send message due to no permissions in channel for ${guild.name}`);
             return;
         }
-        if (guild && !guild.members.me?.permissions.has(discord_js_1.PermissionFlagsBits.AddReactions)) {
-            return instance.messageHandler.get(guild, 'NO_REACT_PERMS');
-        }
         // Typical "!help" syntax for the menu
         if (args.length === 0) {
-            sendHelpMenu(message, instance);
+            sendHelpMenu(message || interaction, instance);
             return;
         }
         // If the user is looking for info on a specific command
         // Ex: "!help prefix"
-        const arg = args.shift()?.toLowerCase();
+        const arg = message ? args.shift()?.toLowerCase() : interaction.options.getString('comando').toLowerCase();
         const command = instance.commandHandler.getICommand(arg);
-        if (!command) {
-            return instance.messageHandler.get(guild, 'UNKNOWN_COMMAND', {
-                COMMAND: arg,
-            });
-        }
-        const description = _ReactionListener_1.default.getHelp(command, instance, guild);
+        if (!command)
+            return {
+                custom: true,
+                content: instance.messageHandler.get(guild, 'UNKNOWN_COMMAND', {
+                    COMMAND: arg,
+                })
+            };
+        const description = _InteractionListener_1.default.getHelp(command, instance, guild);
         const embed = new discord_js_1.EmbedBuilder()
             .setTitle(`${instance.displayName} ${instance.messageHandler.getEmbed(guild, 'HELP_MENU', 'TITLE')} - ${arg}`)
             .setDescription(description);
-        if (instance.color) {
-            embed.setColor([142, 89, 170]);
+        if (instance.color)
+            embed.setColor(instance.color);
+        if (interaction) {
+            await interaction.reply({ content: 'Desplegando menú de ayuda...', ephemeral: true });
+            interaction.editReply({ content: null, embeds: [embed] });
+            return;
         }
-        if (interaction) interaction.reply({ content: 'Desplegando menú de ayuda...' });
-        return embed;
+        return { custom: true, embeds: [embed] };
     },
 };

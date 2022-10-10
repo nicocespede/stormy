@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const getFirstEmbed = (message, instance) => {
-    const { guild, member } = message;
+const getFirstEmbed = (messageOrInteraction, instance) => {
+    const { guild, member } = messageOrInteraction;
     const { commandHandler: { commands }, messageHandler, } = instance;
     const embed = new discord_js_1.EmbedBuilder()
         .setTitle(`${instance.displayName} ${messageHandler.getEmbed(guild, 'HELP_MENU', 'TITLE')}`)
-        .setFooter({ text: `ID #${message.author?.id}` });
+        .setFooter({ text: `ID #${member.user.id}` });
     if (instance.color) {
         embed.setColor(instance.color);
     }
@@ -27,9 +27,10 @@ const getFirstEmbed = (message, instance) => {
             };
         }
     }
-    const reactions = [];
     const keys = Object.keys(categories);
     let desc = messageHandler.getEmbed(guild, 'HELP_MENU', 'SELECT_A_CATEGORY');
+    const rows = [];
+    let row = new discord_js_1.ActionRowBuilder();
     for (let a = 0; a < keys.length; ++a) {
         const key = keys[a];
         const { emoji } = categories[key];
@@ -42,15 +43,22 @@ const getFirstEmbed = (message, instance) => {
         if (amount === 0) {
             continue;
         }
-        const reaction = emoji;
-        reactions.push(reaction);
-        desc += `\n\n**${reaction} - ${key}** - ${amount} comando${amount === 1 ? '' : 's'}`;
+        desc += `\n\n**${emoji} - ${key}** - ${amount} comando${amount === 1 ? '' : 's'}`;
+        row.addComponents(new discord_js_1.ButtonBuilder()
+            .setCustomId(emoji)
+            .setEmoji(emoji)
+            .setLabel(key)
+            .setStyle(discord_js_1.ButtonStyle.Secondary));
+        if (row.components.length === 5 || a === keys.length - 1) {
+            rows.push(row);
+            row = new discord_js_1.ActionRowBuilder();
+        }
         embed.setThumbnail(instance.client.user.avatarURL());
     }
     embed.setDescription(desc);
     return {
         embed,
-        reactions,
+        rows
     };
 };
 exports.default = getFirstEmbed;

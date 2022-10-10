@@ -66,10 +66,7 @@ module.exports = {
     getMcuMovies: () => mcuMovies,
     updateMcuMovies: async (filters) => {
         const mcu = getMcu() || await updateMcu();
-        if (filters.includes('all'))
-            mcuMovies = mcu;
-        else
-            mcuMovies = mcu.filter(movie => filters.includes(movie.type));
+        mcuMovies = filters.includes('all') ? mcu : mcu.filter(movie => filters.includes(movie.type));
         console.log(chalk.green('> Caché de UCM actualizado'));
         return mcuMovies;
     },
@@ -177,8 +174,7 @@ module.exports = {
     getAnniversaries: () => anniversaries,
     updateAnniversaries: async () => {
         const anniversarySchema = require('../models/anniversary-schema');
-        const results = await anniversarySchema.find({});
-        anniversaries = results;
+        anniversaries = await anniversarySchema.find({});
         console.log(chalk.green('> Caché de aniversarios actualizado'));
         return anniversaries;
     },

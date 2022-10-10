@@ -1,28 +1,15 @@
 "use strict";
 
-const { ChannelType, PermissionsBitField, EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addReactions = void 0;
 const _get_first_embed_1 = __importDefault(require("./!get-first-embed"));
-const /**
-   * Recursively adds reactions to the message
-   * @param message The message to react to
-   * @param reactions A list of reactions to add
-   */ addReactions = (message, reactions) => {
-        const emoji = reactions.shift();
-        if (emoji) {
-            message.react(emoji);
-            addReactions(message, reactions);
-        }
-    };
-exports.addReactions = addReactions;
-class ReactionHandler {
+class InteractionHandler {
     instance;
-    reaction;
+    interaction;
     user;
     message;
     embed;
@@ -31,17 +18,14 @@ class ReactionHandler {
     emojiId = '';
     door = '🚪';
     pageLimit = 3;
-    constructor(instance, reaction, user) {
+    constructor(instance, interaction) {
         this.instance = instance;
-        this.reaction = reaction;
-        this.user = user;
-        this.message = reaction.message;
+        this.interaction = interaction;
+        this.user = interaction.user;
+        this.message = interaction.message;
         this.init();
     }
     init = async () => {
-        if (this.message.partial) {
-            await this.message.fetch();
-        }
         const { embeds, guild } = this.message;
         if (this.user.bot || !embeds || embeds.length !== 1) {
             return;
@@ -51,16 +35,9 @@ class ReactionHandler {
         if (!this.canUserInteract()) {
             return;
         }
-        this.emojiName = this.reaction.emoji.name;
-        this.emojiId = this.reaction.emoji.id || '';
-        this.handleEmoji();
-    };
-    /**
-     * @returns If the bot has access to remove reactions from the help menu
-     */
-    canBotRemoveReaction = () => {
-        return (this.message.channel.type !== ChannelType.DM &&
-            this.message.member?.permissions.has(PermissionsBitField.Flags.ManageMessages));
+        this.emojiName = this.interaction.customId;
+        this.emojiId = this.interaction.customId || '';
+        this.handleButton();
     };
     /**
      * @returns If the user is allowed to interact with this help menu
@@ -77,9 +54,7 @@ class ReactionHandler {
             const { text } = this.embed.data.footer;
             const id = text?.split('#')[1];
             if (id !== this.user.id) {
-                if (this.canBotRemoveReaction()) {
-                    this.reaction.users.remove(this.user.id);
-                }
+                this.interaction.deferUpdate();
                 return false;
             }
         }
@@ -90,15 +65,11 @@ class ReactionHandler {
      */
     returnToMainMenu = () => {
         const data = _get_first_embed_1.default(this.message, this.instance);
-        const { reactions } = data;
+        const { rows } = data;
         let { embed: newEmbed } = data;
         newEmbed = EmbedBuilder.from(newEmbed).data;
         this.embed.setDescription(newEmbed.description || '');
-        this.message.edit({ embeds: [this.embed.data] });
-        if (this.canBotRemoveReaction()) {
-            this.message.reactions.removeAll();
-        }
-        addReactions(this.message, reactions);
+        this.interaction.update({ components: rows, embeds: [this.embed.data] });
     };
     /**
      * @param commandLength How many commands are in the category
@@ -169,27 +140,32 @@ class ReactionHandler {
                     // @ts-ignore
                     names = [...names];
                 }
-                desc += `\n\n${++counter}. ${ReactionHandler.getHelp(command, this.instance, this.guild)}`;
+                desc += `\n\n${++counter}. ${InteractionHandler.getHelp(command, this.instance, this.guild)}`;
             }
         }
         desc += `\n\nPágina ${page} / ${maxPages}.`;
         this.embed.setDescription(desc);
-        this.message.edit({ embeds: [this.embed.data] });
-        if (this.canBotRemoveReaction()) {
-            this.message.reactions.removeAll();
+        const buttons = hasMultiplePages ? [{ emoji: '⬅', label: 'Página anterior' }, { emoji: '➡', label: 'Página siguiente' }] : [];
+        buttons.push({ emoji: '🚪', label: 'Menú principal' });
+        const rows = [];
+        let row = new ActionRowBuilder();
+        for (let a = 0; a < buttons.length; ++a) {
+            row.addComponents(new ButtonBuilder()
+                .setCustomId(buttons[a].emoji)
+                .setEmoji(buttons[a].emoji)
+                .setLabel(buttons[a].label)
+                .setStyle(ButtonStyle.Secondary));
+            if (row.components.length === 5 || a === buttons.length - 1) {
+                rows.push(row);
+                row = new ActionRowBuilder();
+            }
         }
-        const reactions = [];
-        if (hasMultiplePages) {
-            reactions.push('⬅');
-            reactions.push('➡');
-        }
-        reactions.push('🚪');
-        addReactions(this.message, reactions);
+        this.interaction.update({ components: rows, embeds: [this.embed.data] });
     };
     /**
      * Handles the input from the emoji
      */
-    handleEmoji = () => {
+    handleButton = () => {
         if (this.emojiName === this.door) {
             this.returnToMainMenu();
             return;
@@ -198,18 +174,14 @@ class ReactionHandler {
         let [page, maxPages] = this.getMaxPages(length);
         if (this.emojiName === '⬅') {
             if (page <= 1) {
-                if (this.canBotRemoveReaction()) {
-                    this.reaction.users.remove(this.user.id);
-                }
+                this.interaction.deferUpdate();
                 return;
             }
             --page;
         }
         else if (this.emojiName === '➡') {
             if (page >= maxPages) {
-                if (this.canBotRemoveReaction()) {
-                    this.reaction.users.remove(this.user.id);
-                }
+                this.interaction.deferUpdate();
                 return;
             }
             ++page;
@@ -217,4 +189,4 @@ class ReactionHandler {
         this.generateMenu(page, maxPages);
     };
 }
-exports.default = ReactionHandler;
+exports.default = InteractionHandler;

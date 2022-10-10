@@ -316,13 +316,13 @@
             "french": "Menu d'aide"
         },
         "SELECT_A_CATEGORY": {
-            "english": "Please select a command category by clicking it's reaction.",
-            "spanish": "Seleccione una categoría de comando haciendo clic en su reacción.",
-            "portuguese": "Selecione uma categoria de comando clicando em sua reação.",
-            "russian": "Пожалуйста, выберите категорию команд нажатием на её реакцию.",
-            "german": "Bitte wähle eine Befehlskategorie aus, indem du auf eine Reaktion klickst.",
-            "dutch": "Selecteer een commando categorie door op de reactie te klikken.",
-            "french": "Sélectionnez une catégorie de commande en cliquant sur la réaction."
+            "english": "Please select a command category by clicking it's button.",
+            "spanish": "Seleccione una categoría de comando haciendo clic en su botón.",
+            "portuguese": "Selecione uma categoria de comando clicando em sua botão.",
+            "russian": "Пожалуйста, выберите категорию команд нажатием на её кнопка.",
+            "german": "Bitte wähle eine Befehlskategorie aus, indem du auf eine Taste klickst.",
+            "dutch": "Selecteer een commando categorie door op de knop te klikken.",
+            "french": "Sélectionnez une catégorie de commande en cliquant sur la bouton."
         },
         "COMMANDS": {
             "english": "commands",
