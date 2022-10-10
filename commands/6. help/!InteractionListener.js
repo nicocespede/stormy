@@ -26,6 +26,9 @@ class InteractionHandler {
         this.init();
     }
     init = async () => {
+        if (this.message.partial) {
+            await this.message.fetch();
+        }
         const { embeds, guild } = this.message;
         if (this.user.bot || !embeds || embeds.length !== 1) {
             return;
