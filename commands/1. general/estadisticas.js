@@ -4,6 +4,7 @@ const chalk = require('chalk');
 chalk.level = 1;
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
 const { pushDifference } = require('../../app/general');
+const { githubRawURL } = require('../../app/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
@@ -32,7 +33,7 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    callback: async ({ guild, message, interaction, user }) => {
+    callback: async ({ guild, message, interaction, user, instance }) => {
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });
         const timestamps = getTimestamps();
@@ -71,13 +72,13 @@ module.exports = {
             .setTitle(`**Estadísticas**`)
             .setDescription(`Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n${usersField.value.length === 0 ? '_No hay estadísticas actualmente._' : ''}`)
             .addFields(usersField.value.length != 0 ? [usersField, timeField] : [])
-            .setColor([255, 205, 52])
-            .setThumbnail(`attachment://stats.jpg`)
+            .setColor(instance.color)
+            .setThumbnail(`${githubRawURL}/assets/thumbs/bar-chart.png`)
 
         if (needsFooter)
             embed.setFooter({ text: 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' });
 
-        const reply = { content: null, embeds: [embed], files: ['./assets/thumbs/stats.jpg'] };
+        const reply = { content: null, embeds: [embed] };
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
         return;
     }

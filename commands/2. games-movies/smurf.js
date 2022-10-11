@@ -74,7 +74,7 @@ module.exports = {
     expectedArgs: '<id>',
     slash: 'both',
 
-    callback: async ({ guild, member, user, message, interaction, client, args, channel }) => {
+    callback: async ({ guild, member, user, message, interaction, client, args, channel, instance }) => {
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
         const ids = getIds() || await updateIds();
@@ -130,10 +130,9 @@ module.exports = {
                         embeds: [new EmbedBuilder()
                             .setTitle(`**Cuentas smurf**`)
                             .setDescription(description)
-                            .setColor([255, 81, 82])
+                            .setColor(instance.color)
                             .addFields([accountsField, commandsField, ranksField])
-                            .setThumbnail(`attachment://valorant-logo.png`)],
-                        files: [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`]
+                            .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)]
                     }).then(() => {
                         reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
                         message ? deferringMessage.edit(reply) : interaction.editReply(reply);

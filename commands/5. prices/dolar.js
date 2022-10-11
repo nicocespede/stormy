@@ -13,7 +13,7 @@ module.exports = {
     maxArgs: 0,
     slash: 'both',
 
-    callback: async ({ user, message, interaction }) => {
+    callback: async ({ user, message, interaction, instance }) => {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const urlBase = 'https://dolarhoy.com';
         const variants = {
@@ -61,11 +61,10 @@ module.exports = {
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**COTIZACIÓN DEL DÓLAR**`)
                 .setDescription(`Hola <@${user.id}>, la cotización del dólar es:`)
-                .setColor([76, 175, 80])
+                .setColor(instance.color)
                 .addFields([variantsField, bidField, askField])
-                .setThumbnail(`attachment://dolar.png`)
+                .setThumbnail(`${githubRawURL}/assets/thumbs/us-dollar-circled.png`)
                 .setFooter({ text: 'Información obtenida de DolarHoy.' })]
-            reply.files = [`${githubRawURL}/assets/thumbs/dolar.png`];
             reply.content = null;
         }
 

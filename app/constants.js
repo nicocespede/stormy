@@ -7,6 +7,8 @@ module.exports = {
 
     githubRawURL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
 
+    color: [0, 119, 145],
+
     currencies: {
         slp: {
             id: "smooth-love-potion",

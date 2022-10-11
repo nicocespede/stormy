@@ -82,9 +82,8 @@ module.exports = {
                 .setTitle(`**Miras**`)
                 .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${prefix}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
                 .setFields([userCrosshairsField, crosshairsField])
-                .setColor([255, 81, 82])
-                .setThumbnail(`attachment://valorant-logo.png`)];
-            reply.files = [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`];
+                .setColor(instance.color)
+                .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)];
             reply.ephemeral = true;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
@@ -172,10 +171,9 @@ module.exports = {
                 reply.embeds = [new EmbedBuilder()
                     .setTitle(selectedCrosshair.name + owner)
                     .setDescription(`Código de importación de la mira:\n\n` + selectedCrosshair.code)
-                    .setColor([255, 81, 82])
+                    .setColor(instance.color)
                     .setImage(crosshairData.url)
-                    .setThumbnail(`attachment://valorant-logo.png`)];
-                reply.files = [`${githubRawURL}/assets/thumbs/games/valorant-logo.png`];
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)];
                 reply.ephemeral = true;
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             }

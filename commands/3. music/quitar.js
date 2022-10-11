@@ -1,5 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { getIds, updateIds } = require("../../app/cache");
+const { githubRawURL } = require("../../app/constants");
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
 function orderArgs(array) {
@@ -44,26 +45,26 @@ module.exports = {
     expectedArgs: '<números>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, args, client, interaction }) => {
-        const embed = new EmbedBuilder().setColor([195, 36, 255]);
+    callback: async ({ guild, member, user, message, channel, args, client, interaction, instance }) => {
+        const embed = new EmbedBuilder().setColor(instance.color);
         const numbers = message ? args : interaction.options.getString('números').split(' ');
-        const reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
-        const ids = !getIds() ? await updateIds() : getIds();
+        const reply = { custom: true, ephemeral: true };
+
+        const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            reply.files = [];
             return reply;
         }
 
         if (!member.voice.channel) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
@@ -71,13 +72,13 @@ module.exports = {
 
         if (!queue || !queue.playing) {
             reply.embeds = [embed.setDescription("🛑 ¡No hay canciones en la cola!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         if (!validateArgs(numbers, queue.tracks.length)) {
             reply.embeds = [embed.setDescription("🛑 Alguno de los números ingresados es inválido.")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
@@ -90,9 +91,8 @@ module.exports = {
         }
 
         reply.embeds = [embed.setDescription('❌ Se quitó de la cola de reproducción:\n\n' + description.reverse().join(''))
-            .setThumbnail(`attachment://icons8-delete-64.png`)];
+            .setThumbnail(`${githubRawURL}/assets/thumbs/music/delete.png`)];
         reply.ephemeral = false;
-        reply.files = [`./assets/thumbs/music/icons8-delete-64.png`];
         return reply;
     }
 }

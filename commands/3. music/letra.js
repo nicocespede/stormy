@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 const { containsAuthor, cleanTitle } = require("../../app/music");
 const Genius = require("genius-lyrics");
 const { splitMessage } = require('../../app/general');
@@ -23,12 +23,13 @@ module.exports = {
     expectedArgs: '[canción]',
     guildOnly: true,
 
-    callback: async ({ guild, user, message, channel, client, interaction, text }) => {
-        var embed = new EmbedBuilder().setColor([195, 36, 255]);
+    callback: async ({ guild, user, message, channel, client, interaction, text, instance }) => {
+        const embed = new EmbedBuilder().setColor(instance.color);
         const messageOrInteraction = message ? message : interaction;
         const song = message ? text : interaction.options.getString('canción');
-        var reply = { custom: true, ephemeral: true };
-        const ids = !getIds() ? await updateIds() : getIds();
+        const reply = { custom: true, ephemeral: true };
+
+        const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;
@@ -39,8 +40,7 @@ module.exports = {
 
             if (!queue || !queue.playing) {
                 reply.embeds = [embed.setDescription(`🛑 ¡No hay ninguna canción de la cual mostrar la letra! Podés usar el comando **${prefix}letra** seguido del nombre de la canción que buscás.`)
-                    .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                reply.files = [`./assets/thumbs/music/icons8-no-entry-64.png`];
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
                 return reply;
             }
 
@@ -58,8 +58,7 @@ module.exports = {
             }).catch(async error => {
                 if (error.message === 'No result was found') {
                     reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción actual!`)
-                        .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                    reply.files = [`./assets/thumbs/music/icons8-no-entry-64.png`];
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
                     await messageOrInteraction.reply(reply);
                 } else
                     console.error;
@@ -77,8 +76,7 @@ module.exports = {
             }).catch(async error => {
                 if (error.message === 'No result was found') {
                     reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
-                        .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                    reply.files = [`./assets/thumbs/music/icons8-no-entry-64.png`];
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
                     await messageOrInteraction.reply(reply);
                 } else
                     console.error;

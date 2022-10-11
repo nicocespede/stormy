@@ -3,7 +3,7 @@ const { EmbedBuilder } = require("discord.js");
 const chalk = require('chalk');
 chalk.level = 1;
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras } = require("./cache");
-const { MusicActions } = require("./constants");
+const { MusicActions, githubRawURL, color } = require("./constants");
 const { addQueue } = require("./mongodb");
 
 module.exports = {
@@ -12,10 +12,9 @@ module.exports = {
         const queue = client.player.getQueue(guild.id);
         if (queue)
             queue.metadata.send({
-                embeds: [new EmbedBuilder().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor(color)
                     .setDescription(`🔃 Fui movido al canal de voz **${channel.name}**.`)
-                    .setThumbnail(`attachment://icons8-change-64.png`)],
-                files: [`./assets/thumbs/music/icons8-change-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/change.png`)]
             });
     },
 
@@ -24,10 +23,9 @@ module.exports = {
         const queue = client.player.getQueue(guild.id);
         if (queue) {
             queue.metadata.send({
-                embeds: [new EmbedBuilder().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor(color)
                     .setDescription("⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!")
-                    .setThumbnail(`attachment://icons8-disconnected-64.png`)],
-                files: [`./assets/thumbs/music/icons8-disconnected-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/disconnected.png`)]
             });
             queue.destroy();
         }
@@ -61,10 +59,9 @@ module.exports = {
         const queue = client.player.getQueue(guild.id);
         if (queue) {
             queue.metadata.send({
-                embeds: [new EmbedBuilder().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor(color)
                     .setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
-                    .setThumbnail(`attachment://icons8-no-audio-64.png`)],
-                files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
             });
             queue.destroy();
         }
@@ -76,10 +73,9 @@ module.exports = {
         if (queue) {
             console.log(chalk.yellow('> Guardando cola de reproducción actual'));
             await queue.metadata.send({
-                embeds: [new EmbedBuilder().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor(color)
                     .setDescription(`⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`)
-                    .setThumbnail(`attachment://icons8-shutdown-64.png`)],
-                files: [`./assets/thumbs/music/icons8-shutdown-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/restart.png`)]
             });
             const previousTracks = queue.previousTracks.slice();
             const currenTrack = previousTracks.pop();
@@ -109,7 +105,7 @@ module.exports = {
             const previousTracks = previousQueue.previousTracks;
             const tracks = previousQueue.tracks;
             const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId).catch(console.error);
-            const embed = new EmbedBuilder().setColor([195, 36, 255]);
+            const embed = new EmbedBuilder().setColor(color);
 
             if (voiceChannel.members.size > 0) {
                 console.log(chalk.yellow('> Reanudando reproducción interrumpida por el reinicio'));
@@ -123,21 +119,22 @@ module.exports = {
                     metadata: metadata
                 });
 
-                const message = { files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
-
                 try {
                     if (!queue.connection) await queue.connect(voiceChannel)
                 } catch {
                     await client.player.deleteQueue(guild.id);
-                    message.embeds = [embed.setDescription(`🛑 No me puedo unir al canal de voz.`)
-                        .setThumbnail(`attachment://icons8-no-entry-64.png`)];
-                    metadata.send(message);
+                    metadata.send({
+                        embeds: [embed.setDescription(`🛑 No me puedo unir al canal de voz.`)
+                            .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)]
+                    });
+                    await previousQueueSchema.deleteMany({});
+                    return;
                 }
 
-                message.embeds = [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
-                    .setThumbnail(`attachment://icons8-sand-timer-64.png`)];
-                message.files = [`./assets/thumbs/music/icons8-sand-timer-64.png`];
-                await metadata.send(message);
+                await metadata.send({
+                    embeds: [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                });
 
                 const { joinVoiceChannel } = require('@discordjs/voice');
                 joinVoiceChannel({
@@ -172,8 +169,7 @@ module.exports = {
             } else {
                 await metadata.send({
                     embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
-                        .setThumbnail(`attachment://icons8-so-so-64.png`)],
-                    files: [`./assets/thumbs/music/icons8-so-so-64.png`]
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
                 });
             }
             await previousQueueSchema.deleteMany({});
@@ -181,8 +177,8 @@ module.exports = {
     },
 
     cleanTitle: async title => {
-        var newTitle = title;
-        const tracksNameExtras = !getTracksNameExtras() ? await updateTracksNameExtras() : getTracksNameExtras();
+        let newTitle = title;
+        const tracksNameExtras = getTracksNameExtras() || await updateTracksNameExtras();
         for (const extra of tracksNameExtras)
             if (newTitle.includes(extra))
                 newTitle = newTitle.replace(extra, '');

@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { getSombraBans, updateSombraBans } = require('../../app/cache');
+const { githubRawURL } = require('../../app/constants');
 
 module.exports = {
     category: 'Moderación',
@@ -9,8 +10,8 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ instance }) => {
-        const bans = !getSombraBans() ? await updateSombraBans() : getSombraBans();
-        var description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
+        const bans = getSombraBans() || await updateSombraBans();
+        let description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
         for (var i = 0; i < bans.length; i++) {
             const reason = bans[i];
             description += `**${i + 1}:** ${!reason || reason === '' ? 'Sin razón de baneo.' : reason}\n`;
@@ -22,8 +23,7 @@ module.exports = {
                 .setTitle('Bans de **Sombra#9370**')
                 .setDescription(description)
                 .setColor(instance.color)
-                .setThumbnail(`attachment://sombra.jpeg`)],
-            files: ['assets/thumbs/sombra.jpeg'],
+                .setThumbnail(`${githubRawURL}/assets/thumbs/sombra.jpeg`)],
             ephemeral: true
         };
     }

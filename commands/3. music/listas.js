@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../app/cache');
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 const { addPlaylist, deletePlaylist } = require('../../app/mongodb');
 
 module.exports = {
@@ -71,9 +71,8 @@ module.exports = {
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Listas de reproducción**`)
                 .setDescription(description + `${Object.keys(playlists).length === 0 ? '_No hay ninguna lista de reproducción guardada aún._' : ''}`)
-                .setColor([195, 36, 255])
-                .setThumbnail(`attachment://icons8-playlist-64.png`)];
-            reply.files = ['./assets/thumbs/music/icons8-playlist-64.png'];
+                .setColor(instance.color)
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/playlist.png`)];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         } else if (subCommand === 'agregar') {

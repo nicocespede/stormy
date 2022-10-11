@@ -8,7 +8,7 @@ chalk.level = 1;
 const cache = require('./app/cache');
 const { initiateReactionCollector, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle } = require('./app/music');
-const { prefix, MusicActions, categorySettings, testing } = require('./app/constants');
+const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./app/constants');
 
 const client = new Client({
     intents: [
@@ -48,15 +48,15 @@ client.on('ready', async () => {
         dbOptions: { keepAlive: true }
     }).setDefaultPrefix(prefix)
         .setCategorySettings(categorySettings)
-        .setColor([0, 119, 145]);
+        .setColor(color);
 
     await checkBansCorrelativity(client);
 
-    const reactionCollectorInfo = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
+    const reactionCollectorInfo = cache.getReactionCollectorInfo() || await cache.updateReactionCollectorInfo();
     if (reactionCollectorInfo.isActive)
         initiateReactionCollector(client);
 
-    const musicEmbed = new EmbedBuilder().setColor([195, 36, 255]);
+    const musicEmbed = new EmbedBuilder().setColor(color);
     client.player = new Player(client, {
         leaveOnEnd: false,
         leaveOnStop: true,
@@ -73,12 +73,11 @@ client.on('ready', async () => {
             const songInQueue = (cache.getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
             const reply = {
-                embeds: [new EmbedBuilder().setColor([195, 36, 255])
+                embeds: [new EmbedBuilder().setColor(color)
                     .setDescription(`▶️ Comenzando a reproducir:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
-                    .setThumbnail(`attachment://icons8-circled-play-64.png`)
-                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })],
-                files: [`./assets/thumbs/music/icons8-circled-play-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/play.png`)
+                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })]
             };
             if (songInQueue) {
                 const { interaction, message } = songInQueue;
@@ -94,8 +93,7 @@ client.on('ready', async () => {
             const filteredTitle = await cleanTitle(track.title);
             const reply = {
                 embeds: [musicEmbed.setDescription(`☑️ Agregado a la cola:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
-                    .setThumbnail(`attachment://icons8-add-song-64.png`)],
-                files: [`./assets/thumbs/music/icons8-add-song-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
             };
             message ? await message.edit(reply) : await interaction.editReply(reply);
             cache.removeSongInQueue(track.url);
@@ -105,20 +103,18 @@ client.on('ready', async () => {
             const { interaction, message } = (cache.getSongsInQueue())[tracks[0].url];
             const reply = {
                 embeds: [musicEmbed.setDescription(`☑️ **${tracks.length} canciones** agregadas a la cola.`)
-                    .setThumbnail(`attachment://icons8-add-song-64.png`)],
-                files: [`./assets/thumbs/music/icons8-add-song-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
             };
             message ? await message.edit(reply) : await interaction.editReply(reply);
             cache.removeSongInQueue(tracks[0].url);
         }
-    }).on('channelEmpty', (queue) => {
+    }).on('channelEmpty', queue => {
         cache.updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
         queue.metadata.send({
             embeds: [musicEmbed.setDescription("🔇 Ya no queda nadie escuchando música, 👋 ¡adiós!")
-                .setThumbnail(`attachment://icons8-no-audio-64.png`)],
-            files: [`./assets/thumbs/music/icons8-no-audio-64.png`]
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
         });
-    }).on('queueEnd', (queue) => {
+    }).on('queueEnd', queue => {
         if (cache.getLastAction() != MusicActions.LEAVING_EMPTY_CHANNEL
             && cache.getLastAction() != MusicActions.STOPPING
             && cache.getLastAction() != MusicActions.BEING_KICKED
@@ -126,8 +122,7 @@ client.on('ready', async () => {
             cache.updateLastAction(MusicActions.ENDING);
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")
-                    .setThumbnail(`attachment://icons8-so-so-64.png`)],
-                files: [`./assets/thumbs/music/icons8-so-so-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
             });
         }
     }).on('connectionError', (queue, error) => {
@@ -135,8 +130,7 @@ client.on('ready', async () => {
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                .setThumbnail(`attachment://icons8-delete-64.png`)],
-            files: [`./assets/thumbs/music/icons8-delete-64.png`]
+                .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
         });
         if (!queue.destroyed)
             queue.destroy();
@@ -145,8 +139,7 @@ client.on('ready', async () => {
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                .setThumbnail(`attachment://icons8-delete-64.png`)],
-            files: [`./assets/thumbs/music/icons8-delete-64.png`]
+                .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
         });
         if (!queue.destroyed)
             queue.destroy();

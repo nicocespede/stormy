@@ -48,7 +48,7 @@ module.exports = {
 
     slash: true,
 
-    callback: async ({ user, interaction }) => {
+    callback: async ({ user, interaction, instance }) => {
         const subCommand = interaction.options.getSubcommand();
 
         if (subCommand === 'ver') {
@@ -66,10 +66,9 @@ module.exports = {
                     embeds: [new EmbedBuilder()
                         .setTitle('🔔 Tus recordatorios')
                         .setDescription(description)
-                        .setColor([255, 2, 6])
-                        .setThumbnail('attachment://alarm.png')],
-                    ephemeral: true,
-                    files: [`${githubRawURL}/assets/thumbs/alarm.png`]
+                        .setColor(instance.color)
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/alarm-clock.png`)],
+                    ephemeral: true
                 });
                 return;
             } else

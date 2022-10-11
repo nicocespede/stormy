@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const { getIds, updateIds } = require("../../app/cache");
+const { githubRawURL } = require("../../app/constants");
 
 module.exports = {
     category: 'Música',
@@ -11,48 +12,45 @@ module.exports = {
     maxArgs: 0,
     guildOnly: true,
 
-    callback: async ({ guild, member, user, channel, client }) => {
-        const errorEmbed = new EmbedBuilder().setColor([195, 36, 255]);
-        const reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
-        const ids = !getIds() ? await updateIds() : getIds();
+    callback: async ({ guild, member, user, channel, client, instance }) => {
+        const embed = new EmbedBuilder().setColor(instance.color);
+        const reply = { custom: true, ephemeral: true };
+
+        const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            reply.files = [];
             return reply;
         }
         if (!member.voice.channel) {
-            reply.embeds = [errorEmbed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
-            reply.embeds = [errorEmbed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         const queue = client.player.getQueue(guild.id);
 
         if (!queue || !queue.playing) {
-            reply.embeds = [errorEmbed.setDescription("🛑 ¡No hay música reproduciéndose!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            reply.embeds = [embed.setDescription("🛑 ¡No hay música reproduciéndose!")
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         if (!queue.previousTracks[1]) {
-            reply.embeds = [errorEmbed.setDescription("🛑 ¡No había otra canción antes!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+            reply.embeds = [embed.setDescription("🛑 ¡No había otra canción antes!")
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         await queue.back();
 
-        reply.embeds = [new EmbedBuilder()
-            .setDescription(`⏮️ Reproduciendo canción anterior.`)
-            .setColor([195, 36, 255])
-            .setThumbnail(`attachment://icons8-backward-button-64.png`)];
+        reply.embeds = [embed.setDescription(`⏮️ Reproduciendo canción anterior.`)
+            .setThumbnail(`${githubRawURL}/assets/thumbs/music/backward-button.png`)];
         reply.ephemeral = false;
-        reply.files = [`./assets/thumbs/music/icons8-backward-button-64.png`];
 
         return reply;
     }

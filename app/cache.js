@@ -1,4 +1,4 @@
-const { githubRawURL, testing } = require('./constants');
+const { githubRawURL, testing, color } = require('./constants');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -80,7 +80,7 @@ module.exports = {
                 if (Object.hasOwnProperty.call(parsed, key)) {
                     const element = parsed[key];
                     if (key === 'steam') {
-                        const embedData = { color: [18, 43, 94], thumb: `${githubRawURL}/assets/thumbs/games/steam.png` };
+                        const embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/steam.png` };
                         for (const game of element)
                             await steam.getGameDetails(game.id).then(data => {
                                 games.push({
@@ -95,7 +95,7 @@ module.exports = {
                                 });
                             }).catch(console.error);
                     } else {
-                        const embedData = { color: [234, 61, 78], thumb: `${githubRawURL}/assets/thumbs/games/games.png` };
+                        const embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/control.png` };
                         element.embedData = embedData;
                         games.concat(element);
                     }

@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction, getIds, updateIds } = require("../../app/cache");
-const { MusicActions } = require("../../app/constants");
+const { MusicActions, githubRawURL } = require("../../app/constants");
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
@@ -29,26 +29,26 @@ module.exports = {
     expectedArgs: '<número> <posición>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, args, client, interaction }) => {
-        const embed = new EmbedBuilder().setColor([195, 36, 255]);
+    callback: async ({ guild, member, user, message, channel, args, client, interaction, instance }) => {
+        const embed = new EmbedBuilder().setColor(instance.color);
         const number = message ? args[0] : interaction.options.getInteger('número');
         const position = message ? args[1] : interaction.options.getInteger('posición');
-        const reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
-        const ids = !getIds() ? await updateIds() : getIds();
+        const reply = { custom: true, ephemeral: true };
+
+        const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            reply.files = [];
             return reply;
         }
         if (!member.voice.channel) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
@@ -56,13 +56,13 @@ module.exports = {
 
         if (!queue || !queue.playing) {
             reply.embeds = [embed.setDescription("🛑 ¡No hay ninguna canción para mover!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         if (queue.tracks.length <= 1) {
             reply.embeds = [embed.setDescription("🛑 ¡No hay suficientes canciones en la cola para mover!")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
@@ -70,35 +70,35 @@ module.exports = {
 
         if (songIndex < 0 || songIndex >= queue.tracks.length || isNaN(songIndex)) {
             reply.embeds = [embed.setDescription("🛑 El número de canción ingresado es inválido.")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
-        var positionIndex = parseInt(position - 1);
+        let positionIndex = parseInt(position - 1);
 
         if (isNaN(positionIndex)) {
             reply.embeds = [embed.setDescription("🛑 El número de posición ingresado es inválido.")
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         const song = queue.remove(songIndex);
+        let auxString;
         if (positionIndex <= 0) {
             positionIndex = 0;
-            var auxString = 'al principio';
+            auxString = 'al principio';
         } else if (positionIndex >= queue.tracks.length - 1) {
             positionIndex = queue.tracks.length - 1;
-            var auxString = 'al final';
+            auxString = 'al final';
         } else
-            var auxString = `a la posición ${positionIndex + 1}`;
+            auxString = `a la posición ${positionIndex + 1}`;
         updateLastAction(MusicActions.MOVING_SONG);
         queue.insert(song, positionIndex);
 
         const filteredTitle = await cleanTitle(song.title);
         reply.embeds = [embed.setDescription(`🔁 **${filteredTitle}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
-            .setThumbnail(`attachment://icons8-repeat-64.png`)];
+            .setThumbnail(`${githubRawURL}/assets/thumbs/music/sorting-arrows.png`)];
         reply.ephemeral = false;
-        reply.files = [`./assets/thumbs/music/icons8-repeat-64.png`];
         return reply;
     }
 }

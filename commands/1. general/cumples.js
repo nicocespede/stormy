@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../app/cache');
-const { prefix } = require('../../app/constants');
+const { prefix, githubRawURL } = require('../../app/constants');
 const { addBirthday, deleteBirthday } = require('../../app/mongodb');
 
 const validateDate = (instance, guild, date) => {
@@ -110,11 +110,10 @@ module.exports = {
                 embeds: [new EmbedBuilder()
                     .setTitle(`**Cumpleaños**`)
                     .setDescription(`Hola <@${user.id}>, los cumpleaños registrados son:\n\n`)
-                    .setColor([237, 0, 0])
+                    .setColor(instance.color)
                     .addFields([usersField, datesField])
-                    .setThumbnail(`attachment://bday.png`)],
-                ephemeral: true,
-                files: [`./assets/thumbs/bday.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/birthday.png`)],
+                ephemeral: true
             };
         } else if (subCommand === 'agregar') {
             const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');

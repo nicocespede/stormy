@@ -58,11 +58,10 @@ module.exports = {
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Juegos crackeados**`)
                 .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: prefix }))
-                .setColor([234, 61, 78])
+                .setColor(instance.color)
                 .addFields([gamesField, updatesField])
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
-                .setThumbnail(`attachment://games.png`)];
-            reply.files = [`${githubRawURL}/assets/thumbs/games/games.png`];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/games/games-folder.png`)];
         } else {
             const index = parseInt(number) - 1;
             if (index < 0 || index >= games.length || isNaN(index))

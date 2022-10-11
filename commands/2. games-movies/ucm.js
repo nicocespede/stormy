@@ -306,7 +306,7 @@ module.exports = {
                             embeds.push(new EmbedBuilder()
                                 .setColor(color)
                                 .addFields([moviesField, typesField])
-                                .setThumbnail(`attachment://mcu-logo.png`));
+                                .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
                             moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                             typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
                             if (ctx.measureText(newName).width > 288)
@@ -316,7 +316,7 @@ module.exports = {
                     embeds.push(new EmbedBuilder()
                         .setColor(color)
                         .addFields([moviesField, typesField])
-                        .setThumbnail(`attachment://mcu-logo.png`));
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
                     for (let i = 0; i < embeds.length; i++) {
                         const msg = embeds[i];
                         msg.setFooter({ text: `Página ${i + 1} | ${embeds.length}` });
@@ -359,7 +359,7 @@ module.exports = {
                     edit.components = [getRow(id)];
                     edit.content = `**Universo Cinematográfico de Marvel**\n\n⚠ Podés navegar libremente por las páginas durante 5 minutos, luego esta acción expirará.\n\u200b`;
                     edit.embeds = [embeds[pages[id]]];
-                    edit.files = [`./assets/thumbs/mcu-logo.png`];
+                    edit.files = [];
 
                     const finalCollector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
 

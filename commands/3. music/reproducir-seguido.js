@@ -4,7 +4,7 @@ const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addS
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../app/cache');
-const { MusicActions } = require('../../app/constants');
+const { MusicActions, githubRawURL } = require('../../app/constants');
 const { containsAuthor, cleanTitle } = require("../../app/music");
 
 module.exports = {
@@ -25,27 +25,26 @@ module.exports = {
     expectedArgs: '<URL ó canción>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, client, interaction, text }) => {
-        const embed = new EmbedBuilder().setColor([195, 36, 255]);
+    callback: async ({ guild, member, user, message, channel, client, interaction, text, instance }) => {
+        const embed = new EmbedBuilder().setColor(instance.color);
         var song = message ? text : interaction.options.getString('canción');
-        const reply = { custom: true, ephemeral: true, files: [`./assets/thumbs/music/icons8-no-entry-64.png`] };
+        const reply = { custom: true, ephemeral: true };
 
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            reply.files = [];
             return reply;
         }
 
         if (!member.voice.channel) {
             reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en un canal de voz para usar este comando!`)
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!`)
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
@@ -55,7 +54,7 @@ module.exports = {
             song = playlists[song.toLowerCase()];
 
         //TEMP SOLUTION
-        const blacklistedSongs = !getBlacklistedSongs() ? await updateBlacklistedSongs() : getBlacklistedSongs();
+        const blacklistedSongs = getBlacklistedSongs() || await updateBlacklistedSongs();
         if (Object.keys(blacklistedSongs).includes(song)) {
             song = blacklistedSongs[song];
         }//
@@ -67,7 +66,7 @@ module.exports = {
 
         if (!res || !res.tracks.length) {
             reply.embeds = [embed.setDescription(`🛑 ¡${user}, no se encontraron resultados! `)
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
@@ -80,14 +79,13 @@ module.exports = {
         } catch {
             await client.player.deleteQueue(guild.id);
             reply.embeds = [embed.setDescription(`🛑 ${user}, no me puedo unir al canal de voz.`)
-                .setThumbnail(`attachment://icons8-no-entry-64.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
             return reply;
         }
 
         reply.embeds = [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
-            .setThumbnail(`attachment://icons8-sand-timer-64.png`)];
+            .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)];
         reply.ephemeral = false;
-        reply.files = [`./assets/thumbs/music/icons8-sand-timer-64.png`];
         const deferringMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
         const voiceChannel = member.voice.channel;
@@ -135,8 +133,7 @@ module.exports = {
             }
             const edit = {
                 embeds: [embed.setDescription(description)
-                    .setThumbnail(`attachment://icons8-add-song-64.png`)],
-                files: [`./assets/thumbs/music/icons8-add-song-64.png`]
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
             };
             message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
             return;

@@ -42,7 +42,7 @@ module.exports = {
         const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
         const reply = {};
         if (!availableCurrencies.includes(argsCurrency)) {
-            const ids = !getIds() ? await updateIds() : getIds();
+            const ids = getIds() || await updateIds();
             reply.content = instance.messageHandler.get(guild, 'INVALID_CURRENCY', {
                 CURRENCIES: availableCurrencies.join(', '),
                 ID: ids.users.stormer
@@ -78,21 +78,19 @@ module.exports = {
             else {
                 const canvas = Canvas.createCanvas(500, 250);
                 const context = canvas.getContext('2d');
-                const swapImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/swap.png`);
+                const swapImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/sorting-arrows-horizontal.png`);
                 const pesoImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/peso.png`);
 
                 const variantsField = { name: 'Variante', value: '', inline: true };
                 const valuesField = { name: 'Conversión', value: ``, inline: true };
                 const pricesField = { name: 'Valores tomados en cuenta:', value: `` };
                 let coinID;
-                let color = [76, 175, 80];
                 let currency = 'Dólares';
-                let imageURL = `${githubRawURL}/assets/thumbs/dolar.png`;
+                let imageURL = `${githubRawURL}/assets/thumbs/us-dollar-circled.png`;
                 let coinPrice;
 
                 if (argsCurrency != 'usd') {
                     coinID = currencies[argsCurrency].id;
-                    color = currencies[argsCurrency].color;
                     let data = await CoinGeckoClient.coins.fetch(coinID, {});
                     data = data.data;
                     currency = data.localization.es;
@@ -120,9 +118,9 @@ module.exports = {
                     .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
                     .setDescription(`Hola <@${user.id}>, la conversión de **${quantity} ${currency}** a Pesos Argentinos es:`)
                     .setFields([variantsField, valuesField, pricesField])
-                    .setColor(color)
+                    .setColor(instance.color)
                     .setImage('attachment://image.png')
-                    .setThumbnail(client.user.avatarURL())
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/exchange.png`)
                     .setFooter({ text: 'Cotización del dólar obtenida de DolarHoy.' })];
                 reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
                 reply.content = null;
