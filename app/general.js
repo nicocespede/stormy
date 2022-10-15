@@ -127,7 +127,7 @@ module.exports = {
         reactionCollector.on('remove', async (_, user) => {
             const member = await guild.members.fetch(user.id).catch(console.error);
             await member.roles.remove(role.id);
-            console.log(chalk.green(`> Rol 'función' quitado a ${member.user.tag}`));
+            console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
         });
         cache.setReactionCollector(reactionCollector);
         console.log(chalk.green('> Recolector de reacciones activado'));

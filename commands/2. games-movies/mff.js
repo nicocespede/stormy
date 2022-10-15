@@ -6,10 +6,8 @@ const secondsToHours = seconds => {
     let hours = Math.floor(seconds / 3600) % 24;
     seconds -= hours * 3600;
     // calculate (and subtract) whole minutes
-    let minutes = Math.floor(seconds / 60) % 60;
-    seconds -= minutes * 60;
-    seconds = seconds % 60;
-    return `${hours > 0 ? `${hours}h` : ''} ${minutes > 0 ? `${minutes}m` : ''} ${seconds > 0 ? `${seconds}s` : ''}`;
+    let minutes = Math.ceil(seconds / 60) % 60;
+    return `${hours > 0 ? `${hours}h` : ''} ${minutes > 0 ? `${minutes}m` : ''}`;
 };
 
 module.exports = {
