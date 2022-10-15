@@ -9,41 +9,18 @@ function until(conditionFunction) {
     return new Promise(poll);
 };
 
-const getMaxPoints = points => {
-    var max = 0;
-    for (const id in points)
-        if (Object.hasOwnProperty.call(points, id)) {
-            const element = points[id];
-            if (element > max)
-                max = element;
-        }
-    return max;
-};
+const getMaxPoints = points => Object.entries(points).map(([_, p]) => p).reduce((a, b) => Math.max(a, b), -Infinity);
 
 const checkDraw = points => {
-    var max = getMaxPoints(points);
-    var appearances = 0;
-    for (const id in points)
-        if (Object.hasOwnProperty.call(points, id)) {
-            const element = points[id];
-            if (element === max)
-                appearances++;
-        }
-    return appearances > 1;
+    const max = getMaxPoints(points);
+    return Object.entries(points).filter(([_, p]) => p === max).length > 1;
 };
 
 const getWinner = async (guild, points) => {
-    var max = getMaxPoints(points);
-    var winner;
-    for (const id in points)
-        if (Object.hasOwnProperty.call(points, id)) {
-            const element = points[id];
-            if (element === max) {
-                await guild.members.fetch(id).then(member => winner = member.user.tag).catch(console.error);
-                break;
-            }
-        }
-    return winner;
+    const max = getMaxPoints(points);
+    const id = Object.entries(points).filter(([_, p]) => p === max).pop()[0];
+    const member = await guild.members.fetch(id).catch(console.error);
+    return member.user.tag;
 };
 
 module.exports = {
@@ -72,8 +49,8 @@ module.exports = {
         if (parsedNumber <= 0 || parsedNumber > quiz.length - 1 || isNaN(parsedNumber))
             return { content: `⚠ El número debe estar entre 1 y ${quiz.length - 1}.`, custom: true, ephemeral: true };
         else {
-            var participants = [user.id];
-            var readyToStart = false;
+            const participants = [user.id];
+            let readyToStart = false;
             const row = new ActionRowBuilder()
                 .addComponents(new ButtonBuilder().setCustomId('join')
                     .setEmoji('✋🏼')
@@ -152,11 +129,9 @@ module.exports = {
                         return participants.includes(m.author.id);
                     };
 
-                    var points = {};
-                    for (let i = 0; i < participants.length; i++) {
-                        const element = participants[i];
-                        points[element] = 0;
-                    }
+                    const score = {};
+                    for (const id of participants)
+                        score[id] = 0;
 
                     await new Promise(res => setTimeout(res, 1000 * 1));
 
@@ -178,7 +153,7 @@ module.exports = {
                                     answered = true;
                                     messagesCollector.stop();
                                     newChannel.send(`✅ **¡Correcto <@${msg.author.id}>!**${i != selectedQuestions.length - 2 ? ' Siguiente pregunta...' : ''}`);
-                                    points[msg.author.id] += 5;
+                                    score[msg.author.id] += 5;
                                 }).catch(console.error);
                         });
 
@@ -191,7 +166,7 @@ module.exports = {
                         await until(_ => answered === true);
                     }
 
-                    if (checkDraw(points)) {
+                    if (checkDraw(score)) {
                         var answered = false;
                         var actualQuestion = selectedQuestions[selectedQuestions.length - 1];
                         newChannel.send(`🤔 **¡Hay empate!** Última pregunta de desempate...`);
@@ -209,11 +184,11 @@ module.exports = {
                                     answered = true;
                                     messagesCollector.stop();
                                     newChannel.send(`✅ **¡Correcto <@${msg.author.id}>!**`);
-                                    points[msg.author.id] += 5;
+                                    score[msg.author.id] += 5;
                                 }).catch(console.error);
                         });
 
-                        messagesCollector.on('end', collected => {
+                        messagesCollector.on('end', _ => {
                             if (!answered) {
                                 newChannel.send(`⏳ **¡Tiempo!**`);
                                 answered = true;
@@ -231,13 +206,15 @@ module.exports = {
                                 .setURL(`https://discord.com/channels/${guild.id}/${channel.id}/${reply.id}`))]
                     });
 
-                    var msg = checkDraw(points) ? `⚖ **¡Quiz terminado en empate!**\n\n**Puntuaciones:**\n`
-                        : `🏆 **¡${await getWinner(guild, points)} ganó el quiz!**\n\n**Puntuaciones:**\n`;
-                    for (const id in points)
-                        if (Object.hasOwnProperty.call(points, id)) {
-                            const element = points[id];
-                            await guild.members.fetch(id).then(member => msg += `- ${member.user.tag}: ${element} puntos\n`).catch(console.error);
-                        }
+                    let msg = checkDraw(score) ? `⚖ **¡Quiz terminado en empate!**\n\n**Puntuaciones:**\n`
+                        : `🏆 **¡${await getWinner(guild, score)} ganó el quiz!**\n\n**Puntuaciones:**\n`;
+
+                    const members = await guild.members.fetch(Object.keys(score)).catch(console.error);
+                    for (const id in score) if (Object.hasOwnProperty.call(score, id)) {
+                        const points = score[id];
+                        const member = members.get(id);
+                        msg += `- ${member ? member.user.tag : `Miembro desconocido`}: ${points} puntos\n`;
+                    }
                     await reply.edit({ components: [], content: msg });
                     await new Promise(res => setTimeout(res, 1000 * 6));
                     newChannel.delete();

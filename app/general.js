@@ -10,8 +10,6 @@ const { updateIconString, deleteBan, updateBillboardCollectorMessage, addStat, u
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
-var reactionCollector = {};
-
 const convertTZ = (date, tzString) => {
     return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
 };
@@ -99,37 +97,44 @@ module.exports = {
 
     convertTZ,
 
-    initiateReactionCollector: async (client, message) => {
-        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-        client.channels.fetch(ids.channels.cartelera).then(async channel => {
-            if (message)
-                await channel.send(message).then(async msg => {
-                    await updateBillboardCollectorMessage(true, msg.id).catch(console.error);
-                    await cache.updateReactionCollectorInfo();
-                });
-            const aux = !cache.getReactionCollectorInfo() ? await cache.updateReactionCollectorInfo() : cache.getReactionCollectorInfo();
-            channel.messages.fetch({ message: aux.messageId }).then(m => {
-                if (message)
-                    m.react('✅');
-                const filter = (reaction) => reaction.emoji.name === '✅';
-                reactionCollector = m.createReactionCollector({ filter });
-                client.guilds.fetch(ids.guilds.default).then(guild => {
-                    guild.roles.fetch(ids.roles.funcion).then(role => {
-                        reactionCollector.on('collect', (r, user) => {
-                            guild.members.fetch(user.id).then(member => {
-                                member.roles.add(role.id);
-                                console.log(chalk.green(`> Rol 'función' asignado a ${member.user.tag}`));
-                            }).catch(console.error);
-                        });
-                    }).catch(console.error);
-                }).catch(console.error);
-                console.log(chalk.green('> Recolector de reacciones activado'));
-            }).catch(console.error);
-        }).catch(console.error);
+    initiateReactionCollector: async (client, messageData) => {
+        const ids = cache.getIds() || await cache.updateIds();
+        const channel = await client.channels.fetch(ids.channels.cartelera).catch(console.error);
+
+        let message;
+        if (messageData) {
+            message = await channel.send(messageData);
+            await updateBillboardCollectorMessage(true, message.id).catch(console.error);
+            await cache.updateReactionCollectorInfo();
+            message.react('✅');
+        } else {
+            const { messageId } = cache.getReactionCollectorInfo() || await cache.updateReactionCollectorInfo();
+            message = await channel.messages.fetch({ message: messageId }).catch(console.error);
+        }
+
+        const filter = reaction => reaction.emoji.name === '✅';
+        const reactionCollector = message.createReactionCollector({ filter, dispose: true });
+
+        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+        const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
+        reactionCollector.on('collect', async (_, user) => {
+            if (!user.bot) {
+                const member = await guild.members.fetch(user.id).catch(console.error);
+                await member.roles.add(role.id);
+                console.log(chalk.green(`> Rol 'función' asignado a ${member.user.tag}`));
+            }
+        });
+        reactionCollector.on('remove', async (_, user) => {
+            const member = await guild.members.fetch(user.id).catch(console.error);
+            await member.roles.remove(role.id);
+            console.log(chalk.green(`> Rol 'función' quitado a ${member.user.tag}`));
+        });
+        cache.setReactionCollector(reactionCollector);
+        console.log(chalk.green('> Recolector de reacciones activado'));
     },
 
     stopReactionCollector: () => {
-        reactionCollector.stop();
+        cache.getReactionCollector().stop();
         console.log(chalk.yellow('> Recolector de reacciones desactivado'));
     },
 
@@ -189,16 +194,16 @@ module.exports = {
     },
 
     countMembers: async client => {
-        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
-        client.guilds.fetch(ids.guilds.default).then(async guild => {
-            const members = await guild.members.fetch();
-            const membersCounter = members.filter(m => !m.user.bot).size;
-            const totalMembersName = `👥 Totales: ${membersCounter}`;
-            guild.channels.fetch(ids.channels.members).then(channel => {
-                if (channel.name !== totalMembersName)
-                    channel.setName(totalMembersName).then(_ => console.log(chalk.blue('> Contador de miembros actualizado'))).catch(console.error);
-            }).catch(console.error);
-        }).catch(console.error);
+        const ids = cache.getIds() || await cache.updateIds();
+        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+        const members = await guild.members.fetch();
+        const membersCounter = members.filter(m => !m.user.bot).size;
+        const totalMembersName = `👥 Totales: ${membersCounter}`;
+        const channel = await guild.channels.fetch(ids.channels.members).catch(console.error);
+        if (channel.name !== totalMembersName) {
+            await channel.setName(totalMembersName).catch(console.error);
+            console.log(chalk.blue('> Contador de miembros actualizado'));
+        }
     },
 
     updateIcon: async guild => {

@@ -6,7 +6,6 @@ const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, update
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
 const { updateMcuFilters } = require('../../app/mongodb');
-const validFilters = ['Película', 'Serie', 'Miniserie', 'One-Shot', 'Especial'];
 
 const areEqual = (oldFilters, newFilters) => {
     if (oldFilters.length === newFilters.length) {
@@ -32,7 +31,12 @@ const getMovieInfo = async movieName => {
                 info[version] = data;
             }).catch(err => console.log(chalk.red(`> Error al cargar ${version}.txt\n${err}`)));
     return info;
-}
+};
+
+const getValidFilters = async () => {
+    const mcu = getMcu() || await updateMcu();
+    return [...new Set(mcu.map(({ type }) => type))];
+};
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -190,6 +194,7 @@ module.exports = {
         } else {
             let filters = getFilters() || await updateFilters();
             let mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
+            const validFilters = await getValidFilters();
 
             const getFiltersRows = array => {
                 const rows = [];
@@ -251,9 +256,10 @@ module.exports = {
                     update.components = getFiltersRows(selected).concat([secondaryRow]);
                     await i.update(update);
                 } else if (i.customId === 'confirm') {
-                    if (selected.length === 0)
+                    if (selected.length === 0) {
                         extraMessages.push(await channel.send('⛔ ¡Debes seleccionar algún filtro para confirmar!'));
-                    else {
+                        i.deferUpdate();
+                    } else {
                         if (!areEqual(filters, selected)) {
                             await updateMcuFilters(selected);
                             filters = await updateFilters();
@@ -272,10 +278,13 @@ module.exports = {
                 } else {
                     if (selected.includes('all'))
                         selected = [];
-                    if (!selected.includes(i.customId))
-                        selected.push(i.customId);
-                    else
+                    if (selected.includes(i.customId))
                         selected.splice(selected.indexOf(i.customId), 1);
+                    else {
+                        selected.push(i.customId);
+                        if (selected.length === validFilters.length)
+                            selected = ['all'];
+                    }
                     update.components = getFiltersRows(selected).concat([secondaryRow]);
                     await i.update(update);
                 }

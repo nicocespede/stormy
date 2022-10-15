@@ -43,22 +43,33 @@ module.exports = {
                 addTimestamp(key, new Date());
             }
         const stats = getStats() || await updateStats();
-        const usersField = { name: 'Usuario', value: '', inline: true };
-        const timeField = { name: 'Tiempo', value: ``, inline: true };
+        let description = `Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n`;
+        let fields = [];
         let needsFooter = false;
-        const canvas = createCanvas(200, 200);
-        const ctx = canvas.getContext('2d');
-        let counter = 1;
-        for (const key in stats) {
-            if (Object.hasOwnProperty.call(stats, key)) {
-                const stat = stats[key];
-                const member = await guild.members.fetch(key).catch(() => console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`)));
-                if (!member)
+
+        if (Object.keys(stats).length === 0)
+            description += '_No hay estadísticas actualmente._';
+        else {
+            const canvas = createCanvas(200, 200);
+            const ctx = canvas.getContext('2d');
+            const members = await guild.members.fetch(Object.keys(stats)).catch(console.error);
+            const usersField = { name: 'Usuario', value: '', inline: true };
+            const timeField = { name: 'Tiempo', value: ``, inline: true };
+
+            let counter = 1;
+            for (const key in stats) if (Object.hasOwnProperty.call(stats, key)) {
+                const member = members.get(key);
+
+                if (!member) {
+                    console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`));
                     continue;
+                }
+
+                const { seconds, minutes, hours, days } = stats[key];
                 const aux1 = usersField.value + `**${member.user.bot ? '🤖' : `${counter++}.`} **${member.user.tag.replace(/_/g, '\\_')}\n\n`;
-                let aux2 = timeField.value + `${timeToString('full', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
+                let aux2 = timeField.value + `${timeToString('full', seconds, minutes, hours, days)}\n\n`;
                 if (ctx.measureText(aux2).width >= 182)
-                    aux2 = timeField.value + `${timeToString('short', stat.seconds, stat.minutes, stat.hours, stat.days)}\n\n`;
+                    aux2 = timeField.value + `${timeToString('short', seconds, minutes, hours, days)}\n\n`;
                 if (aux1.length <= 1024 && aux2.length <= 1024) {
                     usersField.value = aux1;
                     timeField.value = aux2;
@@ -67,11 +78,13 @@ module.exports = {
                     break;
                 }
             }
+
+            fields = [usersField, timeField];
         }
         const embed = new EmbedBuilder()
             .setTitle(`**Estadísticas**`)
-            .setDescription(`Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n${usersField.value.length === 0 ? '_No hay estadísticas actualmente._' : ''}`)
-            .addFields(usersField.value.length != 0 ? [usersField, timeField] : [])
+            .setDescription(description)
+            .addFields(fields)
             .setColor(instance.color)
             .setThumbnail(`${githubRawURL}/assets/thumbs/bar-chart.png`)
 

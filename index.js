@@ -179,6 +179,9 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     //ends discord client
     console.log(chalk.yellow('> Desconectando bot'));
     client.destroy();
+
+    //exits process
+    process.exit();
 });
 
 client.login(process.env.TOKEN);

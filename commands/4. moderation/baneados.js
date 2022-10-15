@@ -11,29 +11,36 @@ module.exports = {
 
     callback: async ({ guild, client, instance, user }) => {
         const banned = getBanned() || await updateBanned();
-        const usersField = { name: 'Usuario', value: '', inline: true };
-        const responsiblesField = { name: 'Baneado por', value: ``, inline: true };
-        const reasonsField = { name: 'Razón', value: ``, inline: true };
-        var i = 1;
-        for (const key in banned)
-            if (Object.hasOwnProperty.call(banned, key)) {
-                const ban = banned[key];
-                usersField.value += `**${i++}. **${ban.user}\n\n`;
-                if (ban.responsible === "Desconocido")
-                    responsiblesField.value += "Desconocido\n\n";
-                else
-                    await guild.members.fetch(ban.responsible).then(member => {
-                        responsiblesField.value += `${member.user.username}\n\n`;
-                    }).catch(async () => responsiblesField.value += "Desconocido\n\n");
-                reasonsField.value += `${ban.reason ? ban.reason : `No se proporcionó razón`}\n\n`;
+        let description = `Hola <@${user.id}>, los usuarios actualmente baneados son:\n\n`;
+        let fields = [];
+        const responsiblesIds = [...new Set(Object.entries(banned).map(([_, value]) => value.responsible))];
+
+        if (responsiblesIds.length === 0)
+            description += '_No hay usuarios baneados actualmente._';
+        else {
+            const usersField = { name: 'Usuario', value: '', inline: true };
+            const responsiblesField = { name: 'Baneado por', value: ``, inline: true };
+            const reasonsField = { name: 'Razón', value: ``, inline: true };
+
+            const members = await guild.members.fetch(responsiblesIds).catch(console.error);
+            let i = 1;
+            for (const key in banned) if (Object.hasOwnProperty.call(banned, key)) {
+                const { reason, responsible, user } = banned[key];
+                usersField.value += `**${i++}. **${user}\n\n`;
+                const responsibleMember = members.get(responsible);
+                responsiblesField.value += `${responsibleMember ? responsibleMember.user.username : 'Desconocido'}\n\n`;
+                reasonsField.value += `${reason || `No se proporcionó razón`}\n\n`;
             }
+
+            fields = [usersField, responsiblesField, reasonsField];
+        }
 
         return {
             custom: true,
             embeds: [new EmbedBuilder()
                 .setTitle(`**Usuarios baneados**`)
-                .setDescription(`Hola <@${user.id}>, los usuarios actualmente baneados son:\n\n${usersField.value.length === 0 ? '_No hay usuarios baneados actualmente._' : ''}`)
-                .addFields(usersField.value.length > 0 ? [usersField, responsiblesField, reasonsField] : [])
+                .setDescription(description)
+                .addFields(fields)
                 .setColor(instance.color)
                 .setThumbnail(client.user.avatarURL())],
             ephemeral: true

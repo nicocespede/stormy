@@ -143,7 +143,7 @@ module.exports = {
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         } else if (subCommand === 'ver') {
-            const crosshairs = !getCrosshairs() ? await updateCrosshairs() : getCrosshairs();
+            const crosshairs = getCrosshairs() || await updateCrosshairs();
             const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
 
             if (!id) {
@@ -162,15 +162,20 @@ module.exports = {
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
                 return;
             } else {
-                const selectedCrosshair = crosshairs[id];
+                const { code, name, owner: ownerId } = crosshairs[id];
                 let owner = '';
-                await guild.members.fetch(selectedCrosshair.owner).then(member => owner = ` de ${member.user.username}`).catch(_ => owner = ` de usuario desconocido`);
-                const crosshairData = await ValorantAPI.getCrosshair({ code: selectedCrosshair.code }).catch(console.error);
+                try {
+                    const member = await guild.members.fetch(ownerId);
+                    owner = ` de ${member.user.username}`
+                } catch {
+                    owner = ` de usuario desconocido`;
+                }
+                const crosshairData = await ValorantAPI.getCrosshair({ code: code }).catch(console.error);
 
                 if (message) reply.content = null;
                 reply.embeds = [new EmbedBuilder()
-                    .setTitle(selectedCrosshair.name + owner)
-                    .setDescription(`Código de importación de la mira:\n\n` + selectedCrosshair.code)
+                    .setTitle(name + owner)
+                    .setDescription(`Código de importación de la mira:\n\n` + code)
                     .setColor(instance.color)
                     .setImage(crosshairData.url)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)];

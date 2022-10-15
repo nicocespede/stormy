@@ -110,8 +110,13 @@ module.exports = {
             if (voiceChannel.members.size > 0) {
                 console.log(chalk.yellow('> Reanudando reproducción interrumpida por el reinicio'));
 
+                const membersIds = [...new Set([current.requestedBy]
+                    .concat(previousTracks.map(({ requestedBy }) => requestedBy))
+                    .concat(tracks.map(({ requestedBy }) => requestedBy)))];
+                const members = await guild.members.fetch(membersIds);
+
                 var res = await client.player.search(current.url, {
-                    requestedBy: await guild.members.fetch(current.requestedBy),
+                    requestedBy: members.get(current.requestedBy),
                     searchEngine: QueryType.AUTO
                 });
 
@@ -148,19 +153,17 @@ module.exports = {
 
                 if (!queue.playing) await queue.play();
 
-                for (let i = 0; i < previousTracks.length; i++) {
-                    const element = previousTracks[i];
-                    res = await client.player.search(element.url, {
-                        requestedBy: await guild.members.fetch(element.requestedBy),
+                for (const track of previousTracks) {
+                    res = await client.player.search(track.url, {
+                        requestedBy: members.get(track.requestedBy),
                         searchEngine: QueryType.AUTO
                     });
                     queue.previousTracks.push(res.tracks[0]);
                 }
 
-                for (let i = 0; i < tracks.length; i++) {
-                    const element = tracks[i];
-                    res = await client.player.search(element.url, {
-                        requestedBy: await guild.members.fetch(element.requestedBy),
+                for (const track of tracks) {
+                    res = await client.player.search(track.url, {
+                        requestedBy: members.get(track.requestedBy),
                         searchEngine: QueryType.AUTO
                     });
                     queue.tracks.push(res.tracks[0]);

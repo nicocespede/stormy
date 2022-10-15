@@ -13,23 +13,23 @@ module.exports = {
     ownerOnly: true,
 
     callback: async ({ guild, message }) => {
-        const aux = !getReactionCollectorInfo() ? await updateReactionCollectorInfo() : getReactionCollectorInfo();
-        if (!aux.isActive)
+        const { isActive, messageId } = getReactionCollectorInfo() || await updateReactionCollectorInfo();
+        if (!isActive)
             message.author.send({ content: 'El recolector de reacciones no está activo.' });
-        else
-            updateBillboardCollectorMessage(false, aux.messageId).then(async () => {
-                await updateReactionCollectorInfo();
-                stopReactionCollector();
-                const ids = !getIds() ? await updateIds() : getIds();
-                guild.roles.fetch(ids.roles.funcion).then(role => {
-                    guild.members.fetch().then(members => {
-                        members.forEach(member => {
-                            if (member.roles.cache.has(role.id))
-                                member.roles.remove(role).then(() => console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`))).catch(console.error);
-                        });
-                    }).catch(console.error);
-                }).catch(console.error);
-            }).catch(console.error);
+        else {
+            await updateBillboardCollectorMessage(false, messageId).catch(console.error);
+            await updateReactionCollectorInfo();
+            stopReactionCollector();
+            const ids = getIds() || await updateIds();
+            const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
+            const members = await guild.members.fetch().catch(console.error);
+            members.forEach(async member => {
+                if (member.roles.cache.has(role.id)) {
+                    await member.roles.remove(role).catch(console.error);
+                    console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`))
+                }
+            });
+        }
         message.delete();
         return;
     }

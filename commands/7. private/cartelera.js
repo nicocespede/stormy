@@ -15,8 +15,7 @@ module.exports = {
     ownerOnly: true,
 
     callback: async ({ message, args, client }) => {
-        const url = args[0];
-        args = args.splice(1);
+        const url = args.pop();
         const ids = getIds() || await updateIds();
         const random = Math.floor(Math.random() * (files.length));
         const msg = {

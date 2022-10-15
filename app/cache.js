@@ -16,6 +16,7 @@ var games;
 var birthdays;
 let banned;
 var sombraBans;
+let reactionCollector;
 var reactionCollectorInfo;
 var rolesMessageInfo;
 var anniversaries;
@@ -40,11 +41,18 @@ let songsInQueue = {};
 const getMcu = () => mcu;
 
 const updateMcu = async () => {
-    await fetch(`${githubRawURL}/mcu.json`)
-        .then(res => res.text()).then(data => {
-            mcu = JSON.parse(data);
-            console.log(chalk.green('> mcu.json cargado'));
-        }).catch(err => console.log(chalk.red(`> Error al cargar mcu.json\n${err}`)));
+    try {
+        let data;
+        if (!testing) {
+            const res = await fetch(`${githubRawURL}/mcu.json`);
+            data = await res.text();
+        } else
+            data = fs.readFileSync('../stormy-data/mcu.json', 'utf8');
+        mcu = JSON.parse(data);
+        console.log(chalk.green('> mcu.json cargado'));
+    } catch (err) {
+        console.log(chalk.red(`> Error al cargar mcu.json\n${err}`));
+    }
     return mcu;
 };
 
@@ -148,6 +156,9 @@ module.exports = {
         console.log(chalk.green('> Caché de baneos de Sombra actualizado'));
         return sombraBans;
     },
+
+    getReactionCollector: () => reactionCollector,
+    setReactionCollector: collector => reactionCollector = collector,
 
     getReactionCollectorInfo: () => reactionCollectorInfo,
     updateReactionCollectorInfo: async () => {

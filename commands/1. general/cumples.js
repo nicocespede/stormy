@@ -82,36 +82,48 @@ module.exports = {
         if (subCommand === 'ver') {
             const birthdays = getBirthdays() || await updateBirthdays();
             const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            const usersField = { name: 'Usuario', value: '', inline: true };
-            const datesField = { name: 'Fecha', value: '', inline: true };
-            let previousMonth = -1;
-            for (const key in birthdays)
-                if (Object.hasOwnProperty.call(birthdays, key)) {
+            let description = `Hola <@${user.id}>, los cumpleaños registrados son:\n\n`;
+            let fields = [];
+
+            if (Object.keys(birthdays).length === 0)
+                description += '_No hay cumpleaños guardados actualmente._';
+            else {
+                const usersField = { name: 'Usuario', value: '', inline: true };
+                const datesField = { name: 'Fecha', value: '', inline: true };
+                let previousMonth = -1;
+                const members = await guild.members.fetch(Object.keys(birthdays)).catch(console.error);
+                
+                for (const key in birthdays) if (Object.hasOwnProperty.call(birthdays, key)) {
                     const bday = birthdays[key];
-                    try {
-                        const member = await guild.members.fetch(key).catch(console.error);
-                        const month = parseInt(bday.month) - 1;
-                        if (previousMonth != month) {
-                            usersField.value += `\n**${months[month]}**\n`;
-                            datesField.value += `\n\u200b\n`;
-                        }
-                        usersField.value += `${member.user.username}\n`;
-                        datesField.value += `${bday.day}/${bday.month}\n`;
-                        previousMonth = month;
-                    } catch {
-                        await deleteBirthday(key).catch(console.error);
-                        await updateBirthdays();
-                        channel.send(`Se eliminó el cumpleaños de **${bday.user}** (el **${bday.day}/${bday.month}**) ya que el usuario no está más en el servidor.`);
+                    const member = members.get(key);
+
+                    if (!member) {
+                        console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`));
+                        continue;
                     }
+
+                    const month = parseInt(bday.month) - 1;
+                    if (previousMonth != month) {
+                        usersField.value += `\n**${months[month]}**\n`;
+                        datesField.value += `\n\u200b\n`;
+                    }
+                    usersField.value += `${member.user.username}\n`;
+                    datesField.value += `${bday.day}/${bday.month}\n`;
+                    previousMonth = month;
                 }
+
+                fields = [usersField, datesField];
+            }
+
+
 
             return {
                 custom: true,
                 embeds: [new EmbedBuilder()
                     .setTitle(`**Cumpleaños**`)
-                    .setDescription(`Hola <@${user.id}>, los cumpleaños registrados son:\n\n`)
+                    .setDescription(description)
                     .setColor(instance.color)
-                    .addFields([usersField, datesField])
+                    .addFields(fields)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/birthday.png`)],
                 ephemeral: true
             };

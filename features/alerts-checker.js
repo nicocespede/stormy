@@ -2,7 +2,7 @@ const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
 const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../app/cache');
 const { convertTZ, applyText } = require('../app/general');
-const { deleteBirthday, updateBirthday, updateAnniversary } = require('../app/mongodb');
+const { updateBirthday, updateAnniversary } = require('../app/mongodb');
 const { relativeSpecialDays } = require('../app/constants');
 
 const getToday = () => {
@@ -58,33 +58,44 @@ const generateBirthdayImage = async user => {
     return new AttachmentBuilder(canvas.toBuffer());
 };
 
-module.exports = client => {
+module.exports = async client => {
+    const ids = getIds() || await updateIds();
+    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
+    const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+
     const check = async () => {
-        const ids = getIds() || await updateIds();
-        const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+        const todayDayAndMonth = getToday();
 
         const birthdays = getBirthdays() || await updateBirthdays();
         const birthdaysArray = Object.entries(birthdays);
-        const todayBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` === getToday() && !value.flag);
-        const pastBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` !== getToday() && value.flag);
+        const todayBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` === todayDayAndMonth && !value.flag);
+        const pastBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` !== todayDayAndMonth && value.flag);
 
-        for (const [id, bday] of todayBirthdays) {
-            const member = await guild.members.fetch(id).catch(async _ => {
-                await deleteBirthday(id);
+        let members;
+        let membersIds = [...new Set(todayBirthdays.map(([id, _]) => id))];
+
+        if (membersIds.length > 0) {
+            members = await guild.members.fetch(membersIds).catch(console.error);
+
+            for (const [id, _] of todayBirthdays) {
+                const member = members.get(id);
+
+                if (!member) {
+                    console.log(chalk.yellow(`> El usuario con ID ${id} ya no está en el servidor.`));
+                    continue;
+                }
+
+                const attachment = await generateBirthdayImage(member.user).catch(console.error);
+                const msg = id === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
+                    : `@everyone\n\nHoy es el cumpleaños de <@${id}>, ¡feliz cumpleaños!`;
+                const m = await channel.send({ content: msg, files: [attachment] }).catch(console.error);
+                for (const emoji of ['🎈', '🥳', '🎉', '🎂']) {
+                    await m.react(emoji);
+                    await new Promise(res => setTimeout(res, 1000 * 0.5));
+                }
+                await updateBirthday(id, true).catch(console.error);
                 await updateBirthdays();
-                channel.send({ content: `⚠ Se eliminó el cumpleaños de **${bday.user}** (**Hoy**) ya que el usuario no está más en el servidor.` });
-            });
-            const attachment = await generateBirthdayImage(member.user).catch(console.error);
-            const msg = id === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
-                : `@everyone\n\nHoy es el cumpleaños de <@${id}>, ¡feliz cumpleaños!`;
-            const m = await channel.send({ content: msg, files: [attachment] }).catch(console.error);
-            for (const emoji of ['🎈', '🥳', '🎉', '🎂']) {
-                await m.react(emoji);
-                await new Promise(res => setTimeout(res, 1000 * 0.5));
             }
-            await updateBirthday(id, true).catch(console.error);
-            await updateBirthdays();
         }
 
         for (const [id, _] of pastBirthdays) {
@@ -93,26 +104,43 @@ module.exports = client => {
         }
 
         const anniversaries = getAnniversaries() || await updateAnniversaries();
-        const todayAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) === getToday() && !a.flag);
-        const pastAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) !== getToday() && a.flag);
+        const todayAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) === todayDayAndMonth && !a.flag);
+        const pastAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) !== todayDayAndMonth && a.flag);
 
         const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
 
-        for (const anniversary of todayAnniversaries) {
-            const member1 = await guild.members.fetch(anniversary.id1).catch(console.error);
-            const member2 = await guild.members.fetch(anniversary.id2).catch(console.error);
-            const years = today.getFullYear() - parseInt(anniversary.date.substring(6));
-            const m = await channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).catch(console.error);
-            for (const emoji of ['🥰', '😍', '💏']) {
-                await m.react(emoji);
-                await new Promise(res => setTimeout(res, 1000 * 0.5));
+        const membersIds1 = [...new Set(todayAnniversaries.map(({ id1 }) => id1))];
+        const membersIds2 = [...new Set(todayAnniversaries.map(({ id2 }) => id2))];
+        membersIds = membersIds1.concat(membersIds2);
+
+        if (membersIds.length > 0) {
+            members = await guild.members.fetch(membersIds).catch(console.error);
+
+            for (const anniversary of todayAnniversaries) {
+                const { date, id1, id2 } = anniversary;
+
+                const member1 = members.get(id1);
+                const member2 = members.get(id2);
+
+                if (!member1 || !member2) {
+                    console.log(chalk.yellow(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`));
+                    continue;
+                }
+
+                const years = today.getFullYear() - parseInt(date.substring(6));
+                const m = await channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).catch(console.error);
+                for (const emoji of ['🥰', '😍', '💏']) {
+                    await m.react(emoji);
+                    await new Promise(res => setTimeout(res, 1000 * 0.5));
+                }
+                await updateAnniversary(anniversary.id1, anniversary.id2, true).catch(console.error);
+                await updateAnniversaries();
             }
-            await updateAnniversary(anniversary.id1, anniversary.id2, true).catch(console.error);
-            await updateAnniversaries();
         }
 
         for (const anniversary of pastAnniversaries) {
-            await updateAnniversary(anniversary.id1, anniversary.id2, false).catch(console.error);
+            const { id1, id2 } = anniversary;
+            await updateAnniversary(id1, id2, false).catch(console.error);
             await updateAnniversaries();
         }
 
