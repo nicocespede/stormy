@@ -131,9 +131,8 @@ class InteractionHandler {
         const { length, commands, commandsString, category } = this.getCommands();
         const hasMultiplePages = length > this.pageLimit;
         let desc = `${category} ${commandsString}\n\n${this.instance.messageHandler.getEmbed(this.guild, 'HELP_MENU', 'DESCRIPTION_FIRST_LINE')}`;
-        if (hasMultiplePages) {
+        if (hasMultiplePages)
             desc += `\n\n${this.instance.messageHandler.getEmbed(this.guild, 'HELP_MENU', 'DESCRIPTION_SECOND_LINE')}`;
-        }
         const start = (page - 1) * this.pageLimit;
         for (let a = start, counter = a; a < commands.length && a < start + this.pageLimit; ++a) {
             const command = commands[a];
@@ -148,15 +147,20 @@ class InteractionHandler {
         }
         desc += `\n\nPágina ${page} / ${maxPages}.`;
         this.embed.setDescription(desc);
-        const buttons = hasMultiplePages ? [{ emoji: '⬅', label: 'Página anterior' }, { emoji: '➡', label: 'Página siguiente' }] : [];
-        buttons.push({ emoji: '🚪', label: 'Menú principal' });
+        const buttons = hasMultiplePages ? [
+            { emoji: '⬅', label: 'Página anterior', disabled: page === 1 },
+            { emoji: '➡', label: 'Página siguiente', disabled: page === maxPages }
+        ] : [];
+        buttons.push({ emoji: '🚪', label: 'Menú principal', disabled: false });
         const rows = [];
         let row = new ActionRowBuilder();
         for (let a = 0; a < buttons.length; ++a) {
+            const { disabled, emoji, label } = buttons[a];
             row.addComponents(new ButtonBuilder()
-                .setCustomId(buttons[a].emoji)
-                .setEmoji(buttons[a].emoji)
-                .setLabel(buttons[a].label)
+                .setCustomId(emoji)
+                .setEmoji(emoji)
+                .setLabel(label)
+                .setDisabled(disabled)
                 .setStyle(ButtonStyle.Secondary));
             if (row.components.length === 5 || a === buttons.length - 1) {
                 rows.push(row);

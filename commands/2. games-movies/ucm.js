@@ -10,9 +10,8 @@ const { updateMcuFilters } = require('../../app/mongodb');
 const areEqual = (oldFilters, newFilters) => {
     if (oldFilters.length === newFilters.length) {
         return oldFilters.every(element => {
-            if (newFilters.includes(element)) {
+            if (newFilters.includes(element))
                 return true;
-            }
             return false;
         });
     }
@@ -58,140 +57,8 @@ module.exports = {
         if (interaction) await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
         const reply = { ephemeral: true };
-        if (number) {
-            const filters = getFilters() || await updateFilters();
-            const mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
-            const index = parseInt(number) - 1;
-            if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
-                reply.content = `⚠ El número ingresado es inválido.`;
-                message ? await message.reply(reply) : await interaction.editReply(reply);
-                return;
-            }
-            const name = mcuMovies[index].name;
-            await getMovieInfo(name).then(async info => {
-                let nowShowing = '';
-                const getVersionsRow = () => {
-                    const row = new ActionRowBuilder();
-                    for (const ver in info)
-                        if (Object.hasOwnProperty.call(info, ver)) {
-                            row.addComponents(new ButtonBuilder().setCustomId(ver)
-                                .setEmoji('📽')
-                                .setLabel(ver)
-                                .setStyle(ButtonStyle.Primary)
-                                .setDisabled(ver === nowShowing));
-                        }
-                    return row;
-                };
 
-                const moviePath = `${githubRawURL}/mcu/${name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')}`;
-
-                reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
-                reply.components = [getVersionsRow()];
-                reply.files = [`${moviePath}/image.jpg`];
-
-                const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
-
-                const filter = (btnInt) => {
-                    const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
-                    const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
-                    return user.id === btnInt.user.id && isTheSameMessage;
-                }
-
-                const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
-
-                let versionsMessage;
-                let finalCollector;
-
-                collector.on('collect', async i => {
-                    const embeds = [];
-                    const pages = {};
-                    nowShowing = i.customId;
-                    await i.update({ components: [getVersionsRow()] });
-                    const serverOptions = info[i.customId].split('\n**');
-                    const password = serverOptions.length > 1 ? '**' + serverOptions.pop() : '';
-                    serverOptions.forEach(server => {
-                        const lines = server.split('\n');
-                        const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
-                        const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
-                        embeds.push(new EmbedBuilder()
-                            .setTitle(`${title} - ${i.customId} (${serverName})`)
-                            .setColor(mcuMovies[index].color)
-                            .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId], false)}.\n` + lines.join('\n') + `\n${password}`)
-                            .setThumbnail(`attachment://thumb.png`));
-                    });
-
-                    for (let i = 0; i < embeds.length; i++) {
-                        const msg = embeds[i];
-                        msg.setFooter({ text: `Opción ${i + 1} | ${embeds.length}` });
-                    }
-
-                    const getRow = id => {
-                        const row = new ActionRowBuilder();
-
-                        row.addComponents(new ButtonBuilder()
-                            .setCustomId('prev_page')
-                            .setStyle(ButtonStyle.Secondary)
-                            .setEmoji('⬅')
-                            .setLabel('Anterior')
-                            .setDisabled(pages[id] === 0));
-
-                        row.addComponents(new ButtonBuilder()
-                            .setCustomId('next_page')
-                            .setStyle(ButtonStyle.Secondary)
-                            .setEmoji('➡')
-                            .setLabel('Siguiente')
-                            .setDisabled(pages[id] === embeds.length - 1));
-
-                        return row;
-                    };
-
-                    const id = user.id;
-                    pages[id] = pages[id] || 0;
-
-                    const msg = {
-                        components: [getRow(id)],
-                        embeds: [embeds[pages[id]]],
-                        files: [`${moviePath}/thumb.png`]
-                    };
-
-                    versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
-                    if (finalCollector)
-                        finalCollector.stop();
-
-                    const secondFilter = (btnInt) => { return user.id === btnInt.user.id };
-
-                    finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, time: 1000 * 60 * 5 });
-
-                    finalCollector.on('collect', async btnInt => {
-                        if (!btnInt) return;
-
-                        btnInt.deferUpdate();
-
-                        if (btnInt.customId !== 'prev_page' && btnInt.customId !== 'next_page')
-                            return;
-                        else {
-                            if (btnInt.customId === 'prev_page' && pages[id] > 0) --pages[id];
-                            else if (btnInt.customId === 'next_page' && pages[id] < embeds.length - 1) ++pages[id];
-
-                            msg.components = [getRow(id)];
-                            msg.embeds = [embeds[pages[id]]];
-                            await versionsMessage.edit(msg);
-                        }
-                    });
-                });
-
-                collector.on('end', async _ => {
-                    if (versionsMessage) versionsMessage.delete();
-                    const edit = {
-                        components: [],
-                        content: `**${name}**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
-                        embeds: [],
-                        files: reply.files
-                    };
-                    message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
-                });
-            }).catch(console.error);
-        } else {
+        if (!number) {
             let filters = getFilters() || await updateFilters();
             let mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
             const validFilters = await getValidFilters();
@@ -293,6 +160,7 @@ module.exports = {
             collector.on('end', async _ => {
                 extraMessages.forEach(m => m.delete());
                 const edit = {};
+
                 if (status === 'CONFIRMED') {
                     const canvas = createCanvas(200, 200);
                     const ctx = canvas.getContext('2d');
@@ -402,7 +270,139 @@ module.exports = {
 
                 message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
             });
+            return;
         }
-        return;
+
+        const filters = getFilters() || await updateFilters();
+        const mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
+        const index = parseInt(number) - 1;
+
+        if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
+            reply.content = `⚠ El número ingresado es inválido.`;
+            message ? await message.reply(reply) : await interaction.editReply(reply);
+            return;
+        }
+
+        const name = mcuMovies[index].name;
+        const info = await getMovieInfo(name).catch(console.error);
+        let nowShowing = '';
+        const getVersionsRow = () => {
+            const row = new ActionRowBuilder();
+            for (const ver in info)
+                if (Object.hasOwnProperty.call(info, ver)) {
+                    row.addComponents(new ButtonBuilder().setCustomId(ver)
+                        .setEmoji('📽')
+                        .setLabel(ver)
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(ver === nowShowing));
+                }
+            return row;
+        };
+
+        const moviePath = `${githubRawURL}/mcu/${name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')}`;
+
+        reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
+        reply.components = [getVersionsRow()];
+        reply.files = [`${moviePath}/image.jpg`];
+
+        const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
+
+        const filter = (btnInt) => {
+            const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
+            const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
+            return user.id === btnInt.user.id && isTheSameMessage;
+        }
+
+        const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
+
+        let versionsMessage;
+        let finalCollector;
+
+        collector.on('collect', async i => {
+            const embeds = [];
+            const pages = {};
+            nowShowing = i.customId;
+            await i.update({ components: [getVersionsRow()] });
+            const serverOptions = info[i.customId].split('\n**');
+            const password = serverOptions.length > 1 ? '**' + serverOptions.pop() : '';
+            serverOptions.forEach(server => {
+                const lines = server.split('\n');
+                const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
+                const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
+                embeds.push(new EmbedBuilder()
+                    .setTitle(`${title} - ${i.customId} (${serverName})`)
+                    .setColor(mcuMovies[index].color)
+                    .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId], false)}.\n` + lines.join('\n') + `\n${password}`)
+                    .setThumbnail(`attachment://thumb.png`));
+            });
+
+            for (let i = 0; i < embeds.length; i++)
+                embeds[i].setFooter({ text: `Opción ${i + 1} | ${embeds.length}` });
+
+            const getRow = id => {
+                const row = new ActionRowBuilder();
+
+                row.addComponents(new ButtonBuilder()
+                    .setCustomId('prev_page')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('⬅')
+                    .setLabel('Anterior')
+                    .setDisabled(pages[id] === 0));
+
+                row.addComponents(new ButtonBuilder()
+                    .setCustomId('next_page')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('➡')
+                    .setLabel('Siguiente')
+                    .setDisabled(pages[id] === embeds.length - 1));
+
+                return row;
+            };
+
+            const id = user.id;
+            pages[id] = pages[id] || 0;
+
+            const msg = {
+                components: [getRow(id)],
+                embeds: [embeds[pages[id]]],
+                files: [`${moviePath}/thumb.png`]
+            };
+
+            versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
+            if (finalCollector)
+                finalCollector.stop();
+
+            const secondFilter = (btnInt) => { return user.id === btnInt.user.id };
+
+            finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, time: 1000 * 60 * 5 });
+
+            finalCollector.on('collect', async btnInt => {
+                if (!btnInt) return;
+
+                btnInt.deferUpdate();
+
+                if (btnInt.customId !== 'prev_page' && btnInt.customId !== 'next_page')
+                    return;
+                else {
+                    if (btnInt.customId === 'prev_page' && pages[id] > 0) --pages[id];
+                    else if (btnInt.customId === 'next_page' && pages[id] < embeds.length - 1) ++pages[id];
+
+                    msg.components = [getRow(id)];
+                    msg.embeds = [embeds[pages[id]]];
+                    await versionsMessage.edit(msg);
+                }
+            });
+        });
+
+        collector.on('end', async _ => {
+            if (versionsMessage) versionsMessage.delete();
+            const edit = {
+                components: [],
+                content: `**${name}**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                embeds: [],
+                files: reply.files
+            };
+            message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+        });
     }
 }
