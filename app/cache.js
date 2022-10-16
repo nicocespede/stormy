@@ -43,11 +43,12 @@ const getMcu = () => mcu;
 const updateMcu = async () => {
     try {
         let data;
-        if (!testing) {
+        if (testing)
+            data = fs.readFileSync('../stormy-data/mcu.json', 'utf8');
+        else {
             const res = await fetch(`${githubRawURL}/mcu.json`);
             data = await res.text();
-        } else
-            data = fs.readFileSync('../stormy-data/mcu.json', 'utf8');
+        }
         mcu = JSON.parse(data);
         console.log(chalk.green('> mcu.json cargado'));
     } catch (err) {
@@ -300,11 +301,19 @@ module.exports = {
     getIds: () => ids,
     updateIds: async () => {
         const fileName = !testing ? 'ids.json' : 'testingIds.json';
-        await fetch(`${githubRawURL}/${fileName}`)
-            .then(res => res.text()).then(data => {
-                ids = JSON.parse(data);
-                console.log(chalk.green(`> ${fileName} cargado`));
-            }).catch(err => console.log(chalk.red(`> Error al cargar ${fileName}\n${err}`)));
+        try {
+            let data;
+            if (testing)
+                data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
+            else {
+                const res = await fetch(`${githubRawURL}/${fileName}`);
+                data = await res.text();
+            }
+            ids = JSON.parse(data);
+            console.log(chalk.green(`> ${fileName} cargado`));
+        } catch (err) {
+            console.log(chalk.red(`> Error al cargar ${fileName}\n${err}`))
+        }
         return ids;
     },
 
@@ -362,11 +371,12 @@ module.exports = {
     updateCharacters: async () => {
         try {
             let data;
-            if (!testing) {
+            if (testing)
+                data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
+            else {
                 const res = await fetch(`${githubRawURL}/characters.json`);
                 data = await res.text();
-            } else
-                data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
+            }
             characters = JSON.parse(data);
             console.log(chalk.green('> characters.json cargado'));
         } catch (err) {

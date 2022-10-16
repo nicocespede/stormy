@@ -19,7 +19,7 @@ module.exports = {
         const datesField = { name: 'Fecha', value: '', inline: true };
         const urlsField = { name: 'Detalles', value: '', inline: true };
 
-        const matches = !getKruMatches() ? await updateKruMatches() : getKruMatches();
+        const matches = getKruMatches() || await updateKruMatches();
         for (const m in matches)
             if (Object.hasOwnProperty.call(matches, m)) {
                 const match = matches[m];

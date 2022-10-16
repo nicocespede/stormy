@@ -2,7 +2,7 @@ const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
 chalk.level = 1;
-const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu } = require('../../app/cache');
+const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu, getIds, updateIds } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
 const { updateMcuFilters } = require('../../app/mongodb');
@@ -98,7 +98,17 @@ module.exports = {
                     .setLabel('Cancelar')
                     .setStyle(ButtonStyle.Danger));
 
-            reply.content = `**Universo Cinematográfico de Marvel**\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
+            const getNewEmoji = async () => {
+                const ids = getIds() || await updateIds();
+                const mcuCharacters = Object.keys(ids.emojis.mcuCharacters);
+                const emojiName = mcuCharacters[Math.floor(Math.random() * mcuCharacters.length)];
+                return `<:${emojiName}:${ids.emojis.mcuCharacters[emojiName]}>`;
+            };
+
+            const title = `Universo Cinematográfico de Marvel`;
+            let emoji = await getNewEmoji();
+
+            reply.content = `${emoji} **${title}**\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
             reply.components = getFiltersRows(filters).concat([secondaryRow]);
             reply.files = [`./assets/mcu.jpg`];
 
@@ -160,6 +170,7 @@ module.exports = {
             collector.on('end', async _ => {
                 extraMessages.forEach(m => m.delete());
                 const edit = {};
+                emoji = await getNewEmoji();
 
                 if (status === 'CONFIRMED') {
                     const canvas = createCanvas(200, 200);
@@ -234,7 +245,7 @@ module.exports = {
                     pages[id] = pages[id] || 0;
 
                     edit.components = [getRow(id)];
-                    edit.content = `**Universo Cinematográfico de Marvel**\n\n⚠ Podés navegar libremente por las páginas durante 5 minutos, luego esta acción expirará.\n\u200b`;
+                    edit.content = `${emoji} **${title}**\n\n⚠ Podés navegar libremente por las páginas durante 5 minutos, luego esta acción expirará.\n\u200b`;
                     edit.embeds = [embeds[pages[id]]];
                     edit.files = [];
 
@@ -260,13 +271,13 @@ module.exports = {
 
                     finalCollector.on('end', async _ => {
                         edit.components = [];
-                        edit.content = `**Universo Cinematográfico de Marvel**\n\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
+                        edit.content = `${emoji} **${title}**\n\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
                         message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                     });
                 } else if (status === 'CANCELLED')
-                    edit.content = `**Universo Cinematográfico de Marvel**\n\n❌ Esta acción **fue cancelada**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
+                    edit.content = `${emoji} **${title}**\n\n❌ Esta acción **fue cancelada**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
                 else
-                    edit.content = `**Universo Cinematográfico de Marvel**\n\n⌛ Esta acción **expiró**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
+                    edit.content = `${emoji} **${title}**\n\n⌛ Esta acción **expiró**, para volver a elegir filtros usá **${prefix}ucm**.\n\u200b`;
 
                 message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
             });
