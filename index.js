@@ -77,18 +77,19 @@ client.on('ready', async () => {
                     .setDescription(`▶️ Comenzando a reproducir:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
                     .setImage(track.thumbnail)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/music/play.png`)
-                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length != 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })]
+                    .setFooter({ text: `Agregada por ${track.requestedBy.tag}${queue.tracks.length !== 0 ? ` - ${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` : ''}` })]
             };
-            if (songInQueue) {
+            if (!songInQueue)
+                queue.metadata.send(reply);
+            else {
                 const { interaction, message } = songInQueue;
                 message ? await message.edit(reply) : await interaction.editReply(reply);
                 cache.removeSongInQueue(track.url);
-            } else
-                queue.metadata.send(reply);
+            }
         }
     }).on('trackAdd', async (queue, track) => {
         const lastAction = cache.getLastAction();
-        if (queue.playing && lastAction != MusicActions.MOVING_SONG && lastAction != MusicActions.ADDING_NEXT) {
+        if (queue.playing && lastAction !== MusicActions.MOVING_SONG && lastAction !== MusicActions.ADDING_NEXT) {
             const { interaction, message } = (cache.getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
             const reply = {
@@ -99,11 +100,14 @@ client.on('ready', async () => {
             cache.removeSongInQueue(track.url);
         }
     }).on('tracksAdd', async (_, tracks) => {
-        if (cache.getLastAction() != MusicActions.ADDING_NEXT) {
+        if (cache.getLastAction() !== MusicActions.ADDING_NEXT) {
             const { interaction, message } = (cache.getSongsInQueue())[tracks[0].url];
+            const playlist = tracks[0].playlist;
             const reply = {
-                embeds: [musicEmbed.setDescription(`☑️ **${tracks.length} canciones** agregadas a la cola.`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
+                embeds: [musicEmbed
+                    .setDescription(`☑️ **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''} agregadas a la cola.`)
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)
+                ]
             };
             message ? await message.edit(reply) : await interaction.editReply(reply);
             cache.removeSongInQueue(tracks[0].url);
@@ -115,10 +119,11 @@ client.on('ready', async () => {
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
         });
     }).on('queueEnd', queue => {
-        if (cache.getLastAction() != MusicActions.LEAVING_EMPTY_CHANNEL
-            && cache.getLastAction() != MusicActions.STOPPING
-            && cache.getLastAction() != MusicActions.BEING_KICKED
-            && cache.getLastAction() != MusicActions.RESTARTING) {
+        const lastAction = cache.getLastAction();
+        if (lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL
+            && lastAction !== MusicActions.STOPPING
+            && lastAction !== MusicActions.BEING_KICKED
+            && lastAction !== MusicActions.RESTARTING) {
             cache.updateLastAction(MusicActions.ENDING);
             queue.metadata.send({
                 embeds: [musicEmbed.setDescription("⛔ Fin de la cola, 👋 ¡adiós!")

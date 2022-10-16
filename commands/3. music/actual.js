@@ -40,9 +40,15 @@ module.exports = {
 
         const progress = queue.createProgressBar();
         const timestamp = queue.getPlayerTimestamp();
+        const description = [`**Progreso:** ${timestamp.progress}%`,
+        `**Volumen:** ${queue.volume}%`,
+        `**URL:** ${track.url}`,
+        `**Agregada por:** ${track.requestedBy.tag}`];
+        if (track.playlist)
+            description.push(`**Lista de reproducción:** [${track.playlist.title}](${track.playlist.url})`);
 
         const filteredTitle = await cleanTitle(track.title);
-        reply.embeds = [embed.setDescription(`${progress}\n\n**Progreso:** ${timestamp.progress}%\n**Volumen:** ${queue.volume}%\n**URL:** ${track.url}\n**Agregada por:** ${track.requestedBy.tag}`)
+        reply.embeds = [embed.setDescription(`${progress}\n\n${description.join('\n')}`)
             .setImage(track.thumbnail)
             .setTitle(filteredTitle + (!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''))];
         reply.ephemeral = false;

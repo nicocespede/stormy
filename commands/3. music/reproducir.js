@@ -69,9 +69,8 @@ module.exports = {
 
             //TEMP SOLUTION
             const blacklistedSongs = getBlacklistedSongs() || await updateBlacklistedSongs();
-            if (Object.keys(blacklistedSongs).includes(song)) {
-                song = blacklistedSongs[song];
-            }//
+            if (Object.keys(blacklistedSongs).includes(song))
+                song = blacklistedSongs[song];//
 
             const res = await client.player.search(song, {
                 requestedBy: member,

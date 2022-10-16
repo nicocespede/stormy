@@ -97,7 +97,7 @@ module.exports = {
             selfDeaf: true
         });
 
-        if (queue.tracks.length != 0) {
+        if (queue.tracks.length !== 0) {
             let description;
             updateLastAction(MusicActions.ADDING_NEXT);
             if (res.playlist) {
@@ -116,7 +116,7 @@ module.exports = {
                 queue.clear();
                 const newQueue = res.tracks.concat(actualQueue);
                 queue.addTracks(newQueue);
-                description = `☑️ **${newQueue.length - actualQueue.length} canciones** agregadas a la cola como siguientes.`;
+                description = `☑️ **${newQueue.length - actualQueue.length} canciones** de la lista de reproducción **[${res.playlist.title}](${res.playlist.url})** agregadas a la cola como siguientes.`;
             } else {
                 //TEMP SOLUTION
                 if (Object.keys(blacklistedSongs).includes(res.tracks[0].url)) {
