@@ -186,6 +186,7 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     client.destroy();
 
     //exits process
+    console.log(chalk.yellow('> Terminando proceso'));
     process.exit();
 });
 
