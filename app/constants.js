@@ -7,7 +7,7 @@ module.exports = {
 
     githubRawURL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
 
-    color: [0, 119, 145],
+    color: [4, 134, 164],
 
     currencies: {
         slp: {

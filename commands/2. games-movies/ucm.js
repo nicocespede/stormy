@@ -175,7 +175,6 @@ module.exports = {
                 if (status === 'CONFIRMED') {
                     const canvas = createCanvas(200, 200);
                     const ctx = canvas.getContext('2d');
-                    const color = [181, 2, 22];
                     const embeds = [];
                     const pages = {};
                     let moviesField = { name: 'Nombre', value: '', inline: true };
@@ -192,9 +191,9 @@ module.exports = {
                                 typesField.value += `\n`;
                         } else {
                             embeds.push(new EmbedBuilder()
-                                .setColor(color)
+                                .setColor(instance.color)
                                 .addFields([moviesField, typesField])
-                                .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
+                                .setThumbnail(`${githubRawURL}/assets/thumbs/marvel.png`));
                             moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                             typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
                             if (ctx.measureText(newName).width > 288)
@@ -202,9 +201,9 @@ module.exports = {
                         }
                     }
                     embeds.push(new EmbedBuilder()
-                        .setColor(color)
+                        .setColor(instance.color)
                         .addFields([moviesField, typesField])
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/marvel.png`));
                     for (let i = 0; i < embeds.length; i++) {
                         const msg = embeds[i];
                         msg.setFooter({ text: `Página ${i + 1} | ${embeds.length}` });

@@ -3,7 +3,7 @@ const { initiateReactionCollector } = require('../../app/general');
 const { getIds, updateIds } = require('../../app/cache');
 const { githubRawURL } = require('../../app/constants');
 
-const files = ['camera.png', 'clapper.png', 'popcorn.png'];
+const thumbs = ['cinema', 'clapperboard', 'movie', 'movie-projector'];
 
 module.exports = {
     category: 'Privados',
@@ -14,18 +14,17 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    callback: async ({ message, args, client }) => {
+    callback: async ({ message, args, client, instance }) => {
         const url = args.pop();
         const ids = getIds() || await updateIds();
-        const random = Math.floor(Math.random() * (files.length));
+        const random = Math.floor(Math.random() * (thumbs.length));
         const msg = {
             content: `<@&${ids.roles.cine}>`,
             embeds: [new EmbedBuilder()
                 .setDescription(args.join(" "))
-                .setColor([255, 0, 6])
-                .setThumbnail(`attachment://${files[random]}`)
-                .setImage(url)],
-            files: [`${githubRawURL}/assets/thumbs/movies/${files[random]}`]
+                .setColor(instance.color)
+                .setThumbnail(`${githubRawURL}/assets/thumbs/movies/${thumbs[random]}.png`)
+                .setImage(url)]
         };
         initiateReactionCollector(client, msg);
         message.delete();
