@@ -10,8 +10,8 @@ module.exports = async client => {
         const matches = getKruMatches() || await updateKruMatches();
         const ids = getIds() || await updateIds();
         matches.forEach(element => {
-            const date = convertTZ(`${element.date} ${element.time}`, 'America/Argentina/Buenos_Aires');console.log(date)
-            const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');console.log(today)
+            const date = convertTZ(`${element.date} ${convertTime(element.time)}`, 'America/Argentina/Buenos_Aires');console.log(date)
+            const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
             const difference = date - today;
             const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
             if (difference <= oneDay && difference >= (oneDay - oneMinute))
