@@ -13,7 +13,7 @@ module.exports = async client => {
             const splittedDate = element.date.split('/');
             const splittedTime = convertTime(element.time).split(':');
             const utcDate = Date.UTC(splittedDate[0], splittedDate[1], splittedDate[2], splittedTime[0], splittedTime[1]) + (1000 * 60 * 60 * 4);
-            const date = convertTZ(new Date(utcDate), 'America/Argentina/Buenos_Aires'); console.log(date)
+            const date = convertTZ(new Date(utcDate), 'America/Argentina/Buenos_Aires');
             const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
             const difference = date - today;
             const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
