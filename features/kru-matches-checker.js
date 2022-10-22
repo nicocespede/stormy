@@ -10,7 +10,10 @@ module.exports = async client => {
         const matches = getKruMatches() || await updateKruMatches();
         const ids = getIds() || await updateIds();
         matches.forEach(element => {
-            const date = convertTZ(`${element.date} ${convertTime(element.time)}`, 'America/Argentina/Buenos_Aires');console.log(date)
+            const splittedDate = element.date.split('/');
+            const splittedTime = convertTime(element.time).split(':');
+            const utcDate = Date.UTC(splittedDate[0], splittedDate[1], splittedDate[2], splittedTime[0], splittedTime[1]);
+            const date = convertTZ(new Date(utcDate), 'America/Argentina/Buenos_Aires'); console.log(date)
             const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
             const difference = date - today;
             const rivalTeam = element.team1Name.includes('KRÜ') ? element.team2Name : element.team1Name;
