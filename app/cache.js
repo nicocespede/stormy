@@ -21,7 +21,7 @@ var reactionCollectorInfo;
 var rolesMessageInfo;
 var anniversaries;
 let icon;
-var lastAction;
+let lastAction;
 let playlists;
 var stats;
 var timestamps = {};
@@ -37,6 +37,7 @@ var kruMatches;
 let reminders;
 let characters;
 let songsInQueue = {};
+let musicPlayerData = {};
 
 const getMcu = () => mcu;
 
@@ -201,7 +202,7 @@ module.exports = {
     },
 
     getLastAction: () => lastAction,
-    updateLastAction: (action) => (lastAction = action),
+    updateLastAction: (action, user) => lastAction = { action: action, user: user },
 
     getPlaylists: () => playlists,
     updatePlaylists: async () => {
@@ -392,4 +393,9 @@ module.exports = {
         newKey[messageType] = object;
     },
     removeSongInQueue: url => (delete songsInQueue[url]),
+
+    getMusicPlayerData: key => musicPlayerData[key],
+    setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector: collector, message: message, page: page },
+    clearMusicPlayerData: key => delete musicPlayerData[key],
+    updatePage: (key, page) => musicPlayerData[key].page = page
 };

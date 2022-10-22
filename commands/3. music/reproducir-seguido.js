@@ -5,7 +5,7 @@ const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addS
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../app/cache');
 const { MusicActions, githubRawURL } = require('../../app/constants');
-const { containsAuthor, cleanTitle } = require("../../app/music");
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel, setMusicPlayerMessage } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -32,20 +32,22 @@ module.exports = {
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;
         }
 
         if (!member.voice.channel) {
             reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en un canal de voz para usar este comando!`)
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!`)
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         if (interaction) await interaction.deferReply();
@@ -67,7 +69,8 @@ module.exports = {
         if (!res || !res.tracks.length) {
             reply.embeds = [embed.setDescription(`🛑 ¡${user}, no se encontraron resultados! `)
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         const queue = await client.player.createQueue(guild, {
@@ -97,53 +100,59 @@ module.exports = {
             selfDeaf: true
         });
 
-        if (queue.tracks.length !== 0) {
-            let description;
-            updateLastAction(MusicActions.ADDING_NEXT);
-            if (res.playlist) {
-                //TEMP SOLUTION
-                for (let i = 0; i < res.tracks.length; i++) {
-                    const track = res.tracks[i];
-                    if (Object.keys(blacklistedSongs).includes(track.url)) {
-                        const auxRes = await client.player.search(blacklistedSongs[track.url], {
-                            requestedBy: member,
-                            searchEngine: QueryType.AUTO
-                        });
-                        res.tracks[i] = auxRes.tracks[0];
-                    }
-                }//
-                const actualQueue = queue.tracks;
-                queue.clear();
-                const newQueue = res.tracks.concat(actualQueue);
-                queue.addTracks(newQueue);
-                description = `☑️ **${newQueue.length - actualQueue.length} canciones** de la lista de reproducción **[${res.playlist.title}](${res.playlist.url})** agregadas a la cola como siguientes.`;
-            } else {
-                //TEMP SOLUTION
-                if (Object.keys(blacklistedSongs).includes(res.tracks[0].url)) {
-                    const auxRes = await client.player.search(blacklistedSongs[res.tracks[0].url], {
-                        requestedBy: member,
-                        searchEngine: QueryType.AUTO
-                    });
-                    res.tracks[0] = auxRes.tracks[0];
-                }//
-                const track = res.tracks[0];
-                queue.insert(track, 0);
-                const filteredTitle = await cleanTitle(track.title);
-                description = `☑️ Agregado a la cola como siguiente:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''}](${track.url}) - **${track.duration}**`;
-            }
-            const edit = {
-                embeds: [embed.setDescription(description)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
-            };
-            message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
-            return;
-        } else {
+        if (queue.tracks.length === 0) {
             updateLastAction(MusicActions.ADDING);
             addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
             res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
+
+            if (!queue.playing) await queue.play();
+            return;
         }
 
-        if (!queue.playing) await queue.play();
+        let description;
+        let action;
+        updateLastAction(MusicActions.ADDING_NEXT);
+        if (res.playlist) {
+            //TEMP SOLUTION
+            for (let i = 0; i < res.tracks.length; i++) {
+                const track = res.tracks[i];
+                if (Object.keys(blacklistedSongs).includes(track.url)) {
+                    const auxRes = await client.player.search(blacklistedSongs[track.url], {
+                        requestedBy: member,
+                        searchEngine: QueryType.AUTO
+                    });
+                    res.tracks[i] = auxRes.tracks[0];
+                }
+            }//
+            const actualQueue = queue.tracks;
+            queue.clear();
+            const newQueue = res.tracks.concat(actualQueue);
+            queue.addTracks(newQueue);
+            description = `☑️ **${newQueue.length - actualQueue.length} canciones** de la lista de reproducción **[${res.playlist.title}](${res.playlist.url})** agregadas a la cola como siguientes.`;
+            action = `s **${newQueue.length - actualQueue.length} canciones** de la lista de reproducción **[${res.playlist.title}](${res.playlist.url})**.`;
+        } else {
+            //TEMP SOLUTION
+            if (Object.keys(blacklistedSongs).includes(res.tracks[0].url)) {
+                const auxRes = await client.player.search(blacklistedSongs[res.tracks[0].url], {
+                    requestedBy: member,
+                    searchEngine: QueryType.AUTO
+                });
+                res.tracks[0] = auxRes.tracks[0];
+            }//
+            const track = res.tracks[0];
+            queue.insert(track, 0);
+            const filteredTitle = await cleanTitle(track.title);
+            description = `☑️ Agregado a la cola como siguiente:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''}](${track.url}) - **${track.duration}**`;
+            action = ` [${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''}](${track.url}).`;
+        }
+        const edit = {
+            embeds: [embed.setDescription(description)
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
+        };
+        message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
+
+        addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
+        setMusicPlayerMessage(queue, res.tracks[0], `☑️ ${message ? deferringMessage.mentions.repliedUser.tag : interaction.user.tag} agregó a la cola como siguiente${action}`);
         return;
     }
 

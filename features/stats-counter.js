@@ -43,7 +43,7 @@ module.exports = client => {
             }
 
             //check for new channel
-            if (newState.channelId != null && newState.channelId != ids.channels.afk && newState.guild.id === ids.guilds.default) {
+            if (newState.channelId && newState.channelId !== ids.channels.afk && newState.guild.id === ids.guilds.default) {
                 const membersInNewChannel = await getMembersStatus(newState.channel);
                 if (membersInNewChannel.size === 2)
                     membersInNewChannel.valid.forEach(member => {
@@ -67,7 +67,7 @@ module.exports = client => {
             }
 
             //check for old channel
-            if (oldState.channelId != null && oldState.channelId != ids.channels.afk && oldState.guild.id === ids.guilds.default) {
+            if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
                 const membersInOldChannel = await getMembersStatus(oldState.channel);
                 if (membersInOldChannel.size < 2)
                     oldState.channel.members.each(async member => {

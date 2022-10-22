@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction, getIds, updateIds } = require("../../app/cache");
 const { MusicActions, githubRawURL } = require("../../app/constants");
-const { containsAuthor, cleanTitle } = require("../../app/music");
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel } = require("../../app/music");
 
 module.exports = {
     category: 'Música',
@@ -37,19 +37,21 @@ module.exports = {
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;
         }
         if (!member.voice.channel) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         const queue = client.player.getQueue(guild.id);
@@ -57,13 +59,15 @@ module.exports = {
         if (!queue || !queue.playing) {
             reply.embeds = [embed.setDescription("🛑 ¡No hay ninguna canción para mover!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         if (queue.tracks.length <= 1) {
             reply.embeds = [embed.setDescription("🛑 ¡No hay suficientes canciones en la cola para mover!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         const songIndex = parseInt(number - 1);
@@ -71,7 +75,8 @@ module.exports = {
         if (songIndex < 0 || songIndex >= queue.tracks.length || isNaN(songIndex)) {
             reply.embeds = [embed.setDescription("🛑 El número de canción ingresado es inválido.")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         let positionIndex = parseInt(position - 1);
@@ -79,7 +84,8 @@ module.exports = {
         if (isNaN(positionIndex)) {
             reply.embeds = [embed.setDescription("🛑 El número de posición ingresado es inválido.")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         const song = queue.remove(songIndex);

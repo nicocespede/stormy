@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { getIds, updateIds } = require("../../app/cache");
 const { githubRawURL } = require("../../app/constants");
-const { containsAuthor, cleanTitle } = require("../../app/music");
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel } = require("../../app/music");
 
 function orderArgs(array) {
     var uniqueArray = array.filter(function (item, pos, self) {
@@ -52,20 +52,22 @@ module.exports = {
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;
         }
 
         if (!member.voice.channel) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
             reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         const queue = client.player.getQueue(guild.id);
@@ -73,17 +75,19 @@ module.exports = {
         if (!queue || !queue.playing) {
             reply.embeds = [embed.setDescription("🛑 ¡No hay canciones en la cola!")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         if (!validateArgs(numbers, queue.tracks.length)) {
             reply.embeds = [embed.setDescription("🛑 Alguno de los números ingresados es inválido.")
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            return reply;
+            handleErrorInMusicChannel(message, interaction, reply, channel);
+            return;
         }
 
         const ordered = orderArgs(numbers);
-        var description = [];
+        const description = [];
         for (let i = 0; i < ordered.length; i++) {
             const track = queue.remove(ordered[i]);
             const filteredTitle = await cleanTitle(track.title);

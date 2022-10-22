@@ -245,16 +245,16 @@ module.exports = {
         const split = message.split(' ');
         const ret = [];
         let chunk = '';
-        split.forEach(word => {
+        for (let i = 0; i < split.length; i++) {
+            const word = split[i];
             const aux = chunk + word + ' ';
-            if (aux.length <= 2000)
-                chunk += word + ' ';
-            else {
+            if (aux.length > 2000) {
                 ret.push(chunk);
                 chunk = '';
             }
-        });
-        ret.push(chunk);
+            chunk += word + ' ';
+            if (i === split.length - 1) ret.push(chunk);
+        }
         return ret;
     },
 
@@ -263,10 +263,10 @@ module.exports = {
     lastUpdateToString: (lastUpdate, upperCase) => {
         const date = new Date(`${lastUpdate.substring(6, 10)}/${lastUpdate.substring(3, 5)}/${lastUpdate.substring(0, 2)}`);
         const today = new Date();
-        if (date.getMonth() == today.getMonth() && date.getFullYear() == today.getFullYear())
-            if (date.getDate() == today.getDate())
+        if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear())
+            if (date.getDate() === today.getDate())
                 return !upperCase ? 'hoy' : 'Hoy';
-            else if (date.getDate() == today.getDate() - 1)
+            else if (date.getDate() === today.getDate() - 1)
                 return !upperCase ? 'ayer' : 'Ayer';
         return `${(!upperCase ? 'el ' : '')}` + lastUpdate;
     },

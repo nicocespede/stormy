@@ -1,87 +1,126 @@
-const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { containsAuthor, cleanTitle } = require("../../app/music");
+const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { githubRawURL } = require('../../app/constants');
 const Genius = require("genius-lyrics");
-const { splitMessage } = require('../../app/general');
-const { getIds, updateIds } = require('../../app/cache');
 const Client = new Genius.Client();
+const { getIds, updateIds } = require('../../app/cache');
+const { splitLyrics } = require('../../app/music');
 
 module.exports = {
     category: 'Música',
-    description: 'Muestra la letra de la canción actual o la de la canción ingresada.',
+    description: 'Muestra la letra de la canción ingresada.',
     aliases: ['lyrics'],
     options: [
         {
             name: 'canción',
             description: 'El nombre de la canción de la que se quiere la letra.',
-            required: false,
+            required: true,
             type: ApplicationCommandOptionType.String
         }
     ],
     slash: 'both',
 
+    minArgs: 1,
     expectedArgs: '[canción]',
     guildOnly: true,
 
-    callback: async ({ guild, user, message, channel, client, interaction, text, instance }) => {
-        const embed = new EmbedBuilder().setColor(instance.color);
+    callback: async ({ user, message, channel, interaction, text, instance }) => {
         const messageOrInteraction = message ? message : interaction;
         const song = message ? text : interaction.options.getString('canción');
         const reply = { custom: true, ephemeral: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             return reply;
         }
 
-        if (!song) {
-            const queue = client.player.getQueue(guild.id);
+        try {
+            const searches = await Client.songs.search(song);
 
-            if (!queue || !queue.playing) {
-                reply.embeds = [embed.setDescription(`🛑 ¡No hay ninguna canción de la cual mostrar la letra! Podés usar el comando **${prefix}letra** seguido del nombre de la canción que buscás.`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-                return reply;
+            const firstSong = searches[0];
+            let lyrics = await firstSong.lyrics();
+            lyrics = lyrics.replace(/[[]/g, '**[').replace(/[\]]/g, ']**');
+
+            const embeds = [];
+
+            const chunks = splitLyrics(lyrics);
+            for (const chunk of chunks)
+                embeds.push(new EmbedBuilder()
+                    .setDescription(chunk)
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/genius.png`)
+                    .setColor(instance.color));
+            embeds[embeds.length - 1].setFooter({ text: 'Letra obtenida de genius.com' });
+
+            const getRow = () => {
+                const row = new ActionRowBuilder();
+
+                row.addComponents(new ButtonBuilder()
+                    .setCustomId('prev_page')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('⬅')
+                    .setLabel('Anterior')
+                    .setDisabled(page === 0));
+
+                row.addComponents(new ButtonBuilder()
+                    .setCustomId('next_page')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('➡')
+                    .setLabel('Siguiente')
+                    .setDisabled(page === embeds.length - 1));
+
+                return row;
+            };
+            let page = 0;
+
+            reply.components = embeds.length > 1 ? [getRow()] : [];
+            reply.embeds = [embeds[page]];
+
+            const targetMessage = await messageOrInteraction.reply(reply);
+
+            if (embeds.length > 1) {
+                const filter = btnInt => user.id === btnInt.user.id;
+                const collector = targetMessage.createMessageComponentCollector({ filter, idle: 1000 * 60 * 10 });
+
+                collector.on('collect', async btnInt => {
+                    if (!btnInt) return;
+
+                    if (btnInt.customId === 'prev_page' && page > 0) --page;
+                    else if (btnInt.customId === 'next_page' && page < embeds.length - 1) ++page;
+
+                    reply.components = [getRow()];
+                    reply.embeds = [embeds[page]];
+
+                    btnInt.update(reply);
+                });
+
+                collector.on('end', _ => {
+                    if (message) {
+                        targetMessage.delete();
+                        message.delete();
+                    } else
+                        interaction.editReply({
+                            components: [], embeds: [new EmbedBuilder()
+                                .setDescription('⌛ Esta acción expiró...')
+                                .setColor(instance.color)
+                                .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                        });
+                });
             }
-
-            const filteredTitle = await cleanTitle(queue.current.title);
-            await Client.songs.search(filteredTitle + (!queue.current.url.includes('youtube') || !containsAuthor(queue.current) ? ` - ${queue.current.author}` : ``)).then(async searches => {
-                const firstSong = searches[0];
-                var lyrics = await firstSong.lyrics();
-                lyrics = lyrics.replace(/[[]/g, '**[');
-                lyrics = lyrics.replace(/[\]]/g, ']**');
-                var chunks = splitMessage(lyrics);
-                await messageOrInteraction.reply({ content: chunks[0] });
-                chunks.shift();
-                if (chunks.length > 0)
-                    chunks.forEach(async element => await channel.send({ content: element }));
-            }).catch(async error => {
-                if (error.message === 'No result was found') {
-                    reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción actual!`)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-                    await messageOrInteraction.reply(reply);
-                } else
-                    console.error;
-            });
-        } else {
-            await Client.songs.search(song).then(async searches => {
-                const firstSong = searches[0];
-                var lyrics = await firstSong.lyrics();
-                lyrics = lyrics.replace(/[[]/g, '**[');
-                lyrics = lyrics.replace(/[\]]/g, ']**');
-                var chunks = splitMessage(lyrics);
-                await messageOrInteraction.reply({ content: chunks[0] }).catch(console.error);
-                chunks.shift();
-                chunks.forEach(async element => await channel.send({ content: element }));
-            }).catch(async error => {
-                if (error.message === 'No result was found') {
-                    reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-                    await messageOrInteraction.reply(reply);
-                } else
-                    console.error;
-            });
+        } catch (error) {
+            const embed = new EmbedBuilder().setColor(instance.color);
+            const notFoundErrors = ['No result was found', "Cannot read properties of undefined (reading 'lyrics')"];
+            const notFound = notFoundErrors.includes(error.message);
+            if (notFound)
+                reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
+            else {
+                console.log(error);
+                reply.embeds = [embed.setDescription(`🛑 ¡Lo siento, ocurrió un error!`)
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
+            }
+            await messageOrInteraction.reply(reply);
         }
+
         return;
     }
 }
