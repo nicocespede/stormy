@@ -55,27 +55,63 @@ module.exports = {
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
+            reply.content = `⚠ Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         }
 
         if (subCommand === 'ver') {
             const playlists = getPlaylists() || await updatePlaylists();
-            let description = `Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\nLas listas de reproducción guardadas son:\n\n`;
-            let i = 1;
-            for (const name in playlists)
-                if (Object.hasOwnProperty.call(playlists, name))
-                    description += `**${i++}.** ${name} - ${playlists[name]}\n\n`;
-
-            reply.embeds = [new EmbedBuilder()
+            const embed = new EmbedBuilder()
                 .setTitle(`**Listas de reproducción**`)
-                .setDescription(description + `${Object.keys(playlists).length === 0 ? '_No hay ninguna lista de reproducción guardada aún._' : ''}`)
                 .setColor(instance.color)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/playlist.png`)];
+                .setThumbnail(`${githubRawURL}/assets/thumbs/music/playlist.png`);
+
+            if (Object.keys(playlists).length === 0) {
+                embed.setDescription('_No hay ninguna lista de reproducción guardada aún._');
+                reply.embeds = [embed];
+                message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+                return;
+            }
+
+            const fields = [];
+
+            const ownedPlaylists = Object.entries(playlists).filter(([_, playlist]) => playlist.ownerId === user.id);
+            if (ownedPlaylists.length > 0) {
+                const ownedField = { name: 'Tus listas de reproducción', value: '' };
+                let i = 1;
+                for (const [name, playlist] of ownedPlaylists) {
+                    const { url } = playlist;
+                    ownedField.value += `**${i++}.** [${name}](${url})\n\n`;
+                }
+                fields.push(ownedField);
+            }
+
+            const othersPlaylists = Object.entries(playlists).filter(([_, playlist]) => playlist.ownerId !== user.id);
+            if (othersPlaylists.length > 0) {
+                const othersField = { name: 'Otras listas de reproducción', value: '', inline: true };
+                const ownersField = { name: 'Agregada por', value: '', inline: true };
+                const membersIds = othersPlaylists.map(([_, playlist]) => playlist.ownerId);
+                const members = await guild.members.fetch(membersIds);
+                let i = 1;
+                for (const [name, playlist] of othersPlaylists) {
+                    const { url, ownerId } = playlist;
+                    const member = members.get(ownerId);
+                    othersField.value += `**${i++}.** [${name}](${url})\n\n`;
+                    ownersField.value += `${member ? member.user.tag : 'Desconocido'}\n\n`;
+                }
+                fields.push(othersField);
+                fields.push(ownersField);
+            }
+
+            embed.setFields(fields)
+                .setDescription(`Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\n`);
+            reply.embeds = [embed];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
-        } else if (subCommand === 'agregar') {
+        }
+
+        if (subCommand === 'agregar') {
             const url = message ? args.pop() : interaction.options.getString('url');
             const argsName = message ? args.join(' ') : interaction.options.getString('nombre');
 
@@ -100,16 +136,18 @@ module.exports = {
                     ARGUMENTS: "`<nombre>` `<url>`"
                 });
             else if (Object.keys(playlists).includes(name))
-                reply.content = `Ya hay una lista de reproducción guardada con ese nombre.`;
-            else
-                await addPlaylist(name, url).then(async () => {
-                    await updatePlaylists();
-                    reply.content = `Se agregó la lista de reproducción **${name}**.`;
-                    reply.ephemeral = false;
-                }).catch(console.error);
+                reply.content = `⚠ Ya hay una lista de reproducción guardada con ese nombre.`;
+            else {
+                await addPlaylist(name, url, user.id).catch(console.error);
+                await updatePlaylists();
+                reply.content = `✅ Se agregó la lista de reproducción **${name}**.`;
+                reply.ephemeral = false;
+            }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
-        } else if (subCommand === 'borrar' || subCommand === 'eliminar') {
+        }
+
+        if (subCommand === 'borrar' || subCommand === 'eliminar') {
             const argsName = message ? args.join(' ') : interaction.options.getString('nombre');
 
             if (!argsName) {
@@ -127,18 +165,20 @@ module.exports = {
             const name = argsName.toLowerCase();
             if (!Object.keys(playlists).includes(name))
                 reply.content = `⚠ La lista que intentás borrar no existe.`;
-            else
-                await deletePlaylist(name).then(async () => {
-                    await updatePlaylists();
-                    reply.content = `La lista de reproducción fue borrada de manera exitosa.`;
-                    reply.ephemeral = false;
-                }).catch(console.error);
-            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
-        } else {
-            reply.content = 'Comando inválido, los comandos válidos son: _ver, agregar, borrar, eliminar_';
+            else if (playlists[name].ownerId !== user.id)
+                reply.content = `⚠ No podés borrar una lista de otra persona.`;
+            else {
+                await deletePlaylist(name).catch(console.error);
+                await updatePlaylists();
+                reply.content = `✅ La lista de reproducción fue borrada de manera exitosa.`;
+                reply.ephemeral = false;
+            }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         }
+
+        reply.content = 'Comando inválido, los comandos válidos son: _ver, agregar, borrar, eliminar_';
+        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        return;
     }
 }

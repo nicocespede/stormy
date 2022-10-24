@@ -80,8 +80,8 @@ module.exports = {
         console.log(chalk.green(`> Juegos actualizados en la base de datos`));
     },
 
-    addPlaylist: async (name, url) => {
-        await new playlistSchema({ _id: name, url: url }).save();
+    addPlaylist: async (name, url, ownerId) => {
+        await new playlistSchema({ _id: name, url: url, ownerId: ownerId }).save();
         console.log(chalk.green('> Lista de reproducción agregada a la base de datos'));
     },
     deletePlaylist: async name => {

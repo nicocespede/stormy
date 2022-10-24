@@ -55,7 +55,7 @@ module.exports = {
 
         const playlists = getPlaylists() || await updatePlaylists();
         if (Object.keys(playlists).includes(song.toLowerCase()))
-            song = playlists[song.toLowerCase()];
+            song = playlists[song.toLowerCase()].url;
 
         //TEMP SOLUTION
         const blacklistedSongs = getBlacklistedSongs() || await updateBlacklistedSongs();

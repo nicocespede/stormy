@@ -5,7 +5,8 @@ const reqString = { type: String, required: true };
 
 const schema = new Schema({
     _id: reqString,
-    url: reqString
+    url: reqString,
+    ownerId: reqString
 });
 
 const name = 'playlist';

@@ -209,7 +209,7 @@ module.exports = {
         const playlistSchema = require('../models/playlist-schema');
         const results = await playlistSchema.find({}).sort({ _id: 'asc' });
         playlists = {};
-        results.forEach(pl => playlists[pl._id] = pl.url);
+        results.forEach(pl => playlists[pl._id] = { url: pl.url, ownerId: pl.ownerId });
         console.log(chalk.green('> Caché de playlists actualizado'));
         return playlists;
     },
