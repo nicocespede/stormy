@@ -72,6 +72,7 @@ module.exports = {
                         .setImage(url)]
                 };
                 initiateReactionCollector(client, msg);
+                reply.content = `✅ Cartelera activada.`;
             } catch (e) {
                 if (e.message === 'Received one or more errors') {
                     const messages = e.errors.filter(error => error.message === 'Invalid URL');
@@ -79,12 +80,9 @@ module.exports = {
                         : `❌ Ocurrieron errores:\n\n• ${e.errors.map(error => error.message).join('\n• ')}`;
                 } else
                     reply.content = `❌ Ocurrió un error: ${e.message}.`
-                return reply;
             }
 
-            reply.content = `✅ Cartelera activada.`;
             return reply;
-
         }
 
         const { isActive, messageId } = getReactionCollectorInfo() || await updateReactionCollectorInfo();
