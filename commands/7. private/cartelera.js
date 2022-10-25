@@ -146,8 +146,6 @@ module.exports = {
         if (!isActive)
             reply.content = '⚠ El recolector de reacciones no está activo.';
         else {
-            await updateBillboardMessage(false, messageId).catch(console.error);
-            await updateBillboardMessageInfo();
             const channel = await guild.channels.fetch(ids.channels.cartelera).catch(console.error);
             const message = await channel.messages.fetch(messageId).catch(console.error);
             message.edit({ components: [] });
@@ -156,6 +154,8 @@ module.exports = {
                 await member.roles.remove(role).catch(console.error);
                 console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
             });
+            await updateBillboardMessage(false, messageId).catch(console.error);
+            await updateBillboardMessageInfo();
             reply.content = `✅ Cartelera desactivada.`;
         }
 
