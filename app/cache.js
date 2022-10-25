@@ -16,8 +16,7 @@ var games;
 var birthdays;
 let banned;
 var sombraBans;
-let reactionCollector;
-var reactionCollectorInfo;
+let billboardMessageInfo;
 var rolesMessageInfo;
 var anniversaries;
 let icon;
@@ -159,18 +158,15 @@ module.exports = {
         return sombraBans;
     },
 
-    getReactionCollector: () => reactionCollector,
-    setReactionCollector: collector => reactionCollector = collector,
-
-    getReactionCollectorInfo: () => reactionCollectorInfo,
-    updateReactionCollectorInfo: async () => {
+    getBillboardMessageInfo: () => billboardMessageInfo,
+    updateBillboardMessageInfo: async () => {
         const result = await collectorMessageSchema.findById('billboard_message');
-        reactionCollectorInfo = {
+        billboardMessageInfo = {
             isActive: result.isActive,
             messageId: result.messageId
         };
         console.log(chalk.green('> Caché de recolector de reacciones actualizado'));
-        return reactionCollectorInfo;
+        return billboardMessageInfo;
     },
 
     getRolesMessageInfo: () => rolesMessageInfo,

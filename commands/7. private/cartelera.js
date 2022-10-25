@@ -1,10 +1,26 @@
-const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
 chalk.level = 1;
-const { initiateReactionCollector, stopReactionCollector } = require('../../app/general');
-const { getIds, updateIds, getReactionCollectorInfo, updateReactionCollectorInfo } = require('../../app/cache');
-const { updateBillboardCollectorMessage } = require('../../app/mongodb');
+const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../app/cache');
+const { updateBillboardMessage } = require('../../app/mongodb');
 const { githubRawURL } = require('../../app/constants');
+
+const prefix = 'billboard-';
+
+const getNewEmbed = async (interaction, roleId) => {
+    await new Promise(res => setTimeout(res, 1000 * 0.5));
+    const { message, guild } = interaction;
+    const embed = EmbedBuilder.from(message.embeds[0]);
+    const role = await guild.roles.fetch(roleId).catch(console.error);
+    if (role.members.size === 0)
+        embed.setFields([]);
+    else {
+        const field = { name: '👥 Espectadores:', value: `` };
+        role.members.forEach(member => field.value += `• ${member.user.tag}\n`);
+        embed.setFields([field]);
+    }
+    return embed;
+};
 
 module.exports = {
     category: 'Privados',
@@ -41,6 +57,33 @@ module.exports = {
     slash: true,
     guildOnly: true,
 
+    init: client => {
+        client.on('interactionCreate', async interaction => {
+            if (!interaction.isButton()) return;
+
+            const { guild, customId } = interaction;
+            if (!guild || !customId.startsWith(prefix)) return;
+
+            const ids = getIds() || await updateIds();
+            const buttonId = customId.replace(prefix, '');
+            const roleId = ids.roles.funcion;
+            const member = interaction.member;
+
+            if (buttonId === 'out' && member.roles.cache.has(roleId)) {
+                await member.roles.remove(roleId);
+                console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
+            } else if (buttonId === 'in' && !member.roles.cache.has(roleId)) {
+                await member.roles.add(roleId);
+                console.log(chalk.green(`> Rol 'función' asignado a ${member.user.tag}`));
+            } else {
+                interaction.deferUpdate();
+                return;
+            }
+
+            interaction.update({ embeds: [await getNewEmbed(interaction, roleId)] });
+        });
+    },
+
     callback: async ({ client, instance, interaction, user, guild }) => {
         const reply = { custom: true, ephemeral: true };
 
@@ -62,16 +105,30 @@ module.exports = {
             const random = Math.floor(Math.random() * (thumbs.length));
 
             try {
-                const msg = {
+                const messageData = {
+                    components: [new ActionRowBuilder()
+                        .addComponents(new ButtonBuilder()
+                            .setCustomId(`${prefix}in`)
+                            .setEmoji('🖐🏼')
+                            .setLabel('Participo')
+                            .setStyle(ButtonStyle.Primary))
+                        .addComponents(new ButtonBuilder()
+                            .setCustomId(`${prefix}out`)
+                            .setEmoji('👋🏼')
+                            .setLabel('No participo')
+                            .setStyle(ButtonStyle.Danger))],
                     content: `<@&${ids.roles.cine}>`,
                     embeds: [new EmbedBuilder()
-                        .setTitle(title)
-                        .setDescription(`${date}\n\n(reaccioná a este mensaje con ✅ si querés participar)`)
                         .setColor(instance.color)
+                        .setDescription(`**🕔 Fecha y horario:**\n${date}`)
+                        .setImage(url)
                         .setThumbnail(`${githubRawURL}/assets/thumbs/movies/${thumbs[random]}.png`)
-                        .setImage(url)]
+                        .setTitle(title)]
                 };
-                initiateReactionCollector(client, msg);
+                const channel = await client.channels.fetch(ids.channels.cartelera).catch(console.error);
+                const message = await channel.send(messageData);
+                await updateBillboardMessage(true, message.id).catch(console.error);
+                await updateBillboardMessageInfo();
                 reply.content = `✅ Cartelera activada.`;
             } catch (e) {
                 if (e.message === 'Received one or more errors') {
@@ -85,20 +142,19 @@ module.exports = {
             return reply;
         }
 
-        const { isActive, messageId } = getReactionCollectorInfo() || await updateReactionCollectorInfo();
+        const { isActive, messageId } = getBillboardMessageInfo() || await updateBillboardMessageInfo();
         if (!isActive)
             reply.content = '⚠ El recolector de reacciones no está activo.';
         else {
-            await updateBillboardCollectorMessage(false, messageId).catch(console.error);
-            await updateReactionCollectorInfo();
-            stopReactionCollector();
+            await updateBillboardMessage(false, messageId).catch(console.error);
+            await updateBillboardMessageInfo();
+            const channel = await guild.channels.fetch(ids.channels.cartelera).catch(console.error);
+            const message = await channel.messages.fetch(messageId).catch(console.error);
+            message.edit({ components: [] });
             const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
-            const members = await guild.members.fetch().catch(console.error);
-            members.forEach(async member => {
-                if (member.roles.cache.has(role.id)) {
-                    await member.roles.remove(role).catch(console.error);
-                    console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`))
-                }
+            role.members.forEach(async member => {
+                await member.roles.remove(role).catch(console.error);
+                console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
             });
             reply.content = `✅ Cartelera desactivada.`;
         }

@@ -60,7 +60,7 @@ module.exports = {
         console.log(chalk.green('> Filtros del UCM actualizados en la base de datos'));
     },
 
-    updateBillboardCollectorMessage: async (flag, id) => {
+    updateBillboardMessage: async (flag, id) => {
         await collectorMessageSchema.updateOne({ _id: 'billboard_message' }, { isActive: flag, messageId: id });
         console.log(chalk.green('> Mensaje de recolector actualizado en la base de datos'));
     },

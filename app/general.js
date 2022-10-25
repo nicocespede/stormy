@@ -6,7 +6,7 @@ const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./cache');
 const { relativeSpecialDays, githubRawURL } = require('./constants');
-const { updateIconString, deleteBan, updateBillboardCollectorMessage, addStat, updateStat } = require('./mongodb');
+const { updateIconString, deleteBan, addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -96,47 +96,6 @@ module.exports = {
     },
 
     convertTZ,
-
-    initiateReactionCollector: async (client, messageData) => {
-        const ids = cache.getIds() || await cache.updateIds();
-        const channel = await client.channels.fetch(ids.channels.cartelera).catch(console.error);
-
-        let message;
-        if (messageData) {
-            message = await channel.send(messageData);
-            await updateBillboardCollectorMessage(true, message.id).catch(console.error);
-            await cache.updateReactionCollectorInfo();
-            message.react('✅');
-        } else {
-            const { messageId } = cache.getReactionCollectorInfo() || await cache.updateReactionCollectorInfo();
-            message = await channel.messages.fetch({ message: messageId }).catch(console.error);
-        }
-
-        const filter = reaction => reaction.emoji.name === '✅';
-        const reactionCollector = message.createReactionCollector({ filter, dispose: true });
-
-        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
-        reactionCollector.on('collect', async (_, user) => {
-            if (!user.bot) {
-                const member = await guild.members.fetch(user.id).catch(console.error);
-                await member.roles.add(role.id);
-                console.log(chalk.green(`> Rol 'función' asignado a ${member.user.tag}`));
-            }
-        });
-        reactionCollector.on('remove', async (_, user) => {
-            const member = await guild.members.fetch(user.id).catch(console.error);
-            await member.roles.remove(role.id);
-            console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
-        });
-        cache.setReactionCollector(reactionCollector);
-        console.log(chalk.green('> Recolector de reacciones activado'));
-    },
-
-    stopReactionCollector: () => {
-        cache.getReactionCollector().stop();
-        console.log(chalk.yellow('> Recolector de reacciones desactivado'));
-    },
 
     pushDifference: async (id, username) => {
         let stats = cache.getStats() || await cache.updateStats();

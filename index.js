@@ -6,7 +6,7 @@ const { Player } = require('discord-player');
 const chalk = require('chalk');
 chalk.level = 1;
 const cache = require('./app/cache');
-const { initiateReactionCollector, pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
+const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./app/music');
 const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./app/constants');
 
@@ -51,10 +51,6 @@ client.on('ready', async () => {
         .setColor(color);
 
     await checkBansCorrelativity(client);
-
-    const reactionCollectorInfo = cache.getReactionCollectorInfo() || await cache.updateReactionCollectorInfo();
-    if (reactionCollectorInfo.isActive)
-        initiateReactionCollector(client);
 
     const musicEmbed = new EmbedBuilder().setColor(color);
     client.player = new Player(client, {
