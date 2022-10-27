@@ -6,20 +6,6 @@ const { getGames, updateGames } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
 
-async function getGameInfo(gameId) {
-    const fetch = require('node-fetch');
-    const info = {};
-    const games = !getGames() ? await updateGames() : getGames();
-    const game = games.filter(element => element.id === gameId)[0];
-    const files = game.instructions ? game.instructions.concat('links') : ['links'];
-    for (const file of files)
-        await fetch(`${githubRawURL}/games/${gameId}/${file}.txt`)
-            .then(res => res.text()).then(data => {
-                info[file] = data;
-            }).catch(err => console.log(chalk.red(`> Error al cargar ${file}.txt\n${err}`)));
-    return info;
-}
-
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Responde con los links de descarga de algunos juegos crackeados.',
@@ -67,35 +53,55 @@ module.exports = {
             if (index < 0 || index >= games.length || isNaN(index))
                 reply.content = `⚠ El número ingresado es inválido.`;
             else {
-                const game = games[index];
-                await getGameInfo(game.id).then(info => {
-                    const fields = [];
-                    for (const key in info)
-                        if (Object.hasOwnProperty.call(info, key))
-                            if (key === 'links') {
-                                const element = info[key];
-                                var field = { name: '\u200b', value: '' };
-                                const fullString = element.split('\n');
-                                fullString.forEach(line => {
-                                    const aux = field.value + line + '\n';
-                                    if (aux.length <= 1024)
-                                        field.value += line + '\n';
-                                    else {
-                                        fields.push(field);
-                                        field = { name: '\u200b', value: line + '\n' };
-                                    }
-                                });
+                const { embedData, imageURL, instructions, links, name, version, year } = games[index];
+                const fields = [];
+
+                if (instructions)
+                    for (const key in instructions) if (Object.hasOwnProperty.call(instructions, key))
+                        fields.push({ name: `${key}:`, value: instructions[key].join('\n') });
+
+                for (const key in links) if (Object.hasOwnProperty.call(links, key) && key !== 'password') {
+                    const variant = links[key];
+                    let field = { name: `${key.toUpperCase()}:`, value: '' };
+                    for (const server in variant) if (Object.hasOwnProperty.call(variant, server)) {
+                        const aux = field.value + `\n${server}:\n\n`;
+                        if (aux.length <= 1024)
+                            field.value = aux;
+                        else {
+                            fields.push(field);
+                            field = { name: '\u200b', value: `\n${server}:\n\n` };
+                        }
+
+                        const lines = variant[server];
+                        lines.forEach(line => {
+                            const aux = field.value + line + '\n';
+                            if (aux.length <= 1024)
+                                field.value = aux;
+                            else {
                                 fields.push(field);
-                            } else
-                                fields.push({ name: key, value: info[key] });
-                    reply.embeds = [new EmbedBuilder()
-                        .setTitle(`${game.name} (${game.year}) ${game.version}`)
-                        .setColor(game.embedData.color)
-                        .addFields(fields)
-                        .setThumbnail(`attachment://thumb.png`)
-                        .setImage(game.imageURL)];
-                    reply.files = [new AttachmentBuilder(game.embedData.thumb, { name: 'thumb.png' })];
-                }).catch(console.error);
+                                field = { name: '\u200b', value: line + '\n' };
+                            }
+                        });
+                    }
+                    fields.push(field);
+                }
+
+                if (links.password) {
+                    const aux = fields[fields.length - 1].value + `\n**Contraseña:** ${links.password}`;
+                    if (aux.length <= 1024)
+                        fields[fields.length - 1].value += `\n**Contraseña:** ${links.password}`;
+                    else
+                        fields.push({ name: '\u200b', value: `**Contraseña:** ${links.password}` });
+                }
+
+                reply.content = null;
+                reply.embeds = [new EmbedBuilder()
+                    .setTitle(`${name} (${year}) ${version}`)
+                    .setColor(embedData.color)
+                    .addFields(fields)
+                    .setThumbnail(`attachment://thumb.png`)
+                    .setImage(imageURL)];
+                reply.files = [new AttachmentBuilder(embedData.thumb, { name: 'thumb.png' })];
             }
         }
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);

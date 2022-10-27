@@ -64,11 +64,12 @@ module.exports = {
 
                 const games = await updateGamesCache();
                 games.forEach(game => {
-                    const found = oldGames.data.filter(g => g.name === game.name)[0];
+                    const { lastUpdate, name, year } = game;
+                    const found = oldGames.data.filter(g => g.name === name)[0];
                     if (!found)
-                        newStuff.games.push(game.name + ` (${game.year})`);
-                    else if (game.lastUpdate !== found.lastUpdate)
-                        updatedStuff.games.push(game.name + ` (${game.year})`);
+                        newStuff.games.push(name + ` (${year})`);
+                    else if (lastUpdate !== found.lastUpdate)
+                        updatedStuff.games.push(name + ` (${year})`);
                 });
 
                 const ids = getIds() || await updateIds();
@@ -104,7 +105,13 @@ module.exports = {
                         for (let i = 0; i < updatedStuff.games.length; i++)
                             content += `• Se actualizó el juego ${updatedStuff.games[i]}.\n`;
                         content += '```';
-                        await updateGames(games);
+
+                        const dbUpdate = [];
+                        for (const element of games) {
+                            const { name, lastUpdate } = element;
+                            dbUpdate.push({ name, lastUpdate });
+                        }
+                        await updateGames(dbUpdate);
                     }
                     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
                     channel.send(content).catch(console.error);
