@@ -79,13 +79,13 @@ module.exports = {
                     let content = '';
                     if (updatedStuff.movies.length > 0 || newStuff.movies.length > 0) {
                         content += `<@&${ids.roles.anunciosUcm}>\n\n<:marvel:${ids.emojis.marvel}> **___Universo Cinematográfico de Marvel:___**\n\`\`\``;
-                        for (let i = 0; i < newStuff.movies.length; i++) {
-                            const element = newStuff.movies[i];
-                            content += `• Se agregó ${element.name} en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} ${element.versions.join(', ')}.\n`;
-                        }
                         for (let i = 0; i < updatedStuff.movies.length; i++) {
                             const element = updatedStuff.movies[i];
                             content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} ${element.versions.join(', ')} de ${element.name}: ${element.updateInfo}.\n`;
+                        }
+                        for (let i = 0; i < newStuff.movies.length; i++) {
+                            const element = newStuff.movies[i];
+                            content += `• Se agregó ${element.name} en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} ${element.versions.join(', ')}.\n`;
                         }
                         content += '```';
 
@@ -102,10 +102,10 @@ module.exports = {
 
                     if (updatedStuff.games.length > 0 || newStuff.games.length > 0) {
                         content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\`\`\``;
-                        for (let i = 0; i < newStuff.games.length; i++)
-                            content += `• Se agregó el juego ${newStuff.games[i]}.\n`;
                         for (let i = 0; i < updatedStuff.games.length; i++)
                             content += `• Se actualizó el juego ${updatedStuff.games[i]}.\n`;
+                        for (let i = 0; i < newStuff.games.length; i++)
+                            content += `• Se agregó el juego ${newStuff.games[i]}.\n`;
                         content += '```';
 
                         const dbUpdate = [];
