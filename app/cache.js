@@ -52,7 +52,7 @@ const updateMcu = async () => {
         mcu = JSON.parse(data);
         console.log(chalk.green('> mcu.json cargado'));
     } catch (err) {
-        console.log(chalk.red(`> Error al cargar mcu.json\n${err}`));
+        console.log(chalk.red(`> Error al cargar mcu.json\n${err.stack}`));
     }
     return mcu;
 };
@@ -118,7 +118,7 @@ module.exports = {
                 }
             }
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar games.json\n${err}`));
+            console.log(chalk.red(`> Error al cargar games.json\n${err.stack}`));
         }
         return games.sort((a, b) => a.name.localeCompare(b.name));
     },
@@ -289,7 +289,7 @@ module.exports = {
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
                 console.log(chalk.green('> tracksNameExtras.json cargado'));
-            }).catch(err => console.log(chalk.red(`> Error al cargar tracksNameExtras.json\n${err}`)));
+            }).catch(err => console.log(chalk.red(`> Error al cargar tracksNameExtras.json\n${err.stack}`)));
         return tracksNameExtras;
     },
 
@@ -300,7 +300,7 @@ module.exports = {
             .then(res => res.text()).then(data => {
                 blacklistedSongs = JSON.parse(data);
                 console.log(chalk.green('> blacklistedTracks.json cargado'));
-            }).catch(err => console.log(chalk.red(`> Error al cargar blacklistedTracks.json\n${err}`)));
+            }).catch(err => console.log(chalk.red(`> Error al cargar blacklistedTracks.json\n${err.stack}`)));
         return blacklistedSongs;
     },//
 
@@ -318,7 +318,7 @@ module.exports = {
             ids = JSON.parse(data);
             console.log(chalk.green(`> ${fileName} cargado`));
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar ${fileName}\n${err}`))
+            console.log(chalk.red(`> Error al cargar ${fileName}\n${err.stack}`))
         }
         return ids;
     },
@@ -360,7 +360,7 @@ module.exports = {
         } catch (e) {
             if (!kruMatches)
                 kruMatches = [];
-            console.log(chalk.red(`> Error al obtener información de partidos programados de KRÜ\n${e}`));
+            console.log(chalk.red(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`));
         }
         return kruMatches;
     },
@@ -386,7 +386,7 @@ module.exports = {
             characters = JSON.parse(data);
             console.log(chalk.green('> characters.json cargado'));
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar characters.json\n${err}`));
+            console.log(chalk.red(`> Error al cargar characters.json\n${err.stack}`));
         }
         return characters;
     },

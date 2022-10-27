@@ -42,41 +42,42 @@ module.exports = {
                 const updatedStuff = { movies: [], games: [] };
 
                 const mcu = await updateMcu();
-                mcu.forEach(movie => {
+                for (const movie of mcu) {
                     const { name, updateInfo, versions } = movie;
                     const found = oldMovies.data.filter(m => m.name === name)[0];
-                    if (!found)
+
+                    if (!found) {
                         newStuff.movies.push({ name: name, versions: Object.keys(versions) });
-                    else {
-                        const added = [];
-                        const updated = [];
-                        for (const key in versions) if (Object.hasOwnProperty.call(versions, key))
-                            if (!found.versions[key])
-                                added.push(key)
-                            else if (versions[key].lastUpdate !== found.versions[key].lastUpdate)
-                                updated.push(key);
-                        if (added.length > 0)
-                            newStuff.movies.push({ name: name, versions: added });
-                        if (updated.length > 0)
-                            updatedStuff.movies.push({ name: name, versions: updated, updateInfo: updateInfo });
+                        continue;
                     }
-                });
+
+                    const versionsEntries = Object.entries(versions);
+                    const added = versionsEntries.filter(([key, _]) => !found.versions[key]).map(([key, _]) => key);
+                    const updated = versionsEntries
+                        .filter(([key, _]) => found.versions[key] && versions[key].lastUpdate !== found.versions[key].lastUpdate)
+                        .map(([key, _]) => key);
+
+                    if (added.length > 0)
+                        newStuff.movies.push({ name: name, versions: added });
+                    if (updated.length > 0)
+                        updatedStuff.movies.push({ name: name, versions: updated, updateInfo: updateInfo });
+                }
 
                 const games = await updateGamesCache();
-                games.forEach(game => {
+                for (const game of games) {
                     const { lastUpdate, name, year } = game;
                     const found = oldGames.data.filter(g => g.name === name)[0];
                     if (!found)
                         newStuff.games.push(name + ` (${year})`);
                     else if (lastUpdate !== found.lastUpdate)
                         updatedStuff.games.push(name + ` (${year})`);
-                });
+                }
 
-                const ids = getIds() || await updateIds();
-                if (updatedStuff.games.length !== 0 || updatedStuff.movies.length !== 0
-                    || newStuff.games.length !== 0 || newStuff.movies.length !== 0) {
+                if (updatedStuff.games.length > 0 || updatedStuff.movies.length > 0
+                    || newStuff.games.length > 0 || newStuff.movies.length > 0) {
+                    const ids = getIds() || await updateIds();
                     let content = '';
-                    if (updatedStuff.movies.length !== 0 || newStuff.movies.length !== 0) {
+                    if (updatedStuff.movies.length > 0 || newStuff.movies.length > 0) {
                         content += `<@&${ids.roles.anunciosUcm}>\n\n<:marvel:${ids.emojis.marvel}> **___Universo Cinematográfico de Marvel:___**\n\`\`\``;
                         for (let i = 0; i < newStuff.movies.length; i++) {
                             const element = newStuff.movies[i];
@@ -98,7 +99,8 @@ module.exports = {
                         }
                         await updateMovies(dbUpdate);
                     }
-                    if (updatedStuff.games.length !== 0 || newStuff.games.length !== 0) {
+
+                    if (updatedStuff.games.length > 0 || newStuff.games.length > 0) {
                         content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\`\`\``;
                         for (let i = 0; i < newStuff.games.length; i++)
                             content += `• Se agregó el juego ${newStuff.games[i]}.\n`;
@@ -128,7 +130,7 @@ module.exports = {
 
             await interaction.editReply({ content: '✅ Caché actualizado.' });
         } catch (e) {
-            console.log(chalk.red(`Error in actualizar-cache.js:\n${e}`));
+            console.log(chalk.red(`Error in actualizar-cache.js:\n${e.stack}`));
             await interaction.editReply({ content: '❌ Ocurrió un error.' });
         }
         return;

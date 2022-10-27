@@ -100,29 +100,28 @@ module.exports = {
                     const smurfs = getSmurfs() || await updateSmurfs();
                     let errorsCounter = 0;
                     let description = `Hola <@${user.id}>, `;
-                    for (const command in smurfs)
-                        if (Object.hasOwnProperty.call(smurfs, command)) {
-                            const account = smurfs[command];
-                            if (!account.vip || isVip) {
-                                const accInfo = account.name.split('#');
-                                const mmr = await ValorantAPI.getMMR({
-                                    version: 'v1',
-                                    region: 'na',
-                                    name: accInfo[0],
-                                    tag: accInfo[1],
-                                }).catch(console.error);
-                                if (mmr.error) {
-                                    errorsCounter++;
-                                    console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
-                                    accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${account.name}\n\n`;
-                                    ranksField.value += `???\n\n`;
-                                } else {
-                                    accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
-                                    ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
-                                }
-                                commandsField.value += `${command}\n\n`;
+                    for (const command in smurfs) if (Object.hasOwnProperty.call(smurfs, command)) {
+                        const account = smurfs[command];
+                        if (!account.vip || isVip) {
+                            const accInfo = account.name.split('#');
+                            const mmr = await ValorantAPI.getMMR({
+                                version: 'v1',
+                                region: 'na',
+                                name: accInfo[0],
+                                tag: accInfo[1],
+                            }).catch(console.error);
+                            if (mmr.error) {
+                                errorsCounter++;
+                                console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
+                                accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${account.name}\n\n`;
+                                ranksField.value += `???\n\n`;
+                            } else {
+                                accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
+                                ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
                             }
+                            commandsField.value += `${command}\n\n`;
                         }
+                    }
 
                     description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`;
 
