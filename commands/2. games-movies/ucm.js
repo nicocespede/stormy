@@ -18,20 +18,6 @@ const areEqual = (oldFilters, newFilters) => {
     return false;
 };
 
-const getMovieInfo = async movieName => {
-    const fetch = require('node-fetch');
-    const info = {};
-    const mcu = getMcu() || await updateMcu();
-    const movie = mcu.filter(element => element.name === movieName)[0];
-    const filteredName = movieName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
-    for (const version in movie.lastUpdate)
-        await fetch(`${githubRawURL}/mcu/${filteredName}/${version}.txt`)
-            .then(res => res.text()).then(data => {
-                info[version] = data;
-            }).catch(err => console.log(chalk.red(`> Error al cargar ${version}.txt\n${err}`)));
-    return info;
-};
-
 const getValidFilters = async () => {
     const mcu = getMcu() || await updateMcu();
     return [...new Set(mcu.map(({ type }) => type))];
@@ -293,27 +279,25 @@ module.exports = {
             return;
         }
 
-        const name = mcuMovies[index].name;
-        const info = await getMovieInfo(name).catch(console.error);
+        const { color, name, type, versions } = mcuMovies[index];
         let nowShowing = '';
         const getVersionsRow = () => {
             const row = new ActionRowBuilder();
-            for (const ver in info)
-                if (Object.hasOwnProperty.call(info, ver)) {
-                    row.addComponents(new ButtonBuilder().setCustomId(ver)
-                        .setEmoji('📽')
-                        .setLabel(ver)
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(ver === nowShowing));
-                }
+            for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver)) {
+                row.addComponents(new ButtonBuilder().setCustomId(ver)
+                    .setEmoji('📽')
+                    .setLabel(ver)
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(ver === nowShowing));
+            }
             return row;
         };
 
-        const moviePath = `${githubRawURL}/mcu/${name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')}`;
+        const filteredName = name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
 
         reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
         reply.components = [getVersionsRow()];
-        reply.files = [`${moviePath}/image.jpg`];
+        reply.files = [`${githubRawURL}/assets/mcu/${filteredName}.jpg`];
 
         const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
@@ -333,18 +317,16 @@ module.exports = {
             const pages = {};
             nowShowing = i.customId;
             await i.update({ components: [getVersionsRow()] });
-            const serverOptions = info[i.customId].split('\n**');
-            const password = serverOptions.length > 1 ? '**' + serverOptions.pop() : '';
-            serverOptions.forEach(server => {
-                const lines = server.split('\n');
-                const serverName = lines.shift().split(':**')[0].replace(/[**]/g, '');
-                const title = mcuMovies[index].type === 'Cortometraje' ? `Marvel One-shot collection (2011-2018)` : name;
+            const { lastUpdate, links, password } = versions[i.customId];
+            const passwordString = password ? `**Contraseña:** ${password}` : '';
+            for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
+                const title = type === 'One-Shot' ? `Marvel One-shot collection (2011-2018)` : name;
                 embeds.push(new EmbedBuilder()
-                    .setTitle(`${title} - ${i.customId} (${serverName})`)
-                    .setColor(mcuMovies[index].color)
-                    .setDescription(`Actualizada por última vez ${lastUpdateToString(mcuMovies[index].lastUpdate[i.customId], false)}.\n` + lines.join('\n') + `\n${password}`)
-                    .setThumbnail(`attachment://thumb.png`));
-            });
+                    .setTitle(`${title} - ${i.customId} (${server})`)
+                    .setColor(color)
+                    .setDescription(`Actualizada por última vez ${lastUpdateToString(lastUpdate, false)}.\n\n${links[server].join('\n')}\n\n${passwordString}`)
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/mcu/${filteredName}.png`));
+            }
 
             for (let i = 0; i < embeds.length; i++)
                 embeds[i].setFooter({ text: `Opción ${i + 1} | ${embeds.length}` });
@@ -375,7 +357,7 @@ module.exports = {
             const msg = {
                 components: [getRow(id)],
                 embeds: [embeds[pages[id]]],
-                files: [`${moviePath}/thumb.png`]
+                files: []
             };
 
             versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);

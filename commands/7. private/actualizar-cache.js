@@ -43,22 +43,22 @@ module.exports = {
 
                 const mcu = await updateMcu();
                 mcu.forEach(movie => {
-                    const found = oldMovies.data.filter(m => m.name === movie.name)[0];
+                    const { name, updateInfo, versions } = movie;
+                    const found = oldMovies.data.filter(m => m.name === name)[0];
                     if (!found)
-                        newStuff.movies.push({ name: movie.name, versions: Object.keys(movie.lastUpdate) });
+                        newStuff.movies.push({ name: name, versions: Object.keys(versions) });
                     else {
                         const added = [];
                         const updated = [];
-                        for (const key in movie.lastUpdate)
-                            if (Object.hasOwnProperty.call(movie.lastUpdate, key))
-                                if (!found.lastUpdate[key])
-                                    added.push(key)
-                                else if (movie.lastUpdate[key] !== found.lastUpdate[key])
-                                    updated.push(key);
+                        for (const key in versions) if (Object.hasOwnProperty.call(versions, key))
+                            if (!found.versions[key])
+                                added.push(key)
+                            else if (versions[key].lastUpdate !== found.versions[key].lastUpdate)
+                                updated.push(key);
                         if (added.length > 0)
-                            newStuff.movies.push({ name: movie.name, versions: added });
+                            newStuff.movies.push({ name: name, versions: added });
                         if (updated.length > 0)
-                            updatedStuff.movies.push({ name: movie.name, versions: updated, updateInfo: movie.updateInfo });
+                            updatedStuff.movies.push({ name: name, versions: updated, updateInfo: updateInfo });
                     }
                 });
 
@@ -86,7 +86,16 @@ module.exports = {
                             content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} ${element.versions.join(', ')} de ${element.name}: ${element.updateInfo}.\n`;
                         }
                         content += '```';
-                        await updateMovies(mcu);
+
+                        const dbUpdate = [];
+                        for (const element of mcu) {
+                            const { name, versions } = element;
+                            const newObj = { name, versions: {} };
+                            for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver))
+                                newObj.versions[ver] = { lastUpdate: versions[ver].lastUpdate };
+                            dbUpdate.push(newObj);
+                        }
+                        await updateMovies(dbUpdate);
                     }
                     if (updatedStuff.games.length !== 0 || newStuff.games.length !== 0) {
                         content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\`\`\``;
