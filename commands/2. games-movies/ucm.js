@@ -282,10 +282,11 @@ module.exports = {
         const { color, episodes, name, type, versions } = mcuMovies[index];
         let nowShowing = '';
         const getVersionsRow = () => {
+            const emojis = { "Película": '📽', "Serie": '🎞', "One-Shot": '🎬', "Miniserie": '🎥', "Especial": '📺' };
             const row = new ActionRowBuilder();
             for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver)) {
                 row.addComponents(new ButtonBuilder().setCustomId(ver)
-                    .setEmoji('📽')
+                    .setEmoji(emojis[type])
                     .setLabel(ver)
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(ver === nowShowing));
