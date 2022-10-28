@@ -282,7 +282,14 @@ module.exports = {
         const { color, episodes, name, type, versions } = mcuMovies[index];
         let nowShowing = '';
         const getVersionsRow = () => {
-            const emojis = { "Película": '📽', "Serie": '🎞', "One-Shot": '🎬', "Miniserie": '🎥', "Especial": '📺' };
+            const emojis = {
+                "Cortometraje": '📹',
+                "Especial": '📺',
+                "Miniserie": '🎥',
+                "One-Shot": '🎬',
+                "Película": '📽',
+                "Serie": '🎞'
+            };
             const row = new ActionRowBuilder();
             for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver)) {
                 row.addComponents(new ButtonBuilder().setCustomId(ver)
@@ -322,7 +329,7 @@ module.exports = {
             const dataString = `${episodes ? `**Episodios:** ${episodes}\n` : ''}**Archivos:** ${files}`;
             const passwordString = password ? `**Contraseña:** ${password}` : '';
             for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
-                const title = type === 'One-Shot' ? `Marvel One-shot collection (2011-2018)` : name;
+                const title = type === 'One-Shot' ? `Marvel One-Shots collection (2011-2018)` : name;
                 embeds.push(new EmbedBuilder()
                     .setTitle(`${title} - ${i.customId} (${server})`)
                     .setColor(color)
