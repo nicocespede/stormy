@@ -53,7 +53,7 @@ module.exports = {
             if (index < 0 || index >= games.length || isNaN(index))
                 reply.content = `⚠ El número ingresado es inválido.`;
             else {
-                const { embedData, imageURL, instructions, links, name, version, year } = games[index];
+                const { embedData, files, imageURL, instructions, links, name, version, year } = games[index];
                 const fields = [];
 
                 if (instructions)
@@ -98,6 +98,7 @@ module.exports = {
                 reply.embeds = [new EmbedBuilder()
                     .setTitle(`${name} (${year}) ${version}`)
                     .setColor(embedData.color)
+                    .setDescription(`**Cantidad de archivos: **${files}`)
                     .addFields(fields)
                     .setThumbnail(`attachment://thumb.png`)
                     .setImage(imageURL)];

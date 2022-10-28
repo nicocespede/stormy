@@ -326,7 +326,7 @@ module.exports = {
             nowShowing = i.customId;
             await i.update({ components: [getVersionsRow()] });
             const { files, lastUpdate, links, password } = versions[i.customId];
-            const dataString = `${episodes ? `**Episodios:** ${episodes}\n` : ''}**Archivos:** ${files}`;
+            const dataString = `${episodes ? `**Episodios:** ${episodes}\n` : ''}**Cantidad de archivos:** ${files}`;
             const passwordString = password ? `**Contraseña:** ${password}` : '';
             for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
                 const title = type === 'One-Shot' ? `Marvel One-Shots collection (2011-2018)` : name;
