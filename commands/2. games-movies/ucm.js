@@ -230,11 +230,11 @@ module.exports = {
                     pages[id] = pages[id] || 0;
 
                     edit.components = [getRow(id)];
-                    edit.content = `${emoji} **${title}**\n\n⚠ Podés navegar libremente por las páginas durante 5 minutos, luego esta acción expirará.\n\u200b`;
+                    edit.content = `${emoji} **${title}**\n\n⚠ Podés navegar libremente por las páginas, luego de 5 minutos de inactividad esta acción expirará.\n\u200b`;
                     edit.embeds = [embeds[pages[id]]];
                     edit.files = [];
 
-                    const finalCollector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
+                    const finalCollector = channel.createMessageComponentCollector({ filter, idle: 1000 * 60 * 5 });
 
                     finalCollector.on('collect', async btnInt => {
                         if (!btnInt) return;
@@ -279,7 +279,7 @@ module.exports = {
             return;
         }
 
-        const { color, name, type, versions } = mcuMovies[index];
+        const { color, episodes, name, type, versions } = mcuMovies[index];
         let nowShowing = '';
         const getVersionsRow = () => {
             const row = new ActionRowBuilder();
@@ -295,7 +295,7 @@ module.exports = {
 
         const filteredName = name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
 
-        reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos.\n\u200b`;
+        reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
         reply.components = [getVersionsRow()];
         reply.files = [`${githubRawURL}/assets/mcu/${filteredName}.jpg`];
 
@@ -307,7 +307,7 @@ module.exports = {
             return user.id === btnInt.user.id && isTheSameMessage;
         }
 
-        const collector = channel.createMessageComponentCollector({ filter, time: 1000 * 60 * 5 });
+        const collector = channel.createMessageComponentCollector({ filter, idle: 1000 * 60 * 5 });
 
         let versionsMessage;
         let finalCollector;
@@ -317,19 +317,20 @@ module.exports = {
             const pages = {};
             nowShowing = i.customId;
             await i.update({ components: [getVersionsRow()] });
-            const { lastUpdate, links, password } = versions[i.customId];
+            const { files, lastUpdate, links, password } = versions[i.customId];
+            const dataString = `${episodes ? `**Episodios:** ${episodes}\n` : ''}**Archivos:** ${files}`;
             const passwordString = password ? `**Contraseña:** ${password}` : '';
             for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
                 const title = type === 'One-Shot' ? `Marvel One-shot collection (2011-2018)` : name;
                 embeds.push(new EmbedBuilder()
                     .setTitle(`${title} - ${i.customId} (${server})`)
                     .setColor(color)
-                    .setDescription(`Actualizada por última vez ${lastUpdateToString(lastUpdate, false)}.\n\n${links[server].join('\n')}\n\n${passwordString}`)
+                    .setDescription(`${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${links[server].join('\n')}\n\n${passwordString}`)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/mcu/${filteredName}.png`));
             }
 
             for (let i = 0; i < embeds.length; i++)
-                embeds[i].setFooter({ text: `Opción ${i + 1} | ${embeds.length}` });
+                embeds[i].setFooter({ text: `Servidor ${i + 1} | ${embeds.length}` });
 
             const getRow = id => {
                 const row = new ActionRowBuilder();
@@ -366,7 +367,7 @@ module.exports = {
 
             const secondFilter = (btnInt) => { return user.id === btnInt.user.id };
 
-            finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, time: 1000 * 60 * 5 });
+            finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, idle: 1000 * 60 * 5 });
 
             finalCollector.on('collect', async btnInt => {
                 if (!btnInt) return;
