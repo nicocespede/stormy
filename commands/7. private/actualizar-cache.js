@@ -65,12 +65,12 @@ module.exports = {
 
                 const games = await updateGamesCache();
                 for (const game of games) {
-                    const { lastUpdate, name, year } = game;
+                    const { lastUpdate, name, updateInfo, year } = game;
                     const found = oldGames.data.filter(g => g.name === name)[0];
                     if (!found)
                         newStuff.games.push(name + ` (${year})`);
                     else if (lastUpdate !== found.lastUpdate)
-                        updatedStuff.games.push(name + ` (${year})`);
+                        updatedStuff.games.push({ name: name + ` (${year})`, updateInfo: updateInfo });
                 }
 
                 if (updatedStuff.games.length > 0 || updatedStuff.movies.length > 0
@@ -103,7 +103,7 @@ module.exports = {
                     if (updatedStuff.games.length > 0 || newStuff.games.length > 0) {
                         content += `\n<@&${ids.roles.anunciosJuegos}>\n\n🎮 **___Juegos:___**\n\`\`\``;
                         for (let i = 0; i < updatedStuff.games.length; i++)
-                            content += `• Se actualizó el juego ${updatedStuff.games[i]}.\n`;
+                            content += `• Se actualizó el juego ${updatedStuff.games[i].name}${updatedStuff.games[i].updateInfo}.\n`;
                         for (let i = 0; i < newStuff.games.length; i++)
                             content += `• Se agregó el juego ${newStuff.games[i]}.\n`;
                         content += '```';

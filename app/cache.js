@@ -105,6 +105,7 @@ module.exports = {
                                 year: data.release_date.date.split(',').pop().trim(),
                                 version: game.version,
                                 lastUpdate: game.lastUpdate,
+                                updateInfo: game.updateInfo,
                                 files: game.files,
                                 imageURL: data.header_image,
                                 instructions: game.instructions,

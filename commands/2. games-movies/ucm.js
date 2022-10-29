@@ -39,8 +39,20 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
-    callback: async ({ user, message, args, interaction, channel, guild, instance }) => {
+    callback: async ({ user, member, message, args, interaction, channel, guild, instance }) => {
         if (interaction) await interaction.deferReply({ ephemeral: true });
+
+        const ids = getIds() || await updateIds();
+        try {
+            const role = await guild.roles.fetch(ids.roles.anunciosUcm);
+            if (!role.members.has(user.id)) {
+                await member.roles.add(ids.roles.anunciosUcm);
+                console.log(chalk.green(`Rol 'MCU Fans' agregado a ${user.tag}`));
+            }
+        } catch (error) {
+            console.log(chalk.red(`No se pudo agregar el rol 'MCU Fans' a ${user.tag}:\n${error.stack}`));
+        }
+
         const number = message ? args[0] : interaction.options.getInteger('numero');
         const reply = { ephemeral: true };
 
@@ -85,7 +97,6 @@ module.exports = {
                     .setStyle(ButtonStyle.Danger));
 
             const getNewEmoji = async () => {
-                const ids = getIds() || await updateIds();
                 const mcuCharacters = Object.keys(ids.emojis.mcuCharacters);
                 const emojiName = mcuCharacters[Math.floor(Math.random() * mcuCharacters.length)];
                 return `<:${emojiName}:${ids.emojis.mcuCharacters[emojiName]}>`;

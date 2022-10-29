@@ -2,7 +2,7 @@ const { EmbedBuilder, ApplicationCommandOptionType, AttachmentBuilder } = requir
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
 chalk.level = 1;
-const { getGames, updateGames } = require('../../app/cache');
+const { getGames, updateGames, getIds, updateIds } = require('../../app/cache');
 const { prefix, githubRawURL } = require('../../app/constants');
 const { lastUpdateToString } = require('../../app/general');
 
@@ -22,10 +22,22 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
-    callback: async ({ message, args, interaction, user, instance, guild }) => {
+    callback: async ({ message, args, interaction, user, instance, guild, member }) => {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
+
+        try {
+            const ids = getIds() || await updateIds();
+            const role = await guild.roles.fetch(ids.roles.anunciosJuegos);
+            if (!role.members.has(user.id)) {
+                await member.roles.add(ids.roles.anunciosJuegos);
+                console.log(chalk.green(`Rol 'Gamers' agregado a ${user.tag}`));
+            }
+        } catch (error) {
+            console.log(chalk.red(`No se pudo agregar el rol 'Gamers' a ${user.tag}:\n${error.stack}`));
+        }
+
         const number = message ? args[0] : interaction.options.getInteger('numero');
-        const games = !getGames() ? await updateGames() : getGames();
+        const games = getGames() || await updateGames();
         const reply = { custom: true, ephemeral: true };
         if (!number) {
             const canvas = createCanvas(200, 200);
