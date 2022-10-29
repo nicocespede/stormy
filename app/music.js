@@ -177,7 +177,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 break;
 
             case 'notInVoiceChannel':
-                description = "🛑 ¡Debes estar en el mismo canal de voz que yo para pausar la reproducción!";
+                description = "🛑 ¡Debes estar en el mismo canal de voz que yo para realizar esta acción!";
                 break;
 
             case 'noPreviousTrack':
