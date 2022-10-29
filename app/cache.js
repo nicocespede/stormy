@@ -6,7 +6,6 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const chalk = require('chalk');
-chalk.level = 1;
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
 var mcu;

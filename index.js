@@ -132,11 +132,12 @@ client.on('ready', async () => {
             queue.destroy();
     }).on('error', (queue, error) => {
         console.log(chalk.red(`Error in Player.on('error'):\n${error.stack}`));
-        queue.metadata.send({
-            content: `<@${ids.users.stormer}>`,
-            embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
-        });
+        if (error.message !== 'write EPIPE')
+            queue.metadata.send({
+                content: `<@${ids.users.stormer}>`,
+                embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
+                    .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
+            });
         if (!queue.destroyed)
             queue.destroy();
     })/*.on('debug', (queue, message) => {
