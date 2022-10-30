@@ -1,4 +1,4 @@
-const { getIds, updateIds } = require("../../app/cache");
+const { getIds, updateIds } = require("../../src/cache");
 
 module.exports = {
     category: 'Privados',

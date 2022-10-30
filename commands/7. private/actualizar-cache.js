@@ -1,11 +1,10 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const chalk = require("chalk");
-chalk.level = 1;
 const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
-} = require("../../app/cache");
-const { updateMovies, updateGames } = require("../../app/mongodb");
+} = require("../../src/cache");
+const { updateMovies, updateGames } = require("../../src/mongodb");
 
 const choices = [
     { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },

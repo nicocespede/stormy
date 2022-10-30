@@ -1,11 +1,10 @@
 const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
-chalk.level = 1;
-const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu, getIds, updateIds } = require('../../app/cache');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { lastUpdateToString } = require('../../app/general');
-const { updateMcuFilters } = require('../../app/mongodb');
+const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu, getIds, updateIds } = require('../../src/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { lastUpdateToString } = require('../../src/general');
+const { updateMcuFilters } = require('../../src/mongodb');
 
 const areEqual = (oldFilters, newFilters) => {
     if (oldFilters.length === newFilters.length) {

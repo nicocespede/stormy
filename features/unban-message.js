@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
-const { getBanned, updateBanned, getIds, updateIds } = require("../app/cache");
-const { getUnbannedMemberEmbedInfo } = require("../app/characters");
-const { deleteBan } = require("../app/mongodb");
+const { getBanned, updateBanned, getIds, updateIds } = require("../src/cache");
+const { getUnbannedMemberEmbedInfo } = require("../src/characters");
+const { deleteBan } = require("../src/mongodb");
 
 module.exports = client => {
     client.on('guildBanRemove', async ban => {

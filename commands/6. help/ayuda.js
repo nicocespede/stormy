@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const { githubRawURL } = require("../../app/constants");
+const { githubRawURL } = require("../../src/constants");
 const _get_first_embed_1 = __importDefault(require("./!get-first-embed"));
 const _InteractionListener_1 = __importStar(require("./!InteractionListener"));
 const sendHelpMenu = (messageOrInteraction, instance) => {

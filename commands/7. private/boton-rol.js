@@ -1,5 +1,5 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require("discord.js");
-const { getRolesMessageInfo, updateRolesMessageInfo } = require("../../app/cache");
+const { getRolesMessageInfo, updateRolesMessageInfo } = require("../../src/cache");
 
 const buttonStyles = ['primary', 'secondary', 'success', 'danger'];
 const prefix = 'button-roles-';

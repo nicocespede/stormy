@@ -1,9 +1,9 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { githubRawURL } = require('../../app/constants');
+const { githubRawURL } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
-const { getIds, updateIds } = require('../../app/cache');
-const { splitLyrics } = require('../../app/music');
+const { getIds, updateIds } = require('../../src/cache');
+const { splitLyrics } = require('../../src/music');
 
 module.exports = {
     category: 'Música',

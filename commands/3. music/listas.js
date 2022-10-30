@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../app/cache');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { addPlaylist, deletePlaylist } = require('../../app/mongodb');
+const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../src/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
 
 module.exports = {
     category: 'Música',

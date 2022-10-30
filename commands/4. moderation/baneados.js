@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { getBanned, updateBanned } = require('../../app/cache');
+const { getBanned, updateBanned } = require('../../src/cache');
 
 module.exports = {
     category: 'Moderación',

@@ -4,9 +4,9 @@ const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addS
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs,//
     getMusicPlayerData
-} = require('../../app/cache');
-const { MusicActions, githubRawURL } = require('../../app/constants');
-const { handleErrorInMusicChannel } = require('../../app/music');
+} = require('../../src/cache');
+const { MusicActions, githubRawURL } = require('../../src/constants');
+const { handleErrorInMusicChannel } = require('../../src/music');
 
 module.exports = {
     category: 'Música',

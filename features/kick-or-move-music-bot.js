@@ -1,6 +1,6 @@
-const { getLastAction } = require("../app/cache");
-const { MusicActions } = require("../app/constants");
-const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../app/music");
+const { getLastAction } = require("../src/cache");
+const { MusicActions } = require("../src/constants");
+const { leaveEmptyChannel, setNewVoiceChannel, setKicked } = require("../src/music");
 
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {

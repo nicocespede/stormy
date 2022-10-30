@@ -1,5 +1,5 @@
-const { addTimestamp, getTimestamps } = require("../../app/cache");
-const { pushDifference } = require("../../app/general");
+const { addTimestamp, getTimestamps } = require("../../src/cache");
+const { pushDifference } = require("../../src/general");
 
 module.exports = {
     category: 'Privados',

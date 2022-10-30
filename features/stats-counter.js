@@ -1,7 +1,6 @@
 const chalk = require('chalk');
-chalk.level = 1;
-const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../app/cache");
-const { pushDifference, getMembersStatus } = require("../app/general");
+const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
+const { pushDifference, getMembersStatus } = require("../src/general");
 
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {

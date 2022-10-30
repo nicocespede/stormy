@@ -1,6 +1,6 @@
-const { getStats, updateStats } = require("../../app/cache");
-const { fullToSeconds, secondsToFull } = require("../../app/general");
-const { updateStat } = require("../../app/mongodb");
+const { getStats, updateStats } = require("../../src/cache");
+const { fullToSeconds, secondsToFull } = require("../../src/general");
+const { updateStat } = require("../../src/mongodb");
 
 module.exports = {
     category: 'Privados',

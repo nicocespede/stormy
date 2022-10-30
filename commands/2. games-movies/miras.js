@@ -1,11 +1,10 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const chalk = require("chalk");
-chalk.level = 1;
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const { getCrosshairs, updateCrosshairs } = require('../../app/cache');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { addCrosshair, deleteCrosshair } = require('../../app/mongodb');
+const { getCrosshairs, updateCrosshairs } = require('../../src/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
 
 module.exports = {
     category: 'Juegos/Películas',

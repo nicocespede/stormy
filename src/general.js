@@ -3,8 +3,7 @@ const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
 const chalk = require('chalk');
-chalk.level = 1;
-const cache = require('./cache');
+const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon } = require('./cache');
 const { relativeSpecialDays, githubRawURL } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat } = require('./mongodb');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -98,13 +97,13 @@ module.exports = {
     convertTZ,
 
     pushDifference: async (id, username) => {
-        let stats = cache.getStats() || await cache.updateStats();
+        let stats = getStats() || await updateStats();
         if (!Object.keys(stats).includes(id)) {
             await addStat(id);
             await new Promise(res => setTimeout(res, 1000 * 2));
-            stats = await cache.updateStats();
+            stats = await updateStats();
         }
-        const timestamps = cache.getTimestamps();
+        const timestamps = getTimestamps();
         const stat = stats[id];
         const now = new Date();
         const totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
@@ -112,7 +111,7 @@ module.exports = {
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
             await updateStat(id, days, hours, minutes, seconds, username);
         }
-        await cache.updateStats();
+        await updateStats();
     },
 
     fullToSeconds,
@@ -122,10 +121,10 @@ module.exports = {
     getMembersStatus,
 
     checkBansCorrelativity: async client => {
-        const ids = cache.getIds() || await cache.updateIds();
+        const ids = getIds() || await updateIds();
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         const bans = await guild.bans.fetch().catch(console.error);
-        const banned = cache.getBanned() || await cache.updateBanned();
+        const banned = getBanned() || await updateBanned();
         let needUpdate = false;
         for (const key in banned)
             if (!bans.has(key)) {
@@ -134,26 +133,24 @@ module.exports = {
                 await deleteBan(key);
             }
         if (needUpdate)
-            await cache.updateBanned();
+            await updateBanned();
     },
 
     startStatsCounters: async client => {
-        const ids = !cache.getIds() ? await cache.updateIds() : cache.getIds();
+        const ids = getIds() || await updateIds();
         client.guilds.fetch(ids.guilds.default).then(guild => {
             guild.channels.cache.each(async channel => {
                 if (channel.type === ChannelType.GuildVoice && channel.id != ids.channels.afk) {
                     const membersInChannel = await getMembersStatus(channel);
                     if (membersInChannel.size >= 2)
-                        membersInChannel.valid.forEach(member => {
-                            cache.addTimestamp(member.id, new Date());
-                        });
+                        membersInChannel.valid.forEach(member => addTimestamp(member.id, new Date()));
                 }
             });
         }).catch(console.error);
     },
 
     countMembers: async client => {
-        const ids = cache.getIds() || await cache.updateIds();
+        const ids = getIds() || await updateIds();
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         const members = await guild.members.fetch();
         const membersCounter = members.filter(m => !m.user.bot).size;
@@ -166,12 +163,12 @@ module.exports = {
     },
 
     updateIcon: async guild => {
-        const actualIcon = cache.getIcon() || await cache.updateIcon();
+        const actualIcon = getIcon() || await updateIcon();
         const newIcon = `kgprime${getImageType()}`;
         if (actualIcon != newIcon) {
             await guild.setIcon(`${githubRawURL}/assets/icons/${newIcon}.png`).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
-            await cache.updateIcon()
+            await updateIcon()
         }
     },
 

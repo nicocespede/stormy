@@ -1,6 +1,6 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { getBanned, updateBanned, getIds, updateIds } = require('../../app/cache');
-const { prefix } = require('../../app/constants');
+const { getBanned, updateBanned, getIds, updateIds } = require('../../src/cache');
+const { prefix } = require('../../src/constants');
 
 module.exports = {
     category: 'Moderación',

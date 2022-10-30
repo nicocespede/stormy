@@ -2,8 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const chalk = require('chalk');
-const { githubRawURL } = require('../../app/constants');
-chalk.level = 1;
+const { githubRawURL } = require('../../src/constants');
 
 module.exports = {
     category: 'Cotizaciones',

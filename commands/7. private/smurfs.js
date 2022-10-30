@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { getSmurfs, updateSmurfs, getIds, updateIds } = require('../../app/cache');
-const { convertTZ } = require('../../app/general');
-const { addSmurf, deleteSmurf, updateSmurf } = require('../../app/mongodb');
+const { getSmurfs, updateSmurfs, getIds, updateIds } = require('../../src/cache');
+const { convertTZ } = require('../../src/general');
+const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
 
 const validateDate = (date) => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

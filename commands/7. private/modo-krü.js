@@ -1,7 +1,7 @@
-const { getIcon, updateIcon, getIds, updateIds } = require("../../app/cache");
-const { githubRawURL } = require("../../app/constants");
-const general = require("../../app/general");
-const { updateIconString } = require("../../app/mongodb");
+const { getIcon, updateIcon, getIds, updateIds } = require("../../src/cache");
+const { githubRawURL } = require("../../src/constants");
+const general = require("../../src/general");
+const { updateIconString } = require("../../src/mongodb");
 
 module.exports = {
     category: 'Privados',

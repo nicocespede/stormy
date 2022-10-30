@@ -1,7 +1,7 @@
 const { AttachmentBuilder } = require("discord.js");
 const Canvas = require('canvas');
-const { getIds, updateIds } = require("../app/cache");
-const { countMembers, applyText, getImageType } = require("../app/general");
+const { getIds, updateIds } = require("../src/cache");
+const { countMembers, applyText, getImageType } = require("../src/general");
 
 const generateWelcomeImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);

@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
-const { updateRolesMessageInfo } = require("../../app/cache");
-const { updateRolesMessage } = require("../../app/mongodb");
+const { updateRolesMessageInfo } = require("../../src/cache");
+const { updateRolesMessage } = require("../../src/mongodb");
 
 module.exports = {
     category: 'Privados',

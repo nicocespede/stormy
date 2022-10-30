@@ -5,10 +5,10 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const chalk = require('chalk');
 chalk.level = 1;
-const cache = require('./app/cache');
-const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./app/general');
-const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./app/music');
-const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./app/constants');
+const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
+const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/general');
+const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
+const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./src/constants');
 
 const client = new Client({
     intents: [
@@ -28,7 +28,7 @@ const client = new Client({
 client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
 
-    const ids = cache.getIds() || await cache.updateIds();
+    const ids = getIds() || await updateIds();
 
     startStatsCounters(client);
 
@@ -63,22 +63,22 @@ client.on('ready', async () => {
             highWaterMark: 1 << 25
         }
     }).on('trackStart', async (queue, track) => {
-        const { action: lastAction, user } = cache.getLastAction();
+        const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
-            cache.updateLastAction(MusicActions.STARTING_TRACK);
+            updateLastAction(MusicActions.STARTING_TRACK);
         else {
             let action;
             if (lastAction === MusicActions.SKIPPING)
                 action = `⏭ ${user} saltó una canción.`;
             else if ((lastAction === MusicActions.GOING_BACK))
                 action = `⏮ ${user} volvió a la canción anterior.`;
-            cache.updateLastAction(MusicActions.STARTING_TRACK);
+            updateLastAction(MusicActions.STARTING_TRACK);
             setMusicPlayerMessage(queue, track, action);
         }
     }).on('trackAdd', async (queue, track) => {
-        const { action: lastAction } = cache.getLastAction();
+        const { action: lastAction } = getLastAction();
         if (queue.playing && lastAction !== MusicActions.MOVING_SONG && lastAction !== MusicActions.ADDING_NEXT) {
-            const { interaction, message } = (cache.getSongsInQueue())[track.url];
+            const { interaction, message } = (getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
             const temporalReply = {
                 embeds: [musicEmbed
@@ -92,9 +92,9 @@ client.on('ready', async () => {
 
         }
     }).on('tracksAdd', async (queue, tracks) => {
-        const { action: lastAction } = cache.getLastAction();
+        const { action: lastAction } = getLastAction();
         if (queue.playing && lastAction !== MusicActions.ADDING_NEXT) {
-            const { interaction, message } = (cache.getSongsInQueue())[tracks[0].url];
+            const { interaction, message } = (getSongsInQueue())[tracks[0].url];
             const playlist = tracks[0].playlist;
             const temporalReply = {
                 embeds: [musicEmbed
@@ -108,17 +108,17 @@ client.on('ready', async () => {
             setMusicPlayerMessage(queue, tracks[0], action);
         }
     }).on('channelEmpty', _ => {
-        cache.updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
-        const { collector } = cache.getMusicPlayerData('player');
+        updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
+        const { collector } = getMusicPlayerData('player');
         collector.stop();
     }).on('queueEnd', async queue => {
-        const { action: lastAction } = cache.getLastAction();
+        const { action: lastAction } = getLastAction();
         const queueEnded = queue.connection.channel.members.size > 1
             && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
-            cache.updateLastAction(MusicActions.ENDING);
-            const { collector } = cache.getMusicPlayerData('player');
+            updateLastAction(MusicActions.ENDING);
+            const { collector } = getMusicPlayerData('player');
             collector.stop();
         }
     }).on('connectionError', (queue, error) => {
@@ -154,11 +154,11 @@ client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     console.log(chalk.yellow('> Reinicio inminente...'));
     // disconnects music bot
-    const ids = cache.getIds() || await cache.updateIds();
+    const ids = getIds() || await updateIds();
     await emergencyShutdown(client, ids.guilds.default);
 
     // send stats
-    const timestamps = cache.getTimestamps();
+    const timestamps = getTimestamps();
     if (Object.keys(timestamps).length > 0) {
         console.log(chalk.yellow('> Enviando estadísticas a la base de datos'));
         for (const key in timestamps)
@@ -167,7 +167,6 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     }
 
     //clears timeouts
-    const { timeouts } = cache;
     console.log(chalk.yellow(`> Terminando ${Object.keys(timeouts).length} loops`));
     for (const key in timeouts)
         if (Object.hasOwnProperty.call(timeouts, key))

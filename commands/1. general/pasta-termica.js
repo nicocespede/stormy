@@ -1,8 +1,8 @@
-const { getThermalPasteDates, updateThermalPasteDates } = require('../../app/cache');
-const { convertTZ } = require('../../app/general');
+const { getThermalPasteDates, updateThermalPasteDates } = require('../../src/cache');
+const { convertTZ } = require('../../src/general');
 const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { prefix } = require('../../app/constants');
-const { addThermalPasteDate, updateThermalPasteDate } = require('../../app/mongodb');
+const { prefix } = require('../../src/constants');
+const { addThermalPasteDate, updateThermalPasteDate } = require('../../src/mongodb');
 
 const validateDate = (date) => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

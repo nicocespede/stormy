@@ -1,10 +1,9 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
 const chalk = require('chalk');
-chalk.level = 1;
-const { updateReminders, getReminders } = require('../../app/cache');
+const { updateReminders, getReminders } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
-const { githubRawURL } = require('../../app/constants');
-const { convertTZ } = require('../../app/general');
+const { githubRawURL } = require('../../src/constants');
+const { convertTZ } = require('../../src/general');
 
 module.exports = {
     category: 'General',

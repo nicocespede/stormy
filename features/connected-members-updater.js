@@ -1,6 +1,5 @@
 const chalk = require('chalk');
-chalk.level = 1;
-const { getIds, updateIds, timeouts } = require('../app/cache');
+const { getIds, updateIds, timeouts } = require('../src/cache');
 
 module.exports = async client => {
     const ids = getIds() || await updateIds();

@@ -1,10 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
-chalk.level = 1;
-const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../app/cache');
-const { pushDifference } = require('../../app/general');
-const { githubRawURL } = require('../../app/constants');
+const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
+const { pushDifference } = require('../../src/general');
+const { githubRawURL } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']

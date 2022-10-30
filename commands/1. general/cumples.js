@@ -1,7 +1,7 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { getBirthdays, updateBirthdays } = require('../../app/cache');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { addBirthday, deleteBirthday } = require('../../app/mongodb');
+const { getBirthdays, updateBirthdays } = require('../../src/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { addBirthday, deleteBirthday } = require('../../src/mongodb');
 
 const validateDate = (instance, guild, date) => {
     var ret = {

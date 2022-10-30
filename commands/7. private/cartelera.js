@@ -1,9 +1,8 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
-chalk.level = 1;
-const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../app/cache');
-const { updateBillboardMessage } = require('../../app/mongodb');
-const { githubRawURL } = require('../../app/constants');
+const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
+const { updateBillboardMessage } = require('../../src/mongodb');
+const { githubRawURL } = require('../../src/constants');
 
 const prefix = 'billboard-';
 

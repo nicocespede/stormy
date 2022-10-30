@@ -3,9 +3,9 @@ const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addSongInQueue,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
-} = require('../../app/cache');
-const { MusicActions, githubRawURL } = require('../../app/constants');
-const { containsAuthor, cleanTitle, handleErrorInMusicChannel, setMusicPlayerMessage } = require("../../app/music");
+} = require('../../src/cache');
+const { MusicActions, githubRawURL } = require('../../src/constants');
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel, setMusicPlayerMessage } = require("../../src/music");
 
 module.exports = {
     category: 'Música',

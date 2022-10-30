@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateIds } = require("../../app/cache");
-const { githubRawURL } = require("../../app/constants");
-const { handleErrorInMusicChannel } = require("../../app/music");
+const { getIds, updateIds } = require("../../src/cache");
+const { githubRawURL } = require("../../src/constants");
+const { handleErrorInMusicChannel } = require("../../src/music");
 
 module.exports = {
     category: 'Música',

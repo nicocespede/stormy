@@ -1,6 +1,6 @@
-const { getSmurfs, updateSmurfs, timeouts } = require('../app/cache');
-const { convertTZ } = require('../app/general');
-const { updateSmurf } = require('../app/mongodb');
+const { getSmurfs, updateSmurfs, timeouts } = require('../src/cache');
+const { convertTZ } = require('../src/general');
+const { updateSmurf } = require('../src/mongodb');
 
 module.exports = _ => {
     let lastDateChecked = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

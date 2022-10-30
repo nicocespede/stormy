@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { getIds, updateIds } = require('../../app/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { getIds, updateIds } = require('../../src/cache');
 
 module.exports = {
     aliases: ['moscardondelamuerte', 'moscardóndelamuerte', 'moscardón-asesino'],

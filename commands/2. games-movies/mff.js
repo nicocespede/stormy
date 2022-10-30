@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { githubRawURL } = require('../../app/constants');
+const { githubRawURL } = require('../../src/constants');
 
 const secondsToHours = seconds => {
     // calculate (and subtract) whole hours

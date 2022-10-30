@@ -3,7 +3,6 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const chalk = require('chalk');
-chalk.level = 1;
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
 const { MusicActions, githubRawURL, color } = require("./constants");
 const { addQueue } = require("./mongodb");

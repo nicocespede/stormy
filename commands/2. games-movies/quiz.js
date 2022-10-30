@@ -1,5 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, AttachmentBuilder, ApplicationCommandOptionType, ButtonStyle, ChannelType } = require("discord.js");
-const { quiz } = require('../../app/constants');
+const { quiz } = require('../../src/constants');
 
 function until(conditionFunction) {
     const poll = resolve => {

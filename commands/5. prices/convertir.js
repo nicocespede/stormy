@@ -5,9 +5,8 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const Canvas = require('canvas');
 const chalk = require('chalk');
-chalk.level = 1;
-const { currencies, githubRawURL } = require('../../app/constants');
-const { getIds, updateIds } = require('../../app/cache');
+const { currencies, githubRawURL } = require('../../src/constants');
+const { getIds, updateIds } = require('../../src/cache');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
 

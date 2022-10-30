@@ -1,10 +1,9 @@
 const { EmbedBuilder, ApplicationCommandOptionType, AttachmentBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const chalk = require('chalk');
-chalk.level = 1;
-const { getGames, updateGames, getIds, updateIds } = require('../../app/cache');
-const { prefix, githubRawURL } = require('../../app/constants');
-const { lastUpdateToString } = require('../../app/general');
+const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { lastUpdateToString } = require('../../src/general');
 
 module.exports = {
     category: 'Juegos/Películas',

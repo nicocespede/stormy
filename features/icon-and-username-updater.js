@@ -1,5 +1,5 @@
-const { updateIcon: updateIconCache, getIcon, timeouts, getIds, updateIds } = require('../app/cache');
-const { convertTZ, updateIcon, updateUsername } = require('../app/general');
+const { updateIcon: updateIconCache, getIcon, timeouts, getIds, updateIds } = require('../src/cache');
+const { convertTZ, updateIcon, updateUsername } = require('../src/general');
 
 module.exports = client => {
     let lastDateChecked = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

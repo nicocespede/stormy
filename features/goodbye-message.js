@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
-const { getBanned, updateBanned, getIds, updateIds } = require("../app/cache");
-const { getMemberLeaveEmbedInfo } = require("../app/characters");
-const { countMembers } = require("../app/general");
+const { getBanned, updateBanned, getIds, updateIds } = require("../src/cache");
+const { getMemberLeaveEmbedInfo } = require("../src/characters");
+const { countMembers } = require("../src/general");
 
 module.exports = client => {
     client.on('guildMemberRemove', async member => {

@@ -1,8 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const chalk = require('chalk');
-chalk.level = 1;
-const { prefix, githubRawURL } = require('../../app/constants');
-const { getIds, updateIds } = require('../../app/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
+const { getIds, updateIds } = require('../../src/cache');
 
 const files = ['mosca0.png', 'mosca1.png', 'mosca2.png', 'mosca3.gif'];
 

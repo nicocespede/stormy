@@ -1,6 +1,6 @@
 const translate = require("translate");
-const { getIds, updateIds } = require("../app/cache");
-const { needsTranslation, splitMessage } = require("../app/general");
+const { getIds, updateIds } = require("../src/cache");
+const { needsTranslation, splitMessage } = require("../src/general");
 
 const getNextMessage = (id, collection) => {
     let previousMessage = collection.first();

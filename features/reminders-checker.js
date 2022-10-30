@@ -1,7 +1,6 @@
 const chalk = require('chalk');
-chalk.level = 1;
-const { updateReminders, timeouts } = require('../app/cache');
-const { convertTZ } = require('../app/general');
+const { updateReminders, timeouts } = require('../src/cache');
+const { convertTZ } = require('../src/general');
 const reminderSchema = require('../models/reminder-schema');
 
 module.exports = client => {

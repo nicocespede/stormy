@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix } = require('../../app/constants');
-const { getIds, updateIds } = require('../../app/cache');
+const { prefix } = require('../../src/constants');
+const { getIds, updateIds } = require('../../src/cache');
 
 module.exports = {
     category: 'General',

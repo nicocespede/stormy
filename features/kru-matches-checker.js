@@ -1,7 +1,6 @@
 const chalk = require('chalk');
-chalk.level = 1;
-const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../app/cache');
-const { convertTZ, convertTime } = require('../app/general');
+const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../src/cache');
+const { convertTZ, convertTime } = require('../src/general');
 
 module.exports = async client => {
     const check = async () => {

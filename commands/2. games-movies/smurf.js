@@ -2,9 +2,8 @@ const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelTy
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const chalk = require('chalk');
-chalk.level = 1;
-const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../app/cache');
-const { prefix, githubRawURL } = require('../../app/constants');
+const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
+const { prefix, githubRawURL } = require('../../src/constants');
 
 const translateRank = rank => {
     if (!rank)

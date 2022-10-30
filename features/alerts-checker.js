@@ -1,9 +1,9 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../app/cache');
-const { convertTZ, applyText } = require('../app/general');
-const { updateBirthday, updateAnniversary } = require('../app/mongodb');
-const { relativeSpecialDays } = require('../app/constants');
+const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../src/cache');
+const { convertTZ, applyText } = require('../src/general');
+const { updateBirthday, updateAnniversary } = require('../src/mongodb');
+const { relativeSpecialDays } = require('../src/constants');
 
 const getToday = () => {
     const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');

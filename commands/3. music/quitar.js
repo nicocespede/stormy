@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateIds } = require("../../app/cache");
-const { githubRawURL } = require("../../app/constants");
-const { containsAuthor, cleanTitle, handleErrorInMusicChannel } = require("../../app/music");
+const { getIds, updateIds } = require("../../src/cache");
+const { githubRawURL } = require("../../src/constants");
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel } = require("../../src/music");
 
 function orderArgs(array) {
     var uniqueArray = array.filter(function (item, pos, self) {

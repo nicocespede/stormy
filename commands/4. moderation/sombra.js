@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
-const { getSombraBans, updateSombraBans } = require('../../app/cache');
-const { githubRawURL } = require('../../app/constants');
+const { getSombraBans, updateSombraBans } = require('../../src/cache');
+const { githubRawURL } = require('../../src/constants');
 
 module.exports = {
     category: 'Moderación',
