@@ -6,11 +6,12 @@ const { githubRawURL } = require('../../src/constants');
 
 const prefix = 'billboard-';
 
-const getNewEmbed = async (interaction, roleId) => {
+const getNewEmbed = async (interaction) => {
     await new Promise(res => setTimeout(res, 1000 * 0.5));
     const { message, guild } = interaction;
     const embed = EmbedBuilder.from(message.embeds[0]);
-    const role = await guild.roles.fetch(roleId).catch(console.error);
+    const ids = getIds() || await updateIds();
+    const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
     if (role.members.size === 0)
         embed.setFields([]);
     else {
@@ -79,7 +80,7 @@ module.exports = {
                 return;
             }
 
-            interaction.update({ embeds: [await getNewEmbed(interaction, roleId)] });
+            interaction.update({ embeds: [await getNewEmbed(interaction)] });
         });
     },
 
