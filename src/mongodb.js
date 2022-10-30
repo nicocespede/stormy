@@ -110,7 +110,7 @@ module.exports = {
         console.log(chalk.yellow('> Cuenta smurf eliminada de la base de datos'));
     },
     updateSmurf: async (command, ban) => {
-        await smurfSchema.updateOne({ _id: command }, { ban: ban });
+        await smurfSchema.updateOne({ _id: command }, { bannedUntil: ban });
         console.log(chalk.green(`> Ban de cuenta smurf actualizada en la base de datos`));
     },
 
