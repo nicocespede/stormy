@@ -189,7 +189,7 @@ module.exports = {
                             embeds.push(new EmbedBuilder()
                                 .setColor(instance.color)
                                 .addFields([moviesField, typesField])
-                                .setThumbnail(`${githubRawURL}/assets/thumbs/marvel.png`));
+                                .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
                             moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                             typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
                             if (ctx.measureText(newName).width > 288)
@@ -199,7 +199,7 @@ module.exports = {
                     embeds.push(new EmbedBuilder()
                         .setColor(instance.color)
                         .addFields([moviesField, typesField])
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/marvel.png`));
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
                     for (let i = 0; i < embeds.length; i++) {
                         const msg = embeds[i];
                         msg.setFooter({ text: `Página ${i + 1} | ${embeds.length}` });
