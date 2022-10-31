@@ -104,7 +104,7 @@ module.exports = {
             const title = `Universo Cinematográfico de Marvel`;
             let emoji = await getNewEmoji();
 
-            reply.content = `${emoji} **${title}**\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
+            reply.content = `${emoji} __**${title}**__\n\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
             reply.components = getFiltersRows(filters).concat([secondaryRow]);
             reply.files = [`./assets/mcu.jpg`];
 
@@ -183,7 +183,7 @@ module.exports = {
                         if (aux.length <= 1024) {
                             moviesField.value += `${newName}\n\n`;
                             typesField.value += `*${type}*\n\n`;
-                            if (ctx.measureText(newName).width > 292)
+                            if (ctx.measureText(newName).width >= 292)
                                 typesField.value += `\n`;
                         } else {
                             embeds.push(new EmbedBuilder()
@@ -192,7 +192,7 @@ module.exports = {
                                 .setThumbnail(`${githubRawURL}/assets/thumbs/mcu-logo.png`));
                             moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                             typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
-                            if (ctx.measureText(newName).width > 288)
+                            if (ctx.measureText(newName).width >= 292)
                                 typesField.value += `\n`;
                         }
                     }
@@ -240,7 +240,7 @@ module.exports = {
                     pages[id] = pages[id] || 0;
 
                     edit.components = [getRow(id)];
-                    edit.content = `${emoji} **${title}**\n\n⚠ Podés navegar libremente por las páginas, luego de 5 minutos de inactividad esta acción expirará.\n\u200b`;
+                    edit.content = `${emoji} __**${title}**__\n\n⚠ Podés navegar libremente por las páginas, luego de 5 minutos de inactividad esta acción expirará.\n\u200b`;
                     edit.embeds = [embeds[pages[id]]];
                     edit.files = [];
 
