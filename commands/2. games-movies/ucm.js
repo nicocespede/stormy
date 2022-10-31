@@ -1,7 +1,7 @@
 const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
-const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu, getIds, updateIds, getMcuData, updateMcuData } = require('../../src/cache');
+const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getChronology, updateChronology, getIds, updateIds, getDownloadsData, updateDownloadsData } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { lastUpdateToString } = require('../../src/general');
 const { updateMcuFilters } = require('../../src/mongodb');
@@ -18,7 +18,7 @@ const areEqual = (oldFilters, newFilters) => {
 };
 
 const getValidFilters = async () => {
-    const mcu = getMcu() || await updateMcu();
+    const mcu = getChronology('mcu') || await updateChronology('mcu');
     return [...new Set(mcu.map(({ type }) => type))];
 };
 
@@ -281,7 +281,7 @@ module.exports = {
 
         const filters = getFilters() || await updateFilters();
         const mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
-        const mcuData = getMcuData() || await updateMcuData();
+        const mcuData = getDownloadsData('mcu') || await updateDownloadsData('mcu');
         const index = parseInt(number) - 1;
 
         if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
@@ -313,10 +313,10 @@ module.exports = {
             return row;
         };
 
-        const filteredName = type !== 'One-Shot' ? realName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')
+        const filteredName = !extraYear ? realName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')
             : name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
 
-        reply.content = `**${name} (${extraYear || year})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
+        reply.content = `**${!extraYear ? realName : name} (${extraYear || year})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
         reply.components = [getVersionsRow()];
         reply.files = [`${githubRawURL}/assets/mcu/${filteredName}.jpg`];
 

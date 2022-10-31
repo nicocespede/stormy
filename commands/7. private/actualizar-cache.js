@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const chalk = require("chalk");
-const { updateMcuData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
+const { updateDownloadsData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../src/cache");
@@ -40,7 +40,7 @@ module.exports = {
                 const newStuff = { movies: [], games: [] };
                 const updatedStuff = { movies: [], games: [] };
 
-                const mcu = await updateMcuData();
+                const mcu = await updateDownloadsData('mcu');
                 for (const id in mcu) if (Object.hasOwnProperty.call(mcu, id)) {
                     const { name, updateInfo, versions, year } = mcu[id];
                     const found = oldUcm.data.filter(m => m.name === name)[0];

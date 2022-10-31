@@ -8,8 +8,8 @@ const fs = require('fs');
 const chalk = require('chalk');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
-let mcu;
-let mcuData;
+let chronologies = {};
+let downloadsData = {};
 let mcuMovies;
 var filters;
 var games;
@@ -38,30 +38,30 @@ let characters;
 let songsInQueue = {};
 let musicPlayerData = {};
 
-const getMcu = () => mcu;
+const getChronology = id => chronologies[id];
 
-const updateMcu = async () => {
+const updateChronology = async id => {
     try {
         let data;
         if (testing)
-            data = fs.readFileSync('../stormy-data/chronologies/mcu.json', 'utf8');
+            data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
         else {
-            const res = await fetch(`${githubRawURL}/chronologies/mcu.json.json`);
+            const res = await fetch(`${githubRawURL}/chronologies/${id}.json.json`);
             data = await res.text();
         }
-        mcu = JSON.parse(data);
-        console.log(chalk.green('> chronologies/mcu.json cargado'));
+        chronologies[id] = JSON.parse(data);
+        console.log(chalk.green(`> chronologies/${id}.json cargado`));
     } catch (err) {
-        console.log(chalk.red(`> Error al cargar chronologies/mcu.json\n${err.stack}`));
+        console.log(chalk.red(`> Error al cargar chronologies/${id}.json\n${err.stack}`));
     }
-    return mcu;
+    return chronologies[id];
 };
 
 module.exports = {
     timeouts: {},
 
-    getMcu,
-    updateMcu,
+    getChronology,
+    updateChronology,
 
     getFilters: () => filters,
     updateFilters: async () => {
@@ -74,29 +74,29 @@ module.exports = {
 
     getMcuMovies: () => mcuMovies,
     updateMcuMovies: async filters => {
-        const mcu = getMcu() || await updateMcu();
+        const mcu = getChronology('mcu') || await updateChronology('mcu');
         mcuMovies = filters.includes('all') ? mcu : mcu.filter(movie => filters.includes(movie.type));
         console.log(chalk.green('> Caché de UCM actualizado'));
         return mcuMovies;
     },
 
-    getMcuData: () => mcuData,
+    getDownloadsData: id => downloadsData[id],
 
-    updateMcuData: async () => {
+    updateDownloadsData: async id => {
         try {
             let data;
             if (testing)
-                data = fs.readFileSync('../stormy-data/downloads/mcu.json', 'utf8');
+                data = fs.readFileSync(`../stormy-data/downloads/${id}.json`, 'utf8');
             else {
-                const res = await fetch(`${githubRawURL}/downloads/mcu.json`);
+                const res = await fetch(`${githubRawURL}/downloads/${id}.json`);
                 data = await res.text();
             }
-            mcuData = JSON.parse(data);
-            console.log(chalk.green('> downloads/mcu.json cargado'));
+            downloadsData[id] = JSON.parse(data);
+            console.log(chalk.green(`> downloads/${id}.json cargado`));
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar downloads/mcu.json\n${err.stack}`));
+            console.log(chalk.red(`> Error al cargar downloads/${id}.json\n${err.stack}`));
         }
-        return mcuData;
+        return downloadsData[id];
     },
 
     getGames: () => games,
@@ -104,9 +104,9 @@ module.exports = {
         try {
             let data;
             if (testing)
-                data = fs.readFileSync('../stormy-data/games.json', 'utf8');
+                data = fs.readFileSync('../stormy-data/downloads/games.json', 'utf8');
             else {
-                const res = await fetch(`${githubRawURL}/games.json`);
+                const res = await fetch(`${githubRawURL}/downloads/games.json`);
                 data = await res.text();
             }
             console.log(chalk.green('> games.json cargado'));
