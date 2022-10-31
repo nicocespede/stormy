@@ -69,9 +69,10 @@ module.exports = {
         console.log(chalk.green('> Mensaje de roles actualizado en la base de datos'));
     },
 
-    updateMovies: async movies => {
-        await moviesAndGamesSchema.updateOne({ _id: 'movies' }, { data: movies });
-        console.log(chalk.green(`> Películas actualizadas en la base de datos`));
+    updateMovies: async (id, movies) => {
+        const messages = { "ucm": "UCM actualizado" };
+        await moviesAndGamesSchema.updateOne({ _id: id }, { data: movies });
+        console.log(chalk.green(`> ${messages[id]} en la base de datos`));
     },
 
     updateGames: async games => {

@@ -616,6 +616,7 @@ module.exports = {
                 embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
             });
+            await previousQueueSchema.deleteMany({});
             return;
         }
 

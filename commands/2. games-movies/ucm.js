@@ -1,7 +1,7 @@
 const { createCanvas } = require('canvas');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
-const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu, getIds, updateIds } = require('../../src/cache');
+const { getMcuMovies, updateMcuMovies, getFilters, updateFilters, getMcu, updateMcu, getIds, updateIds, getMcuData, updateMcuData } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { lastUpdateToString } = require('../../src/general');
 const { updateMcuFilters } = require('../../src/mongodb');
@@ -183,7 +183,7 @@ module.exports = {
                         if (aux.length <= 1024) {
                             moviesField.value += `${newName}\n\n`;
                             typesField.value += `*${type}*\n\n`;
-                            if (ctx.measureText(newName).width > 288)
+                            if (ctx.measureText(newName).width > 292)
                                 typesField.value += `\n`;
                         } else {
                             embeds.push(new EmbedBuilder()
@@ -281,6 +281,7 @@ module.exports = {
 
         const filters = getFilters() || await updateFilters();
         const mcuMovies = getMcuMovies() || await updateMcuMovies(filters);
+        const mcuData = getMcuData() || await updateMcuData();
         const index = parseInt(number) - 1;
 
         if (isNaN(index) || index < 0 || index >= mcuMovies.length) {
@@ -289,7 +290,8 @@ module.exports = {
             return;
         }
 
-        const { color, episodes, name, type, versions } = mcuMovies[index];
+        const { name, reference, type, year: extraYear } = mcuMovies[index];
+        const { color, episodes, name: realName, versions, year } = mcuData[reference];
         let nowShowing = '';
         const getVersionsRow = () => {
             const emojis = {
@@ -311,9 +313,10 @@ module.exports = {
             return row;
         };
 
-        const filteredName = name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
+        const filteredName = type !== 'One-Shot' ? realName.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20')
+            : name.replace(/[:]/g, '').replace(/[?]/g, '').replace(/ /g, '%20');
 
-        reply.content = `**${name}**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
+        reply.content = `**${name} (${extraYear || year})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
         reply.components = [getVersionsRow()];
         reply.files = [`${githubRawURL}/assets/mcu/${filteredName}.jpg`];
 
@@ -338,14 +341,12 @@ module.exports = {
             const { files, lastUpdate, links, password } = versions[i.customId];
             const dataString = `${episodes ? `**Episodios:** ${episodes}\n` : ''}**Cantidad de archivos:** ${files}`;
             const passwordString = password ? `**Contraseña:** ${password}` : '';
-            for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
-                const title = type === 'One-Shot' ? `Marvel One-Shots collection (2011-2018)` : name;
+            for (const server in links) if (Object.hasOwnProperty.call(links, server))
                 embeds.push(new EmbedBuilder()
-                    .setTitle(`${title} - ${i.customId} (${server})`)
+                    .setTitle(`${realName} (${year}) - ${i.customId} (${server})`)
                     .setColor(color)
                     .setDescription(`${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${links[server].join('\n')}\n\n${passwordString}`)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/mcu/${filteredName}.png`));
-            }
 
             for (let i = 0; i < embeds.length; i++)
                 embeds[i].setFooter({ text: `Servidor ${i + 1} | ${embeds.length}` });
@@ -409,7 +410,7 @@ module.exports = {
             if (versionsMessage) versionsMessage.delete();
             const edit = {
                 components: [],
-                content: `**${name}**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                content: `**${realName} (${year})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
                 embeds: [],
                 files: reply.files
             };

@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const chalk = require("chalk");
-const { updateMcu, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
+const { updateMcuData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../src/cache");
@@ -36,17 +36,17 @@ module.exports = {
             if (name === 'games-and-movies') {
                 const moviesAndGamesSchema = require('../../models/moviesAndGames-schema');
                 const oldGames = (await moviesAndGamesSchema.find({ _id: 'games' }))[0];
-                const oldMovies = (await moviesAndGamesSchema.find({ _id: 'movies' }))[0];
+                const oldUcm = (await moviesAndGamesSchema.find({ _id: 'ucm' }))[0];
                 const newStuff = { movies: [], games: [] };
                 const updatedStuff = { movies: [], games: [] };
 
-                const mcu = await updateMcu();
-                for (const movie of mcu) {
-                    const { name, updateInfo, versions } = movie;
-                    const found = oldMovies.data.filter(m => m.name === name)[0];
+                const mcu = await updateMcuData();
+                for (const id in mcu) if (Object.hasOwnProperty.call(mcu, id)) {
+                    const { name, updateInfo, versions, year } = mcu[id];
+                    const found = oldUcm.data.filter(m => m.name === name)[0];
 
                     if (!found) {
-                        newStuff.movies.push({ name: name, versions: Object.keys(versions) });
+                        newStuff.movies.push({ name: `${name} (${year})`, versions: Object.keys(versions) });
                         continue;
                     }
 
@@ -57,9 +57,9 @@ module.exports = {
                         .map(([key, _]) => key);
 
                     if (added.length > 0)
-                        newStuff.movies.push({ name: name, versions: added });
+                        newStuff.movies.push({ name: `${name} (${year})`, versions: added });
                     if (updated.length > 0)
-                        updatedStuff.movies.push({ name: name, versions: updated, updateInfo: updateInfo });
+                        updatedStuff.movies.push({ name: `${name} (${year})`, versions: updated, updateInfo: updateInfo });
                 }
 
                 const games = await updateGamesCache();
@@ -89,14 +89,14 @@ module.exports = {
                         content += '```';
 
                         const dbUpdate = [];
-                        for (const element of mcu) {
-                            const { name, versions } = element;
+                        for (const id in mcu) if (Object.hasOwnProperty.call(mcu, id)) {
+                            const { name, versions } = mcu[id];
                             const newObj = { name, versions: {} };
                             for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver))
                                 newObj.versions[ver] = { lastUpdate: versions[ver].lastUpdate };
                             dbUpdate.push(newObj);
                         }
-                        await updateMovies(dbUpdate);
+                        await updateMovies('ucm', dbUpdate);
                     }
 
                     if (updatedStuff.games.length > 0 || newStuff.games.length > 0) {

@@ -8,8 +8,9 @@ const fs = require('fs');
 const chalk = require('chalk');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
-var mcu;
-var mcuMovies;
+let mcu;
+let mcuData;
+let mcuMovies;
 var filters;
 var games;
 var birthdays;
@@ -43,15 +44,15 @@ const updateMcu = async () => {
     try {
         let data;
         if (testing)
-            data = fs.readFileSync('../stormy-data/mcu.json', 'utf8');
+            data = fs.readFileSync('../stormy-data/chronologies/mcu.json', 'utf8');
         else {
-            const res = await fetch(`${githubRawURL}/mcu.json`);
+            const res = await fetch(`${githubRawURL}/chronologies/mcu.json.json`);
             data = await res.text();
         }
         mcu = JSON.parse(data);
-        console.log(chalk.green('> mcu.json cargado'));
+        console.log(chalk.green('> chronologies/mcu.json cargado'));
     } catch (err) {
-        console.log(chalk.red(`> Error al cargar mcu.json\n${err.stack}`));
+        console.log(chalk.red(`> Error al cargar chronologies/mcu.json\n${err.stack}`));
     }
     return mcu;
 };
@@ -72,11 +73,30 @@ module.exports = {
     },
 
     getMcuMovies: () => mcuMovies,
-    updateMcuMovies: async (filters) => {
+    updateMcuMovies: async filters => {
         const mcu = getMcu() || await updateMcu();
         mcuMovies = filters.includes('all') ? mcu : mcu.filter(movie => filters.includes(movie.type));
         console.log(chalk.green('> Caché de UCM actualizado'));
         return mcuMovies;
+    },
+
+    getMcuData: () => mcuData,
+
+    updateMcuData: async () => {
+        try {
+            let data;
+            if (testing)
+                data = fs.readFileSync('../stormy-data/downloads/mcu.json', 'utf8');
+            else {
+                const res = await fetch(`${githubRawURL}/downloads/mcu.json`);
+                data = await res.text();
+            }
+            mcuData = JSON.parse(data);
+            console.log(chalk.green('> downloads/mcu.json cargado'));
+        } catch (err) {
+            console.log(chalk.red(`> Error al cargar downloads/mcu.json\n${err.stack}`));
+        }
+        return mcuData;
     },
 
     getGames: () => games,
