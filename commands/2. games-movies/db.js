@@ -4,7 +4,7 @@ const { addAnnouncementsRole, sendChronologySettingMessage, sendChronologyElemen
 
 module.exports = {
     category: 'Juegos/Películas',
-    description: 'Responde con los links de descarga de las películas del Universo Cinematográfico de Marvel.',
+    description: 'Responde con los links de descarga de las películas del universo de Dragon Ball.',
 
     options: [
         {
@@ -22,16 +22,15 @@ module.exports = {
         if (interaction) await interaction.deferReply({ ephemeral: true });
 
         const ids = getIds() || await updateIds();
-        await addAnnouncementsRole(ids.roles.anunciosUcm, guild, member);
+        await addAnnouncementsRole(ids.roles.anunciosDb, guild, member);
 
         const number = message ? args[0] : interaction.options.getInteger('numero');
 
-        const collectionId = 'mcu';
+        const collectionId = 'db';
 
         if (!number)
             sendChronologySettingMessage(channel, collectionId, guild, instance, interaction, member, message);
         else
             sendChronologyElement(channel, collectionId, instance, interaction, member, message, number);
-
     }
 }

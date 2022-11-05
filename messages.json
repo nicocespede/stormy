@@ -418,8 +418,8 @@
     "AUTOROLE_ADVICE": {
         "spanish": "**¡Hola <@{USER_ID}>!** Te invito a **seleccionar los roles que desees** en el canal <#{CHANNEL_ID}>.\n\n_Este mensaje se eliminará en 5 minutos..._"
     },
-    "MCU": {
-        "spanish": "Hola <@{ID}>, para obtener los links usá nuevamente el comando `{PREFIX}ucm` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2).\n\nPor cualquier error o links caídos, por favor avisar a <@334409923389554699>.\n\nLas películas (en orden cronológico) disponibles para descargar son:\n\n"
+    "MOVIES": {
+        "spanish": "Hola <@{ID}>, para obtener los links usá nuevamente el comando `{PREFIX}{CMD}` seguido de un espacio y el número del elemento que quieras descargar.\n\nPara descargar se recomienda utilizar el gestor de descargas [JDownloader 2](https://jdownloader.org/jdownloader2) ó [MegaDownloader](https://mega.nz/file/1lhhlKKK#jd_DACqbxCUWOXt-KERPkTVJcJMFw3kNFgTl_uBGqcs).\n\nPor cualquier error o links caídos, por favor avisar a <@334409923389554699>.\n\nLos elementos (en orden cronológico) disponibles para descargar son:\n\n"
     },
     "GAMES": {
         "DESCRIPTION": {

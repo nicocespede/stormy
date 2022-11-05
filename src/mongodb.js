@@ -53,10 +53,16 @@ module.exports = {
         console.log(chalk.yellow('> Mira eliminada de la base de datos'));
     },
 
-    updateMcuFilters: async array => {
-        const mcuFiltersSchema = require('../models/mcuFilters-schema');
-        await mcuFiltersSchema.updateOne({ _id: 1 }, { filters: array });
-        console.log(chalk.green('> Filtros del UCM actualizados en la base de datos'));
+    updateFilters: async (id, filters) => {
+        const filtersSchema = require('../models/filters-schema');
+        await filtersSchema.updateOne({ _id: id }, { filters });
+        console.log(chalk.green(`> Filtros de '${id}' actualizados en la base de datos`));
+    },
+
+    updateChoices: async (id, choices) => {
+        const filtersSchema = require('../models/filters-schema');
+        await filtersSchema.updateOne({ _id: id }, { choices });
+        console.log(chalk.green(`> Opciones de '${id}' actualizados en la base de datos`));
     },
 
     updateBillboardMessage: async (flag, id) => {
@@ -70,9 +76,8 @@ module.exports = {
     },
 
     updateMovies: async (id, movies) => {
-        const messages = { "ucm": "UCM actualizado" };
         await moviesAndGamesSchema.updateOne({ _id: id }, { data: movies });
-        console.log(chalk.green(`> ${messages[id]} en la base de datos`));
+        console.log(chalk.green(`> Stock de '${id}' actualizado en la base de datos`));
     },
 
     updateGames: async games => {

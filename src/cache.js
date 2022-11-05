@@ -10,8 +10,8 @@ const collectorMessageSchema = require('../models/collectorMessage-schema');
 
 let chronologies = {};
 let downloadsData = {};
-let mcuMovies;
-var filters;
+let movies = {};
+let filters = {};
 var games;
 var birthdays;
 let banned;
@@ -63,21 +63,47 @@ module.exports = {
     getChronology,
     updateChronology,
 
-    getFilters: () => filters,
-    updateFilters: async () => {
-        const mcuFiltersSchema = require('../models/mcuFilters-schema');
-        const result = await mcuFiltersSchema.findById(1, 'filters');
-        filters = result.filters;
-        console.log(chalk.green('> Caché de filtros actualizado'));
-        return filters;
+    getFilters: id => filters[id],
+    updateFilters: async id => {
+        const filtersSchema = require('../models/filters-schema');
+        const result = await filtersSchema.findById(id, 'filters choices');
+        if (result)
+            filters[id] = result.choices ? { filters: result.filters, choices: result.choices } : { filters: result.filters };
+        else {
+            await new filtersSchema({ _id: id, filters: ['all'] }).save();
+            console.log(chalk.green(`> Filtros de '${id}' agregados a la base de datos`));
+            filters[id] = { filters: ['all'] };
+        }
+        console.log(chalk.green(`> Caché de filtros de '${id}' actualizado`));
+        return filters[id];
     },
 
-    getMcuMovies: () => mcuMovies,
-    updateMcuMovies: async filters => {
-        const mcu = getChronology('mcu') || await updateChronology('mcu');
-        mcuMovies = filters.includes('all') ? mcu : mcu.filter(movie => filters.includes(movie.type));
-        console.log(chalk.green('> Caché de UCM actualizado'));
-        return mcuMovies;
+    getMovies: id => movies[id],
+    updateMovies: async (id, selectedFilters, selectedChoices) => {
+        const chronology = getChronology(id) || await updateChronology(id);
+
+        if (!selectedChoices)
+            movies[id] = selectedFilters.includes('all') ? chronology : chronology.filter(movie => selectedFilters.includes(movie.type));
+        else {
+            let array = [];
+            let i = 0;
+            for (const element of chronology) {
+                const { choices, type } = element;
+                if (!choices) {
+                    if (selectedFilters.includes('all') || selectedFilters.includes(type))
+                        array.push(element);
+                    continue;
+                }
+
+                const choice = choices[selectedChoices[i++]] || choices[0];
+                const { data } = choice;
+                array = array.concat(selectedFilters.includes('all') ? data : data.filter(movie => selectedFilters.includes(movie.type)));
+            }
+            movies[id] = array;
+        }
+
+        console.log(chalk.green(`> Caché de '${id}' actualizado`));
+        return movies[id];
     },
 
     getDownloadsData: id => downloadsData[id],

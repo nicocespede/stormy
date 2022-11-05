@@ -35,33 +35,49 @@ module.exports = {
         try {
             if (name === 'games-and-movies') {
                 const moviesAndGamesSchema = require('../../models/moviesAndGames-schema');
-                const oldGames = (await moviesAndGamesSchema.find({ _id: 'games' }))[0];
-                const oldUcm = (await moviesAndGamesSchema.find({ _id: 'ucm' }))[0];
-                const newStuff = { movies: [], games: [] };
-                const updatedStuff = { movies: [], games: [] };
+                const newStuff = { games: [] };
+                const updatedStuff = { games: [] };
 
-                const mcu = await updateDownloadsData('mcu');
-                for (const id in mcu) if (Object.hasOwnProperty.call(mcu, id)) {
-                    const { name, updateInfo, versions, year } = mcu[id];
-                    const found = oldUcm.data.filter(m => m.name === name)[0];
+                const checkForUpdates = async id => {
+                    const result = await moviesAndGamesSchema.find({ _id: id });
 
-                    if (!found) {
-                        newStuff.movies.push({ name: `${name} (${year})`, versions: Object.keys(versions) });
-                        continue;
+                    if (!result[0]) {
+                        newStuff[id] = 'all';
+                        return;
                     }
 
-                    const versionsEntries = Object.entries(versions);
-                    const added = versionsEntries.filter(([key, _]) => !found.versions[key]).map(([key, _]) => key);
-                    const updated = versionsEntries
-                        .filter(([key, _]) => found.versions[key] && versions[key].lastUpdate !== found.versions[key].lastUpdate)
-                        .map(([key, _]) => key);
+                    newStuff[id] = [];
+                    updatedStuff[id] = [];
 
-                    if (added.length > 0)
-                        newStuff.movies.push({ name: `${name} (${year})`, versions: added });
-                    if (updated.length > 0)
-                        updatedStuff.movies.push({ name: `${name} (${year})`, versions: updated, updateInfo: updateInfo });
-                }
+                    const oldStuff = result[0];
+                    const data = await updateDownloadsData(id);
+                    for (const k in data) if (Object.hasOwnProperty.call(data, k)) {
+                        const { name, updateInfo, versions, year } = data[k];
+                        const found = oldStuff.data.filter(m => m.name === name)[0];
 
+                        if (!found) {
+                            newStuff[id].push({ name: `${name} (${year})`, versions: Object.keys(versions) });
+                            continue;
+                        }
+
+                        const versionsEntries = Object.entries(versions);
+                        const added = versionsEntries.filter(([key, _]) => !found.versions[key]).map(([key, _]) => key);
+                        const updated = versionsEntries
+                            .filter(([key, _]) => found.versions[key] && versions[key].lastUpdate !== found.versions[key].lastUpdate)
+                            .map(([key, _]) => key);
+
+                        if (added.length > 0)
+                            newStuff[id].push({ name: `${name} (${year})`, versions: added });
+                        if (updated.length > 0)
+                            updatedStuff[id].push({ name: `${name} (${year})`, versions: updated, updateInfo: updateInfo });
+                    }
+                };
+
+                const chronologiesIds = ['mcu', 'db']
+                for (const id of chronologiesIds)
+                    await checkForUpdates(id);
+
+                const oldGames = (await moviesAndGamesSchema.find({ _id: 'games' }))[0];
                 const games = await updateGamesCache();
                 for (const game of games) {
                     const { lastUpdate, name, updateInfo, year } = game;
@@ -72,31 +88,60 @@ module.exports = {
                         updatedStuff.games.push({ name: name + ` (${year})`, updateInfo: updateInfo });
                 }
 
-                if (updatedStuff.games.length > 0 || updatedStuff.movies.length > 0
-                    || newStuff.games.length > 0 || newStuff.movies.length > 0) {
+                const newStuffKeys = Object.keys(newStuff).filter(k => k !== 'games');
+                const updatedStuffKeys = Object.keys(updatedStuff).filter(k => k !== 'games');
+                if (updatedStuff.games.length > 0 || updatedStuffKeys.length > 0
+                    || newStuff.games.length > 0 || newStuffKeys.length > 0) {
                     const ids = getIds() || await updateIds();
-                    let content = '';
-                    if (updatedStuff.movies.length > 0 || newStuff.movies.length > 0) {
-                        content += `<@&${ids.roles.anunciosUcm}>\n\n<:marvel:${ids.emojis.marvel}> **___Universo Cinematográfico de Marvel:___**\n\`\`\``;
-                        for (let i = 0; i < updatedStuff.movies.length; i++) {
-                            const element = updatedStuff.movies[i];
+                    const collectionsData = {
+                        'db': { emoji: 'dragon_ball', role: 'anunciosDb', title: 'Universo de Dragon Ball' },
+                        'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' }
+                    };
+
+                    const getMessagePart = id => {
+                        let content = '';
+                        if (updatedStuff[id].length === 0 && newStuff[id].length === 0)
+                            return content;
+
+                        const { emoji, role, title } = collectionsData[id];
+                        content += `\n<@&${ids.roles[role]}>\n\n<:${emoji}:${ids.emojis[emoji]}> **___${title}:___**\n\`\`\``;
+                        for (let i = 0; i < updatedStuff[id].length; i++) {
+                            const element = updatedStuff[id][i];
                             content += `• Se ${element.versions.length > 1 ? 'actualizaron las versiones' : 'actualizó la versión'} ${element.versions.join(', ')} de ${element.name}: ${element.updateInfo}.\n`;
                         }
-                        for (let i = 0; i < newStuff.movies.length; i++) {
-                            const element = newStuff.movies[i];
+                        for (let i = 0; i < newStuff[id].length; i++) {
+                            const element = newStuff[id][i];
                             content += `• Se agregó ${element.name} en ${element.versions.length > 1 ? 'las versiones' : 'la versión'} ${element.versions.join(', ')}.\n`;
                         }
                         content += '```';
 
+                        return content;
+                    };
+
+                    const getDatabaseUpdate = async id => {
+                        const data = await updateDownloadsData(id);
                         const dbUpdate = [];
-                        for (const id in mcu) if (Object.hasOwnProperty.call(mcu, id)) {
-                            const { name, versions } = mcu[id];
+                        for (const key in data) if (Object.hasOwnProperty.call(data, key)) {
+                            const { name, versions } = data[key];
                             const newObj = { name, versions: {} };
                             for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver))
                                 newObj.versions[ver] = { lastUpdate: versions[ver].lastUpdate };
                             dbUpdate.push(newObj);
                         }
-                        await updateMovies('ucm', dbUpdate);
+                        return dbUpdate;
+                    };
+
+                    let content = '';
+                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
+                    for (const id of chronologiesIds) {
+                        if (newStuff[id] === 'all') {
+                            const { emoji, title } = collectionsData[id];
+                            await new moviesAndGamesSchema({ _id: id, data: await getDatabaseUpdate(id) }).save();
+                            channel.send({ content: `@everyone\n\n<:${emoji}:${ids.emojis[emoji]}> Se agregó **${title}** a las descargas disponibles.` }).catch(console.error);
+                        } else if (newStuff[id].length > 0 || updatedStuff[id].length > 0) {
+                            content += getMessagePart(id);
+                            await updateMovies(id, await getDatabaseUpdate(id));
+                        }
                     }
 
                     if (updatedStuff.games.length > 0 || newStuff.games.length > 0) {
@@ -114,8 +159,8 @@ module.exports = {
                         }
                         await updateGames(dbUpdate);
                     }
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(content).catch(console.error);
+                    if (content.length > 0)
+                        channel.send(content).catch(console.error);
                 }
             } else if (name === 'tracks-name-extras')
                 await updateTracksNameExtras();
