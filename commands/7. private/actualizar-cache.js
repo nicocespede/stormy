@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const chalk = require("chalk");
-const { updateDownloadsData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
+const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../src/cache");
@@ -98,12 +98,19 @@ module.exports = {
                         'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' }
                     };
 
-                    const getMessagePart = id => {
+                    const getMessagePart = async id => {
                         let content = '';
+                        const { emoji, role, title } = collectionsData[id];
+
+                        if (newStuff[id] === 'all') {
+                            const data = getDownloadsData(id) || await updateDownloadsData(id);
+                            content += `\n@everyone\n\n<:${emoji}:${ids.emojis[emoji]}> **___${title}:___**\n\`\`\`• Se agregaron ${Object.keys(data).length} elementos para descargar.\`\`\``;
+                            return content;
+                        }
+
                         if (updatedStuff[id].length === 0 && newStuff[id].length === 0)
                             return content;
 
-                        const { emoji, role, title } = collectionsData[id];
                         content += `\n<@&${ids.roles[role]}>\n\n<:${emoji}:${ids.emojis[emoji]}> **___${title}:___**\n\`\`\``;
                         for (let i = 0; i < updatedStuff[id].length; i++) {
                             const element = updatedStuff[id][i];
@@ -119,7 +126,7 @@ module.exports = {
                     };
 
                     const getDatabaseUpdate = async id => {
-                        const data = await updateDownloadsData(id);
+                        const data = getDownloadsData(id) || await updateDownloadsData(id);
                         const dbUpdate = [];
                         for (const key in data) if (Object.hasOwnProperty.call(data, key)) {
                             const { name, versions } = data[key];
@@ -132,14 +139,12 @@ module.exports = {
                     };
 
                     let content = '';
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
                     for (const id of chronologiesIds) {
                         if (newStuff[id] === 'all') {
-                            const { emoji, title } = collectionsData[id];
+                            content += await getMessagePart(id);
                             await new moviesAndGamesSchema({ _id: id, data: await getDatabaseUpdate(id) }).save();
-                            channel.send({ content: `@everyone\n\n<:${emoji}:${ids.emojis[emoji]}> Se agregó **${title}** a las descargas disponibles.` }).catch(console.error);
                         } else if (newStuff[id].length > 0 || updatedStuff[id].length > 0) {
-                            content += getMessagePart(id);
+                            content += await getMessagePart(id);
                             await updateMovies(id, await getDatabaseUpdate(id));
                         }
                     }
@@ -159,6 +164,7 @@ module.exports = {
                         }
                         await updateGames(dbUpdate);
                     }
+                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
                     if (content.length > 0)
                         channel.send(content).catch(console.error);
                 }
