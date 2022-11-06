@@ -9,7 +9,7 @@ const schema = new Schema({
     user: reqString,
     password: reqString,
     vip: { type: Boolean, required: true },
-    bannedUntil: { type: String, required: false }
+    bannedUntil: { type: Date, required: false }
 });
 
 const name = 'smurf';
