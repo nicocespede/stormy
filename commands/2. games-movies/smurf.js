@@ -112,10 +112,10 @@ module.exports = {
                             if (mmr.error) {
                                 errorsCounter++;
                                 console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
-                                accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${account.name}\n\n`;
+                                accountsField.value += `${account.bannedUntil ? '⛔ ' : ''}${account.name}\n\n`;
                                 ranksField.value += `???\n\n`;
                             } else {
-                                accountsField.value += `${account.bannedUntil != '' ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
+                                accountsField.value += `${account.bannedUntil ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
                                 ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
                             }
                             commandsField.value += `${command}\n\n`;
@@ -148,7 +148,7 @@ module.exports = {
             const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
             const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
             const smurfs = getSmurfs() || await updateSmurfs();
-            if (channel.type != ChannelType.DM)
+            if (channel.type !== ChannelType.DM)
                 reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
             else if (!isAuthorized)
                 reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
@@ -181,8 +181,8 @@ module.exports = {
                             .setColor(getRankColor(mmr.data.currenttierpatched))];
                         reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                     }
-                    if (account.bannedUntil != '')
-                        reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil}** ⚠`);
+                    if (account.bannedUntil)
+                        reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil.toLocaleDateString('es-AR')}** ⚠`);
                     reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
                     { name: 'Contraseña:', value: account.password, inline: true }])
                         .setThumbnail(`attachment://rank.png`);
