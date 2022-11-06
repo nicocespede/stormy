@@ -1,8 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const chalk = require('chalk');
 const { githubRawURL } = require('../../src/constants');
+const { log } = require('../../src/util');
 
 module.exports = {
     category: 'Cotizaciones',
@@ -37,7 +37,7 @@ module.exports = {
                 }
         } catch (e) {
             error = true;
-            console.log(chalk.red(e));
+            log(e, 'red');
         }
 
         const reply = {};

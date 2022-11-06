@@ -1,5 +1,4 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const chalk = require('chalk');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
 

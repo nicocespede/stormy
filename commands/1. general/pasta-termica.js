@@ -1,11 +1,11 @@
 const { getThermalPasteDates, updateThermalPasteDates } = require('../../src/cache');
-const { convertTZ } = require('../../src/general');
+const { convertTZ } = require('../../src/util');
 const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { prefix } = require('../../src/constants');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../src/mongodb');
 
 const validateDate = (date) => {
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const today = convertTZ(new Date());
     var ret = { valid: false, reason: 'La fecha debe estar en el formato DD/MM/AAAA.' };
     if (date.length != 10) return ret;
     if (date.substring(2, 3) != '/' || date.substring(5, 6) != '/') return ret;
@@ -19,7 +19,7 @@ const validateDate = (date) => {
     const thirtyDaysMonths = [4, 6, 9, 11];
     if (month === 2 && day > 29) return ret;
     else if (thirtyDaysMonths.includes(month) && day > 30) return ret;
-    if (convertTZ(`${month}/${day}/${year}`, 'America/Argentina/Buenos_Aires') > today) return ret;
+    if (convertTZ(`${month}/${day}/${year}`) > today) return ret;
     ret.valid = true;
     return ret;
 };
@@ -72,9 +72,9 @@ module.exports = {
             const dates = !getThermalPasteDates() ? await updateThermalPasteDates() : getThermalPasteDates();
             const userDate = dates[user.id];
             if (dates[user.id]) {
-                const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+                const today = convertTZ(new Date());
                 const splittedUserDate = userDate.split('/');
-                var totalTime = Math.abs(today - convertTZ(`${splittedUserDate[1]}/${splittedUserDate[0]}/${splittedUserDate[2]}`, 'America/Argentina/Buenos_Aires')) / 1000;
+                var totalTime = Math.abs(today - convertTZ(`${splittedUserDate[1]}/${splittedUserDate[0]}/${splittedUserDate[2]}`)) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
                 reply.content = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${userDate}**).`;
             } else

@@ -1,10 +1,10 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
-const chalk = require("chalk");
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getCrosshairs, updateCrosshairs } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
+const { log } = require("../../src/util");
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -104,7 +104,7 @@ module.exports = {
             await addCrosshair(name, code, user.id).then(async () => {
                 reply.content = `✅ Se agregó la mira **${name}**.`;
             }).catch(error => {
-                console.log(chalk.red(error));
+                log(error, 'red');
                 reply.content = `❌ Lo siento, se produjo un error al agregar la mira.`;
             });
 
@@ -136,7 +136,7 @@ module.exports = {
                     await updateCrosshairs();
                     reply.content = `✅ La mira **${crosshairs[id].name}** fue borrada de manera exitosa.`;
                 }).catch(error => {
-                    console.log(chalk.red(error));
+                    log(error, 'red');
                     reply.content = `❌ Lo siento, se produjo un error al borrar la mira.`;
                 });
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);

@@ -1,12 +1,13 @@
 const { updateIcon: updateIconCache, getIcon, timeouts, getIds, updateIds } = require('../src/cache');
-const { convertTZ, updateIcon, updateUsername } = require('../src/general');
+const { updateIcon, updateUsername } = require('../src/general');
+const { convertTZ } = require('../src/util');
 
 module.exports = client => {
-    let lastDateChecked = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    let lastDateChecked = convertTZ(new Date());
     lastDateChecked.setDate(lastDateChecked.getDate() - 1);
 
     const check = async () => {
-        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const today = convertTZ(new Date());
 
         if (lastDateChecked.getDate() != today.getDate()) {
             const actualIcon = getIcon() || await updateIconCache();

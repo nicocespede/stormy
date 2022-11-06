@@ -1,11 +1,10 @@
-const chalk = require('chalk');
 const { updateReminders, timeouts } = require('../src/cache');
-const { convertTZ } = require('../src/general');
+const { convertTZ, log } = require('../src/util');
 const reminderSchema = require('../models/reminder-schema');
 
 module.exports = client => {
     const check = async () => {
-        const date = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const date = convertTZ(new Date());
         date.setMinutes(date.getMinutes() + 1);
         date.setSeconds(0);
         date.setMilliseconds(0);
@@ -17,18 +16,18 @@ module.exports = client => {
             const { description, userId } = result;
             const user = await client.users.fetch(userId);
             if (!user) {
-                console.log(chalk.red(`> Usuario "${userId}" no encontrado`));
+                log(`> Usuario "${userId}" no encontrado`, 'red');
                 continue;
             }
 
             user.send({ content: `🔔 **RECORDATORIO** ⏰\n\n${description}` })
-                .catch(_ => console.log(chalk.red(`> No se pudo enviar el recordatorio a ${user.tag} `)));
+                .catch(_ => log(`> No se pudo enviar el recordatorio a ${user.tag} `, 'red'));
         }
 
         const deletion = await reminderSchema.deleteMany(query);
         if (deletion.deletedCount > 0) {
             const moreThan1 = deletion.deletedCount > 1;
-            console.log(chalk.green(`> ${deletion.deletedCount} recordatorio${moreThan1 ? 's' : ''} eliminado${moreThan1 ? 's' : ''} de la base de datos`));
+            log(`> ${deletion.deletedCount} recordatorio${moreThan1 ? 's' : ''} eliminado${moreThan1 ? 's' : ''} de la base de datos`, 'green');
             updateReminders();
         }
 

@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs, getIds, updateIds } = require('../../src/cache');
-const { convertTZ } = require('../../src/general');
+const { convertTZ } = require('../../src/util');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
 
 module.exports = {
@@ -159,7 +159,7 @@ module.exports = {
                         totalTime += time;
                 }
 
-                date = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+                date = convertTZ(new Date());
                 date.setMinutes(date.getMinutes() + totalTime);
 
             } else {

@@ -1,5 +1,5 @@
-const chalk = require('chalk');
 const { getIds, updateIds, timeouts } = require('../src/cache');
+const { log } = require('../src/util');
 
 module.exports = async client => {
     const ids = getIds() || await updateIds();
@@ -12,7 +12,7 @@ module.exports = async client => {
         const channel = await guild.channels.fetch(ids.channels.connectedMembers).catch(console.error);
         if (channel.name !== connectedMembersName) {
             await channel.setName(connectedMembersName).catch(console.error);
-            console.log(chalk.blue('> Contador de miembros conectados actualizado'));
+            log('> Contador de miembros conectados actualizado', 'blue');
         }
 
         timeouts['connected-members-updater'] = setTimeout(check, 1000 * 60 * 5);

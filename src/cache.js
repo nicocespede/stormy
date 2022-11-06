@@ -1,11 +1,11 @@
 const { githubRawURL, testing, color, local } = require('./constants');
+const { log } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
-const chalk = require('chalk');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 
 let chronologies = {};
@@ -50,9 +50,9 @@ const updateChronology = async id => {
             data = await res.text();
         }
         chronologies[id] = JSON.parse(data);
-        console.log(chalk.green(`> chronologies/${id}.json cargado`));
+        log(`> chronologies/${id}.json cargado`, 'green');
     } catch (err) {
-        console.log(chalk.red(`> Error al cargar chronologies/${id}.json\n${err.stack}`));
+        log(`> Error al cargar chronologies/${id}.json\n${err.stack}`, 'red');
     }
     return chronologies[id];
 };
@@ -71,10 +71,10 @@ module.exports = {
             filters[id] = result.choices ? { filters: result.filters, choices: result.choices } : { filters: result.filters };
         else {
             await new filtersSchema({ _id: id, filters: ['all'] }).save();
-            console.log(chalk.green(`> Filtros de '${id}' agregados a la base de datos`));
+            log(`> Filtros de '${id}' agregados a la base de datos`, 'green');
             filters[id] = { filters: ['all'] };
         }
-        console.log(chalk.green(`> Caché de filtros de '${id}' actualizado`));
+        log(`> Caché de filtros de '${id}' actualizado`, 'green');
         return filters[id];
     },
 
@@ -102,7 +102,7 @@ module.exports = {
             movies[id] = array;
         }
 
-        console.log(chalk.green(`> Caché de '${id}' actualizado`));
+        log(`> Caché de '${id}' actualizado`, 'green');
         return movies[id];
     },
 
@@ -118,9 +118,9 @@ module.exports = {
                 data = await res.text();
             }
             downloadsData[id] = JSON.parse(data);
-            console.log(chalk.green(`> downloads/${id}.json cargado`));
+            log(`> downloads/${id}.json cargado`, 'green');
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar downloads/${id}.json\n${err.stack}`));
+            log(`> Error al cargar downloads/${id}.json\n${err.stack}`, 'red');
         }
         return downloadsData[id];
     },
@@ -135,7 +135,7 @@ module.exports = {
                 const res = await fetch(`${githubRawURL}/downloads/games.json`);
                 data = await res.text();
             }
-            console.log(chalk.green('> games.json cargado'));
+            log('> games.json cargado', 'green');
             games = [];
             const parsed = JSON.parse(data);
             for (const key in parsed) if (Object.hasOwnProperty.call(parsed, key)) {
@@ -165,7 +165,7 @@ module.exports = {
                 }
             }
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar games.json\n${err.stack}`));
+            log(`> Error al cargar games.json\n${err.stack}`, 'red');
         }
         return games.sort((a, b) => a.name.localeCompare(b.name));
     },
@@ -183,7 +183,7 @@ module.exports = {
                 user: element.username
             };
         });
-        console.log(chalk.green('> Caché de cumpleaños actualizado'));
+        log('> Caché de cumpleaños actualizado', 'green');
         return birthdays;
     },
 
@@ -198,7 +198,7 @@ module.exports = {
             user: element.tag,
             character: element.character
         });
-        console.log(chalk.green('> Caché de baneados actualizado'));
+        log('> Caché de baneados actualizado', 'green');
         return banned;
     },
 
@@ -210,7 +210,7 @@ module.exports = {
         results.forEach(element => {
             sombraBans.push(element.reason);
         });
-        console.log(chalk.green('> Caché de baneos de Sombra actualizado'));
+        log('> Caché de baneos de Sombra actualizado', 'green');
         return sombraBans;
     },
 
@@ -221,7 +221,7 @@ module.exports = {
             isActive: result.isActive,
             messageId: result.messageId
         };
-        console.log(chalk.green('> Caché de recolector de reacciones actualizado'));
+        log('> Caché de recolector de reacciones actualizado', 'green');
         return billboardMessageInfo;
     },
 
@@ -232,7 +232,7 @@ module.exports = {
             messageId: result.messageId,
             channelId: result.channelId
         };
-        console.log(chalk.green('> Caché de mensaje de roles actualizado'));
+        log('> Caché de mensaje de roles actualizado', 'green');
         return rolesMessageInfo;
     },
 
@@ -240,7 +240,7 @@ module.exports = {
     updateAnniversaries: async () => {
         const anniversarySchema = require('../models/anniversary-schema');
         anniversaries = await anniversarySchema.find({});
-        console.log(chalk.green('> Caché de aniversarios actualizado'));
+        log('> Caché de aniversarios actualizado', 'green');
         return anniversaries;
     },
 
@@ -249,7 +249,7 @@ module.exports = {
         const iconSchema = require('../models/icon-schema');
         const result = await iconSchema.findById(1, 'name');
         icon = result.name;
-        console.log(chalk.green('> Caché de ícono actualizado'));
+        log('> Caché de ícono actualizado', 'green');
         return icon;
     },
 
@@ -262,7 +262,7 @@ module.exports = {
         const results = await playlistSchema.find({}).sort({ _id: 'asc' });
         playlists = {};
         results.forEach(pl => playlists[pl._id] = { url: pl.url, ownerId: pl.ownerId });
-        console.log(chalk.green('> Caché de playlists actualizado'));
+        log('> Caché de playlists actualizado', 'green');
         return playlists;
     },
 
@@ -279,7 +279,7 @@ module.exports = {
                 seconds: element.seconds
             };
         });
-        console.log(chalk.green('> Caché de estadísticas actualizado'));
+        log('> Caché de estadísticas actualizado', 'green');
         return stats;
     },
     getTimestamps: () => timestamps,
@@ -292,7 +292,7 @@ module.exports = {
         const results = await thermalPasteDateSchema.find({});
         thermalPasteDates = {};
         results.forEach(element => thermalPasteDates[element._id] = element.date);
-        console.log(chalk.green('> Caché de fechas de cambio de pasta térmica actualizado'));
+        log('> Caché de fechas de cambio de pasta térmica actualizado', 'green');
         return thermalPasteDates;
     },
 
@@ -310,7 +310,7 @@ module.exports = {
             code: ch.code,
             owner: ch.ownerId
         });
-        console.log(chalk.green('> Caché de miras actualizado'));
+        log('> Caché de miras actualizado', 'green');
         return crosshairs;
     },
 
@@ -326,7 +326,7 @@ module.exports = {
             vip: account.vip,
             bannedUntil: account.bannedUntil
         });
-        console.log(chalk.green('> Caché de smurfs actualizado'));
+        log('> Caché de smurfs actualizado', 'green');
         return smurfs;
     },
 
@@ -335,8 +335,8 @@ module.exports = {
         await fetch(`${githubRawURL}/tracksNameExtras.json`)
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
-                console.log(chalk.green('> tracksNameExtras.json cargado'));
-            }).catch(err => console.log(chalk.red(`> Error al cargar tracksNameExtras.json\n${err.stack}`)));
+                log('> tracksNameExtras.json cargado', 'green');
+            }).catch(err => log(`> Error al cargar tracksNameExtras.json\n${err.stack}`, 'red'));
         return tracksNameExtras;
     },
 
@@ -346,8 +346,8 @@ module.exports = {
         await fetch(`${githubRawURL}/blacklistedTracks.json`)
             .then(res => res.text()).then(data => {
                 blacklistedSongs = JSON.parse(data);
-                console.log(chalk.green('> blacklistedTracks.json cargado'));
-            }).catch(err => console.log(chalk.red(`> Error al cargar blacklistedTracks.json\n${err.stack}`)));
+                log('> blacklistedTracks.json cargado', 'green');
+            }).catch(err => log(`> Error al cargar blacklistedTracks.json\n${err.stack}`, 'red'));
         return blacklistedSongs;
     },//
 
@@ -363,9 +363,9 @@ module.exports = {
                 data = await res.text();
             }
             ids = JSON.parse(data);
-            console.log(chalk.green(`> ${fileName} cargado`));
+            log(`> ${fileName} cargado`, 'green');
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar ${fileName}\n${err.stack}`))
+            log(`> Error al cargar ${fileName}\n${err.stack}`, 'red')
         }
         return ids;
     },
@@ -403,11 +403,11 @@ module.exports = {
                 matches.push(match);
             });
             kruMatches = matches;
-            console.log(chalk.green("> Caché de partidos programados de KRÜ actualizado"));
+            log("> Caché de partidos programados de KRÜ actualizado", 'green');
         } catch (e) {
             if (!kruMatches)
                 kruMatches = [];
-            console.log(chalk.red(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`));
+            log(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, 'green');
         }
         return kruMatches;
     },
@@ -416,7 +416,7 @@ module.exports = {
     updateReminders: async () => {
         const reminderSchema = require('../models/reminder-schema');
         reminders = await reminderSchema.find({});
-        console.log(chalk.green('> Caché de recordatorios actualizado'));
+        log('> Caché de recordatorios actualizado', 'green');
         return reminders;
     },
 
@@ -431,9 +431,9 @@ module.exports = {
                 data = await res.text();
             }
             characters = JSON.parse(data);
-            console.log(chalk.green('> characters.json cargado'));
+            log('> characters.json cargado', 'green');
         } catch (err) {
-            console.log(chalk.red(`> Error al cargar characters.json\n${err.stack}`));
+            log(`> Error al cargar characters.json\n${err.stack}`, 'red');
         }
         return characters;
     },

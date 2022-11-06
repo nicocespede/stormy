@@ -1,10 +1,10 @@
 const { ApplicationCommandOptionType } = require("discord.js");
-const chalk = require("chalk");
 const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../src/cache");
 const { updateMovies, updateGames } = require("../../src/mongodb");
+const { log } = require("../../src/util");
 
 const choices = [
     { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },
@@ -180,7 +180,7 @@ module.exports = {
 
             await interaction.editReply({ content: '✅ Caché actualizado.' });
         } catch (e) {
-            console.log(chalk.red(`Error in actualizar-cache.js:\n${e.stack}`));
+            log(`Error in actualizar-cache.js:\n${e.stack}`, 'red');
             await interaction.editReply({ content: '❌ Ocurrió un error.' });
         }
         return;

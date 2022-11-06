@@ -2,21 +2,17 @@ const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle 
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
-const chalk = require('chalk');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData } = require('./cache');
 const { relativeSpecialDays, githubRawURL, prefix } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
+const { convertTZ, log } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
-const convertTZ = (date, tzString) => {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
-};
-
 const getImageType = () => {
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const today = convertTZ(new Date());
     const date = today.getDate();
     const month = today.getMonth() + 1;
     switch (month) {
@@ -99,10 +95,10 @@ const addAnnouncementsRole = async (id, guild, member) => {
         const role = await guild.roles.fetch(id);
         if (!role.members.has(member.user.id)) {
             await member.roles.add(id);
-            console.log(chalk.green(`Rol '${role.name}' agregado a ${member.user.tag}`));
+            log(`> Rol '${role.name}' agregado a ${member.user.tag}`, 'green');
         }
     } catch (error) {
-        console.log(chalk.red(`No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`));
+        log(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, 'red');
     }
 };
 
@@ -116,8 +112,8 @@ const getValidFilters = async collectionId => {
 module.exports = {
     needsTranslation: (string) => {
         var probabilities = lngDetector.detect(string);
-        if (probabilities[0][0] != 'spanish') {
-            if (probabilities[1][0] == 'spanish') {
+        if (probabilities[0][0] !== 'spanish') {
+            if (probabilities[1][0] === 'spanish') {
                 if (probabilities[1][1] < 0.2)
                     return true;
                 return false;
@@ -125,8 +121,6 @@ module.exports = {
             return true;
         }
     },
-
-    convertTZ,
 
     pushDifference: async (id, username) => {
         let stats = getStats() || await updateStats();
@@ -161,7 +155,7 @@ module.exports = {
         for (const key in banned)
             if (!bans.has(key)) {
                 needUpdate = true;
-                console.log(chalk.yellow(`> El ban de ${banned[key].user} no corresponde a este servidor`));
+                log(`> El ban de ${banned[key].user} no corresponde a este servidor`, 'yellow');
                 await deleteBan(key);
             }
         if (needUpdate)
@@ -190,7 +184,7 @@ module.exports = {
         const channel = await guild.channels.fetch(ids.channels.members).catch(console.error);
         if (channel.name !== totalMembersName) {
             await channel.setName(totalMembersName).catch(console.error);
-            console.log(chalk.blue('> Contador de miembros actualizado'));
+            log('> Contador de miembros actualizado', 'blue');
         }
     },
 
@@ -205,7 +199,7 @@ module.exports = {
     },
 
     updateUsername: async client => {
-        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const today = convertTZ(new Date());
         const date = today.getDate();
         const month = today.getMonth() + 1;
         let newUsername = 'StormY';
@@ -225,7 +219,7 @@ module.exports = {
         }
         if (client.user.username != newUsername) {
             await client.user.setUsername(newUsername).catch(console.error);
-            console.log(chalk.green('> Nombre de usuario actualizado'));
+            log('> Nombre de usuario actualizado', 'green');
         }
     },
 

@@ -2,10 +2,10 @@ const { QueryType } = require("discord-player");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
-const chalk = require('chalk');
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
 const { MusicActions, githubRawURL, color } = require("./constants");
 const { addQueue } = require("./mongodb");
+const { log } = require("./util");
 
 const containsAuthor = track => {
     const author = track.author.split(' ');
@@ -574,7 +574,7 @@ module.exports = {
         updateLastAction(MusicActions.RESTARTING);
         const queue = client.player.getQueue(guildId);
         if (queue) {
-            console.log(chalk.yellow('> Guardando cola de reproducción actual'));
+            log('> Guardando cola de reproducción actual', 'yellow');
             const { collector } = getMusicPlayerData('player');
             collector.stop();
 
@@ -620,7 +620,7 @@ module.exports = {
             return;
         }
 
-        console.log(chalk.yellow('> Reanudando reproducción interrumpida por el reinicio'));
+        log('> Reanudando reproducción interrumpida por el reinicio', 'yellow');
 
         const membersIds = [...new Set([current.requestedBy]
             .concat(previousTracks.map(({ requestedBy }) => requestedBy))

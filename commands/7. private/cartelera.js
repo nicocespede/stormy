@@ -1,8 +1,8 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const chalk = require('chalk');
 const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
 const { updateBillboardMessage } = require('../../src/mongodb');
 const { githubRawURL } = require('../../src/constants');
+const { log } = require('../../src/util');
 
 const prefix = 'billboard-';
 
@@ -71,10 +71,10 @@ module.exports = {
 
             if (buttonId === 'out' && member.roles.cache.has(roleId)) {
                 await member.roles.remove(roleId);
-                console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
+                log(`> Rol 'función' quitado a ${member.user.tag}`, 'yellow');
             } else if (buttonId === 'in' && !member.roles.cache.has(roleId)) {
                 await member.roles.add(roleId);
-                console.log(chalk.green(`> Rol 'función' asignado a ${member.user.tag}`));
+                log(`> Rol 'función' asignado a ${member.user.tag}`, 'green');
             } else {
                 interaction.deferUpdate();
                 return;
@@ -152,7 +152,7 @@ module.exports = {
             const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
             role.members.forEach(async member => {
                 await member.roles.remove(role).catch(console.error);
-                console.log(chalk.yellow(`> Rol 'función' quitado a ${member.user.tag}`));
+                log(`> Rol 'función' quitado a ${member.user.tag}`, 'yellow');
             });
             await updateBillboardMessage(false, messageId).catch(console.error);
             await updateBillboardMessageInfo();

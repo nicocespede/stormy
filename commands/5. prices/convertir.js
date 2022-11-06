@@ -4,9 +4,9 @@ const CoinGeckoClient = new CoinGecko();
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Canvas = require('canvas');
-const chalk = require('chalk');
 const { currencies, githubRawURL } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
+const { log } = require('../../src/util');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
 
@@ -69,7 +69,7 @@ module.exports = {
                     }
             } catch (e) {
                 error = true;
-                console.log(chalk.red(e));
+                log(e, 'red');
             }
 
             if (error)

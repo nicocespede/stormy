@@ -1,6 +1,6 @@
-const chalk = require('chalk');
 const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus } = require("../src/general");
+const { log } = require("../src/util");
 
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
@@ -86,7 +86,7 @@ module.exports = client => {
         if (exec) {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
-                console.log(chalk.blue(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`));
+                log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, 'blue');
                 for (const id in timestamps)
                     if (Object.hasOwnProperty.call(timestamps, id)) {
                         await pushDifference(id);

@@ -2,6 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionT
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
+const { log } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     var ret = {
@@ -92,13 +93,13 @@ module.exports = {
                 const datesField = { name: 'Fecha', value: '', inline: true };
                 let previousMonth = -1;
                 const members = await guild.members.fetch(Object.keys(birthdays)).catch(console.error);
-                
+
                 for (const key in birthdays) if (Object.hasOwnProperty.call(birthdays, key)) {
                     const bday = birthdays[key];
                     const member = members.get(key);
 
                     if (!member) {
-                        console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`));
+                        log(`> El usuario con ID ${key} ya no está en el servidor.`, 'yellow');
                         continue;
                     }
 

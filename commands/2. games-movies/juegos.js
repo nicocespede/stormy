@@ -1,9 +1,9 @@
 const { EmbedBuilder, ApplicationCommandOptionType, AttachmentBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
-const chalk = require('chalk');
 const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { lastUpdateToString } = require('../../src/general');
+const { log } = require('../../src/util');
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -29,10 +29,10 @@ module.exports = {
             const role = await guild.roles.fetch(ids.roles.anunciosJuegos);
             if (!role.members.has(user.id)) {
                 await member.roles.add(ids.roles.anunciosJuegos);
-                console.log(chalk.green(`Rol 'Gamers' agregado a ${user.tag}`));
+                log(`> Rol 'Gamers' agregado a ${user.tag}`, 'green');
             }
         } catch (error) {
-            console.log(chalk.red(`No se pudo agregar el rol 'Gamers' a ${user.tag}:\n${error.stack}`));
+            log(`> No se pudo agregar el rol 'Gamers' a ${user.tag}:\n${error.stack}`, 'red');
         }
 
         const number = message ? args[0] : interaction.options.getInteger('numero');

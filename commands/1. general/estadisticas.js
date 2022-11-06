@@ -1,8 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
-const chalk = require('chalk');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
 const { pushDifference } = require('../../src/general');
+const { log } = require('../../src/util');
 const { githubRawURL } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
@@ -60,7 +60,7 @@ module.exports = {
                 const member = members.get(key);
 
                 if (!member) {
-                    console.log(chalk.yellow(`> El usuario con ID ${key} ya no está en el servidor.`));
+                    log(`> El usuario con ID ${key} ya no está en el servidor.`, 'yellow');
                     continue;
                 }
 

@@ -1,9 +1,9 @@
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const chalk = require('chalk');
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
+const { log } = require('../../src/util');
 
 const translateRank = rank => {
     if (!rank)
@@ -111,7 +111,7 @@ module.exports = {
                             }).catch(console.error);
                             if (mmr.error) {
                                 errorsCounter++;
-                                console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
+                                log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, 'red');
                                 accountsField.value += `${account.bannedUntil ? '⛔ ' : ''}${account.name}\n\n`;
                                 ranksField.value += `???\n\n`;
                             } else {
@@ -169,7 +169,7 @@ module.exports = {
                         tag: accInfo[1],
                     }).catch(console.error);
                     if (mmr.error) {
-                        console.log(chalk.red(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`));
+                        log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, 'red');
                         reply.embeds = [new EmbedBuilder()
                             .setTitle(account.name)
                             .setColor(getRankColor(null))];

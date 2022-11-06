@@ -1,12 +1,13 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
 const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../src/cache');
-const { convertTZ, applyText } = require('../src/general');
+const { applyText } = require('../src/general');
+const { convertTZ, log } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
 const { relativeSpecialDays } = require('../src/constants');
 
 const getToday = () => {
-    const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+    const today = convertTZ(new Date());
     let dd = today.getDate();
     let mm = today.getMonth() + 1;
     if (dd < 10) dd = '0' + dd;
@@ -81,7 +82,7 @@ module.exports = async client => {
                 const member = members.get(id);
 
                 if (!member) {
-                    console.log(chalk.yellow(`> El usuario con ID ${id} ya no está en el servidor.`));
+                    log(`> El usuario con ID ${id} ya no está en el servidor.`, 'yellow');
                     continue;
                 }
 
@@ -107,7 +108,7 @@ module.exports = async client => {
         const todayAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) === todayDayAndMonth && !a.flag);
         const pastAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) !== todayDayAndMonth && a.flag);
 
-        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const today = convertTZ(new Date());
 
         const membersIds1 = [...new Set(todayAnniversaries.map(({ id1 }) => id1))];
         const membersIds2 = [...new Set(todayAnniversaries.map(({ id2 }) => id2))];
@@ -123,7 +124,7 @@ module.exports = async client => {
                 const member2 = members.get(id2);
 
                 if (!member1 || !member2) {
-                    console.log(chalk.yellow(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`));
+                    log(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`, 'yellow');
                     continue;
                 }
 

@@ -1,9 +1,8 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
-const chalk = require('chalk');
 const { updateReminders, getReminders } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
 const { githubRawURL } = require('../../src/constants');
-const { convertTZ } = require('../../src/general');
+const { convertTZ, log } = require('../../src/util');
 
 module.exports = {
     category: 'General',
@@ -106,7 +105,7 @@ module.exports = {
                         totalTime += time;
                 }
 
-                date = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+                date = convertTZ(new Date());
                 date.setMinutes(date.getMinutes() + totalTime);
 
             } else {
@@ -139,7 +138,7 @@ module.exports = {
             }
 
             await new reminderSchema({ description: description, userId: user.id, date: date }).save();
-            console.log(chalk.green('> Recordatorio agregado a la base de datos'));
+            log('> Recordatorio agregado a la base de datos', 'green');
             updateReminders();
 
             reply.content = `✅ Tu recordatorio para el **${date.toLocaleDateString('es-AR')}** a las **${date.toLocaleTimeString('es-AR', { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
@@ -161,7 +160,7 @@ module.exports = {
             const selected = filtered[id - 1];
             const deletion = await reminderSchema.deleteOne({ _id: selected._id }).catch(console.error);
             if (deletion.deletedCount > 0) {
-                console.log(chalk.green(`> Recordatorio eliminado de la base de datos`));
+                log(`> Recordatorio eliminado de la base de datos`, 'green');
                 updateReminders();
                 return { content: `✅ Recordatorio borrado satisfactoriamente.`, custom: true, ephemeral: true };
             }

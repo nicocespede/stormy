@@ -1,10 +1,10 @@
 const { getSmurfs, updateSmurfs, timeouts } = require('../src/cache');
-const { convertTZ } = require('../src/general');
+const { convertTZ } = require('../src/util');
 const { updateSmurf } = require('../src/mongodb');
 
 module.exports = _ => {
     const check = async () => {
-        const today = convertTZ(new Date(), 'America/Argentina/Buenos_Aires');
+        const today = convertTZ(new Date());
 
         const smurfs = getSmurfs() || await updateSmurfs();
         const bannedAccounts = Object.entries(smurfs).filter(([_, value]) => value.bannedUntil);

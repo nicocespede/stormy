@@ -3,10 +3,9 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const chalk = require('chalk');
-chalk.level = 1;
 const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
 const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/general');
+const { log } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
 const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./src/constants');
 
@@ -122,7 +121,7 @@ client.on('ready', async () => {
             collector.stop();
         }
     }).on('connectionError', (queue, error) => {
-        console.log(chalk.red(`Error in Player.on('connectionError'):\n${error.stack}`));
+        log(`Error in Player.on('connectionError'):\n${error.stack}`, 'red');
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -131,7 +130,7 @@ client.on('ready', async () => {
         if (!queue.destroyed)
             queue.destroy();
     }).on('error', (queue, error) => {
-        console.log(chalk.red(`Error in Player.on('error'):\n${error.stack}`));
+        log(`Error in Player.on('error'):\n${error.stack}`, 'red');
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
@@ -141,18 +140,18 @@ client.on('ready', async () => {
         if (!queue.destroyed)
             queue.destroy();
     })/*.on('debug', (queue, message) => {
-        console.log(message)
+        log(message)
     })*/;
 
     playInterruptedQueue(client);
 
-    console.log(chalk.green(`¡Loggeado como ${client.user.tag}!`));
+    log(`¡Loggeado como ${client.user.tag}!`, 'green');
 });
 
-client.rest.on('rateLimited', data => console.log(chalk.yellow(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`)));
+client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
 
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
-    console.log(chalk.yellow('> Reinicio inminente...'));
+    log('> Reinicio inminente...', 'yellow');
     // disconnects music bot
     const ids = getIds() || await updateIds();
     await emergencyShutdown(client, ids.guilds.default);
@@ -160,24 +159,24 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     // send stats
     const timestamps = getTimestamps();
     if (Object.keys(timestamps).length > 0) {
-        console.log(chalk.yellow('> Enviando estadísticas a la base de datos'));
+        log('> Enviando estadísticas a la base de datos', 'yellow');
         for (const key in timestamps)
             if (Object.hasOwnProperty.call(timestamps, key))
                 await pushDifference(key);
     }
 
     //clears timeouts
-    console.log(chalk.yellow(`> Terminando ${Object.keys(timeouts).length} loops`));
+    log(`> Terminando ${Object.keys(timeouts).length} loops`, 'yellow');
     for (const key in timeouts)
         if (Object.hasOwnProperty.call(timeouts, key))
             clearTimeout(timeouts[key]);
 
     //ends discord client
-    console.log(chalk.yellow('> Desconectando bot'));
+    log('> Desconectando bot', 'yellow');
     client.destroy();
 
     //exits process
-    console.log(chalk.yellow('> Terminando proceso'));
+    log('> Terminando proceso', 'yellow');
     process.exit();
 });
 
