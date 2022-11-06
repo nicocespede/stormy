@@ -1,4 +1,4 @@
-const { githubRawURL, testing, color } = require('./constants');
+const { githubRawURL, testing, color, local } = require('./constants');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -43,7 +43,7 @@ const getChronology = id => chronologies[id];
 const updateChronology = async id => {
     try {
         let data;
-        if (testing)
+        if (local)
             data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
         else {
             const res = await fetch(`${githubRawURL}/chronologies/${id}.json.json`);
@@ -111,7 +111,7 @@ module.exports = {
     updateDownloadsData: async id => {
         try {
             let data;
-            if (testing)
+            if (local)
                 data = fs.readFileSync(`../stormy-data/downloads/${id}.json`, 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/downloads/${id}.json`);
@@ -129,7 +129,7 @@ module.exports = {
     updateGames: async () => {
         try {
             let data;
-            if (testing)
+            if (local)
                 data = fs.readFileSync('../stormy-data/downloads/games.json', 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/downloads/games.json`);
@@ -356,7 +356,7 @@ module.exports = {
         const fileName = !testing ? 'ids.json' : 'testingIds.json';
         try {
             let data;
-            if (testing)
+            if (local)
                 data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/${fileName}`);
@@ -424,7 +424,7 @@ module.exports = {
     updateCharacters: async () => {
         try {
             let data;
-            if (testing)
+            if (local)
                 data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/characters.json`);
