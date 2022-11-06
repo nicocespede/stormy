@@ -223,23 +223,6 @@ module.exports = {
         }
     },
 
-    splitMessage: message => {
-        const split = message.split(' ');
-        const ret = [];
-        let chunk = '';
-        for (let i = 0; i < split.length; i++) {
-            const word = split[i];
-            const aux = chunk + word + ' ';
-            if (aux.length > 2000) {
-                ret.push(chunk);
-                chunk = '';
-            }
-            chunk += word + ' ';
-            if (i === split.length - 1) ret.push(chunk);
-        }
-        return ret;
-    },
-
     convertTime,
 
     lastUpdateToString,

@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const translate = require("translate");
-const { splitMessage } = require('../../src/general');
+const { splitMessage } = require('../../src/util');
 
 module.exports = {
     category: 'General',
