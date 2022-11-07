@@ -1,8 +1,8 @@
-const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
-const { prefix, githubRawURL } = require('../../src/constants');
+const { prefix, githubRawURL, color } = require('../../src/constants');
 const { log } = require('../../src/util');
 
 const translateRank = rank => {
@@ -59,6 +59,23 @@ const getRankColor = rank => {
     }
 };
 
+const getRow = type => {
+    const row = new ActionRowBuilder();
+    if (!type)
+        return row.addComponents(new ButtonBuilder()
+            .setCustomId('report-ban')
+            .setEmoji('🚩')
+            .setLabel("Reportar cuenta baneada")
+            .setStyle(ButtonStyle.Secondary));
+
+    return row.addComponents(new ButtonBuilder()
+        .setCustomId('report-ban')
+        .setEmoji(type === 'success' ? '👍🏼' : '🔄')
+        .setLabel(type === 'success' ? "¡Gracias por tu reporte!" : "Reintentar")
+        .setStyle(type === 'success' ? ButtonStyle.Success : ButtonStyle.Danger)
+        .setDisabled(type === 'success'));
+};
+
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Envía un MD con la información de las cuentas smurf de Valorant (sólo para usuarios autorizados).',
@@ -73,10 +90,37 @@ module.exports = {
     expectedArgs: '<id>',
     slash: 'both',
 
+    init: client => {
+        client.on('interactionCreate', async interaction => {
+            if (!interaction.isButton()) return;
+
+            const { customId, message, user } = interaction;
+            if (customId !== 'report-ban') return;
+
+            const ids = getIds() || await updateIds();
+            const stormer = await client.users.fetch(ids.users.stormer).catch(console.error);
+            try {
+                await stormer.send({
+                    embeds: [new EmbedBuilder()
+                        .setTitle('Reporte de baneo en cuenta smurf')
+                        .setAuthor({ name: user.username, iconURL: user.avatarURL() })
+                        .setDescription(`Cuenta: **${EmbedBuilder.from(message.embeds[0]).data.title}**`)
+                        .setColor(color)
+                        .setThumbnail(`${githubRawURL}/assets/thumbs/flag.png`)]
+                });
+                await interaction.update({ components: [getRow('success')] });
+            } catch (e) {
+                log(`> Error sending report:\n${e.stack}`, 'red');
+                await interaction.update({ components: [getRow('retry')] });
+            }
+        });
+    },
+
     callback: async ({ guild, member, user, message, interaction, client, args, channel, instance }) => {
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
         const ids = getIds() || await updateIds();
+
         if (!id) {
             if (channel.type === ChannelType.DM) {
                 reply.content = '⚠ Este comando solo se puede utilizar en un servidor.';
@@ -141,55 +185,58 @@ module.exports = {
                 }
             }
             return;
-        } else {
-            const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-            const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo la información de la cuenta...` })
-                : await interaction.deferReply({ ephemeral: true });
-            const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
-            const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
-            const smurfs = getSmurfs() || await updateSmurfs();
-            if (channel.type !== ChannelType.DM)
-                reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
-            else if (!isAuthorized)
-                reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
-            else if (!Object.keys(smurfs).includes(id))
-                reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
-            else {
-                const familyRole = await defaultGuild.roles.fetch(ids.roles.familia).catch(console.error);
-                const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
-                const account = smurfs[id];
-                if (account.vip && !isVip)
-                    reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
-                else {
-                    const accInfo = account.name.split('#');
-                    const mmr = await ValorantAPI.getMMR({
-                        version: 'v1',
-                        region: 'na',
-                        name: accInfo[0],
-                        tag: accInfo[1],
-                    }).catch(console.error);
-                    if (mmr.error) {
-                        log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, 'red');
-                        reply.embeds = [new EmbedBuilder()
-                            .setTitle(account.name)
-                            .setColor(getRankColor(null))];
-                        reply.files = [new AttachmentBuilder(`${githubRawURL}/assets/thumbs/games/unranked.png`, { name: 'rank.png' })];
-                    } else {
-                        const thumb = !mmr.data.images ? `${githubRawURL}/assets/thumbs/games/unranked.png` : mmr.data.images.large;
-                        reply.embeds = [new EmbedBuilder()
-                            .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
-                            .setColor(getRankColor(mmr.data.currenttierpatched))];
-                        reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
-                    }
-                    if (account.bannedUntil)
-                        reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil.toLocaleDateString('es-AR')}** ⚠`);
-                    reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
-                    { name: 'Contraseña:', value: account.password, inline: true }])
-                        .setThumbnail(`attachment://rank.png`);
-                }
-            }
-            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
         }
+
+        const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+        const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo la información de la cuenta...` })
+            : await interaction.deferReply({ ephemeral: true });
+        const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
+        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
+        const smurfs = getSmurfs() || await updateSmurfs();
+        if (channel.type !== ChannelType.DM)
+            reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
+        else if (!isAuthorized)
+            reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
+        else if (!Object.keys(smurfs).includes(id))
+            reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
+        else {
+            const familyRole = await defaultGuild.roles.fetch(ids.roles.familia).catch(console.error);
+            const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
+            const account = smurfs[id];
+            if (account.vip && !isVip)
+                reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
+            else {
+                const accInfo = account.name.split('#');
+                const mmr = await ValorantAPI.getMMR({
+                    version: 'v1',
+                    region: 'na',
+                    name: accInfo[0],
+                    tag: accInfo[1],
+                }).catch(console.error);
+                if (mmr.error) {
+                    log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, 'red');
+                    reply.embeds = [new EmbedBuilder()
+                        .setTitle(account.name)
+                        .setColor(getRankColor(null))];
+                    reply.files = [new AttachmentBuilder(`${githubRawURL}/assets/thumbs/games/unranked.png`, { name: 'rank.png' })];
+                } else {
+                    const thumb = !mmr.data.images ? `${githubRawURL}/assets/thumbs/games/unranked.png` : mmr.data.images.large;
+                    reply.embeds = [new EmbedBuilder()
+                        .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
+                        .setColor(getRankColor(mmr.data.currenttierpatched))];
+                    reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
+                }
+                if (account.bannedUntil)
+                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil.toLocaleDateString('es-AR')}** ⚠`);
+                else
+                    reply.components = [getRow()];
+                reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
+                { name: 'Contraseña:', value: account.password, inline: true }])
+                    .setThumbnail(`attachment://rank.png`);
+            }
+        }
+        reply.content = null;
+        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+        return;
     }
 }

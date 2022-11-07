@@ -82,7 +82,7 @@ module.exports = {
         const reply = { ephemeral: true };
 
         const ids = getIds() || await updateIds();
-        if (user.id != ids.users.stormer && user.id != ids.users.darkness) {
+        if (user.id !== ids.users.stormer && user.id !== ids.users.darkness) {
             reply.content = `Hola <@${user.id}>, no tenés autorización para usar este comando.`;
             interaction.editReply(reply);
             return;
