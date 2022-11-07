@@ -35,7 +35,6 @@ module.exports = {
     }],
 
     slash: true,
-    testOnly: true,
     ownerOnly: true,
 
     callback: ({ client, guild, interaction, member }) => {
@@ -57,11 +56,8 @@ module.exports = {
                 return '¡Entrada simulada!';
 
             case 'reinicio':
-                if (testing) {
-                    process.emit('SIGINT');
-                    return 'Reinicio simulado, ¡adiós!';
-                }
-                return 'Este comando sólo puede utilizarse en un entorno de prueba.';
+                process.emit(!testing ? 'SIGTERM' : 'SIGINT');
+                return 'Reinicio simulado, ¡adiós!';
 
             case 'salida':
                 client.emit('guildMemberRemove', member);
