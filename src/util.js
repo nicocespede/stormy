@@ -27,7 +27,12 @@ module.exports = {
 
     log: (string, color) => {
         const date = convertTZ(new Date());
-        const now = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+        const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
+        const month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
+        const hours = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours();
+        const minutes = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
+        const seconds = date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds();
+        const now = `${day}-${month}-${date.getFullYear()} ${hours}:${minutes}:${seconds}`;
         let colored;
         switch (color) {
             case 'blue':
