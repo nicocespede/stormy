@@ -40,9 +40,16 @@ module.exports = {
             kru: { name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
         };
 
-        interaction.deferReply({ ephemeral: true });
-
         const actualMode = getMode() || await updateModeCache();
+
+        if (actualMode && actualMode !== mode)
+            return {
+                content: `⚠ Primero debés desactivar el modo actual.`,
+                custom: true,
+                ephemeral: true
+            };
+
+        interaction.deferReply({ ephemeral: true });
         const { name, role: roleName, on, off, username } = modesData[mode];
 
         if (actualMode === mode) {
