@@ -4,14 +4,18 @@ const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
-    getDownloadsData, updateDownloadsData } = require('./cache');
+    getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
 const { relativeSpecialDays, githubRawURL, prefix } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
 const { convertTZ, log } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
-const getImageType = () => {
+const getImageType = async () => {
+    const mode = getMode() || await updateMode();
+    if (mode === 'afa')
+        return '-afa'
+
     const today = convertTZ(new Date());
     const date = today.getDate();
     const month = today.getMonth() + 1;
@@ -190,11 +194,11 @@ module.exports = {
 
     updateIcon: async guild => {
         const actualIcon = getIcon() || await updateIcon();
-        const newIcon = `kgprime${getImageType()}`;
-        if (actualIcon != newIcon) {
+        const newIcon = `kgprime${await getImageType()}`;
+        if (actualIcon !== newIcon) {
             await guild.setIcon(`${githubRawURL}/assets/icons/${newIcon}.png`).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
-            await updateIcon()
+            await updateIcon();
         }
     },
 
@@ -217,7 +221,7 @@ module.exports = {
                 newUsername += date >= 26 ? ' 🥂' : ' 🎅🏻';
                 break;
         }
-        if (client.user.username != newUsername) {
+        if (client.user.username !== newUsername) {
             await client.user.setUsername(newUsername).catch(console.error);
             log('> Nombre de usuario actualizado', 'green');
         }

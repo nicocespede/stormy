@@ -4,7 +4,7 @@ const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, upda
 const { applyText } = require('../src/general');
 const { convertTZ, log } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
-const { relativeSpecialDays } = require('../src/constants');
+const { relativeSpecialDays, githubRawURL } = require('../src/constants');
 
 const getToday = () => {
     const today = convertTZ(new Date());
@@ -18,7 +18,7 @@ const getToday = () => {
 const generateBirthdayImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage('./assets/happy-bday.png');
+    const background = await Canvas.loadImage(`${githubRawURL}/assets/happy-bday.png`);
     const avatarWidth = 300;
     const avatarHeight = avatarWidth;
     const avatarX = (background.width / 2) - (avatarWidth / 2);

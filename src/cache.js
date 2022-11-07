@@ -7,6 +7,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
+const iconSchema = require('../models/icon-schema');
 
 let chronologies = {};
 let downloadsData = {};
@@ -20,6 +21,7 @@ let billboardMessageInfo;
 var rolesMessageInfo;
 var anniversaries;
 let icon;
+let mode;
 let lastAction;
 let playlists;
 var stats;
@@ -246,11 +248,18 @@ module.exports = {
 
     getIcon: () => icon,
     updateIcon: async () => {
-        const iconSchema = require('../models/icon-schema');
         const result = await iconSchema.findById(1, 'name');
         icon = result.name;
         log('> Caché de ícono actualizado', 'green');
         return icon;
+    },
+
+    getMode: () => mode,
+    updateMode: async () => {
+        const result = await iconSchema.findById(1, 'mode');
+        mode = result.mode;
+        log('> Caché de modo actualizado', 'green');
+        return mode;
     },
 
     getLastAction: () => lastAction,

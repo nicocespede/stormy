@@ -2,6 +2,7 @@ const banSchema = require('../models/ban-schema');
 const birthdaySchema = require('../models/birthday-schema');
 const crosshairSchema = require('../models/crosshair-schema');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
+const iconSchema = require('../models/icon-schema');
 const moviesAndGamesSchema = require('../models/moviesAndGames-schema');
 const playlistSchema = require('../models/playlist-schema');
 const smurfSchema = require('../models/smurf-schema');
@@ -17,9 +18,13 @@ module.exports = {
     },
 
     updateIconString: async name => {
-        const iconSchema = require('../models/icon-schema');
         await iconSchema.updateOne({ _id: 1 }, { name: name });
         log('> Ícono actualizado en la base de datos', 'green');
+    },
+
+    updateMode: async mode => {
+        await iconSchema.updateOne({ _id: 1 }, { mode });
+        log('> Modo actualizado en la base de datos', 'green');
     },
 
     addBan: async (id, tag, responsible, character, reason) => {
