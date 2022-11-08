@@ -133,8 +133,8 @@ module.exports = {
                     reply.ephemeral = false;
                     return reply;
                 } else {
-                    const familyRole = await guild.roles.fetch(ids.roles.familia).catch(console.error);
-                    const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
+                    const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
+                    const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || vipRole.members.has(user.id);
                     const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
                         : await interaction.deferReply({ ephemeral: true });
                     const accountsField = { name: 'Cuenta', value: '', inline: true };
@@ -200,8 +200,8 @@ module.exports = {
         else if (!Object.keys(smurfs).includes(id))
             reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
         else {
-            const familyRole = await defaultGuild.roles.fetch(ids.roles.familia).catch(console.error);
-            const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || familyRole.members.has(user.id);
+            const vipRole = await defaultGuild.roles.fetch(ids.roles.vip).catch(console.error);
+            const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || vipRole.members.has(user.id);
             const account = smurfs[id];
             if (account.vip && !isVip)
                 reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
