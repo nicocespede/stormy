@@ -25,10 +25,6 @@ module.exports = {
         description: 'Simula la entrada de un usuario al servidor.',
         type: ApplicationCommandOptionType.Subcommand
     }, {
-        name: 'reinicio',
-        description: 'Simula el reinicio del bot.',
-        type: ApplicationCommandOptionType.Subcommand
-    }, {
         name: 'salida',
         description: 'Simula la salida de un usuario del servidor.',
         type: ApplicationCommandOptionType.Subcommand
@@ -36,6 +32,7 @@ module.exports = {
 
     slash: true,
     ownerOnly: true,
+    testOnly: true,
 
     callback: ({ client, guild, interaction, member }) => {
         const subCommand = interaction.options.getSubcommand();
@@ -54,10 +51,6 @@ module.exports = {
             case 'entrada':
                 client.emit('guildMemberAdd', member);
                 return '¡Entrada simulada!';
-
-            case 'reinicio':
-                process.emit(!testing ? 'SIGTERM' : 'SIGINT');
-                return 'Reinicio simulado, ¡adiós!';
 
             case 'salida':
                 client.emit('guildMemberRemove', member);

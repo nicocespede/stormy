@@ -22,7 +22,7 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ message, args, channel, interaction, user, instance, guild, member }) => {
-        const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
+        const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
 
         const ids = getIds() || await updateIds();
@@ -64,7 +64,7 @@ module.exports = {
             return;
         }
 
-        const { embedData, files, imageURL, instructions, lastUpdate, links, name, version, year } = games[index];
+        const { embedData, imageURL, instructions, lastUpdate, links, name, version, year } = games[index];
 
         let versionsMessage;
         let finalCollector;
@@ -137,10 +137,10 @@ module.exports = {
             const embeds = [];
             const pages = {};
             const element = customId !== 'instructions' ? links[customId] : instructions;
-            const dataString = customId !== 'instructions' ? `**Cantidad total de archivos:** ${files}` : '';
             const passwordString = customId !== 'instructions' && links.password ? `**Contraseña:** ${links.password}` : '';
             const { color, thumb } = embedData;
-            for (const server in element) if (Object.hasOwnProperty.call(element, server)) {
+            for (const server in element) if (Object.hasOwnProperty.call(element, server) && server !== 'files') {
+                const dataString = customId !== 'instructions' ? `**Cantidad de archivos:** ${element.files}` : '';
                 const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${element[server].join('\n')}\n\n${passwordString}`;
                 const chunks = splitEmbedDescription(description);
                 let counter = 1;

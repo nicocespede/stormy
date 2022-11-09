@@ -120,9 +120,9 @@ module.exports = {
         await smurfSchema.deleteOne({ _id: command });
         log('> Cuenta smurf eliminada de la base de datos', 'yellow');
     },
-    updateSmurf: async (command, ban) => {
-        await smurfSchema.updateOne({ _id: command }, { bannedUntil: ban });
-        log(`> Ban de cuenta smurf actualizada en la base de datos`, 'green');
+    updateSmurf: async (command, update) => {
+        await smurfSchema.updateOne({ _id: command }, update);
+        log(`> Cuenta smurf actualizada en la base de datos`, 'green');
     },
 
     addSombraBan: async reason => {
