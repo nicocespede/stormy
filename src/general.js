@@ -7,7 +7,7 @@ const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, upda
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
 const { relativeSpecialDays, githubRawURL, prefix } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
-const { convertTZ, log } = require('./util');
+const { convertTZ, log, splitEmbedDescription } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -286,7 +286,7 @@ module.exports = {
 
         const sendChoicesMessages = async breakpoints => {
             if (breakpoints.length === 0) {
-                sendFiltersMessage();
+                await sendFiltersMessage();
                 return;
             }
 
@@ -340,7 +340,7 @@ module.exports = {
                 if (breakpoints.length > 0)
                     await sendChoicesMessages(breakpoints);
                 else
-                    sendFiltersMessage();
+                    await sendFiltersMessage();
             })
         };
 
@@ -390,7 +390,10 @@ module.exports = {
             reply.components = getFiltersRows(filters).concat([secondaryRow]);
             reply.files = [`${githubRawURL}/assets/${collectionId}/poster.jpg`];
 
-            message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
+            if (!replyMessage)
+                replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
+            else
+                message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
 
             const collector = channel.createMessageComponentCollector({ filter: collectorFilter, time: 1000 * 60 * 5 });
 
@@ -632,8 +635,12 @@ module.exports = {
         const { color: packageColor, episodes, name: packageName, thumb: packageThumb, versions, year: packageYear } = data[reference];
         const color = packageColor || instance.color;
 
-        let nowShowing = '';
-        const getVersionsRow = () => {
+        let versionsMessage;
+        let finalCollector;
+        let filteredName;
+
+        const sendSelectionMenu = async () => {
+            let nowShowing = '';
             const emojis = {
                 "Cortometraje": '📹',
                 "Especial": '📺',
@@ -643,70 +650,67 @@ module.exports = {
                 "Película": '📽',
                 "Serie": '🎞'
             };
-            const row = new ActionRowBuilder();
-            for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver)) {
-                row.addComponents(new ButtonBuilder().setCustomId(ver)
-                    .setEmoji(emojis[type])
-                    .setLabel(ver)
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(ver === nowShowing));
-            }
-            return row;
-        };
-
-        const filteredName = !elementYear ? packageName.replace(/[:|?]/g, '').replace(/ /g, '%20')
-            : elementName.replace(/[:|?]/g, '').replace(/ /g, '%20');
-
-        reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
-        reply.components = [getVersionsRow()];
-        reply.files = [`${githubRawURL}/assets/${collectionId}/${filteredName}.jpg`];
-
-        const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
-
-        const collectorFilter = btnInt => {
-            const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
-            const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
-            return member.user.id === btnInt.user.id && isTheSameMessage;
-        };
-
-        const collector = channel.createMessageComponentCollector({ filter: collectorFilter, idle: 1000 * 60 * 5 });
-
-        let versionsMessage;
-        let finalCollector;
-
-        collector.on('collect', async i => {
-            const splitString = string => {
-                const split = string.split('\n');
-                const ret = [];
-                let chunk = '';
-                for (let i = 0; i < split.length; i++) {
-                    const line = split[i];
-                    const aux = chunk + line + '\n';
-                    if (aux.length > 4096) {
-                        ret.push(chunk);
-                        chunk = '';
-                    }
-                    chunk += line + '\n';
-                    if (i === split.length - 1) ret.push(chunk)
+            const getVersionsRow = () => {
+                const row = new ActionRowBuilder();
+                for (const ver in versions) if (Object.hasOwnProperty.call(versions, ver)) {
+                    row.addComponents(new ButtonBuilder().setCustomId(ver)
+                        .setEmoji(emojis[type])
+                        .setLabel(ver)
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(ver === nowShowing));
                 }
-                return ret;
+                return row;
             };
 
+            filteredName = !elementYear ? packageName.replace(/[:|?]/g, '').replace(/ /g, '%20')
+                : elementName.replace(/[:|?]/g, '').replace(/ /g, '%20');
+
+            reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
+            reply.components = [getVersionsRow()];
+            reply.files = [`${githubRawURL}/assets/${collectionId}/${filteredName}.jpg`];
+
+            const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
+
+            const collectorFilter = btnInt => {
+                const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
+                const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
+                return member.user.id === btnInt.user.id && isTheSameMessage;
+            };
+
+            const collector = channel.createMessageComponentCollector({ filter: collectorFilter, idle: 1000 * 60 * 5 });
+
+            collector.on('collect', async i => {
+                nowShowing = i.customId;
+                await i.update({ components: [getVersionsRow()] });
+                sendElement(i.customId);
+            });
+
+            collector.on('end', async _ => {
+                if (versionsMessage) versionsMessage.delete();
+                const edit = {
+                    components: [],
+                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                    embeds: [],
+                    files: reply.files
+                };
+                message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+            });
+        };
+
+        const sendElement = async customId => {
             const embeds = [];
             const pages = {};
-            nowShowing = i.customId;
-            await i.update({ components: [getVersionsRow()] });
-            const { files, lastUpdate, links, password } = versions[i.customId];
+            const { files, lastUpdate, links, password } = versions[customId];
             const dataString = `${episodes ? `**Episodios:** ${episodes}\n` : ''}**Cantidad de archivos:** ${files}`;
             const passwordString = password ? `**Contraseña:** ${password}` : '';
             const thumb = elementThumb || packageThumb || filteredName;
             for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
                 const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${links[server].join('\n')}\n\n${passwordString}`;
-                const chunks = splitString(description);
+                const chunks = splitEmbedDescription(description);
                 let counter = 1;
                 for (const c of chunks)
                     embeds.push(new EmbedBuilder()
-                        .setTitle(`${packageName} (${packageYear}) - ${i.customId} (${server}${chunks.length > 1 ? ` ${counter}` : ''})`)
+                        .setTitle(`${packageName} (${packageYear}) - ${customId} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`)
                         .setColor(color)
                         .setDescription(c)
                         .setThumbnail(`${githubRawURL}/assets/thumbs/${collectionId}/${thumb}.png`));
@@ -748,7 +752,7 @@ module.exports = {
             if (finalCollector)
                 finalCollector.stop();
 
-            const secondFilter = (btnInt) => { return member.user.id === btnInt.user.id };
+            const secondFilter = btnInt => { return member.user.id === btnInt.user.id };
 
             finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, idle: 1000 * 60 * 5 });
 
@@ -768,17 +772,8 @@ module.exports = {
                     await versionsMessage.edit(msg);
                 }
             });
-        });
+        };
 
-        collector.on('end', async _ => {
-            if (versionsMessage) versionsMessage.delete();
-            const edit = {
-                components: [],
-                content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
-                embeds: [],
-                files: reply.files
-            };
-            message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
-        });
+        sendSelectionMenu();
     }
 }

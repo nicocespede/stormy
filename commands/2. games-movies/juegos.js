@@ -1,9 +1,9 @@
-const { EmbedBuilder, ApplicationCommandOptionType, AttachmentBuilder } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
-const { lastUpdateToString } = require('../../src/general');
-const { log } = require('../../src/util');
+const { lastUpdateToString, addAnnouncementsRole } = require('../../src/general');
+const { splitEmbedDescription } = require('../../src/util');
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -21,23 +21,16 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
-    callback: async ({ message, args, interaction, user, instance, guild, member }) => {
-        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
-
-        try {
-            const ids = getIds() || await updateIds();
-            const role = await guild.roles.fetch(ids.roles.anunciosJuegos);
-            if (!role.members.has(user.id)) {
-                await member.roles.add(ids.roles.anunciosJuegos);
-                log(`> Rol 'Gamers' agregado a ${user.tag}`, 'green');
-            }
-        } catch (error) {
-            log(`> No se pudo agregar el rol 'Gamers' a ${user.tag}:\n${error.stack}`, 'red');
-        }
-
+    callback: async ({ message, args, channel, interaction, user, instance, guild, member }) => {
+        const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: false });
         const number = message ? args[0] : interaction.options.getInteger('numero');
+
+        const ids = getIds() || await updateIds();
+        await addAnnouncementsRole(ids.roles.anunciosJuegos, guild, member);
+
         const games = getGames() || await updateGames();
         const reply = { custom: true, ephemeral: true };
+
         if (!number) {
             const canvas = createCanvas(200, 200);
             const ctx = canvas.getContext('2d');
@@ -59,64 +52,167 @@ module.exports = {
                 .addFields([gamesField, updatesField])
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
                 .setThumbnail(`${githubRawURL}/assets/thumbs/games/games-folder.png`)];
-        } else {
-            const index = parseInt(number) - 1;
-            if (index < 0 || index >= games.length || isNaN(index))
-                reply.content = `⚠ El número ingresado es inválido.`;
-            else {
-                const { embedData, files, imageURL, instructions, links, name, version, year } = games[index];
-                const fields = [];
 
-                if (instructions)
-                    for (const key in instructions) if (Object.hasOwnProperty.call(instructions, key))
-                        fields.push({ name: `${key}:`, value: instructions[key].join('\n') });
-
-                for (const key in links) if (Object.hasOwnProperty.call(links, key) && key !== 'password') {
-                    const variant = links[key];
-                    let field = { name: `${key.toUpperCase()}:`, value: '' };
-                    for (const server in variant) if (Object.hasOwnProperty.call(variant, server)) {
-                        const aux = field.value + `\n${server}:\n\n`;
-                        if (aux.length <= 1024)
-                            field.value = aux;
-                        else {
-                            fields.push(field);
-                            field = { name: '\u200b', value: `\n${server}:\n\n` };
-                        }
-
-                        const lines = variant[server];
-                        lines.forEach(line => {
-                            const aux = field.value + line + '\n';
-                            if (aux.length <= 1024)
-                                field.value = aux;
-                            else {
-                                fields.push(field);
-                                field = { name: '\u200b', value: line + '\n' };
-                            }
-                        });
-                    }
-                    fields.push(field);
-                }
-
-                if (links.password) {
-                    const aux = fields[fields.length - 1].value + `\n**Contraseña:** ${links.password}`;
-                    if (aux.length <= 1024)
-                        fields[fields.length - 1].value += `\n**Contraseña:** ${links.password}`;
-                    else
-                        fields.push({ name: '\u200b', value: `**Contraseña:** ${links.password}` });
-                }
-
-                reply.content = null;
-                reply.embeds = [new EmbedBuilder()
-                    .setTitle(`${name} (${year}) ${version}`)
-                    .setColor(embedData.color)
-                    .setDescription(`**Cantidad de archivos: **${files}`)
-                    .addFields(fields)
-                    .setThumbnail(`attachment://thumb.png`)
-                    .setImage(imageURL)];
-                reply.files = [new AttachmentBuilder(embedData.thumb, { name: 'thumb.png' })];
-            }
+            message ? replyMessage.edit(reply) : interaction.editReply(reply);
+            return;
         }
-        message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-        return;
+
+        const index = parseInt(number) - 1;
+        if (index < 0 || index >= games.length || isNaN(index)) {
+            reply.content = `⚠ El número ingresado es inválido.`;
+            message ? replyMessage.edit(reply) : interaction.editReply(reply);
+            return;
+        }
+
+        const { embedData, files, imageURL, instructions, lastUpdate, links, name, version, year } = games[index];
+
+        let versionsMessage;
+        let finalCollector;
+        const data = {
+            instructions: { emoji: '📄', label: 'Instrucciones', style: ButtonStyle.Secondary },
+            game: { emoji: '🎮', label: 'Juego base' },
+            update: { emoji: '⬇', label: 'Update' },
+            crack: { emoji: '🏴‍☠️', label: 'Crack online' },
+            extras: { emoji: '🔰' }
+        };
+
+        const sendSelectionMenu = async () => {
+            let nowShowing = '';
+            let buttonsTypes = instructions ? ['instructions'] : [];
+            buttonsTypes = buttonsTypes.concat(Object.keys(links).filter(k => k !== 'password'));
+
+            const getRows = () => {
+                const rows = [];
+                let row = new ActionRowBuilder();
+                for (const type of buttonsTypes) {
+                    const prefix = type.split('-')[0];
+                    const { emoji, label, style } = data[prefix];
+                    if (row.components.length >= 5) {
+                        rows.push(row);
+                        row = new ActionRowBuilder();
+                    }
+                    row.addComponents(new ButtonBuilder().setCustomId(type)
+                        .setEmoji(emoji)
+                        .setLabel(`${label || ''} ${type.replace(prefix, '').replace('-', '')}`)
+                        .setStyle(style || ButtonStyle.Primary)
+                        .setDisabled(type === nowShowing));
+                }
+                rows.push(row);
+                return rows;
+            };
+
+            reply.content = `**${name} (${year}) ${version}**\n\n⚠ Por favor seleccioná lo que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
+            reply.components = getRows();
+            reply.files = [imageURL];
+
+            message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
+
+            const collectorFilter = btnInt => {
+                const btnIntId = !btnInt.message.interaction ? btnInt.message.id : btnInt.message.interaction.id;
+                const isTheSameMessage = message ? btnIntId === replyMessage.id : btnIntId === interaction.id;
+                return member.user.id === btnInt.user.id && isTheSameMessage;
+            };
+
+            const collector = channel.createMessageComponentCollector({ filter: collectorFilter, idle: 1000 * 60 * 5 });
+
+            collector.on('collect', async i => {
+                nowShowing = i.customId;
+                await i.update({ components: getRows() });
+                await sendElement(i.customId)
+            });
+
+            collector.on('end', async _ => {
+                if (versionsMessage) versionsMessage.delete();
+                const edit = {
+                    components: [],
+                    content: `**${name} (${year}) ${version}**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}juegos ${index + 1}**.\n\u200b`,
+                    embeds: [],
+                    files: reply.files
+                };
+                message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
+            });
+        };
+
+        const sendElement = async customId => {
+            const embeds = [];
+            const pages = {};
+            const element = customId !== 'instructions' ? links[customId] : instructions;
+            const dataString = customId !== 'instructions' ? `**Cantidad total de archivos:** ${files}` : '';
+            const passwordString = customId !== 'instructions' && links.password ? `**Contraseña:** ${links.password}` : '';
+            const { color, thumb } = embedData;
+            for (const server in element) if (Object.hasOwnProperty.call(element, server)) {
+                const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${element[server].join('\n')}\n\n${passwordString}`;
+                const chunks = splitEmbedDescription(description);
+                let counter = 1;
+                const prefix = customId.split('-')[0];
+                const { label } = data[prefix];
+                const title = `${name} (${year}) ${version} -${label ? ` ${label}` : ''} ${customId.replace(prefix, '').replace('-', '')} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`;
+                for (const c of chunks)
+                    embeds.push(new EmbedBuilder()
+                        .setTitle(title)
+                        .setColor(color)
+                        .setDescription(c)
+                        .setThumbnail(thumb));
+            }
+
+            for (let i = 0; i < embeds.length; i++)
+                embeds[i].setFooter({ text: `${customId !== 'instructions' ? 'Servidor' : 'Página'} ${i + 1} | ${embeds.length}` });
+
+            const getRow = id => {
+                const row = new ActionRowBuilder();
+
+                row.addComponents(new ButtonBuilder()
+                    .setCustomId('prev_page')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('⬅')
+                    .setLabel('Anterior')
+                    .setDisabled(pages[id] === 0));
+
+                row.addComponents(new ButtonBuilder()
+                    .setCustomId('next_page')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('➡')
+                    .setLabel('Siguiente')
+                    .setDisabled(pages[id] === embeds.length - 1));
+
+                return row;
+            };
+
+            const id = member.user.id;
+            pages[id] = pages[id] || 0;
+
+            const msg = {
+                components: [getRow(id)],
+                embeds: [embeds[pages[id]]],
+                files: []
+            };
+
+            versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
+            if (finalCollector)
+                finalCollector.stop();
+
+            const secondFilter = btnInt => { return member.user.id === btnInt.user.id };
+
+            finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, idle: 1000 * 60 * 5 });
+
+            finalCollector.on('collect', async btnInt => {
+                if (!btnInt) return;
+
+                btnInt.deferUpdate();
+
+                if (btnInt.customId !== 'prev_page' && btnInt.customId !== 'next_page')
+                    return;
+                else {
+                    if (btnInt.customId === 'prev_page' && pages[id] > 0) --pages[id];
+                    else if (btnInt.customId === 'next_page' && pages[id] < embeds.length - 1) ++pages[id];
+
+                    msg.components = [getRow(id)];
+                    msg.embeds = [embeds[pages[id]]];
+                    await versionsMessage.edit(msg);
+                }
+            });
+        };
+
+        await sendSelectionMenu();
     }
 }

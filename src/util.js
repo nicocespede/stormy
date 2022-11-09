@@ -52,5 +52,22 @@ module.exports = {
                 break;
         }
         console.log(`${now}: ${colored}`);
+    },
+
+    splitEmbedDescription: string => {
+        const split = string.split('\n');
+        const ret = [];
+        let chunk = '';
+        for (let i = 0; i < split.length; i++) {
+            const line = split[i];
+            const aux = chunk + line + '\n';
+            if (aux.length > 4096) {
+                ret.push(chunk);
+                chunk = '';
+            }
+            chunk += line + '\n';
+            if (i === split.length - 1) ret.push(chunk)
+        }
+        return ret;
     }
 };
