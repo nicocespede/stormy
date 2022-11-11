@@ -140,32 +140,18 @@ module.exports = {
             log('> games.json cargado', 'green');
             games = [];
             const parsed = JSON.parse(data);
-            for (const key in parsed) if (Object.hasOwnProperty.call(parsed, key)) {
-                const element = parsed[key];
-                if (key === 'steam') {
-                    const embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/steam.png` };
-                    for (const game of element)
-                        await steam.getGameDetails(game.id).then(data => {
-                            games.push({
-                                id: game.id,
-                                name: data.name,
-                                year: data.release_date.date.split(',').pop().trim(),
-                                version: game.version,
-                                lastUpdate: game.lastUpdate,
-                                updateInfo: game.updateInfo,
-                                files: game.files,
-                                imageURL: data.header_image,
-                                instructions: game.instructions,
-                                links: game.links,
-                                embedData: embedData
-                            });
-                        }).catch(console.error);
-                } else {
-                    const embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/control.png` };
-                    element.embedData = embedData;
-                    games.concat(element);
+            for (const key in parsed) if (Object.hasOwnProperty.call(parsed, key))
+                for (const game of parsed[key]) {
+                    if (key === 'steam') {
+                        const data = await steam.getGameDetails(game.id).catch(console.error);
+                        game.name = data.name;
+                        game.year = data.release_date.date.split(',').pop().trim();
+                        game.imageURL = data.header_image;
+                        game.embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/steam.png` };
+                    } else
+                        game.embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/control.png` };
+                    games.push(game);
                 }
-            }
         } catch (err) {
             log(`> Error al cargar games.json\n${err.stack}`, 'red');
         }
