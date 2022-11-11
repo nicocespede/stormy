@@ -228,7 +228,7 @@ module.exports = {
                 }
                 if (account.bannedUntil)
                     reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil.toLocaleDateString('es-AR')}** ⚠`);
-                else
+                else if (user.id !== ids.users.stormer)
                     reply.components = [getRow()];
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
                 { name: 'Contraseña:', value: account.password, inline: true }])
