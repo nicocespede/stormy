@@ -9,6 +9,6 @@ module.exports = {
 
     callback: ({ }) => {
         process.emit(!testing ? 'SIGTERM' : 'SIGINT');
-        return '🔄 Comenzando reinicio, ¡adiós!';
+        return { content: '🔄 Comenzando reinicio, ¡adiós!', custom: true, ephemeral: true };
     }
 }
