@@ -7,8 +7,8 @@ module.exports = {
     slash: true,
     ownerOnly: true,
 
-    callback: ({ }) => {
+    callback: async ({ interaction }) => {
+        await interaction.reply({ content: '🔄 Comenzando reinicio, ¡adiós!', ephemeral: true });
         process.emit(!testing ? 'SIGTERM' : 'SIGINT');
-        return { content: '🔄 Comenzando reinicio, ¡adiós!', custom: true, ephemeral: true };
     }
 }
