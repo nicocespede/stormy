@@ -78,34 +78,56 @@ module.exports = {
 
             const ownedPlaylists = Object.entries(playlists).filter(([_, playlist]) => playlist.ownerId === user.id);
             if (ownedPlaylists.length > 0) {
-                const ownedField = { name: 'Tus listas de reproducción', value: '' };
-                let i = 1;
+                let ownedField = { name: 'Tus listas de reproducción', value: '' };
+                let i = 0;
                 for (const [name, playlist] of ownedPlaylists) {
+                    i++;
                     const { url } = playlist;
-                    ownedField.value += `**${i++}.** [${name}](${url})\n\n`;
+                    const aux = ownedField.value + `**${i}.** [${name}](${url})\n\n`;
+                    if (aux.length <= 1024) {
+                        ownedField.value += `**${i}.** [${name}](${url})\n\n`;
+                        continue;
+                    }
+
+                    fields.push(ownedField);
+                    ownedField = { name: `\u200b`, value: `**${i}.** [${name}](${url})\n\n` };
                 }
                 fields.push(ownedField);
             }
 
             const othersPlaylists = Object.entries(playlists).filter(([_, playlist]) => playlist.ownerId !== user.id);
             if (othersPlaylists.length > 0) {
-                const othersField = { name: 'Otras listas de reproducción', value: '', inline: true };
-                const ownersField = { name: 'Agregada por', value: '', inline: true };
+                let othersField = { name: 'Otras listas de reproducción', value: '', inline: true };
+                let ownersField = { name: 'Agregada por', value: '', inline: true };
                 const membersIds = othersPlaylists.map(([_, playlist]) => playlist.ownerId);
                 const members = await guild.members.fetch(membersIds);
-                let i = 1;
+                let i = 0;
                 for (const [name, playlist] of othersPlaylists) {
+                    i++;
                     const { url, ownerId } = playlist;
                     const member = members.get(ownerId);
-                    othersField.value += `**${i++}.** [${name}](${url})\n\n`;
-                    ownersField.value += `${member ? member.user.tag : 'Desconocido'}\n\n`;
+                    const aux = othersField.value + `**${i}.** [${name}](${url})\n\n`;
+                    if (aux.length <= 1024) {
+                        othersField.value += `**${i}.** [${name}](${url})\n\n`;
+                        ownersField.value += `${member ? member.user.tag : 'Desconocido'}\n\n`;
+                        continue;
+                    }
+
+                    fields.push(othersField);
+                    fields.push(ownersField);
+                    fields.push({ name: `\u200b`, value: '\u200b', inline: true });
+                    othersField = { name: '\u200b', value: `**${i}.** [${name}](${url})\n\n`, inline: true };
+                    ownersField = { name: '\u200b', value: `${member ? member.user.tag : 'Desconocido'}\n\n`, inline: true };
+
                 }
                 fields.push(othersField);
                 fields.push(ownersField);
+                fields.push({ name: `\u200b`, value: '\u200b', inline: true });
             }
 
             embed.setFields(fields)
                 .setDescription(`Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\n`);
+            reply.content = null;
             reply.embeds = [embed];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
