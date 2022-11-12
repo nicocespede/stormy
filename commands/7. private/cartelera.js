@@ -3,6 +3,7 @@ const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo }
 const { updateBillboardMessage } = require('../../src/mongodb');
 const { githubRawURL } = require('../../src/constants');
 const { log } = require('../../src/util');
+const { isOwner } = require('../../src/general');
 
 const prefix = 'billboard-';
 
@@ -88,7 +89,7 @@ module.exports = {
         const reply = { custom: true, ephemeral: true };
 
         const ids = getIds() || await updateIds();
-        if (user.id !== ids.users.stormer && user.id !== ids.users.darkness) {
+        if (!(await isOwner(user.id))) {
             reply.content = '⚠ No estás autorizado para usar este comando.';
             reply.ephemeral = false;
             return reply;

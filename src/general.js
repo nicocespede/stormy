@@ -775,5 +775,10 @@ module.exports = {
         };
 
         sendSelectionMenu();
+    },
+
+    isOwner: async id => {
+        const ids = getIds() || await updateIds();
+        return id === ids.users.stormer || id === ids.users.darkness;
     }
 }

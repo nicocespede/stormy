@@ -1,7 +1,7 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
 const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../src/cache');
-const { applyText } = require('../src/general');
+const { applyText, isOwner } = require('../src/general');
 const { convertTZ, log } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
 const { relativeSpecialDays, githubRawURL } = require('../src/constants');
@@ -31,8 +31,7 @@ const generateBirthdayImage = async user => {
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
     const usernameWidth = context.measureText(user.username).width;
-    const ids = getIds() || await updateIds();
-    if (user.id === ids.users.stormer || user.id === ids.users.darkness) {
+    if (await isOwner(user.id)) {
         const crownWidth = 60;
         const gapWidth = 5;
         const crown = await Canvas.loadImage('./assets/crown.png');

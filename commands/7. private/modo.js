@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const { updateIcon: updateIconCache, getIds, updateIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
 const { githubRawURL } = require("../../src/constants");
-const { updateIcon, updateUsername } = require("../../src/general");
+const { updateIcon, updateUsername, isOwner } = require("../../src/general");
 const { updateIconString, updateMode } = require("../../src/mongodb");
 const { log } = require("../../src/util");
 
@@ -26,21 +26,21 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ client, user, guild, interaction }) => {
-        const mode = interaction.options.getString('modo');
-        const ids = getIds() || await updateIds();
-        if (user.id !== ids.users.stormer && user.id !== ids.users.darkness)
+        if (!(await isOwner(user.id)))
             return {
                 content: `⚠ Lo siento <@${user.id}>, este comando solo puede ser utilizado por los **Dueños de casa**.`,
                 custom: true,
                 ephemeral: true
             };
 
+        const ids = getIds() || await updateIds();
         const modesData = {
             afa: { name: 'Selección', username: 'StormY 🇦🇷', on: '¡VAMOS CARAJO! 🇦🇷' },
             kru: { name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
         };
 
         const actualMode = getMode() || await updateModeCache();
+        const mode = interaction.options.getString('modo');
 
         if (actualMode && actualMode !== mode)
             return {

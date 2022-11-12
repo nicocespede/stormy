@@ -1,6 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { prefix } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
+const { isOwner } = require('../../src/general');
 
 module.exports = {
     category: 'General',
@@ -30,7 +31,7 @@ module.exports = {
         const reply = { custom: true, ephemeral: true };
         const ids = getIds() || await updateIds();
         const role = await guild.roles.fetch(ids.roles.mod).catch(console.error);
-        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || role.members.has(user.id);
+        const isAuthorized = await isOwner(user.id) || role.members.has(user.id);
         const newNickname = args.slice(1).join(' ');
         if (!isAuthorized)
             reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para cambiar apodos.`;

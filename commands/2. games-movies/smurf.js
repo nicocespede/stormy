@@ -3,6 +3,7 @@ const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
 const { prefix, githubRawURL, color } = require('../../src/constants');
+const { isOwner } = require('../../src/general');
 const { log } = require('../../src/util');
 
 const translateRank = rank => {
@@ -127,14 +128,14 @@ module.exports = {
                 return reply;
             } else {
                 const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
-                const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
+                const isAuthorized = await isOwner(user.id) || smurfRole.members.has(user.id);
                 if (!isAuthorized) {
                     reply.content = `😂 Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`;
                     reply.ephemeral = false;
                     return reply;
                 } else {
                     const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
-                    const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || vipRole.members.has(user.id);
+                    const isVip = await isOwner(user.id) || vipRole.members.has(user.id);
                     const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
                         : await interaction.deferReply({ ephemeral: true });
                     const accountsField = { name: 'Cuenta', value: '', inline: true };
@@ -191,7 +192,7 @@ module.exports = {
         const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo la información de la cuenta...` })
             : await interaction.deferReply({ ephemeral: true });
         const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
-        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || smurfRole.members.has(user.id);
+        const isAuthorized = await isOwner(user.id) || smurfRole.members.has(user.id);
         const smurfs = getSmurfs() || await updateSmurfs();
         if (channel.type !== ChannelType.DM)
             reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
@@ -201,7 +202,7 @@ module.exports = {
             reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
         else {
             const vipRole = await defaultGuild.roles.fetch(ids.roles.vip).catch(console.error);
-            const isVip = user.id === ids.users.stormer || user.id === ids.users.darkness || vipRole.members.has(user.id);
+            const isVip = await isOwner(user.id) || vipRole.members.has(user.id);
             const account = smurfs[id];
             if (account.vip && !isVip)
                 reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;

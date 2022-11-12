@@ -1,6 +1,7 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBanned, updateBanned, getIds, updateIds } = require('../../src/cache');
 const { prefix } = require('../../src/constants');
+const { isOwner } = require('../../src/general');
 
 module.exports = {
     category: 'Moderación',
@@ -26,7 +27,7 @@ module.exports = {
         const reply = { custom: true, ephemeral: true };
         const ids = getIds() || await updateIds();
         const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
-        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || banRole.members.has(user.id);
+        const isAuthorized = await isOwner(user.id) || banRole.members.has(user.id);
         const index = parseInt(number) - 1;
         const bans = getBanned() || await updateBanned();
         if (!isAuthorized) {

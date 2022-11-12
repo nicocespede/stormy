@@ -1,6 +1,7 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { addBanResponsible, getIds, updateIds } = require('../../src/cache');
 const { prefix } = require('../../src/constants');
+const { isOwner } = require('../../src/general');
 
 module.exports = {
     category: 'Moderación',
@@ -33,7 +34,7 @@ module.exports = {
         const reply = { custom: true, ephemeral: true };
         const ids = getIds() || await updateIds();
         const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
-        const isAuthorized = user.id === ids.users.stormer || user.id === ids.users.darkness || banRole.members.has(user.id);
+        const isAuthorized = await isOwner(user.id) || banRole.members.has(user.id);
         if (!isAuthorized) {
             reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para banear usuarios.`;
             return reply;
@@ -48,7 +49,7 @@ module.exports = {
         } else if (target.user.id === user.id) {
             reply.content = `⚠ Lo siento <@${user.id}>, ¡no podés banearte a vos mismo!`;
             return reply;
-        } else if (target.user.id === ids.users.stormer || target.user.id === ids.users.darkness) {
+        } else if (await isOwner(target.user.id)) {
             reply.content = `⚠ Lo siento <@${user.id}>, los dueños de casa no pueden ser baneados.`;
             return reply;
         } else {
