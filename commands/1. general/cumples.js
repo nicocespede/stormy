@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionT
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { log, convertTZ } = require('../../src/util');
+const { log, convertTZ, getFourHoursForwardDate } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     var ret = {
@@ -181,11 +181,11 @@ module.exports = {
                 else {
                     const splittedDate = date.split('/');
                     const today = new Date();
-                    let realDate = new Date(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
+                    let realDate = getFourHoursForwardDate(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
                     if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     console.log(`New date => ${realDate}`)
-                    console.log(`CONVERTED New date => ${convertTZ(realDate, 'UTC')}`)
+                    console.log(`CONVERTED New date => ${convertTZ(realDate)}`)
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
                     edit.content = '✅ La acción fue completada.';
                     channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
