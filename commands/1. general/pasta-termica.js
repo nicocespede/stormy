@@ -4,11 +4,11 @@ const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonSty
 const { prefix } = require('../../src/constants');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../src/mongodb');
 
-const validateDate = (date) => {
+const validateDate = date => {
     const today = convertTZ(new Date());
     var ret = { valid: false, reason: 'La fecha debe estar en el formato DD/MM/AAAA.' };
-    if (date.length != 10) return ret;
-    if (date.substring(2, 3) != '/' || date.substring(5, 6) != '/') return ret;
+    if (date.length !== 10) return ret;
+    if (date.substring(2, 3) !== '/' || date.substring(5, 6) !== '/') return ret;
     const split = date.split('/');
     const day = parseInt(split[0]);
     const month = parseInt(split[1]);
@@ -26,12 +26,12 @@ const validateDate = (date) => {
 
 const timeToString = (years, weeks, days) => {
     var ret = '';
-    if (years != 0)
+    if (years !== 0)
         ret += years + ` año${years > 1 ? 's' : ''}`;
-    if (weeks != 0)
-        ret += (ret != '' ? ', ' : '') + weeks + ` semana${weeks > 1 ? 's' : ''}`;
-    if (days != 0)
-        ret += (ret != '' ? ', ' : '') + days + ` día${days > 1 ? 's' : ''}`;
+    if (weeks !== 0)
+        ret += (ret !== '' ? ', ' : '') + weeks + ` semana${weeks > 1 ? 's' : ''}`;
+    if (days !== 0)
+        ret += (ret !== '' ? ', ' : '') + days + ` día${days > 1 ? 's' : ''}`;
     return ret;
 };
 
@@ -69,10 +69,11 @@ module.exports = {
         var reply = { custom: true, ephemeral: true };
         var date = message ? args[0] : interaction.options.getString('fecha');
         if (!date) {
-            const dates = !getThermalPasteDates() ? await updateThermalPasteDates() : getThermalPasteDates();
+            const dates = getThermalPasteDates() || await updateThermalPasteDates();
             const userDate = dates[user.id];
             if (dates[user.id]) {
                 const today = convertTZ(new Date());
+                console.log(today)
                 const splittedUserDate = userDate.split('/');
                 var totalTime = Math.abs(today - convertTZ(`${splittedUserDate[1]}/${splittedUserDate[0]}/${splittedUserDate[2]}`)) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
