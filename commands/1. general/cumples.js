@@ -187,7 +187,7 @@ module.exports = {
                     if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     console.log(`New date => ${realDate}`)
-                    console.log(`CONVERTED New date => ${convertTZ(realDate)}`)
+                    console.log(`CONVERTED New date => ${convertTZ(realDate, 'Europe/Berlin')}`)
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
                     edit.content = '✅ La acción fue completada.';
                     channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
