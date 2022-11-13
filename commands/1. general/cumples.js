@@ -96,6 +96,7 @@ module.exports = {
 
                 for (const key in birthdays) if (Object.hasOwnProperty.call(birthdays, key)) {
                     const { date, user: username } = birthdays[key];
+                    console.log(`${username} => ${date}`)
                     const member = members.get(key);
 
                     if (!member) {
@@ -184,6 +185,7 @@ module.exports = {
                     let realDate = new Date(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
                     if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
                         realDate.setFullYear(realDate.getFullYear() + 1);
+                    console.log(`New date => ${realDate}`)
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
                     edit.content = '✅ La acción fue completada.';
                     channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
