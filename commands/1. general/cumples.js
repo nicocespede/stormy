@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionT
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { log } = require('../../src/util');
+const { log, convertTZ } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     var ret = {
@@ -97,6 +97,7 @@ module.exports = {
                 for (const key in birthdays) if (Object.hasOwnProperty.call(birthdays, key)) {
                     const { date, user: username } = birthdays[key];
                     console.log(`${username} => ${date}`)
+                    console.log(`CONVERTED ${username} => ${convertTZ(date)}`)
                     const member = members.get(key);
 
                     if (!member) {
@@ -186,6 +187,7 @@ module.exports = {
                     if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     console.log(`New date => ${realDate}`)
+                    console.log(`CONVERTED New date => ${convertTZ(realDate)}`)
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
                     edit.content = '✅ La acción fue completada.';
                     channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
