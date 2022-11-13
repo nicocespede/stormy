@@ -26,7 +26,7 @@ module.exports = {
     },
 
     log: (string, color) => {
-        const date = convertTZ(new Date());
+        const date = convertTZ(new Date());console.log(date)
         const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
         const month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
         const hours = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours();
