@@ -2,7 +2,7 @@ const chalk = require('chalk');
 chalk.level = 1;
 
 const convertTZ = (date, tzString) => {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString || 'America/Argentina/Buenos_Aires' }));
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("de-DE", { timeZone: tzString || 'America/Argentina/Buenos_Aires' }));
 };
 
 module.exports = {
