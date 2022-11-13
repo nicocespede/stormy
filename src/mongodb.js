@@ -11,9 +11,9 @@ const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
 const { log } = require('./util');
 
 module.exports = {
-    updateAnniversary: async (id1, id2, flag) => {
+    updateAnniversary: async (id1, id2, date) => {
         const anniversarySchema = require('../models/anniversary-schema');
-        await anniversarySchema.updateOne({ id1: id1, id2: id2 }, { flag: flag });
+        await anniversarySchema.updateOne({ id1, id2 }, { date });
         log('> Aniversario actualizado en la base de datos', 'green');
     },
 
@@ -36,12 +36,12 @@ module.exports = {
         log('> Ban eliminado de la base de datos', 'yellow');
     },
 
-    addBirthday: async (id, username, day, month) => {
-        await new birthdaySchema({ _id: id, username: username, day: day, month: month, flag: false }).save();
+    addBirthday: async (id, username, date) => {
+        await new birthdaySchema({ _id: id, username, date }).save();
         log('> Cumpleaños agregado a la base de datos', 'green');
     },
-    updateBirthday: async (id, flag) => {
-        await birthdaySchema.updateOne({ _id: id }, { flag: flag });
+    updateBirthday: async (id, date) => {
+        await birthdaySchema.updateOne({ _id: id }, { date });
         log('> Cumpleaños actualizado en la base de datos', 'green');
     },
     deleteBirthday: async id => {

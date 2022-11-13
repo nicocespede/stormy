@@ -6,9 +6,7 @@ const reqString = { type: String, required: true };
 const schema = new Schema({
     _id: reqString,
     username: reqString,
-    day: reqString,
-    month: reqString,
-    flag: { type: Boolean, required: true }
+    date: { type: Date, required: true }
 });
 
 const name = 'birthday';

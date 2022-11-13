@@ -59,6 +59,15 @@ const updateChronology = async id => {
     return chronologies[id];
 };
 
+const sortBirthdays = array => {
+    let newArray = [];
+    for (let i = 0; i < 12; i++) {
+        const filtered = array.filter(({ date }) => date.getMonth() === i);
+        newArray = newArray.concat(filtered.sort(({ date: date1 }, { date: date2 }) => date1.getDate() - date2.getDate()));
+    }
+    return newArray;
+};
+
 module.exports = {
     timeouts: {},
 
@@ -161,13 +170,11 @@ module.exports = {
     getBirthdays: () => birthdays,
     updateBirthdays: async () => {
         const birthdaySchema = require('../models/birthday-schema');
-        const results = await birthdaySchema.find({}).sort({ month: 'asc', day: 'asc' });
+        const results = await birthdaySchema.find({});
         birthdays = {};
-        results.forEach(element => {
+        sortBirthdays(results).forEach(element => {
             birthdays[element._id] = {
-                day: element.day,
-                month: element.month,
-                flag: element.flag,
+                date: element.date,
                 user: element.username
             };
         });

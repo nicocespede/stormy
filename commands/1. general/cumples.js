@@ -16,8 +16,8 @@ const validateDate = (instance, guild, date) => {
     };
     if (!date) return ret;
     ret.reason = 'La fecha debe estar en el formato DD/MM.';
-    if (date.length != 5) return ret;
-    if (date.substring(2, 3) != '/') return ret;
+    if (date.length !== 5) return ret;
+    if (date.substring(2, 3) !== '/') return ret;
     const split = date.split('/');
     const day = parseInt(split[0]);
     const month = parseInt(split[1]);
@@ -95,28 +95,26 @@ module.exports = {
                 const members = await guild.members.fetch(Object.keys(birthdays)).catch(console.error);
 
                 for (const key in birthdays) if (Object.hasOwnProperty.call(birthdays, key)) {
-                    const bday = birthdays[key];
+                    const { date, user: username } = birthdays[key];
                     const member = members.get(key);
 
                     if (!member) {
-                        log(`> El usuario con ID ${key} ya no está en el servidor.`, 'yellow');
+                        log(`> El usuario ${username} ya no está en el servidor.`, 'yellow');
                         continue;
                     }
 
-                    const month = parseInt(bday.month) - 1;
-                    if (previousMonth != month) {
+                    const month = date.getMonth();
+                    if (previousMonth !== month) {
                         usersField.value += `\n**${months[month]}**\n`;
                         datesField.value += `\n\u200b\n`;
                     }
                     usersField.value += `${member.user.username}\n`;
-                    datesField.value += `${bday.day}/${bday.month}\n`;
+                    datesField.value += `${date.getDate()}/${month + 1}\n`;
                     previousMonth = month;
                 }
 
                 fields = [usersField, datesField];
             }
-
-
 
             return {
                 custom: true,
@@ -128,10 +126,10 @@ module.exports = {
                     .setThumbnail(`${githubRawURL}/assets/thumbs/birthday.png`)],
                 ephemeral: true
             };
-        } else if (subCommand === 'agregar') {
+        }
+
+        if (subCommand === 'agregar') {
             const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
-            const date = message ? args[1] : interaction.options.getString('fecha');
-            const birthdays = getBirthdays() || await updateBirthdays();
             if (!target)
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
@@ -143,53 +141,60 @@ module.exports = {
                     custom: true,
                     ephemeral: true
                 }
-            else {
-                const validDate = validateDate(instance, guild, date);
-                if (!validDate.valid)
-                    return { content: validDate.reason, custom: true, ephemeral: true }
-                else if (Object.keys(birthdays).includes(target.user.id))
-                    return { content: `⚠ Este usuario ya tiene registrado su cumpleaños.`, custom: true, ephemeral: true }
+
+            const date = message ? args[1] : interaction.options.getString('fecha');
+            const birthdays = getBirthdays() || await updateBirthdays();
+
+            const validDate = validateDate(instance, guild, date);
+            if (!validDate.valid)
+                return { content: validDate.reason, custom: true, ephemeral: true };
+
+            if (Object.keys(birthdays).includes(target.user.id))
+                return { content: `⚠ Este usuario ya tiene registrado su cumpleaños.`, custom: true, ephemeral: true };
+
+            const row = new ActionRowBuilder()
+                .addComponents(new ButtonBuilder().setCustomId('add_yes')
+                    .setEmoji('✔️')
+                    .setLabel('Confirmar')
+                    .setStyle(ButtonStyle.Success))
+                .addComponents(new ButtonBuilder().setCustomId('add_no')
+                    .setEmoji('❌')
+                    .setLabel('Cancelar')
+                    .setStyle(ButtonStyle.Danger));
+            const messageOrInteraction = message ? message : interaction;
+            const reply = await messageOrInteraction.reply({
+                components: [row],
+                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
+                ephemeral: true
+            });
+
+            const filter = btnInt => user.id === btnInt.user.id;
+
+            const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
+
+            collector.on('end', async collection => {
+                const edit = { components: [] };
+                if (!collection.first())
+                    edit.content = '⌛ La acción expiró.';
+                else if (collection.first().customId === 'add_no')
+                    edit.content = '❌ La acción fue cancelada.';
                 else {
-                    const row = new ActionRowBuilder()
-                        .addComponents(new ButtonBuilder().setCustomId('add_yes')
-                            .setEmoji('✔️')
-                            .setLabel('Confirmar')
-                            .setStyle(ButtonStyle.Success))
-                        .addComponents(new ButtonBuilder().setCustomId('add_no')
-                            .setEmoji('❌')
-                            .setLabel('Cancelar')
-                            .setStyle(ButtonStyle.Danger));
-                    const messageOrInteraction = message ? message : interaction;
-                    const reply = await messageOrInteraction.reply({
-                        components: [row],
-                        content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
-                        ephemeral: true
-                    });
-
-                    const filter = (btnInt) => {
-                        return user.id === btnInt.user.id;
-                    }
-
-                    const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
-
-                    collector.on('end', async collection => {
-                        var edit = { components: [] };
-                        if (!collection.first())
-                            edit.content = '⌛ La acción expiró.';
-                        else if (collection.first().customId === 'add_yes') {
-                            await addBirthday(target.user.id, target.user.username, date.split('/')[0], date.split('/')[1]).then(async () => {
-                                edit.content = '✅ La acción fue completada.';
-                                channel.send({ content: `Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
-                                await updateBirthdays();
-                            }).catch(console.error);
-                        } else
-                            edit.content = '❌ La acción fue cancelada.';
-                        message ? await reply.edit(edit) : await interaction.editReply(edit);
-                    });
+                    const splittedDate = date.split('/');
+                    const today = new Date();
+                    let realDate = new Date(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
+                    if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
+                        realDate.setFullYear(realDate.getFullYear() + 1);
+                    await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
+                    edit.content = '✅ La acción fue completada.';
+                    channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
+                    await updateBirthdays();
                 }
-            }
+                message ? await reply.edit(edit) : await interaction.editReply(edit);
+            });
             return;
-        } else if (subCommand === 'borrar' || subCommand === 'eliminar') {
+        }
+
+        if (subCommand === 'borrar' || subCommand === 'eliminar') {
             const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
             const birthdays = getBirthdays() || await updateBirthdays();
             if (!target)
@@ -236,7 +241,7 @@ module.exports = {
                     else if (collection.first().customId === 'delete_yes')
                         await deleteBirthday(target.user.id).then(async () => {
                             edit.content = '✅ La acción fue completada.';
-                            channel.send({ content: `El cumpleaños fue borrado de manera exitosa.` });
+                            channel.send({ content: `✅ El cumpleaños fue borrado de manera exitosa.` });
                             updateBirthdays();
                         }).catch(console.error);
                     else
@@ -245,10 +250,11 @@ module.exports = {
                 });
             }
             return;
-        } else
-            return {
-                content: '⚠ Comando inválido, los comandos válidos son: _ver, agregar, borrar, eliminar_',
-                custom: true
-            };
+        }
+
+        return {
+            content: '⚠ Comando inválido, los comandos válidos son: _ver, agregar, borrar, eliminar_',
+            custom: true
+        };
     }
 }

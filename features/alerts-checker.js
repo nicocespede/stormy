@@ -1,19 +1,12 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateIds, getBirthdays, updateBirthdays, getAnniversaries, updateAnniversaries, timeouts } = require('../src/cache');
+const { getIds, updateIds, updateBirthdays, updateAnniversaries, timeouts } = require('../src/cache');
 const { applyText, isOwner } = require('../src/general');
 const { convertTZ, log } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
 const { relativeSpecialDays, githubRawURL } = require('../src/constants');
-
-const getToday = () => {
-    const today = convertTZ(new Date());
-    let dd = today.getDate();
-    let mm = today.getMonth() + 1;
-    if (dd < 10) dd = '0' + dd;
-    if (mm < 10) mm = '0' + mm;
-    return `${dd}/${mm}`;
-};
+const anniversarySchema = require('../models/anniversary-schema');
+const birthdaySchema = require('../models/birthday-schema');
 
 const generateBirthdayImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
@@ -64,60 +57,50 @@ module.exports = async client => {
     const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
 
     const check = async () => {
-        const todayDayAndMonth = getToday();
+        const today = convertTZ(new Date());
 
-        const birthdays = getBirthdays() || await updateBirthdays();
-        const birthdaysArray = Object.entries(birthdays);
-        const todayBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` === todayDayAndMonth && !value.flag);
-        const pastBirthdays = birthdaysArray.filter(([_, value]) => `${value.day}/${value.month}` !== todayDayAndMonth && value.flag);
+        const birthdays = await birthdaySchema.find({ date: { $lt: today } });
 
         let members;
-        let membersIds = [...new Set(todayBirthdays.map(([id, _]) => id))];
+        let membersIds = [...new Set(birthdays.map(({ _id }) => _id))];
 
         if (membersIds.length > 0) {
             members = await guild.members.fetch(membersIds).catch(console.error);
 
-            for (const [id, _] of todayBirthdays) {
-                const member = members.get(id);
+            for (const birthday of birthdays) {
+                const { _id, date, username } = birthday;
+
+                const member = members.get(_id);
 
                 if (!member) {
-                    log(`> El usuario con ID ${id} ya no está en el servidor.`, 'yellow');
+                    log(`> El usuario ${username} ya no está en el servidor.`, 'yellow');
                     continue;
                 }
 
                 const attachment = await generateBirthdayImage(member.user).catch(console.error);
-                const msg = id === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
-                    : `@everyone\n\nHoy es el cumpleaños de <@${id}>, ¡feliz cumpleaños!`;
+                const msg = _id === ids.users.bot ? `@everyone\n\n¡Hoy es mi cumpleaños!`
+                    : `@everyone\n\nHoy es el cumpleaños de <@${_id}>, ¡feliz cumpleaños!`;
                 const m = await channel.send({ content: msg, files: [attachment] }).catch(console.error);
                 for (const emoji of ['🎈', '🥳', '🎉', '🎂']) {
                     await m.react(emoji);
                     await new Promise(res => setTimeout(res, 1000 * 0.5));
                 }
-                await updateBirthday(id, true).catch(console.error);
+                await updateBirthday(_id, date.setYear(date.getFullYear() + 1)).catch(console.error);
                 await updateBirthdays();
             }
         }
 
-        for (const [id, _] of pastBirthdays) {
-            await updateBirthday(id, false).catch(console.error);
-            await updateBirthdays();
-        }
+        const anniversaries = await anniversarySchema.find({ date: { $lt: today } });
 
-        const anniversaries = getAnniversaries() || await updateAnniversaries();
-        const todayAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) === todayDayAndMonth && !a.flag);
-        const pastAnniversaries = anniversaries.filter(a => a.date.substring(0, 5) !== todayDayAndMonth && a.flag);
-
-        const today = convertTZ(new Date());
-
-        const membersIds1 = [...new Set(todayAnniversaries.map(({ id1 }) => id1))];
-        const membersIds2 = [...new Set(todayAnniversaries.map(({ id2 }) => id2))];
+        const membersIds1 = [...new Set(anniversaries.map(({ id1 }) => id1))];
+        const membersIds2 = [...new Set(anniversaries.map(({ id2 }) => id2))];
         membersIds = membersIds1.concat(membersIds2);
 
         if (membersIds.length > 0) {
             members = await guild.members.fetch(membersIds).catch(console.error);
 
-            for (const anniversary of todayAnniversaries) {
-                const { date, id1, id2 } = anniversary;
+            for (const anniversary of anniversaries) {
+                const { id1, id2, date, year } = anniversary;
 
                 const member1 = members.get(id1);
                 const member2 = members.get(id2);
@@ -127,21 +110,15 @@ module.exports = async client => {
                     continue;
                 }
 
-                const years = today.getFullYear() - parseInt(date.substring(6));
-                const m = await channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, ¡feliz aniversario! 💑` }).catch(console.error);
+                const years = today.getFullYear() - year;
+                const m = await channel.send({ content: `@everyone\n\nHoy <@${member1.user.id}> y <@${member2.user.id}> cumplen ${years} años de novios, **¡feliz aniversario!** 💑` }).catch(console.error);
                 for (const emoji of ['🥰', '😍', '💏']) {
                     await m.react(emoji);
                     await new Promise(res => setTimeout(res, 1000 * 0.5));
                 }
-                await updateAnniversary(anniversary.id1, anniversary.id2, true).catch(console.error);
+                await updateAnniversary(anniversary.id1, anniversary.id2, date.setYear(date.getFullYear() + 1)).catch(console.error);
                 await updateAnniversaries();
             }
-        }
-
-        for (const anniversary of pastAnniversaries) {
-            const { id1, id2 } = anniversary;
-            await updateAnniversary(id1, id2, false).catch(console.error);
-            await updateAnniversaries();
         }
 
         if (today.getHours() === 0 && today.getMinutes() === 0) {

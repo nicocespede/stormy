@@ -110,7 +110,7 @@ module.exports = {
 
             } else {
                 const splittedArg = arg.split(' ');
-                if (splittedArg.length != 2) {
+                if (splittedArg.length !== 2) {
                     reply.content = `⚠ **¡Formato de fecha inválido!** Formatos válidos: _DD/MM/AAAA HH:MM_ o _DD-MM-AAAA HH:MM_.`;
                     return reply;
                 }
