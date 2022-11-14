@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionT
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { log, getFourHoursForwardDate } = require('../../src/util');
+const { log } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     var ret = {
@@ -181,7 +181,7 @@ module.exports = {
                 else {
                     const splittedDate = date.split('/');
                     const today = new Date();
-                    let realDate = getFourHoursForwardDate(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
+                    let realDate = new Date(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
                     if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);

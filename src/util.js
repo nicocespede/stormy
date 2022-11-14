@@ -69,11 +69,5 @@ module.exports = {
             if (i === split.length - 1) ret.push(chunk)
         }
         return ret;
-    },
-
-    getFourHoursForwardDate: string => {
-        const date = new Date(string);
-        date.setHours(date.getHours() + 4);
-        return date;
     }
 };

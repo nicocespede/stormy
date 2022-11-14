@@ -107,7 +107,6 @@ module.exports = {
 
                 date = convertTZ(new Date());
                 date.setMinutes(date.getMinutes() + totalTime);
-
             } else {
                 const splittedArg = arg.split(' ');
                 if (splittedArg.length !== 2) {
