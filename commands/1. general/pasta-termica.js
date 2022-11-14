@@ -73,7 +73,6 @@ module.exports = {
             const userDate = dates[user.id];
             if (dates[user.id]) {
                 const today = convertTZ(new Date());
-                console.log(today)
                 const splittedUserDate = userDate.split('/');
                 var totalTime = Math.abs(today - convertTZ(`${splittedUserDate[1]}/${splittedUserDate[0]}/${splittedUserDate[2]}`)) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
