@@ -66,9 +66,9 @@ module.exports = {
                     .setStyle(ButtonStyle.Danger));
 
             const newChannel = await guild.channels.create({ name: '❓┃QUIZ', type: ChannelType.GuildText });
-            newChannel.permissionOverwrites.edit(client.user.id, { 'ViewChannel': true, SEND_MESSAGES: true });
-            newChannel.permissionOverwrites.edit(user.id, { 'ViewChannel': true, SEND_MESSAGES: true });
-            newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { 'ViewChannel': false });
+            newChannel.permissionOverwrites.edit(client.user.id, { ViewChannel: true, SendMessages: true });
+            newChannel.permissionOverwrites.edit(user.id, { ViewChannel: true, SendMessages: true });
+            newChannel.permissionOverwrites.edit(guild.roles.everyone.id, { ViewChannel: false });
 
             var msg = {
                 components: [row],
