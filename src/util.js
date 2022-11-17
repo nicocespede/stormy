@@ -26,13 +26,6 @@ module.exports = {
     },
 
     log: (string, color) => {
-        const date = convertTZ(new Date());
-        const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
-        const month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
-        const hours = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours();
-        const minutes = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
-        const seconds = date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds();
-        const now = `${day}-${month}-${date.getFullYear()} ${hours}:${minutes}:${seconds}`;
         let colored;
         switch (color) {
             case 'blue':
@@ -51,7 +44,7 @@ module.exports = {
                 colored = string;
                 break;
         }
-        console.log(`${now}: ${colored}`);
+        console.log(colored);
     },
 
     splitEmbedDescription: string => {
