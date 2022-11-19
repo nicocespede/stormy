@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { getKruMatches, updateKruMatches } = require('../../src/cache');
 const { githubRawURL } = require('../../src/constants');
-const { convertTime } = require('../../src/general');
+const { convertTime } = require('../../src/util');
 
 module.exports = {
     category: 'Juegos/Películas',

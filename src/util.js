@@ -69,5 +69,19 @@ module.exports = {
             if (i === split.length - 1) ret.push(chunk)
         }
         return ret;
+    },
+
+    convertTime: time => {
+        let split = time.split(' ');
+        const indicator = split.pop();
+        split = split[0].split(':');
+        switch (indicator) {
+            case 'am':
+                return `${split[0] === '12' ? '00' : split[0] < 10 ? `0${split[0]}` : split[0]}:${split[1]}`;
+            case 'pm':
+                const parsedHours = parseInt(split[0]);
+                const finalHours = parsedHours + 12;
+                return `${finalHours === 24 ? '12' : finalHours < 10 ? `0${finalHours}` : finalHours}:${split[1]}`;
+        }
     }
 };

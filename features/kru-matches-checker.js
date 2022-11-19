@@ -1,6 +1,5 @@
 const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../src/cache');
-const { convertTime } = require('../src/general');
-const { convertTZ, log } = require('../src/util');
+const { convertTime, convertTZ, log } = require('../src/util');
 
 module.exports = async client => {
     const check = async () => {

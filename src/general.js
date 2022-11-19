@@ -69,20 +69,6 @@ const getMembersStatus = async channel => {
     return { size: membersSize, valid: valid, invalid: invalid };
 };
 
-const convertTime = time => {
-    let split = time.split(' ');
-    const indicator = split.pop();
-    split = split[0].split(':');
-    switch (indicator) {
-        case 'am':
-            return `${split[0] === '12' ? '00' : split[0]}:${split[1]}`;
-        case 'pm':
-            const parsedMinutes = parseInt(split[0]);
-            const finalMinutes = parsedMinutes + 12;
-            return `${finalMinutes === 24 ? '12' : `${finalMinutes}`}:${split[1]}`;
-    }
-};
-
 const lastUpdateToString = (lastUpdate, upperCase) => {
     const date = new Date(`${lastUpdate.substring(6, 10)}/${lastUpdate.substring(3, 5)}/${lastUpdate.substring(0, 2)}`);
     const today = new Date();
@@ -226,8 +212,6 @@ module.exports = {
             log('> Nombre de usuario actualizado', 'green');
         }
     },
-
-    convertTime,
 
     lastUpdateToString,
 

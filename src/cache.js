@@ -374,25 +374,20 @@ module.exports = {
             const matches = [];
             a.each((_, el) => {
                 const match = {
-                    team1Name: '', team1Tag: '',
-                    team2Name: '', team2Tag: '',
-                    remaining: '',
-                    date: '',
-                    time: '',
+                    remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text(),
                     url: urlBase + el.attribs['href']
                 };
                 const teams = $(el).children('.m-item-team.text-of');
                 teams.each((i, team) => {
                     const names = $(team).children().get();
                     const name = $(names[0]).text().trim();
-                    match[`team${i + 1}Name`] = name != 'TBD' ? name : 'A determinar';
-                    match[`team${i + 1}Tag`] = name != 'TBD' ? $(names[1]).text().trim() : name;
+                    match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
+                    match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
                 });
-                match.remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text();
                 const date = $(el).children('.m-item-date').text().trim();
                 const split = date.split(`\t`);
                 match.date = split.shift();
-                match.time = split.pop()
+                match.time = split.pop();
                 matches.push(match);
             });
             kruMatches = matches;
