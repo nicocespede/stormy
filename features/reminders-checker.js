@@ -1,10 +1,10 @@
 const { updateReminders, timeouts } = require('../src/cache');
-const { convertTZ, log } = require('../src/util');
+const { log } = require('../src/util');
 const reminderSchema = require('../models/reminder-schema');
 
 module.exports = client => {
     const check = async () => {
-        const date = convertTZ(new Date());
+        const date = new Date();
         date.setMinutes(date.getMinutes() + 1);
         date.setSeconds(0);
         date.setMilliseconds(0);

@@ -56,8 +56,8 @@ module.exports = {
             if (filtered.length > 0) {
                 let description = `Hola <@${user.id}>, tus recordatorios guardados son:\n\n`;
                 for (let i = 0; i < filtered.length; i++) {
-                    const reminder = filtered[i];
-                    description += `**${i + 1}.** ${reminder.description}: **${reminder.date.toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
+                    const { date, description: desc } = filtered[i];
+                    description += `**${i + 1}.** ${desc}: **${convertTZ(date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
                 }
 
                 interaction.reply({
@@ -105,7 +105,7 @@ module.exports = {
                         totalTime += time;
                 }
 
-                date = convertTZ(new Date());
+                date = new Date();
                 date.setMinutes(date.getMinutes() + totalTime);
             } else {
                 const splittedArg = arg.split(' ');
@@ -128,7 +128,9 @@ module.exports = {
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
-                date = new Date(`${split[1]}/${split[0]}/${split[2]} ${timeMatch[0]}`);
+                const hour = timeMatch[0];
+                date = new Date(`${split[2]}-${split[1]}-${split[0]}T${hour.length < 5 ? `0${hour}` : hour}Z`);
+                date.setHours(date.getHours() + 3);
 
                 if (date < new Date()) {
                     reply.content = '⚠ La fecha introducida ya pasó.';
@@ -136,11 +138,12 @@ module.exports = {
                 }
             }
 
-            await new reminderSchema({ description: description, userId: user.id, date: date }).save();
+            await new reminderSchema({ description: description, userId: user.id, date }).save();
             log('> Recordatorio agregado a la base de datos', 'green');
             updateReminders();
 
-            reply.content = `✅ Tu recordatorio para el **${date.toLocaleDateString('es-AR')}** a las **${date.toLocaleTimeString('es-AR', { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
+            const convertedDate = convertTZ(date);
+            reply.content = `✅ Tu recordatorio para el **${convertedDate.toLocaleDateString('es-AR')}** a las **${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
             return reply;
 
         } else if (subCommand === 'borrar') {

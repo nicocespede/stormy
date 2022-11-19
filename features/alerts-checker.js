@@ -123,7 +123,7 @@ module.exports = async client => {
         if (today.getHours() === 3 && today.getMinutes() === 0) {
             const date = today.getDate();
             const month = today.getMonth() + 1;
-            let msg = '';
+            let msg;
             let emojis = [];
             if (date === 1 && month === 1) {
                 msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz año nuevo** a todos los miembros del servidor! 🥂🌠`;
@@ -139,7 +139,7 @@ module.exports = async client => {
                 emojis = ['🎅🏻', '🎄', '🎁'];
             }
 
-            if (msg !== '') {
+            if (msg) {
                 const m = await channel.send(msg);
                 for (const emoji of emojis) {
                     await m.react(emoji);
