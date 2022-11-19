@@ -1,8 +1,8 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateIds, updateBirthdays, updateAnniversaries, timeouts } = require('../src/cache');
+const { getIds, updateIds, updateBirthdays, timeouts } = require('../src/cache');
 const { applyText, isOwner } = require('../src/general');
-const { convertTZ, log } = require('../src/util');
+const { log } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
 const { relativeSpecialDays, githubRawURL } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
@@ -57,7 +57,7 @@ module.exports = async client => {
     const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
 
     const check = async () => {
-        const today = convertTZ(new Date());
+        const today = new Date();
 
         const birthdays = await birthdaySchema.find({ date: { $lt: today } });
 
@@ -117,11 +117,10 @@ module.exports = async client => {
                     await new Promise(res => setTimeout(res, 1000 * 0.5));
                 }
                 await updateAnniversary(anniversary.id1, anniversary.id2, date.setYear(date.getFullYear() + 1)).catch(console.error);
-                await updateAnniversaries();
             }
         }
 
-        if (today.getHours() === 0 && today.getMinutes() === 0) {
+        if (today.getHours() === 3 && today.getMinutes() === 0) {
             const date = today.getDate();
             const month = today.getMonth() + 1;
             let msg = '';

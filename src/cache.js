@@ -19,7 +19,6 @@ let banned;
 var sombraBans;
 let billboardMessageInfo;
 var rolesMessageInfo;
-var anniversaries;
 let icon;
 let mode;
 let lastAction;
@@ -229,14 +228,6 @@ module.exports = {
         };
         log('> Caché de mensaje de roles actualizado', 'green');
         return rolesMessageInfo;
-    },
-
-    getAnniversaries: () => anniversaries,
-    updateAnniversaries: async () => {
-        const anniversarySchema = require('../models/anniversary-schema');
-        anniversaries = await anniversarySchema.find({});
-        log('> Caché de aniversarios actualizado', 'green');
-        return anniversaries;
     },
 
     getIcon: () => icon,
