@@ -5,7 +5,7 @@ const { addBirthday, deleteBirthday } = require('../../src/mongodb');
 const { log } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
-    var ret = {
+    const ret = {
         valid: false,
         reason: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
             REASON: "Debe haber una fecha luego de la mención.",
@@ -109,7 +109,9 @@ module.exports = {
                         datesField.value += `\n\u200b\n`;
                     }
                     usersField.value += `${member.user.username}\n`;
-                    datesField.value += `${date.getDate()}/${month + 1}\n`;
+                    const dateInt = date.getDate();
+                    const monthInt = month + 1;
+                    datesField.value += `${dateInt < 10 ? `0${dateInt}` : dateInt}/${monthInt < 10 ? `0${monthInt}` : monthInt}\n`;
                     previousMonth = month;
                 }
 
@@ -164,7 +166,7 @@ module.exports = {
             const messageOrInteraction = message ? message : interaction;
             const reply = await messageOrInteraction.reply({
                 components: [row],
-                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?`,
+                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?\n\u200b`,
                 ephemeral: true
             });
 
@@ -181,7 +183,7 @@ module.exports = {
                 else {
                     const splittedDate = date.split('/');
                     const today = new Date();
-                    let realDate = new Date(`${splittedDate[1]}/${splittedDate[0]}/${today.getFullYear()}`);
+                    let realDate = new Date(`${today.getFullYear()}-${splittedDate[1]}-${splittedDate[0]}T03:00Z`);
                     if (today > realDate && (today.getDate() !== realDate.getDate() || today.getMonth() !== realDate.getMonth()))
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
