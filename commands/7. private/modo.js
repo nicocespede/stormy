@@ -35,7 +35,7 @@ module.exports = {
 
         const ids = getIds() || await updateIds();
         const modesData = {
-            afa: { name: 'Selección', username: 'StormY 🇦🇷', on: '¡VAMOS CARAJO! 🇦🇷' },
+            afa: { name: 'Selección', username: 'AFA StormY', on: '¡VAMOS CARAJO! 🇦🇷' },
             kru: { name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
         };
 
