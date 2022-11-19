@@ -1,5 +1,5 @@
 const { githubRawURL, testing, color, local } = require('./constants');
-const { log } = require('./util');
+const { convertTime, log } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -373,7 +373,11 @@ module.exports = {
             const a = $('.wf-card.fc-flex.m-item');
             const matches = [];
             a.each((_, el) => {
+                const split = $(el).children('.m-item-date').text().trim().split(`\t`);
+                const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
+                date.setHours(date.getHours() + 5);
                 const match = {
+                    date,
                     remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text(),
                     url: urlBase + el.attribs['href']
                 };
@@ -384,10 +388,6 @@ module.exports = {
                     match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
                     match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
                 });
-                const date = $(el).children('.m-item-date').text().trim();
-                const split = date.split(`\t`);
-                match.date = split.shift();
-                match.time = split.pop();
                 matches.push(match);
             });
             kruMatches = matches;

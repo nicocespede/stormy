@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { getKruMatches, updateKruMatches } = require('../../src/cache');
 const { githubRawURL } = require('../../src/constants');
-const { convertTime } = require('../../src/util');
+const { convertTZ } = require('../../src/util');
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -21,10 +21,12 @@ module.exports = {
 
         const matches = getKruMatches() || await updateKruMatches();
         for (const m in matches) if (Object.hasOwnProperty.call(matches, m)) {
-            const { date, remaining, team1Tag, team2Tag, time, url } = matches[m];
+            const { date, remaining, team1Tag, team2Tag, url } = matches[m];
             duelsField.value += `**${team1Tag}** vs **${team2Tag}**\n\n`;
-            const formattedDate = date.split('/').slice(1).reverse().join('/');
-            datesField.value += `${formattedDate} ${convertTime(time)} **(${remaining})**\n\n`;
+            const convertedDate = convertTZ(date);
+            const dateInt = convertedDate.getDate();
+            const month = convertedDate.getMonth() + 1;
+            datesField.value += `${dateInt < 10 ? `0${dateInt}` : dateInt}/${month < 10 ? `0${month}` : month} ${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })} **(${remaining})**\n\n`;
             urlsField.value += `**[🌐](${url})**\n\n`;
         }
 
