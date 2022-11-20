@@ -1,19 +1,17 @@
-const { getSmurfs, updateSmurfs, timeouts } = require('../src/cache');
+const { updateSmurfs, timeouts } = require('../src/cache');
+const smurfSchema = require('../models/smurf-schema');
 const { updateSmurf } = require('../src/mongodb');
 
 module.exports = _ => {
     const check = async () => {
         const today = new Date();
+        const expiredBans = await smurfSchema.find({ bannedUntil: { $lt: today } });
 
-        const smurfs = getSmurfs() || await updateSmurfs();
-        const bannedAccounts = Object.entries(smurfs).filter(([_, value]) => value.bannedUntil);
-        const expiredBans = bannedAccounts.filter(([_, value]) => today > value.bannedUntil);
-
-        for (const [command, _] of expiredBans)
-            await updateSmurf(command, null).catch(console.error);
-
-        if (expiredBans.length > 0)
+        if (expiredBans.length > 0) {
+            for (const { _id } of expiredBans)
+                await updateSmurf(_id, { bannedUntil: null }).catch(console.error);
             await updateSmurfs();
+        }
 
         timeouts['valorant-bans-expiration-checker'] = setTimeout(check, 1000 * 60);
     };
