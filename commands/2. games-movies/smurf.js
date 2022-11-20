@@ -198,12 +198,12 @@ module.exports = {
             reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
         else if (!isAuthorized)
             reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
-        else if (!Object.keys(smurfs).includes(id))
+        else if (!Object.keys(smurfs).includes(id.toLowerCase()))
             reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
         else {
             const vipRole = await defaultGuild.roles.fetch(ids.roles.vip).catch(console.error);
             const isVip = await isOwner(user.id) || vipRole.members.has(user.id);
-            const account = smurfs[id];
+            const account = smurfs[id.toLowerCase()];
             if (account.vip && !isVip)
                 reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
             else {
@@ -234,9 +234,9 @@ module.exports = {
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
                 { name: 'Contraseña:', value: account.password, inline: true }])
                     .setThumbnail(`attachment://rank.png`);
+                reply.content = null;
             }
         }
-        reply.content = null;
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
         return;
     }
