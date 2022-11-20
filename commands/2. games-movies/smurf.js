@@ -4,7 +4,7 @@ const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
 const { prefix, githubRawURL, color } = require('../../src/constants');
 const { isOwner } = require('../../src/general');
-const { log } = require('../../src/util');
+const { log, convertTZ } = require('../../src/util');
 
 const translateRank = rank => {
     if (!rank)
@@ -228,7 +228,7 @@ module.exports = {
                     reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
                 if (account.bannedUntil)
-                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${account.bannedUntil.toLocaleDateString('es-AR')}** ⚠`);
+                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString('es-AR')}** ⚠`);
                 else if (user.id !== ids.users.stormer)
                     reply.components = [getRow()];
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },

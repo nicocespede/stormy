@@ -177,7 +177,7 @@ module.exports = {
                         totalTime += time;
                 }
 
-                date = convertTZ(new Date());
+                date = new Date();
                 date.setMinutes(date.getMinutes() + totalTime);
 
             } else {
@@ -190,7 +190,7 @@ module.exports = {
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
-                date = new Date(`${split[1]}/${split[0]}/${split[2]}`);
+                date = new Date(`${split[2]}-${split[1]}-${split[0]}T03:00Z`);
 
                 if (date < new Date()) {
                     reply.content = '⚠ La fecha introducida ya pasó.';
