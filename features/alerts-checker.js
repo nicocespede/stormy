@@ -2,7 +2,7 @@ const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
 const { getIds, updateIds, updateBirthdays, timeouts } = require('../src/cache');
 const { applyText, isOwner } = require('../src/general');
-const { log } = require('../src/util');
+const { log, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
 const { relativeSpecialDays, githubRawURL } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
@@ -120,9 +120,10 @@ module.exports = async client => {
             }
         }
 
-        if (today.getHours() === 3 && today.getMinutes() === 0) {
-            const date = today.getDate();
-            const month = today.getMonth() + 1;
+        const convertedToday = convertTZ(today);
+        if (convertedToday.getHours() === 0 && convertedToday.getMinutes() === 0) {
+            const date = convertedToday.getDate();
+            const month = convertedToday.getMonth() + 1;
             let msg;
             let emojis = [];
             if (date === 1 && month === 1) {
