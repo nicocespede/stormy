@@ -10,7 +10,7 @@ const { log } = require('../../src/util');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
 
-const formatNumber = (value, decimalPlaces) => value.toLocaleString('es-AR', { maximumFractionDigits: decimalPlaces });
+const formatNumber = (value, maximumFractionDigits, currency) => value.toLocaleString('es-AR', { currency, style: 'currency', maximumFractionDigits });
 
 module.exports = {
     category: 'Cotizaciones',
@@ -35,7 +35,7 @@ module.exports = {
     expectedArgs: '<moneda> <cantidad>',
     slash: 'both',
 
-    callback: async ({ client, args, user, message, interaction, instance, guild }) => {
+    callback: async ({ args, user, message, interaction, instance, guild }) => {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const argsCurrency = message ? args[0] : interaction.options.getString('moneda');
         const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
@@ -88,15 +88,14 @@ module.exports = {
                 let imageURL = `${githubRawURL}/assets/thumbs/us-dollar-circled.png`;
                 let coinPrice;
 
-                if (argsCurrency != 'usd') {
+                if (argsCurrency !== 'usd') {
                     coinID = currencies[argsCurrency].id;
-                    let data = await CoinGeckoClient.coins.fetch(coinID, {});
-                    data = data.data;
+                    const { data } = await CoinGeckoClient.coins.fetch(coinID, {});
                     currency = data.localization.es;
                     imageURL = data.image.large;
-                    data = data.market_data;
-                    coinPrice = data.current_price.usd;
-                    pricesField.value += '• ' + currency + ': **USD$ ' + formatNumber(coinPrice, 4) + '**\n\n';
+                    const { market_data } = data;
+                    coinPrice = market_data.current_price.usd;
+                    pricesField.value += `• ${currency}: **${formatNumber(coinPrice, 4, 'USD')}**\n\n`;
                 }
                 const coinImage = await Canvas.loadImage(imageURL);
 
@@ -109,8 +108,8 @@ module.exports = {
                         const element = variants[variant];
                         const finalPrice = coinID ? coinPrice * element.ask * quantity : element.ask * quantity;
                         variantsField.value += element.title + '\n\n';
-                        valuesField.value += `**ARS$ ` + formatNumber(finalPrice, 2) + `**\n\n`;
-                        pricesField.value += `• ${element.title} (venta): **ARS$ ${formatNumber(element.ask, 2)}**\n\n`;
+                        valuesField.value += `**${formatNumber(finalPrice, 2, 'ARS')}**\n\n`;
+                        pricesField.value += `• ${element.title} (venta): **${formatNumber(element.ask, 2, 'ARS')}**\n\n`;
                     }
 
                 reply.embeds = [new EmbedBuilder()

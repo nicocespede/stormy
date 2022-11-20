@@ -22,19 +22,17 @@ module.exports = {
         };
         let error = false;
         try {
-            for (const variant in variants)
-                if (Object.hasOwnProperty.call(variants, variant)) {
-                    const element = variants[variant];
-                    const url = urlBase + element.url;
-                    const { data } = await axios.get(url);
-                    const $ = cheerio.load(data);
-                    const values = $('.tile.is-parent.is-8');
-                    for (const child of values.children())
-                        if ($(child).children('.topic').text() === 'Compra')
-                            element.bid = $(child).children('.value').text().replace('.', ',');
-                        else
-                            element.ask = $(child).children('.value').text().replace('.', ',');
-                }
+            for (const variant in variants) if (Object.hasOwnProperty.call(variants, variant)) {
+                const element = variants[variant];
+                const { data } = await axios.get(urlBase + element.url);
+                const $ = cheerio.load(data);
+                const values = $('.tile.is-parent.is-8');
+                for (const child of values.children())
+                    if ($(child).children('.topic').text() === 'Compra')
+                        element.bid = $(child).children('.value').text().replace('.', ',');
+                    else
+                        element.ask = $(child).children('.value').text().replace('.', ',');
+            }
         } catch (e) {
             error = true;
             log(e, 'red');
@@ -49,13 +47,12 @@ module.exports = {
             const bidField = { name: 'COMPRA', value: ``, inline: true };
             const askField = { name: 'VENTA', value: ``, inline: true };
 
-            for (const variant in variants)
-                if (Object.hasOwnProperty.call(variants, variant)) {
-                    const element = variants[variant];
-                    variantsField.value += element.title + '\n\n';
-                    bidField.value += element.bid ? `ARS${element.bid}\n\n` : '-\n\n';
-                    askField.value += `ARS${element.ask}\n\n`;
-                }
+            for (const variant in variants) if (Object.hasOwnProperty.call(variants, variant)) {
+                const { ask, bid, title } = variants[variant];
+                variantsField.value += title + '\n\n';
+                bidField.value += bid ? `${bid}\n\n` : '-\n\n';
+                askField.value += `${ask}\n\n`;
+            }
 
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**COTIZACIÓN DEL DÓLAR**`)

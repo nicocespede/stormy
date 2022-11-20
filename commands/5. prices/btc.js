@@ -18,18 +18,17 @@ module.exports = {
         const cmd = message.content.toLowerCase().split(' ')[0].substring(1);
         const coinID = currencies[cmd].id;
         const color = currencies[cmd].color;
-        let data = await CoinGeckoClient.coins.fetch(coinID, {});
-        data = data.data;
+        const { data } = await CoinGeckoClient.coins.fetch(coinID, {});
         const currency = data.localization.es;
         const imageURL = data.image.large;
-        data = data.market_data;
-        const price = data.current_price.usd;
-        const date = new Date(data.last_updated);
+        const { market_data } = data;
+        const price = market_data.current_price.usd;
+        const date = new Date(market_data.last_updated);
         return {
             custom: true,
             embeds: [new EmbedBuilder()
                 .setTitle(`**${currency}**`)
-                .setDescription(`Hola <@${user.id}>, la cotización del **${currency}** es **US$ ${price}**.\n\n*Actualizado por última vez el ${date.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}.*`)
+                .setDescription(`Hola <@${user.id}>, la cotización del **${currency}** es **${price.toLocaleString('es-AR', { currency: 'USD', style: "currency", maximumFractionDigits: 20 })}**.\n\n*Actualizado por última vez el ${date.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}.*`)
                 .setColor(color)
                 .setThumbnail(imageURL)]
         };
