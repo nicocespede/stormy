@@ -391,7 +391,6 @@ module.exports = {
                 matches.push(match);
             });
             kruMatches = matches;
-            log("> Caché de partidos programados de KRÜ actualizado", 'green');
         } catch (e) {
             if (!kruMatches)
                 kruMatches = [];

@@ -10,10 +10,9 @@ module.exports = async client => {
         const membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
         const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
         const channel = await guild.channels.fetch(ids.channels.connectedMembers).catch(console.error);
-        if (channel.name !== connectedMembersName) {
-            await channel.setName(connectedMembersName).catch(console.error);
-            log('> Contador de miembros conectados actualizado', 'blue');
-        }
+        if (channel.name !== connectedMembersName)
+            await channel.setName(connectedMembersName)
+                .catch(error => log(`> Error al actualizar el contador de miembros conectados:\n${error.stack}`, 'red'));
 
         timeouts['connected-members-updater'] = setTimeout(check, 1000 * 60 * 5);
     };

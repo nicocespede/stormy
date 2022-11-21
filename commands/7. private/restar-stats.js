@@ -13,7 +13,7 @@ module.exports = {
     ownerOnly: true,
 
     callback: async ({ args }) => {
-        const stats = !getStats() ? await updateStats() : getStats();
+        const stats = getStats() || await updateStats();
         const id = args[0];
         const argsDays = args[1];
         const argsHours = args[2];
