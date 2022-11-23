@@ -1,6 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { getSmurfs, updateSmurfs, getIds, updateIds } = require('../../src/cache');
-const { convertTZ } = require('../../src/util');
+const { getSmurfs, updateSmurfs } = require('../../src/cache');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
 const { isOwner } = require('../../src/general');
 

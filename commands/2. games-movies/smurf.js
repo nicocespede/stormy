@@ -60,21 +60,96 @@ const getRankColor = rank => {
     }
 };
 
+const getEmbed = async (color, guild, userId) => {
+    const ids = getIds() || await updateIds();
+    const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
+    const isVip = await isOwner(userId) || vipRole.members.has(userId);
+
+    const smurfs = getSmurfs() || await updateSmurfs();
+    const auxArray = [];
+    for (const command in smurfs) if (Object.hasOwnProperty.call(smurfs, command)) {
+        const { bannedUntil, name, vip } = smurfs[command];
+        if (!vip || isVip) {
+            const obj = { bannedUntil, command, name };
+            const accInfo = name.split('#');
+            obj['mmr'] = await ValorantAPI.getMMR({
+                name: accInfo[0],
+                region: 'na',
+                tag: accInfo[1],
+                version: 'v1'
+            }).catch(console.error);
+            auxArray.push(obj);
+        }
+    }
+
+    auxArray.sort((a, b) => {
+        const mmr1 = !a.mmr.error ? (a.mmr.data.currenttier || 0) : -1;
+        const mmr2 = !b.mmr.error ? (b.mmr.data.currenttier || 0) : -1;
+        return mmr1 - mmr2;
+    });
+
+    const accountsField = { name: 'Cuenta', value: '', inline: true };
+    const commandsField = { name: 'ID', value: ``, inline: true };
+    const ranksField = { name: 'Rango', value: ``, inline: true };
+    let errorsCounter = 0;
+    let description = `Hola <@${userId}>, `;
+    for (const account of auxArray) {
+        const { bannedUntil, command, mmr, name } = account;
+        if (!mmr.error) {
+            accountsField.value += `${bannedUntil ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
+            ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
+        } else {
+            errorsCounter++;
+            log(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, 'red');
+            accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
+            ranksField.value += `???\n\n`;
+        }
+        commandsField.value += `${command}\n\n`;
+    }
+
+    description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`;
+
+    return new EmbedBuilder()
+        .setColor(color)
+        .setDescription(description)
+        .addFields([accountsField, commandsField, ranksField])
+        .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}` })
+        .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)
+        .setTitle(`**Cuentas smurf**`);
+};
+
 const getRow = type => {
+    const customId = type === 'update' || type === 'updating' ? 'update-smurfs' : 'report-ban';
+    const disabled = type === 'success' || type === 'updating';
+    let emoji;
+    let label;
+    let style;
+
     const row = new ActionRowBuilder();
-    if (!type)
-        return row.addComponents(new ButtonBuilder()
-            .setCustomId('report-ban')
-            .setEmoji('🚩')
-            .setLabel("Reportar cuenta baneada")
-            .setStyle(ButtonStyle.Secondary));
+    if (type === 'report') {
+        emoji = '🚩';
+        label = "Reportar cuenta baneada";
+        style = ButtonStyle.Secondary;
+    }
+
+    if (type === 'success' || type === 'retry') {
+        emoji = type === 'success' ? '👍🏼' : '🔄';
+        label = type === 'success' ? "¡Gracias por tu reporte!" : "Reintentar";
+        style = type === 'success' ? ButtonStyle.Success : ButtonStyle.Danger;
+    }
+
+    if (type === 'update' || type === 'updating') {
+        emoji = '🔄';
+        label = type === 'update' ? "Actualizar" : 'Actualizando...';
+        style = ButtonStyle.Primary;
+    }
 
     return row.addComponents(new ButtonBuilder()
-        .setCustomId('report-ban')
-        .setEmoji(type === 'success' ? '👍🏼' : '🔄')
-        .setLabel(type === 'success' ? "¡Gracias por tu reporte!" : "Reintentar")
-        .setStyle(type === 'success' ? ButtonStyle.Success : ButtonStyle.Danger)
-        .setDisabled(type === 'success'));
+        .setCustomId(customId)
+        .setEmoji(emoji)
+        .setLabel(label)
+        .setStyle(style)
+        .setDisabled(disabled));
 };
 
 module.exports = {
@@ -96,23 +171,34 @@ module.exports = {
             if (!interaction.isButton()) return;
 
             const { customId, message, user } = interaction;
-            if (customId !== 'report-ban') return;
+            if (customId !== 'report-ban' && customId !== 'update-smurfs') return;
 
             const ids = getIds() || await updateIds();
-            const stormer = await client.users.fetch(ids.users.stormer).catch(console.error);
-            try {
-                await stormer.send({
-                    embeds: [new EmbedBuilder()
-                        .setTitle('Reporte de baneo en cuenta smurf')
-                        .setAuthor({ name: user.username, iconURL: user.avatarURL() })
-                        .setDescription(`Cuenta: **${EmbedBuilder.from(message.embeds[0]).data.title}**`)
-                        .setColor(color)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/flag.png`)]
+            if (customId === 'report-ban') {
+                const stormer = await client.users.fetch(ids.users.stormer).catch(console.error);
+                try {
+                    await stormer.send({
+                        embeds: [new EmbedBuilder()
+                            .setTitle('Reporte de baneo en cuenta smurf')
+                            .setAuthor({ name: user.username, iconURL: user.avatarURL() })
+                            .setDescription(`Cuenta: **${EmbedBuilder.from(message.embeds[0]).data.title}**`)
+                            .setColor(color)
+                            .setThumbnail(`${githubRawURL}/assets/thumbs/flag.png`)]
+                    });
+                    await interaction.update({ components: [getRow('success')] });
+                } catch (e) {
+                    log(`> Error sending report:\n${e.stack}`, 'red');
+                    await interaction.update({ components: [getRow('retry')] });
+                }
+            }
+
+            if (customId === 'update-smurfs') {
+                const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+                await interaction.update({ components: [getRow('updating')] });
+                interaction.message.edit({
+                    components: [getRow('update')],
+                    embeds: [await getEmbed(color, defaultGuild, interaction.user.id)]
                 });
-                await interaction.update({ components: [getRow('success')] });
-            } catch (e) {
-                log(`> Error sending report:\n${e.stack}`, 'red');
-                await interaction.update({ components: [getRow('retry')] });
             }
         });
     },
@@ -136,63 +222,11 @@ module.exports = {
                 return reply;
             }
 
-            const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
-            const isVip = await isOwner(user.id) || vipRole.members.has(user.id);
             const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
                 : await interaction.deferReply({ ephemeral: true });
-            const smurfs = getSmurfs() || await updateSmurfs();
-            const auxArray = [];
-            for (const command in smurfs) if (Object.hasOwnProperty.call(smurfs, command)) {
-                const { bannedUntil, name, vip } = smurfs[command];
-                if (!vip || isVip) {
-                    const obj = { bannedUntil, command, name };
-                    const accInfo = name.split('#');
-                    obj['mmr'] = await ValorantAPI.getMMR({
-                        name: accInfo[0],
-                        region: 'na',
-                        tag: accInfo[1],
-                        version: 'v1'
-                    }).catch(console.error);
-                    auxArray.push(obj);
-                }
-            }
-
-            auxArray.sort((a, b) => {
-                const mmr1 = !a.mmr.error ? (a.mmr.data.currenttier || 0) : -1;
-                const mmr2 = !b.mmr.error ? (b.mmr.data.currenttier || 0) : -1;
-                return mmr1 - mmr2;
-            });
-
-            const accountsField = { name: 'Cuenta', value: '', inline: true };
-            const commandsField = { name: 'ID', value: ``, inline: true };
-            const ranksField = { name: 'Rango', value: ``, inline: true };
-            let errorsCounter = 0;
-            let description = `Hola <@${user.id}>, `;
-            for (const account of auxArray) {
-                const { bannedUntil, command, mmr, name } = account;
-                if (!mmr.error) {
-                    accountsField.value += `${bannedUntil ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
-                    ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
-                } else {
-                    errorsCounter++;
-                    log(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, 'red');
-                    accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
-                    ranksField.value += `???\n\n`;
-                }
-                commandsField.value += `${command}\n\n`;
-            }
-
-            description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`;
 
             try {
-                await member.send({
-                    embeds: [new EmbedBuilder()
-                        .setTitle(`**Cuentas smurf**`)
-                        .setDescription(description)
-                        .setColor(instance.color)
-                        .addFields([accountsField, commandsField, ranksField])
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)]
-                });
+                await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, guild, user.id)] });
                 reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
             } catch (error) {
                 log(`> Error al enviar cuentas smurfs:\n${error.stack}`);
@@ -244,7 +278,7 @@ module.exports = {
                 if (account.bannedUntil)
                     reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString('es-AR')}** ⚠`);
                 else if (user.id !== ids.users.stormer)
-                    reply.components = [getRow()];
+                    reply.components = [getRow('report')];
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
                 { name: 'Contraseña:', value: account.password, inline: true }])
                     .setThumbnail(`attachment://rank.png`);
