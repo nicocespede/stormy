@@ -70,7 +70,7 @@ const getMembersStatus = async channel => {
 };
 
 const lastUpdateToString = (lastUpdate, upperCase) => {
-    const date = convertTZ(new Date(`${lastUpdate.substring(6, 10)}-${lastUpdate.substring(3, 5)}-${lastUpdate.substring(0, 2)}T3:00Z`));
+    const date = convertTZ(new Date(`${lastUpdate.substring(6, 10)}-${lastUpdate.substring(3, 5)}-${lastUpdate.substring(0, 2)}T03:00Z`));
     const today = convertTZ(new Date());
     if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear())
         if (date.getDate() === today.getDate())
