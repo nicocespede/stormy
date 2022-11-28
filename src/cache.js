@@ -47,7 +47,7 @@ const updateChronology = async id => {
         if (local)
             data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
         else {
-            const res = await fetch(`${githubRawURL}/chronologies/${id}.json.json`);
+            const res = await fetch(`${githubRawURL}/chronologies/${id}.json`);
             data = await res.text();
         }
         chronologies[id] = JSON.parse(data);
