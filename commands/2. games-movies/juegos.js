@@ -36,7 +36,7 @@ module.exports = {
             const ctx = canvas.getContext('2d');
             const gamesField = { name: 'Juego', value: '', inline: true };
             const updatesField = { name: 'Última actualización', value: ``, inline: true };
-            for (var i = 0; i < games.length; i++) {
+            for (let i = 0; i < games.length; i++) {
                 const name = `${games[i].name} (${games[i].year})`;
                 const date = games[i].lastUpdate;
                 const newGame = `** ${i + 1}.** ${name}\n\n`;
@@ -53,6 +53,7 @@ module.exports = {
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
                 .setThumbnail(`${githubRawURL}/assets/thumbs/games/games-folder.png`)];
 
+            reply.content = null;
             message ? replyMessage.edit(reply) : interaction.editReply(reply);
             return;
         }
