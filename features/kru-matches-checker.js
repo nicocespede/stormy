@@ -8,20 +8,20 @@ module.exports = async client => {
         if (matches.length > 0) {
             const today = new Date();
             const ids = getIds() || await updateIds();
+            const oneDay = 1000 * 60 * 60 * 24;
+            const oneMinute = 1000 * 60;
 
             for (const element of matches) {
                 const { date, team1Name, team2Name } = element;
                 const rivalTeam = team1Name.includes('KRÜ') ? team2Name : team1Name;
                 const difference = date - today;
 
-                const oneDay = 1000 * 60 * 60 * 24;
                 if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
                     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
                     channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString('es-AR', { timeStyle: 'short' })} hs**.`)
                         .catch(_ => log("> Error al enviar alerta de partido de KRÜ", 'red'));
                 }
 
-                const oneMinute = 1000 * 60;
                 if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9)) {
                     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
                     channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
