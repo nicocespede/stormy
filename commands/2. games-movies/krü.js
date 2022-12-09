@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { getKruMatches, updateKruMatches } = require('../../src/cache');
+const { updateKruMatches } = require('../../src/cache');
 const { githubRawURL } = require('../../src/constants');
 const { convertTZ } = require('../../src/util');
 
@@ -19,7 +19,7 @@ module.exports = {
         const datesField = { name: 'Fecha', value: '', inline: true };
         const urlsField = { name: 'Detalles', value: '', inline: true };
 
-        const matches = getKruMatches() || await updateKruMatches();
+        const matches = await updateKruMatches();
         for (const m in matches) if (Object.hasOwnProperty.call(matches, m)) {
             const { date, remaining, team1Tag, team2Tag, url } = matches[m];
             duelsField.value += `**${team1Tag}** vs **${team2Tag}**\n\n`;
