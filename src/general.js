@@ -736,9 +736,9 @@ module.exports = {
             if (finalCollector)
                 finalCollector.stop();
 
-            const secondFilter = btnInt => { return member.user.id === btnInt.user.id };
+            const secondFilter = btnInt => member.user.id === btnInt.user.id;
 
-            finalCollector = versionsMessage.createMessageComponentCollector({ secondFilter, idle: 1000 * 60 * 5 });
+            finalCollector = versionsMessage.createMessageComponentCollector({ filter: secondFilter, idle: 1000 * 60 * 5 });
 
             finalCollector.on('collect', async btnInt => {
                 if (!btnInt) return;
