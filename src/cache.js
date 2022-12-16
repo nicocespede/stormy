@@ -431,7 +431,7 @@ module.exports = {
         const newKey = songsInQueue[url];
         newKey[messageType] = object;
     },
-    removeSongInQueue: url => (delete songsInQueue[url]),
+    removeSongInQueue: url => delete songsInQueue[url],
 
     getMusicPlayerData: key => musicPlayerData[key],
     setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector: collector, message: message, page: page },
