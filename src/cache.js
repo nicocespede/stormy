@@ -394,7 +394,7 @@ module.exports = {
         } catch (e) {
             if (!kruMatches)
                 kruMatches = [];
-            log(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, 'green');
+            log(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, 'red');
         }
         return kruMatches;
     },
