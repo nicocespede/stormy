@@ -82,7 +82,7 @@ module.exports = {
                 const collector = targetMessage.createMessageComponentCollector({ filter, idle: 1000 * 60 * 10 });
 
                 collector.on('collect', async btnInt => {
-                    if (!btnInt) return;
+                    if (!btnInt.isButton()) return;
 
                     if (btnInt.customId === 'prev_page' && page > 0) --page;
                     else if (btnInt.customId === 'next_page' && page < embeds.length - 1) ++page;
