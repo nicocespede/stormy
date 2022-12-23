@@ -15,7 +15,6 @@ module.exports = async client => {
                 await channel.setName(connectedMembersName);
         } catch (error) {
             log(`> Error al actualizar el contador de miembros conectados:\n${error.stack}`, 'red');
-            client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
         }
 
         timeouts['connected-members-updater'] = setTimeout(check, 1000 * 60 * 5);
