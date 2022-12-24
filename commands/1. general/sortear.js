@@ -107,7 +107,7 @@ module.exports = {
             if (!btnInt.isButton()) return;
 
             if (btnInt.user.id !== user.id) {
-                btnInt.deferUpdate();
+                btnInt.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
                 return;
             }
 
@@ -134,6 +134,9 @@ module.exports = {
 
                 messagesCollector.on('end', () => {
                     if (state === 'collecting-elements' || state === 'deleting-elements') {
+                        const { description } = statesData['expired'];
+                        const edit = { components: [], content: description };
+                        message ? replyMessage.edit(edit) : interaction.editReply(edit);
                         interactionsCollector.stop();
                         return;
                     }
@@ -147,7 +150,7 @@ module.exports = {
                     if (state === 'ready')
                         edit.content += ` Se sorteará${winnersAmount > 1 ? 'n' : ''} **${winnersAmount}** entre los siguientes elementos:\n\n- ${elements.join('\n- ')}\n\u200b`;
 
-                    btnInt.message.interaction ? btnInt.editReply(edit) : btnInt.message.edit(edit);
+                    message ? replyMessage.edit(edit) : interaction.editReply(edit);
                 });
 
                 const { description } = statesData[state];
@@ -171,8 +174,8 @@ module.exports = {
             }
 
             if (customId === 'exit-draw') {
-                state = 'cancelled';
-                btnInt.deferUpdate();
+                const { description } = statesData['cancelled'];
+                btnInt.update({ components: [], content: description });
                 interactionsCollector.stop();
                 return;
             }
@@ -185,12 +188,6 @@ module.exports = {
             }
 
             btnInt.update({ content: `${title}\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo son:' : 'El ganador del sorteo es:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${convertTZ(new Date()).toLocaleString('es-AR')}_` });
-        });
-
-        interactionsCollector.on('end', _ => {
-            const { description } = statesData[state === 'cancelled' ? state : 'expired'];
-            const edit = { components: [], content: description };
-            message ? replyMessage.editReply(edit) : interaction.editReply(edit);
         });
     }
 }
