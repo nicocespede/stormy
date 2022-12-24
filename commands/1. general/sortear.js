@@ -1,39 +1,35 @@
 const { ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { convertTZ } = require("../../src/util");
 
 const title = '🎲 __**Sorteo**__\n';
 
 const buttonsData = {
     'add-elements': {
-        customId: 'add-elements',
-        disabled: [],
         emoji: '➕',
         label: 'Agregar elementos',
         style: ButtonStyle.Primary
     },
     'stop-collecting': {
-        customId: 'stop-collecting',
-        disabled: [],
         emoji: '🛑',
-        label: 'Parar recolector de elementos',
+        label: 'Parar recolector de mensajes',
         style: ButtonStyle.Primary
     },
     'delete-elements': {
-        customId: 'delete-elements',
-        disabled: [],
         emoji: '➖',
-        label: 'Eliminar elemento',
+        label: 'Eliminar elementos',
+        style: ButtonStyle.Primary
+    },
+    'clear-elements': {
+        emoji: '❌',
+        label: 'Limpiar elementos',
         style: ButtonStyle.Primary
     },
     'exit-draw': {
-        customId: 'exit-draw',
-        disabled: [],
         emoji: '🚪',
         label: 'Salir',
         style: ButtonStyle.Danger
     },
     draw: {
-        customId: 'draw',
-        disabled: [],
         emoji: '✅',
         label: 'Sortear',
         style: ButtonStyle.Success
@@ -41,18 +37,18 @@ const buttonsData = {
 };
 
 const statesData = {
-    cancelled: { description: `${title}\n❌ Este sorteo **terminó** ó fue **cancelado**.` },
+    cancelled: { description: `${title}\n❌ Este sorteo fue **cancelado**.` },
     'collecting-elements': {
         buttons: ['stop-collecting'],
-        description: `${title}\n⚠ Cada mensaje que envíes en este canal se agregará como un elemento nuevo al sorteo.\n\u200b`
+        description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **se agregará** como un elemento nuevo** al sorteo.\n\u200b`
     },
     'deleting-elements': {
         buttons: ['stop-collecting'],
-        description: `${title}\n⚠ Cada mensaje que envíes en este canal eliminará del sorteo al elemento que coincida.\n\u200b`
+        description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **eliminará del sorteo al elemento** que coincida.\n\u200b`
     },
     expired: { description: `${title}\n⌛ Este sorteo **expiró**.` },
     ready: {
-        buttons: ['add-elements', 'delete-elements', 'exit-draw', 'draw'],
+        buttons: ['add-elements', 'delete-elements', 'clear-elements', 'exit-draw', 'draw'],
         description: `${title}\n⚠ Utilice los **botones** para **agregar** o **quitar** elementos.`
     },
     start: {
@@ -66,13 +62,12 @@ const getRow = state => {
 
     const { buttons } = statesData[state];
     for (const button of buttons) {
-        const { customId, disabled, emoji, label, style } = buttonsData[button];
+        const { emoji, label, style } = buttonsData[button];
         row.addComponents(new ButtonBuilder()
-            .setCustomId(customId)
+            .setCustomId(button)
             .setEmoji(emoji)
             .setStyle(style)
-            .setLabel(label)
-            .setDisabled(disabled ? disabled.includes(state) : false));
+            .setLabel(label));
     }
 
     return row;
@@ -106,8 +101,7 @@ module.exports = {
         const reply = { components: [getRow(state)], content: description };
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
 
-        const interactionsFilter = int => int.user.id === user.id;
-        const interactionsCollector = channel.createMessageComponentCollector({ filter: interactionsFilter, idle: 1000 * 60 * 60 });
+        const interactionsCollector = channel.createMessageComponentCollector({ idle: 1000 * 60 * 60 });
 
         interactionsCollector.on('collect', async btnInt => {
             if (!btnInt.isButton()) return;
@@ -120,15 +114,21 @@ module.exports = {
             const { customId } = btnInt;
             if (!Object.keys(buttonsData).includes(customId)) return;
 
-            const buttonsFilter = message => user.id === message.author.id;
+            const messagesFilter = message => user.id === message.author.id;
 
-            if (customId === 'add-elements') {
-                state = 'collecting-elements';
+            if (customId === 'add-elements' || customId === 'delete-elements') {
+                state = customId === 'add-elements' ? 'collecting-elements' : 'deleting-elements';
 
-                messagesCollector = channel.createMessageCollector({ filter: buttonsFilter, idle: 1000 * 60 * 5 });
+                messagesCollector = channel.createMessageCollector({ filter: messagesFilter, idle: 1000 * 60 * 5 });
 
                 messagesCollector.on('collect', msg => {
-                    elements = elements.concat(msg.content.split('\n'));
+                    const args = msg.content.split('\n');
+                    if (customId === 'add-elements')
+                        elements = elements.concat(args);
+                    else
+                        for (const element of args)
+                            if (elements.includes(element))
+                                elements.splice(elements.indexOf(element), 1);
                     msg.delete();
                 });
 
@@ -155,21 +155,24 @@ module.exports = {
                 return;
             }
 
+            if (customId === 'clear-elements') {
+                state = 'start';
+                elements = [];
+                const { description } = statesData[state];
+                btnInt.update({ components: [getRow(state)], content: description });
+                return;
+            }
+
             if (customId === 'stop-collecting') {
-                btnInt.deferUpdate();
                 state = 'ready';
+                btnInt.deferUpdate();
                 messagesCollector.stop();
                 return;
             }
 
-            if (customId === 'delete-elements') {
-                state = 'deleting-elements';
-                return;
-            }
-
             if (customId === 'exit-draw') {
-                btnInt.deferUpdate();
                 state = 'cancelled';
+                btnInt.deferUpdate();
                 interactionsCollector.stop();
                 return;
             }
@@ -181,7 +184,7 @@ module.exports = {
                 winners.push(elementsCopy.splice(random, 1));
             }
 
-            btnInt.update({ content: `${title}\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo son:' : 'El ganador del sorteo es:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${(new Date()).toLocaleString('es-AR')}_` });
+            btnInt.update({ content: `${title}\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo son:' : 'El ganador del sorteo es:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${convertTZ(new Date()).toLocaleString('es-AR')}_` });
         });
 
         interactionsCollector.on('end', _ => {

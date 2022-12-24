@@ -157,7 +157,7 @@ client.on('shardError', (error, shardId) => {
 });
 
 client.on('shardReady', (id, unavailableGuilds) => {
-    log(`Shard ${id} ready, unavailable guilds: ${unavailableGuilds}`, 'yellow');
+    log(`Shard ${id} ready${unavailableGuilds ? `, unavailable guilds: ${unavailableGuilds}` : ''}`, 'yellow');
 });
 
 client.on('shardReconnecting', id => {
