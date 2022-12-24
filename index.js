@@ -148,21 +148,13 @@ client.on('ready', async () => {
     log(`¡Loggeado como ${client.user.tag}!`, 'green');
 });
 
-client.on('shardDisconnect', (event, id) => {
-    log(`> Shard ${id} disconnected:\n${JSON.stringify(event)}`, 'yellow');
-});
+client.on('shardDisconnect', (event, id) => log(`> Shard ${id} disconnected:\n${JSON.stringify(event)}`, 'yellow'));
 
-client.on('shardError', (error, shardId) => {
-    log(`> Shard ${shardId} error:\n${error.stack}`, 'red');
-});
+client.on('shardError', (error, shardId) => log(`> Shard ${shardId} error:\n${error.stack}`, 'red'));
 
-client.on('shardReady', (id, unavailableGuilds) => {
-    log(`> Shard ${id} ready${unavailableGuilds ? `, unavailable guilds: ${unavailableGuilds}` : ''}`, 'yellow');
-});
+client.on('shardReady', (id, unavailableGuilds) => log(`> Shard ${id} ready${unavailableGuilds ? `, unavailable guilds: ${unavailableGuilds}` : ''}`, 'yellow'));
 
-client.on('shardReconnecting', id => {
-    log(`> Shard ${id} reconnecting...`, 'yellow');
-});
+client.on('shardReconnecting', id => log(`> Shard ${id} reconnecting...`, 'yellow'));
 
 client.on('shardResume', (id, replayedEvents) => {
     log(`> Shard ${id} resumed, ${replayedEvents} replayed events...`, 'yellow');
