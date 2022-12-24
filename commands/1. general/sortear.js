@@ -40,8 +40,9 @@ const statesData = {
     cancelled: { description: `${title}\n❌ Este sorteo fue **cancelado**.` },
     'collecting-elements': {
         buttons: ['stop-collecting'],
-        description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **se agregará** como un elemento nuevo** al sorteo.\n\u200b`
+        description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **se agregará como un elemento nuevo** al sorteo.\n\u200b`
     },
+    completed: { description: title },
     'deleting-elements': {
         buttons: ['stop-collecting'],
         description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **eliminará del sorteo al elemento** que coincida.\n\u200b`
@@ -95,10 +96,12 @@ module.exports = {
         const winnersAmount = message ? parseInt(args[0]) : interaction.options.getInteger('ganadores');
         let state = 'start';
         let elements = [];
+        let winners;
+        let date;
         let messagesCollector;
 
         const { description } = statesData[state];
-        const reply = { components: [getRow(state)], content: description };
+        const reply = { components: [getRow(state)], content: description, fetchReply: true };
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
 
         const interactionsCollector = channel.createMessageComponentCollector({ idle: 1000 * 60 * 60 });
@@ -134,10 +137,7 @@ module.exports = {
 
                 messagesCollector.on('end', () => {
                     if (state === 'collecting-elements' || state === 'deleting-elements') {
-                        const { description } = statesData['expired'];
-                        const edit = { components: [], content: description };
-                        message ? replyMessage.edit(edit) : interaction.editReply(edit);
-                        interactionsCollector.stop();
+                        interactionsCollector.stop(!winners ? 'expired' : 'completed');
                         return;
                     }
 
@@ -150,7 +150,7 @@ module.exports = {
                     if (state === 'ready')
                         edit.content += ` Se sorteará${winnersAmount > 1 ? 'n' : ''} **${winnersAmount}** entre los siguientes elementos:\n\n- ${elements.join('\n- ')}\n\u200b`;
 
-                    message ? replyMessage.edit(edit) : interaction.editReply(edit);
+                    replyMessage.edit(edit);
                 });
 
                 const { description } = statesData[state];
@@ -174,20 +174,33 @@ module.exports = {
             }
 
             if (customId === 'exit-draw') {
-                const { description } = statesData['cancelled'];
-                btnInt.update({ components: [], content: description });
-                interactionsCollector.stop();
+                btnInt.deferUpdate();
+                interactionsCollector.stop(!winners ? 'cancelled' : 'completed');
                 return;
             }
 
-            const winners = [];
+            if (elements.length <= winnersAmount) {
+                btnInt.reply({ content: `⚠ Debe haber al menos **${winnersAmount + 1} elementos** para realizar el sorteo.`, ephemeral: true })
+                return;
+            }
+
+            winners = [];
             const elementsCopy = elements.slice(0);
             for (let i = 0; i < winnersAmount; i++) {
                 const random = Math.floor(Math.random() * (elementsCopy.length));
                 winners.push(elementsCopy.splice(random, 1));
             }
 
-            btnInt.update({ content: `${title}\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo son:' : 'El ganador del sorteo es:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${convertTZ(new Date()).toLocaleString('es-AR')}_` });
+            date = convertTZ(new Date()).toLocaleString('es-AR');
+            btnInt.update({ content: `${title}\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo son:' : 'El ganador del sorteo es:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${date}_` });
+        });
+
+        interactionsCollector.on('end', (_, reason) => {
+            const { description } = statesData[reason];
+            const edit = { components: [], content: description };
+            if (winners)
+                edit.content += `\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo fueron:' : 'El ganador del sorteo fue:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${date}_`;
+            replyMessage.edit(edit);
         });
     }
 }
