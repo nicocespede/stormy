@@ -166,6 +166,7 @@ client.on('shardReconnecting', id => {
 
 client.on('shardResume', (id, replayedEvents) => {
     log(`Shard ${id} resumed, ${replayedEvents} replayed events...`, 'yellow');
+    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
 });
 
 client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
