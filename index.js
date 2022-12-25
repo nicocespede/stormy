@@ -158,8 +158,9 @@ client.on('shardReconnecting', id => log(`> Shard ${id} reconnecting...`, 'yello
 
 client.on('shardResume', (id, replayedEvents) => {
     log(`> Shard ${id} resumed, ${replayedEvents} replayed events...`, 'yellow');
+    console.log(client.user.presence);
     if (client.user.presence.activities.length === 0) {
-        log('> Asignando actividad a la presencia...', 'yellow')
+        log('> Asignando actividad a la presencia...', 'yellow');
         client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
     }
 });
