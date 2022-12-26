@@ -196,7 +196,7 @@ module.exports = {
         });
 
         interactionsCollector.on('end', (_, reason) => {
-            const { description } = statesData[reason];
+            const { description } = statesData[reason === 'idle' ? 'expired' : reason];
             const edit = { components: [], content: description };
             if (winners)
                 edit.content += `\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo fueron:' : 'El ganador del sorteo fue:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${date}_`;
