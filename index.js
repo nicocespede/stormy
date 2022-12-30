@@ -148,23 +148,6 @@ client.on('ready', async () => {
     log(`¡Loggeado como ${client.user.tag}!`, 'green');
 });
 
-client.on('shardDisconnect', (event, id) => log(`> Shard ${id} disconnected:\n${JSON.stringify(event)}`, 'yellow'));
-
-client.on('shardError', (error, shardId) => log(`> Shard ${shardId} error:\n${error.stack}`, 'red'));
-
-client.on('shardReady', (id, unavailableGuilds) => log(`> Shard ${id} ready${unavailableGuilds ? `, unavailable guilds: ${unavailableGuilds}` : ''}`, 'yellow'));
-
-client.on('shardReconnecting', id => log(`> Shard ${id} reconnecting...`, 'yellow'));
-
-client.on('shardResume', (id, replayedEvents) => {
-    log(`> Shard ${id} resumed, ${replayedEvents} replayed events...`, 'yellow');
-    console.log(client.user.presence);
-    if (client.user.presence.activities.length === 0) {
-        log('> Asignando actividad a la presencia...', 'yellow');
-        client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
-    }
-});
-
 client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
 
 process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
