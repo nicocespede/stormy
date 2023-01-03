@@ -47,7 +47,7 @@ const statesData = {
         buttons: ['stop-collecting'],
         description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **eliminará del sorteo al elemento** que coincida.\n\u200b`
     },
-    expired: { description: `${title}\n⌛ Este sorteo **expiró**.` },
+    expired: { description: `${title}\n⌛ Este sorteo **expiró**.\n` },
     ready: {
         buttons: ['add-elements', 'delete-elements', 'clear-elements', 'exit-draw', 'draw'],
         description: `${title}\n⚠ Utilice los **botones** para **agregar** o **quitar** elementos.`

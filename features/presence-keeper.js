@@ -3,7 +3,7 @@ const { prefix } = require("../src/constants");
 const { log } = require("../src/util");
 
 module.exports = client => {
-    const exec = false;
+    let exec = false;
     client.on('shardReady', () => {
         if (!exec)
             exec = true;
