@@ -138,10 +138,10 @@ module.exports = {
             const embeds = [];
             const pages = {};
             const element = customId !== 'instructions' ? links[customId] : instructions;
-            const passwordString = customId !== 'instructions' && links.password ? `**Contraseña:** ${links.password}` : '';
             const { color, thumb } = embedData;
-            for (const server in element) if (Object.hasOwnProperty.call(element, server) && server !== 'files') {
+            for (const server in element) if (Object.hasOwnProperty.call(element, server) && server !== 'files' && server !== 'password') {
                 const dataString = customId !== 'instructions' ? `**Cantidad de archivos:** ${element.files}` : '';
+                const passwordString = customId !== 'instructions' && element.password ? `**Contraseña:** ${element.password}` : '';
                 const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${element[server].join('\n')}\n\n${passwordString}`;
                 const chunks = splitEmbedDescription(description);
                 let counter = 1;
