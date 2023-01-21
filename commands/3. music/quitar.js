@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateIds } = require("../../src/cache");
-const { githubRawURL } = require("../../src/constants");
-const { containsAuthor, cleanTitle, handleErrorInMusicChannel } = require("../../src/music");
+const { getIds, updateIds, updateLastAction } = require("../../src/cache");
+const { githubRawURL, MusicActions } = require("../../src/constants");
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel, setMusicPlayerMessage } = require("../../src/music");
 
 function orderArgs(array) {
     var uniqueArray = array.filter(function (item, pos, self) {
@@ -48,7 +48,7 @@ module.exports = {
     callback: async ({ guild, member, user, message, channel, args, client, interaction, instance }) => {
         const embed = new EmbedBuilder().setColor(instance.color);
         const numbers = message ? args : interaction.options.getString('números').split(' ');
-        const reply = { custom: true, ephemeral: true };
+        const reply = { ephemeral: true, fetchReply: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
@@ -97,6 +97,13 @@ module.exports = {
         reply.embeds = [embed.setDescription('❌ Se quitó de la cola de reproducción:\n\n' + description.reverse().join(''))
             .setThumbnail(`${githubRawURL}/assets/thumbs/music/delete.png`)];
         reply.ephemeral = false;
-        return reply;
+        const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
+        updateLastAction(MusicActions.REMOVING);
+        setMusicPlayerMessage(queue, queue.current, `❌ ${user.tag} quitó **${ordered.length} ${ordered.length > 1 ? 'canciones' : 'canción'}** de la cola.`);
+
+        setTimeout(async () => {
+            if (message) message.delete();
+            replyMessage.delete();
+        }, 1000 * 30);
     }
 }

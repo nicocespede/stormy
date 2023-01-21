@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction, getIds, updateIds } = require("../../src/cache");
 const { MusicActions, githubRawURL } = require("../../src/constants");
-const { containsAuthor, cleanTitle, handleErrorInMusicChannel } = require("../../src/music");
+const { containsAuthor, cleanTitle, handleErrorInMusicChannel, setMusicPlayerMessage } = require("../../src/music");
 
 module.exports = {
     category: 'Música',
@@ -33,7 +33,7 @@ module.exports = {
         const embed = new EmbedBuilder().setColor(instance.color);
         const number = message ? args[0] : interaction.options.getInteger('número');
         const position = message ? args[1] : interaction.options.getInteger('posición');
-        const reply = { custom: true, ephemeral: true };
+        const reply = { ephemeral: true, fetchReply: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
@@ -105,6 +105,13 @@ module.exports = {
         reply.embeds = [embed.setDescription(`🔁 **${filteredTitle}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
             .setThumbnail(`${githubRawURL}/assets/thumbs/music/sorting-arrows.png`)];
         reply.ephemeral = false;
-        return reply;
+        const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
+        updateLastAction(MusicActions.MOVING_SONG);
+        setMusicPlayerMessage(queue, queue.current, `🔁 ${user.tag} movió una canción de la cola.`);
+
+        setTimeout(async () => {
+            if (message) message.delete();
+            replyMessage.delete();
+        }, 1000 * 30);
     }
 }

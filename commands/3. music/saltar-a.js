@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateIds } = require("../../src/cache");
-const { githubRawURL } = require("../../src/constants");
+const { getIds, updateIds, updateLastAction } = require("../../src/cache");
+const { githubRawURL, MusicActions } = require("../../src/constants");
 const { handleErrorInMusicChannel } = require("../../src/music");
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
     callback: async ({ guild, member, user, message, channel, args, client, interaction, instance }) => {
         const embed = new EmbedBuilder().setColor(instance.color);
         const number = message ? args[0] : interaction.options.getInteger('número');
-        const reply = { custom: true, ephemeral: true };
+        const reply = { ephemeral: true, fetchReply: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
@@ -68,8 +68,14 @@ module.exports = {
 
         queue.skipTo(index);
         reply.embeds = [embed.setDescription(`⏭️ **${index + 1} canciones** salteadas.`)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/end.png`)];
+            .setThumbnail(`${githubRawURL}/assets/thumbs/music/go-to-end.png`)];
         reply.ephemeral = false;
-        return reply;
+        const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
+        updateLastAction(MusicActions.SKIPPING_MANY, user.tag);
+
+        setTimeout(async () => {
+            if (message) message.delete();
+            replyMessage.delete();
+        }, 1000 * 30);
     }
 }

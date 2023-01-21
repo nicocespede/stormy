@@ -123,7 +123,9 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
                 const thumbs = {
                     cleared: 'empty',
+                    moving_song: 'sorting-arrows',
                     paused: 'pause',
+                    removing: 'delete',
                     resumed: 'resume-button',
                     shuffled: 'shuffle',
                     trackStart: 'play'
@@ -255,9 +257,9 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
     };
 
     const deleteMessage = key => {
-        const lyricsMessageData = getMusicPlayerData(key);
-        if (lyricsMessageData) {
-            const { collector, message } = lyricsMessageData;
+        const messageData = getMusicPlayerData(key);
+        if (messageData) {
+            const { collector, message } = messageData;
             if (collector) collector.stop();
             message.delete();
             clearMusicPlayerData(key);
@@ -321,9 +323,12 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         }
 
         musicPlayerMessage = getMusicPlayerData('player').message;
+        const specialActions = [MusicActions.MOVING_SONG, MusicActions.REMOVING];
+        const { action } = getLastAction();
+        const event = specialActions.includes(action) ? action.toLowerCase() : 'trackStart';
         musicPlayerMessage.edit({
-            components: getControlsRows('trackStart'),
-            embeds: [await getEmbed('trackStart', queue, lastAction)]
+            components: getControlsRows(event),
+            embeds: [await getEmbed(event, queue, lastAction)]
         });
         return;
     }

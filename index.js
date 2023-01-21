@@ -69,6 +69,8 @@ client.on('ready', async () => {
             let action;
             if (lastAction === MusicActions.SKIPPING)
                 action = `⏭ ${user} saltó una canción.`;
+            else if (lastAction === MusicActions.SKIPPING_MANY)
+                action = `⏭ ${user} saltó varias canciones.`;
             else if ((lastAction === MusicActions.GOING_BACK))
                 action = `⏮ ${user} volvió a la canción anterior.`;
             updateLastAction(MusicActions.STARTING_TRACK);
