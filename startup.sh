@@ -5,5 +5,5 @@
 #cd bot
 git fetch
 git pull
-npm install --save --production --omit=dev
+npm install --omit=dev --save --production
 node index.js
