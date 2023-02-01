@@ -1,5 +1,5 @@
 const { timeouts, getIds, updateIds, getMode, updateMode } = require('../src/cache');
-const { updateIcon, updateUsername } = require('../src/general');
+const { updateIcon, updateGuildName } = require('../src/general');
 const { convertTZ } = require('../src/util');
 
 module.exports = client => {
@@ -15,18 +15,18 @@ module.exports = client => {
                 const ids = getIds() || await updateIds();
                 const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
                 updateIcon(guild);
-                updateUsername(client);
+                updateGuildName(client);
             }
 
             lastDateChecked = today;
         }
 
-        timeouts['icon-and-username-updater'] = setTimeout(check, 1000 * 60);
+        timeouts['icon-and-guild-name-updater'] = setTimeout(check, 1000 * 60);
     };
     check();
 };
 
 module.exports.config = {
-    displayName: 'Actualizador de ícono y nombre de usuario',
-    dbName: 'ICON_AND_USERNAME_UPDATER'
+    displayName: 'Actualizador de ícono y nombre de servidor',
+    dbName: 'ICON_AND_GUILD_NAME_UPDATER'
 };

@@ -188,28 +188,30 @@ module.exports = {
         }
     },
 
-    updateUsername: async client => {
+    updateGuildName: async client => {
         const today = convertTZ(new Date());
         const date = today.getDate();
         const month = today.getMonth() + 1;
-        let newUsername = 'StormY';
+        let newGuildName = 'NCKG';
         switch (month) {
             case 1:
-                newUsername += ' 🥂';
+                newGuildName += ' 🥂';
                 break;
             case 2:
-                newUsername += ' 💘';
+                newGuildName += ' 💘';
                 break;
             case 4:
-                newUsername += date <= relativeSpecialDays.easter ? ' 🐇' : '';
+                newGuildName += date <= relativeSpecialDays.easter ? ' 🐇' : '';
                 break;
             case 12:
-                newUsername += date >= 26 ? ' 🥂' : ' 🎅🏻';
+                newGuildName += date >= 26 ? ' 🥂' : ' 🎅🏻';
                 break;
         }
-        if (client.user.username !== newUsername) {
-            await client.user.setUsername(newUsername).catch(console.error);
-            log('> Nombre de usuario actualizado', 'green');
+        const ids = getIds() || await updateIds();
+        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+        if (guild.name !== newGuildName) {
+            await guild.setName(newGuildName).catch(console.error);
+            log('> Nombre de servidor actualizado', 'green');
         }
     },
 
