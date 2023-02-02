@@ -77,6 +77,12 @@ module.exports = {
         STOPPING: 'STOPPING'
     },
 
+    Mode: {
+        NORMAL: 'normal',
+        KRU: 'kru',
+        AFA: 'afa'
+    },
+
     categorySettings: [
         {
             name: 'General',

@@ -1,4 +1,5 @@
 const { timeouts, getIds, updateIds, getMode, updateMode } = require('../src/cache');
+const { Mode } = require('../src/constants');
 const { updateIcon, updateGuildName } = require('../src/general');
 const { convertTZ } = require('../src/util');
 
@@ -11,7 +12,7 @@ module.exports = client => {
 
         if (lastDateChecked.getDate() !== today.getDate()) {
             const actualMode = getMode() || await updateMode();
-            if (!actualMode) {
+            if (actualMode === Mode.NORMAL) {
                 const ids = getIds() || await updateIds();
                 const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
                 updateIcon(guild);

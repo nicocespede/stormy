@@ -1,13 +1,13 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const { updateIcon: updateIconCache, getIds, updateIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
-const { githubRawURL } = require("../../src/constants");
+const { githubRawURL, Mode } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/general");
 const { updateIconString, updateMode } = require("../../src/mongodb");
 const { log } = require("../../src/util");
 
 const choices = [
-    { name: '🤟🏼 KRÜ', value: 'kru' },
-    { name: '🇦🇷 Selección', value: 'afa' }
+    { name: '🤟🏼 KRÜ', value: Mode.KRU },
+    { name: '🇦🇷 Selección', value: Mode.AFA }
 ];
 
 module.exports = {
@@ -42,7 +42,7 @@ module.exports = {
         const actualMode = getMode() || await updateModeCache();
         const mode = interaction.options.getString('modo');
 
-        if (actualMode && actualMode !== mode)
+        if (actualMode !== Mode.NORMAL && actualMode !== mode)
             return {
                 content: `⚠ Primero debés desactivar el modo actual.`,
                 custom: true,
@@ -53,7 +53,7 @@ module.exports = {
         const { guildname, name, role: roleName, on, off, username } = modesData[mode];
 
         if (actualMode === mode) {
-            await updateMode(null);
+            await updateMode(Mode.NORMAL);
             await updateModeCache();
             await updateIcon(guild);
             await client.user.setUsername('StormY').catch(console.error);

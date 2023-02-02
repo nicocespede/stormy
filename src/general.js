@@ -5,7 +5,7 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, githubRawURL, prefix } = require('./constants');
+const { relativeSpecialDays, githubRawURL, prefix, Mode } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
 const { convertTZ, log, splitEmbedDescription } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -13,7 +13,7 @@ Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium
 
 const getImageType = async () => {
     const mode = getMode() || await updateMode();
-    if (mode === 'afa')
+    if (mode === Mode.AFA)
         return '-afa'
 
     const today = convertTZ(new Date());
