@@ -30,6 +30,8 @@ module.exports = {
         var song = message ? text : interaction.options.getString('canción');
         const reply = { custom: true, ephemeral: true };
 
+        if (interaction) await interaction.deferReply();
+
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
             reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
@@ -50,7 +52,6 @@ module.exports = {
             return;
         }
 
-        if (interaction) await interaction.deferReply();
         const playlists = getPlaylists() || await updatePlaylists();
         if (Object.keys(playlists).includes(song.toLowerCase()))
             song = playlists[song.toLowerCase()].url;
