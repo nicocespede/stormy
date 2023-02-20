@@ -108,14 +108,14 @@ module.exports = {
 
         interactionsCollector.on('collect', async btnInt => {
             if (!btnInt.isButton()) return;
+            
+            const { customId } = btnInt;
+            if (!Object.keys(buttonsData).includes(customId)) return;
 
             if (btnInt.user.id !== user.id) {
                 btnInt.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
                 return;
-            }
-
-            const { customId } = btnInt;
-            if (!Object.keys(buttonsData).includes(customId)) return;
+            }    
 
             const messagesFilter = message => user.id === message.author.id;
 

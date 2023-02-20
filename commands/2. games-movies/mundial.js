@@ -198,6 +198,11 @@ module.exports = {
             const { customId } = interaction;
             if (!customId.startsWith(buttonsPrefix)) return;
 
+            if (interaction.user.id !== interaction.message.interaction.user.id) {
+                interaction.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
+                return;
+            }
+
             let id = customId.replace(buttonsPrefix, '');
 
             let split = id.split('-');
