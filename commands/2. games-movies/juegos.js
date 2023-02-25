@@ -42,7 +42,7 @@ module.exports = {
                 const newGame = `** ${i + 1}.** ${name}\n\n`;
                 gamesField.value += newGame;
                 updatesField.value += `*${lastUpdateToString(date, true)}*\n\n`;
-                if (ctx.measureText(newGame).width >= 254)
+                if (ctx.measureText(newGame).width >= 229)
                     updatesField.value += `\n`;
             }
             reply.embeds = [new EmbedBuilder()
