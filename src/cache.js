@@ -1,4 +1,4 @@
-const { githubRawURL, testing, color, local } = require('./constants');
+const { githubRawURL, testing, local } = require('./constants');
 const { convertTime, log } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
@@ -38,6 +38,7 @@ let reminders;
 let characters;
 let songsInQueue = {};
 let musicPlayerData = {};
+let fwcData;
 
 const getChronology = id => chronologies[id];
 
@@ -155,9 +156,8 @@ module.exports = {
                         game.name = data.name;
                         game.year = data.release_date.date.split(',').pop().trim();
                         game.imageURL = data.header_image;
-                        game.embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/steam.png` };
-                    } else
-                        game.embedData = { color: color, thumb: `${githubRawURL}/assets/thumbs/games/control.png` };
+                    }
+                    game.platform = key;
                     games.push(game);
                 }
         } catch (err) {
@@ -436,5 +436,24 @@ module.exports = {
     getMusicPlayerData: key => musicPlayerData[key],
     setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector: collector, message: message, page: page },
     clearMusicPlayerData: key => delete musicPlayerData[key],
-    updatePage: (key, page) => musicPlayerData[key].page = page
+    updatePage: (key, page) => musicPlayerData[key].page = page,
+
+    getFWCData: () => fwcData,
+
+    updateFWCData: async () => {
+        try {
+            let data;
+            if (local)
+                data = fs.readFileSync(`../stormy-data/fwc-2022.json`, 'utf8');
+            else {
+                const res = await fetch(`${githubRawURL}/fwc-2022.json`);
+                data = await res.text();
+            }
+            fwcData = JSON.parse(data);
+            log(`> fwc-2022.json cargado`, 'green');
+        } catch (err) {
+            log(`> Error al cargar fwc-2022.json\n${err.stack}`, 'red');
+        }
+        return fwcData;
+    }
 };
