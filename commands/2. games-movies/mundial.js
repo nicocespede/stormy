@@ -1,6 +1,9 @@
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-//const { getIds, updateIds, getFWCData, updateFWCData } = require('../../src/cache');
+const { getIds, updateIds, getFWCData, updateFWCData } = require('../../src/cache');
 const { githubRawURL } = require("../../src/constants");
+
+const packageContent = 5;
+const premiumPercentageChance = 50;
 
 const buttonsPrefix = 'fwc-matches-';
 const stagesData = {
@@ -96,35 +99,62 @@ const matchesData = {
     }
 };
 
-// const getRandomPlayerId = async () => {
-//     const { players } = getFWCData() || await updateFWCData();
-//     const playersIds = Object.keys(players);
-//     const random = Math.floor(Math.random() * (playersIds.length));
-//     return playersIds[random];
-// };
+const isPremiumPackage = () => {
+    const random = Math.floor(Math.random() * 99) + 1;
+    return random <= premiumPercentageChance;
+};
 
-// const getPlayerEmbed = async playerId => {
-//     const { players, positions, teams } = getFWCData() || await updateFWCData();
-//     const { birth, club, goals, name, nationality, picture, position, rating } = players[playerId];
-//     const { color, emblem, flag } = teams[playerId.split('-')[0]];
+const getRandomPlayersIds = async (amount, premium) => {
+    const { players } = getFWCData() || await updateFWCData();
+    const playersIds = !premium ? Object.keys(players)
+        : Object.entries(players).filter(([_, player]) => player.rating > 83).map(([id, _]) => id);
+    const ids = [];
+    for (let i = 0; i < amount; i++) {
+        const random = Math.floor(Math.random() * playersIds.length);
+        ids.push(playersIds.splice(random, 1).shift());
+    }
+    return ids;
+};
 
-//     let fields = [{ name: '#️ID', value: playerId },
-//     { name: 'Nacimiento', value: birth, inline: true },
-//     { name: 'Nacionalidad', value: nationality, inline: true }];
+const getRatingText = rating => {
+    if (rating <= 69)
+        return `🟠 ${rating}`;
+    else if (rating <= 74)
+        return `⚫ ${rating}`;
+    else if (rating <= 79)
+        return `🟡 ${rating}`;
+    else if (rating <= 83)
+        return `🟢 ${rating}`;
+    else if (rating <= 86)
+        return `🔵 ${rating}`;
+    else if (rating <= 89)
+        return `🔴 ${rating}`;
+    else
+        return `🟣 ${rating}`;
+};
 
-//     fields.push(goals ? { name: 'Goles', value: `⚽ ${goals}`, inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
+const getPlayerEmbed = async playerId => {
+    const { players, positions, teams } = getFWCData() || await updateFWCData();
+    const { birth, club, goals, name, nationality, picture, position, rating } = players[playerId];
+    const { color, emblem, flag } = teams[playerId.split('-')[0]];
 
-//     fields = fields.concat([{ name: 'Club', value: club, inline: true },
-//     { name: 'Posición', value: positions[position].replace(/ /g, '\n'), inline: true },
-//     { name: 'Calificación', value: `📈 ${rating}`, inline: true }]);
+    let fields = [{ name: '#️ID', value: playerId },
+    { name: 'Nacimiento', value: birth, inline: true },
+    { name: `Nacionalidad${nationality.includes(' ') ? 'es' : ''}`, value: nationality, inline: true }];
 
-//     return new EmbedBuilder()
-//         .setTitle(`${flag} \u200b ${playerId.split('-')[1]} | ${name}`)
-//         .setFields(fields)
-//         .setImage(picture)
-//         .setThumbnail(emblem)
-//         .setColor(color);
-// };
+    fields.push(goals ? { name: 'Goles', value: `⚽ `.repeat(goals), inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
+
+    fields = fields.concat([{ name: 'Club', value: club, inline: true },
+    { name: 'Posición', value: positions[position].replace(/ /g, '\n'), inline: true },
+    { name: 'Calificación', value: `${getRatingText(rating)}`, inline: true }]);
+
+    return new EmbedBuilder()
+        .setTitle(`${flag} \u200b ${playerId.split('-')[1]} | ${name}`)
+        .setFields(fields)
+        .setImage(picture)
+        .setThumbnail(emblem)
+        .setColor(color);
+};
 
 const getMatchesCategoriesButtons = () => {
     const rows = [];
@@ -170,11 +200,11 @@ module.exports = {
     description: 'Contiene los comandos relacionados a la Copa del Mundo Catar 2022.',
 
     options: [{
-    //     name: 'abrir-paquete',
-    //     description: 'Abre un paquete de jugador.',
-    //     type: ApplicationCommandOptionType.Subcommand
-    // },
-    // {
+        name: 'abrir-paquete',
+        description: 'Abre un paquete de jugador.',
+        type: ApplicationCommandOptionType.Subcommand
+    },
+    {
         name: 'partidos',
         description: 'Abre el navegador de partidos.',
         type: ApplicationCommandOptionType.Subcommand
@@ -246,35 +276,42 @@ module.exports = {
     callback: async ({ channel, interaction, user }) => {
         const subCommand = interaction.options.getSubcommand();
 
-        // const ids = getIds() || await updateIds();
-        // if (channel.id !== ids.channels.fwc)
-        //     return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
+        const ids = getIds() || await updateIds();
+        if (channel.id !== ids.channels.fwc)
+            return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 
         await interaction.deferReply();
 
-        // const fwcColor = [154, 16, 50];
-        // const fwcThumb = `${githubRawURL}/assets/thumbs/fwc-2022.png`;
-
         switch (subCommand) {
-            // case 'abrir-paquete':
-            //     const packageContent = 5;
-            //     await interaction.editReply({
-            //         embeds: [new EmbedBuilder()
-            //             .setDescription(`🔄 Abriendo paquete de 5 jugadores...`)
-            //             .setColor(fwcColor)
-            //             .setThumbnail(fwcThumb)]
-            //     });
+            case 'abrir-paquete':
+                const isPremium = isPremiumPackage();
 
-            //     const embeds = [];
-            //     const reply = { content: `<@${user.id}>\n\n✅ Obtuviste:\n\u200b` };
-            //     for (let i = 0; i < packageContent; i++) {
-            //         const playerId = await getRandomPlayerId();
-            //         embeds.push(await getPlayerEmbed(playerId));
-            //         reply.embeds = embeds;
-            //         await new Promise(res => setTimeout(res, 1000 * 3.5));
-            //         await interaction.editReply(reply);
-            //     }
-            //     break;
+                const fwcColor = !isPremium ? [154, 16, 50] : [205, 172, 93];
+                const fwcThumb = `${githubRawURL}/assets/thumbs/fwc-2022${isPremium ? '-gold' : ''}.png`;
+
+                const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
+                    : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;
+                await interaction.editReply({
+                    embeds: [new EmbedBuilder()
+                        .setDescription(description)
+                        .setColor(fwcColor)
+                        .setThumbnail(fwcThumb)]
+                });
+
+                const playersIds = await getRandomPlayersIds(packageContent, isPremium);
+                const reply = { content: `<@${user.id}>\n\n✅ Obtuviste:\n\u200b` };
+
+                if (isPremium)
+                    await new Promise(res => setTimeout(res, 1000 * 3));
+
+                const embeds = [];
+                for (const id of playersIds) {
+                    embeds.push(await getPlayerEmbed(id));
+                    reply.embeds = embeds;
+                    await new Promise(res => setTimeout(res, 1000 * 3.5));
+                    await interaction.editReply(reply);
+                }
+                break;
 
             case 'partidos':
                 await interaction.editReply({
