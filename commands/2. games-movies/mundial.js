@@ -1,9 +1,13 @@
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { getIds, updateIds, getFWCData, updateFWCData } = require('../../src/cache');
+const { getIds, updateIds, getFWCData, updateFWCData, getCollectors, updateCollectors } = require('../../src/cache');
+const { addAnnouncementsRole } = require("../../src/general");
 const { githubRawURL } = require("../../src/constants");
+const { addCollector, updateCollector } = require("../../src/mongodb");
+const { convertTZ } = require("../../src/util");
 
 const packageContent = 5;
-const premiumPercentageChance = 50;
+const premiumPercentageChance = 1;
+const timeoutHours = 12;
 
 const buttonsPrefix = 'fwc-matches-';
 const stagesData = {
@@ -99,6 +103,20 @@ const matchesData = {
     }
 };
 
+const addNewCards = (newCards, ownedCards, repeatedCards) => {
+    const newOwned = ownedCards.slice();
+    const newRepeated = repeatedCards.slice();
+    newCards.filter(id => !ownedCards.includes(id)).forEach(card => newOwned.push(card));
+    newCards.filter(id => ownedCards.includes(id)).forEach(card => newRepeated.push(card));
+    return { newOwned, newRepeated };
+};
+
+const isCollector = async id => {
+    const collectors = getCollectors() || await updateCollectors();
+    const found = collectors.find(c => c._id === id);
+    return found ? true : false;
+};
+
 const getGoalsString = goals => {
     const emoji = `⚽ `;
 
@@ -158,7 +176,7 @@ const getPlayerEmbed = async playerId => {
 
     fields = fields.concat([{ name: 'Club', value: club, inline: true },
     { name: 'Posición', value: positions[position].replace(/ /g, '\n'), inline: true },
-    { name: 'Calificación', value: `${getRatingText(rating)}`, inline: true }]);
+    { name: 'Calificación', value: getRatingText(rating), inline: true }]);
 
     return new EmbedBuilder()
         .setTitle(`${flag} \u200b ${playerId.split('-')[1]} | ${name}`)
@@ -284,8 +302,8 @@ module.exports = {
         });
     },
 
-    //callback: async ({ guild, instance, message, args,  }) => {
-    callback: async ({ channel, interaction, user }) => {
+    //callback: async ({ instance, message, args,  }) => {
+    callback: async ({ channel, guild, interaction, member, user }) => {
         const subCommand = interaction.options.getSubcommand();
 
         const ids = getIds() || await updateIds();
@@ -296,10 +314,39 @@ module.exports = {
 
         switch (subCommand) {
             case 'abrir-paquete':
+                await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
+
+                if (!(await isCollector(user.id))) {
+                    await addCollector(user.id);
+                    await updateCollectors();
+                }
+
+                const collectors = getCollectors() || await updateCollectors();
+                const { achievements, owned, repeated, timeout } = collectors.find(c => c._id === user.id);
+
+                let fwcColor = [154, 16, 50];
+                let fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
+
+                const now = new Date();
+                if (now < timeout) {
+                    const convertedDate = convertTZ(timeout);
+                    const date = convertedDate.toLocaleDateString('es-AR', { dateStyle: 'medium' });
+                    const time = convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' });
+                    await interaction.editReply({
+                        embeds: [new EmbedBuilder()
+                            .setDescription(`⏳ Podrás abrir el próximo sobre el **${date} a las ${time} hs...**`)
+                            .setColor(fwcColor)
+                            .setThumbnail(fwcThumb)]
+                    });
+                    return;
+                }
+
                 const isPremium = isPremiumPackage();
 
-                const fwcColor = !isPremium ? [154, 16, 50] : [205, 172, 93];
-                const fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022${isPremium ? '-gold' : ''}.png`;
+                if (isPremium) {
+                    fwcColor = [205, 172, 93];
+                    fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
+                }
 
                 const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
                     : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;
@@ -311,7 +358,19 @@ module.exports = {
                 });
 
                 const playersIds = await getRandomPlayersIds(packageContent, isPremium);
-                const reply = { content: `<@${user.id}>\n\n✅ Obtuviste:\n\u200b` };
+
+                const { newOwned, newRepeated } = addNewCards(playersIds, owned, repeated);
+
+                await updateCollector({
+                    _id: user.id,
+                    lastOpened: { date: now, content: playersIds },
+                    owned: newOwned,
+                    repeated: newRepeated,
+                    timeout: now.setHours(now.getHours() + timeoutHours)
+                });
+                await updateCollectors();
+
+                const reply = { content: `**<@${user.id}> - ${!isPremium ? '🧧' : '⭐'} PAQUETE ${!isPremium ? 'NORMAL' : 'PREMIUM'}**\n\n✅ Obtuviste:\n\u200b` };
 
                 if (isPremium)
                     await new Promise(res => setTimeout(res, 1000 * 3));

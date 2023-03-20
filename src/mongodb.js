@@ -8,6 +8,7 @@ const playlistSchema = require('../models/playlist-schema');
 const smurfSchema = require('../models/smurf-schema');
 const statSchema = require('../models/stat-schema');
 const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
+const collectorSchema = require('../models/collector-schema');
 const { log } = require('./util');
 
 module.exports = {
@@ -147,5 +148,14 @@ module.exports = {
     updateThermalPasteDate: async (id, date) => {
         await thermalPasteDateSchema.updateOne({ _id: id }, { date: date });
         log('> Fecha de cambio de pasta térmica actualizada en la base de datos', 'green');
+    },
+
+    addCollector: async id => {
+        await new collectorSchema({ _id: id, achievements: [], exchanges: 0, lastOpened: {}, owned: [], repeated: [], timeout: null }).save();
+        log('> Coleccionista agregado a la base de datos', 'green');
+    },
+    updateCollector: async ({ _id, achievements, exchanges, lastOpened, owned, repeated, timeout }) => {
+        await collectorSchema.updateOne({ _id }, { achievements, exchanges, lastOpened, owned, repeated, timeout });
+        log('> Coleccionista actualizado en la base de datos', 'green');
     }
 };

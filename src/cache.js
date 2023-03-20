@@ -39,6 +39,7 @@ let characters;
 let songsInQueue = {};
 let musicPlayerData = {};
 let fwcData;
+let collectors;
 
 const getChronology = id => chronologies[id];
 
@@ -455,5 +456,13 @@ module.exports = {
             log(`> Error al cargar fwc-2022.json\n${err.stack}`, 'red');
         }
         return fwcData;
-    }
+    },
+
+    getCollectors: () => collectors,
+    updateCollectors: async () => {
+        const collectorSchema = require('../models/collector-schema');
+        collectors = await collectorSchema.find({});
+        log('> Caché de coleccionistas actualizado', 'green');
+        return collectors;
+    },
 };

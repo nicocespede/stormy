@@ -80,11 +80,11 @@ const lastUpdateToString = (lastUpdate, upperCase) => {
     return `${(!upperCase ? 'el ' : '')}` + lastUpdate;
 };
 
-const addAnnouncementsRole = async (id, guild, member) => {
+const addAnnouncementsRole = async (roleId, guild, member) => {
     try {
-        const role = await guild.roles.fetch(id);
+        const role = await guild.roles.fetch(roleId);
         if (!role.members.has(member.user.id)) {
-            await member.roles.add(id);
+            await member.roles.add(roleId);
             log(`> Rol '${role.name}' agregado a ${member.user.tag}`, 'green');
         }
     } catch (error) {
