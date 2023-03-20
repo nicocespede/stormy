@@ -99,6 +99,18 @@ const matchesData = {
     }
 };
 
+const getGoalsString = goals => {
+    const emoji = `⚽ `;
+
+    if (goals <= 4)
+        return emoji.repeat(goals);
+
+    const firstLineLength = Math.ceil(goals / 2);
+    const secondLineLength = goals - firstLineLength;
+
+    return `${emoji.repeat(firstLineLength)}\n${emoji.repeat(secondLineLength)}`;
+};
+
 const isPremiumPackage = () => {
     const random = Math.floor(Math.random() * 99) + 1;
     return random <= premiumPercentageChance;
@@ -107,7 +119,7 @@ const isPremiumPackage = () => {
 const getRandomPlayersIds = async (amount, premium) => {
     const { players } = getFWCData() || await updateFWCData();
     const playersIds = !premium ? Object.keys(players)
-        : Object.entries(players).filter(([_, player]) => player.rating > 83).map(([id, _]) => id);
+        : Object.entries(players).filter(([_, player]) => player.rating > 88).map(([id, _]) => id);
     const ids = [];
     for (let i = 0; i < amount; i++) {
         const random = Math.floor(Math.random() * playersIds.length);
@@ -142,7 +154,7 @@ const getPlayerEmbed = async playerId => {
     { name: 'Nacimiento', value: birth, inline: true },
     { name: `Nacionalidad${nationality.includes(' ') ? 'es' : ''}`, value: nationality, inline: true }];
 
-    fields.push(goals ? { name: 'Goles', value: `⚽ `.repeat(goals), inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
+    fields.push(goals ? { name: 'Goles', value: getGoalsString(goals), inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
 
     fields = fields.concat([{ name: 'Club', value: club, inline: true },
     { name: 'Posición', value: positions[position].replace(/ /g, '\n'), inline: true },
@@ -287,7 +299,7 @@ module.exports = {
                 const isPremium = isPremiumPackage();
 
                 const fwcColor = !isPremium ? [154, 16, 50] : [205, 172, 93];
-                const fwcThumb = `${githubRawURL}/assets/thumbs/fwc-2022${isPremium ? '-gold' : ''}.png`;
+                const fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022${isPremium ? '-gold' : ''}.png`;
 
                 const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
                     : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;

@@ -1,11 +1,23 @@
+const local = process.env.LOCAL ? true : false;
+
+const getActualBranch = () => {
+    if (!local)
+        return 'main';
+
+    const fs = require('fs');
+    const data = fs.readFileSync(`../stormy-data/.git/HEAD`, 'utf8');
+    const splitted = data.split('/');
+    return splitted.pop().replace('\n', '');
+};
+
 module.exports = {
     prefix: '-',
 
     testing: process.env.TESTING ? true : false,
 
-    local: process.env.LOCAL ? true : false,
+    local,
 
-    githubRawURL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
+    githubRawURL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${getActualBranch()}`,
 
     color: [4, 134, 164],
 
