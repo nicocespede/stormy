@@ -6,7 +6,7 @@ const reqObject = { type: Object, required: true };
 const schema = new Schema({
     _id: { type: String, required: true },
     achievements: reqObject,
-    exchanges: { type: Number, required: true },
+    trades: { type: Number, required: true },
     lastOpened: reqObject,
     owned: reqObject,
     repeated: reqObject,
