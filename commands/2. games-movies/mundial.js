@@ -105,91 +105,107 @@ const matchesData = {
 const achievementsData = {
     "25-pc": {
         check: async owned => { return owned.length >= Math.ceil(await getTotalCards() * 0.25) },
-        description: "Consigue el 25% de la colección.",
+        description: "Consigue el **25% de la colección**.",
         name: "Coleccionista principiante"
     },
     "50-pc": {
         check: async owned => { return owned.length >= Math.ceil(await getTotalCards() * 0.50) },
-        description: "Consigue el 50% de la colección.",
+        description: "Consigue el **50% de la colección**.",
         name: "Coleccionista amateur"
     },
     "75-pc": {
         check: async owned => { return owned.length >= Math.ceil(await getTotalCards() * 0.75) },
-        description: "Consigue el 75% de la colección.",
+        description: "Consigue el **75% de la colección**.",
         name: "Coleccionista profesional"
     },
     "100-pc": {
         check: async owned => { return owned.length === await getTotalCards() },
-        description: "Completa la colección.",
+        description: "**Completa** la colección.",
         name: "Coleccionista experto"
     },
     "10-trades": {
         check: async trades => { return trades.length >= 10 },
-        description: "Realiza 10 intercambios.",
+        description: "Realiza **10 intercambios**.",
         name: "Comerciante principiante"
     },
     "25-trades": {
         check: async trades => { return trades.length >= 25 },
-        description: "Realiza 25 intercambios.",
+        description: "Realiza **25 intercambios**.",
         name: "Comerciante amateur"
     },
     "50-trades": {
         check: async trades => { return trades.length >= 50 },
-        description: "Realiza 50 intercambios.",
+        description: "Realiza **50 intercambios**.",
         name: "Comerciante profesional"
     },
     "100-trades": {
         check: async trades => { return trades.length >= 100 },
-        description: "Realiza 100 intercambios.",
+        description: "Realiza **100 intercambios**.",
         name: "Comerciante experto"
     },
+    "2nd": {
+        check: async owned => { return await hasAllPlayersFromTeam(owned, "FRA") },
+        description: "Consigue todos los jugadores de la **selección subcampeona**: 🇫🇷 **Francia**.",
+        name: "Se intentó pero no se pudo"
+    },
+    /*"3rd": {
+        check: async owned => { return await hasAllPlayersFromTeam(owned, "CRO") },
+        description: "Consigue todos los jugadores de la **selección dueña del tercer lugar**: 🇭🇷 **Croacia**.",
+        name: "Peor es nada"
+    },*/
+    "best-goal": {
+        check: async owned => { return hasPlayer("BRA-9", owned) },
+        description: "Consigue al jugador ganador del **Gol del Torneo**: 🇧🇷 **Richarlison de Andrade**.",
+        name: "¡Ay Dibu, qué loco que estás!"
+    },
     champions: {
-        check: async owned => {
-            const { teams } = getFWCData() || await updateFWCData();
-            const filtered = owned.filter(c => c.startsWith("ARG-"));
-            return filtered.length === teams["ARG"].players;
-        },
-        description: "Consigue todos los jugadores de la selección campeona.",
+        check: async owned => { return await hasAllPlayersFromTeam(owned, "ARG") },
+        description: "Consigue todos los jugadores de la **selección campeona**: 🇦🇷 **Argentina**.",
         name: "Campeones del mundo"
     },
     def: {
         check: async owned => { return await hasAllPlayersFromPosition(owned, "def") },
-        description: "Consigue todos los defensores.",
+        description: "Consigue todos los **defensores**.",
         name: "Defensa impenetrable"
     },
     del: {
         check: async owned => { return await hasAllPlayersFromPosition(owned, "del") },
-        description: "Consigue todos los delanteros.",
+        description: "Consigue todos los **delanteros**.",
         name: "Ataque imparable"
+    },
+    "fair-play": {
+        check: async owned => { return await hasAllPlayersFromTeam(owned, "ENG") },
+        description: "Consigue todos los jugadores de la selección ganadora del **Trofeo FIFA Fair Play*: 🏴󠁧󠁢󠁥󠁮󠁧󠁿 **Inglaterra**.",
+        name: "Juego limpio"
     },
     gk: {
         check: async owned => { return hasPlayer("ARG-23", owned) },
-        description: "Consigue al jugador ganador del Guante de Oro.",
+        description: "Consigue al jugador ganador del **Guante de Oro**: 🇦🇷 **Emiliano Martínez**.",
         name: "¡Ay Dibu, qué loco que estás!"
     },
     med: {
         check: async owned => { return await hasAllPlayersFromPosition(owned, "med") },
-        description: "Consigue todos los mediocampistas.",
+        description: "Consigue todos los **mediocampistas**.",
         name: "Mediocampo dominado"
     },
     mvp: {
         check: async owned => { return hasPlayer("ARG-10", owned) },
-        description: "Consigue al jugador ganador del Balón de Oro.",
+        description: "Consigue al jugador ganador del **Balón de Oro**: 🇦🇷 **Lionel Messi**.",
         name: "G.O.A.T."
     },/*,
     oldest: {
         check: async owned => { return hasPlayer("???-??", owned) },
-        description: "Consigue al jugador más viejo del torneo.",
+        description: "Consigue al jugador **más viejo del torneo**: ? **???**.",
         name: "El más experimentado"
     },*/
     platinum: {
         check: async achievements => { return achievements.length === (Object.keys(achievementsData).length - 1) },
-        description: "Consigue todos los logros.",
+        description: "Consigue **todos los logros**.",
         name: "Coleccionista definitivo"
     },
     por: {
         check: async owned => { return await hasAllPlayersFromPosition(owned, "por") },
-        description: "Consigue todos los arqueros.",
+        description: "Consigue todos los **arqueros**.",
         name: "Valla invicta"
     },
     scorers: {
@@ -198,22 +214,22 @@ const achievementsData = {
             const notIncluded = scorers.find(c => !owned.includes(c));
             return !notIncluded;
         },
-        description: "Consigue todos los goleadores.",
+        description: "Consigue todos los **goleadores**.",
         name: "Gol asegurado"
     },
     "top-scorer": {
         check: async owned => { return hasPlayer("FRA-10", owned) },
-        description: "Consigue al jugador ganador de la Bota de Oro.",
+        description: "Consigue al jugador ganador de la **Bota de Oro**: 🇫🇷 **Kylian Mbappé**.",
         name: "Máximo anotador"
     },
     young: {
         check: async owned => { return hasPlayer("ARG-24", owned) },
-        description: "Consigue al jugador ganador del Premio al Jugador Joven de la FIFA.",
+        description: "Consigue al jugador ganador del **Premio al Jugador Joven de la FIFA**: 🇦🇷 **Enzo Fernández**.",
         name: "Joven promesa"
     }/*,
     youngest: {
         check: async owned => { return hasPlayer("???-??", owned) },
-        description: "Consigue al jugador más joven del torneo.",
+        description: "Consigue al jugador **más joven del torneo**: ? **???**.",
         name: "Cuidado con el niño"
     }*/
 };
@@ -235,6 +251,12 @@ const getTotalPlayersFromPosition = async position => {
     const { achievements, players } = getFWCData() || await updateFWCData();
     const filtered = Object.entries(players).filter(([_, player]) => achievements[position].includes(player.position));
     return Object.keys(filtered).length;
+};
+
+const hasAllPlayersFromTeam = async (owned, team) => {
+    const { teams } = getFWCData() || await updateFWCData();
+    const filtered = owned.filter(c => c.startsWith(`${team}-`));
+    return filtered.length === teams[team].players;
 };
 
 const getTotalCards = async () => {
