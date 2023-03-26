@@ -105,48 +105,57 @@ const matchesData = {
 const achievementsData = {
     "1st-place": {
         check: async owned => { return await hasAllPlayersFromTeam(owned, "ARG") },
-        description: `Consigue todos los jugadores de la **selección campeona**: ${await getTeamName("ARG")}.`,
-        name: "Campeones del mundo"
+        description: `Consigue todos los jugadores de la **selección campeona**: {REPLACEMENT}.`,
+        name: "Campeones del mundo",
+        replacement: async () => { return await getTeamName("ARG") }
     },
     "2nd-place": {
         check: async owned => { return await hasAllPlayersFromTeam(owned, "FRA") },
-        description: `Consigue todos los jugadores de la **selección subcampeona**: ${await getTeamName("FRA")}.`,
-        name: "Se intentó pero no se pudo"
+        description: `Consigue todos los jugadores de la **selección subcampeona**: {REPLACEMENT}.`,
+        name: "Se intentó pero no se pudo",
+        replacement: async () => { return await getTeamName("FRA") }
     },
     /*"3rd-place": {
         check: async owned => { return await hasAllPlayersFromTeam(owned, "CRO") },
-        description: `Consigue todos los jugadores de la **selección dueña del tercer lugar**: ${await getTeamName("CRO")}.`,
-        name: "Peor es nada"
+        description: `Consigue todos los jugadores de la **selección dueña del tercer lugar**: {REPLACEMENT}.`,
+        name: "Peor es nada",
+        replacement: async () => {return await getTeamName("CRO")}
     },*/
     "award-best-goal": {
         check: async owned => { return hasPlayer("BRA-9", owned) },
-        description: `Consigue al jugador ganador del **Gol del Torneo**: ${await getPlayerName("BRA-9")}.`,
-        name: "¡Ay Dibu, qué loco que estás!"
+        description: `Consigue al jugador ganador del **Gol del Torneo**: {REPLACEMENT}.`,
+        name: "¡Ay Dibu, qué loco que estás!",
+        replacement: async () => { return await getPlayerName("BRA-9") }
     },
     "award-fair-play": {
         check: async owned => { return await hasAllPlayersFromTeam(owned, "ENG") },
-        description: `Consigue todos los jugadores de la selección ganadora del **Trofeo FIFA Fair Play*: ${await getTeamName("ENG")}.`,
-        name: "Juego limpio"
+        description: `Consigue todos los jugadores de la selección ganadora del **Trofeo FIFA Fair Play*: {REPLACEMENT}.`,
+        name: "Juego limpio",
+        replacement: async () => { return await getTeamName("ENG") }
     },
     "award-gk": {
         check: async owned => { return hasPlayer("ARG-23", owned) },
-        description: `Consigue al jugador ganador del **Guante de Oro**: ${await getPlayerName("ARG-23")}.`,
-        name: "¡Ay Dibu, qué loco que estás!"
+        description: `Consigue al jugador ganador del **Guante de Oro**: {REPLACEMENT}.`,
+        name: "¡Ay Dibu, qué loco que estás!",
+        replacement: async () => { return await getPlayerName("ARG-23") }
     },
     "award-mvp": {
         check: async owned => { return hasPlayer("ARG-10", owned) },
-        description: `Consigue al jugador ganador del **Balón de Oro**: ${await getPlayerName("ARG-10")}.`,
-        name: "G.O.A.T."
+        description: `Consigue al jugador ganador del **Balón de Oro**: {REPLACEMENT}.`,
+        name: "G.O.A.T.",
+        replacement: async () => { return await getPlayerName("ARG-10") }
     },
     "award-top-scorer": {
         check: async owned => { return hasPlayer("FRA-10", owned) },
-        description: `Consigue al jugador ganador de la **Bota de Oro**: ${await getPlayerName("FRA-10")}.`,
-        name: "Máximo anotador"
+        description: `Consigue al jugador ganador de la **Bota de Oro**: {REPLACEMENT}.`,
+        name: "Máximo anotador",
+        replacement: async () => { return await getPlayerName("FRA-10") }
     },
     "award-young": {
         check: async owned => { return hasPlayer("ARG-24", owned) },
-        description: `Consigue al jugador ganador del **Premio al Jugador Joven de la FIFA**: ${await getPlayerName("ARG-24")}.`,
-        name: "Joven promesa"
+        description: `Consigue al jugador ganador del **Premio al Jugador Joven de la FIFA**: {REPLACEMENT}.`,
+        name: "Joven promesa",
+        replacement: async () => { return await getPlayerName("ARG-24") }
     },
     "completion-25": {
         check: async owned => { return owned.length >= Math.ceil(await getTotalCards() * 0.25) },
@@ -232,6 +241,12 @@ const achievementsData = {
     }*/
 };
 
+const sort = async array => {
+    const { players } = getFWCData() || await updateFWCData();
+    const ids = Object.keys(players);
+    array.sort((a, b) => ids.indexOf(a) - ids.indexOf(b));
+};
+
 const getPlayerName = async id => {
     const { players, teams } = getFWCData() || await updateFWCData();
     const player = players[id];
@@ -282,11 +297,13 @@ const getTotalCards = async () => {
     return Object.keys(players).length;
 };
 
-const addNewCards = (newCards, ownedCards, repeatedCards) => {
+const addNewCards = async (newCards, ownedCards, repeatedCards) => {
     const newOwned = ownedCards.slice();
     const newRepeated = repeatedCards.slice();
     newCards.filter(id => !ownedCards.includes(id)).forEach(card => newOwned.push(card));
     newCards.filter(id => ownedCards.includes(id)).forEach(card => newRepeated.push(card));
+    await sort(newOwned);
+    await sort(newRepeated);
     return { newOwned, newRepeated };
 };
 
@@ -340,6 +357,31 @@ const getRatingText = rating => {
         return `🔴 ${rating}`;
     else
         return `🟣 ${rating}`;
+};
+
+const getMisteriousPlayerEmbed = async playerId => {
+    const { players, teams } = getFWCData() || await updateFWCData();
+    const { goals } = players[playerId];
+    const { color, flag } = teams[playerId.split('-')[0]];
+
+    const questionMarks = "???";
+
+    let fields = [{ name: '#️ID', value: playerId },
+    { name: 'Nacimiento', value: questionMarks, inline: true },
+    { name: `Nacionalidad`, value: `🏳 ${questionMarks}`, inline: true }];
+
+    fields.push(goals ? { name: 'Goles', value: questionMarks, inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
+
+    fields = fields.concat([{ name: 'Club', value: `🏳 ${questionMarks}`, inline: true },
+    { name: 'Posición', value: questionMarks, inline: true },
+    { name: 'Calificación', value: `⚪ ${questionMarks}`, inline: true }]);
+
+    return new EmbedBuilder()
+        .setTitle(`${flag} \u200b ${playerId.split('-')[1]} | ${questionMarks}`)
+        .setFields(fields)
+        .setImage(`${githubRawURL}/assets/fwc/misterious-player.png`)
+        .setThumbnail(`${githubRawURL}/assets/fwc/misterious-team.png`)
+        .setColor(color);
 };
 
 const getPlayerEmbed = async playerId => {
@@ -487,7 +529,7 @@ module.exports = {
             interaction.update({
                 components: [getBackButton(stageId)],
                 content: null,
-                files: [`${githubRawURL}/assets/fwc/${stageId}-${matchId}.png`]
+                files: [`${githubRawURL}/assets/fwc/matches/${stageId}-${matchId}.png`]
             });
         });
     },
@@ -500,129 +542,141 @@ module.exports = {
         if (channel.id !== ids.channels.fwc)
             return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 
-        switch (subCommand) {
-            case 'abrir-paquete':
-                await interaction.deferReply();
-                await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
+        const sharedInitialBehaviour = ['abrir-paquete', 'ver-tarjeta'];
+        if (sharedInitialBehaviour.includes(subCommand)) {
+            // shared behaviour
+            await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
 
-                if (!(await isCollector(user.id))) {
-                    await addCollector(user.id);
-                    await updateCollectors();
-                }
+            if (!(await isCollector(user.id))) {
+                await addCollector(user.id);
+                await updateCollectors();
+            }
 
-                const collectors = getCollectors() || await updateCollectors();
-                const { achievements, owned, repeated, timeout } = collectors.find(c => c._id === user.id);
+            const collectors = getCollectors() || await updateCollectors();
+            const { achievements, owned, repeated, timeout } = collectors.find(c => c._id === user.id);
 
-                let fwcColor = [154, 16, 50];
-                let fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
+            switch (subCommand) {
+                case 'abrir-paquete':
+                    await interaction.deferReply();
 
-                const now = new Date();
-                if (now < timeout) {
-                    const convertedDate = convertTZ(timeout);
-                    const date = convertedDate.toLocaleDateString('es-AR', { dateStyle: 'medium' });
-                    const time = convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' });
+                    let fwcColor = [154, 16, 50];
+                    let fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
+
+                    const now = new Date();
+                    if (now < timeout) {
+                        const convertedDate = convertTZ(timeout);
+                        const date = convertedDate.toLocaleDateString('es-AR', { dateStyle: 'medium' });
+                        const time = convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' });
+                        await interaction.editReply({
+                            embeds: [new EmbedBuilder()
+                                .setDescription(`⏳ Podrás abrir el próximo sobre el **${date} a las ${time} hs...**`)
+                                .setColor(fwcColor)
+                                .setThumbnail(fwcThumb)]
+                        });
+                        return;
+                    }
+
+                    const isPremium = isPremiumPackage();
+
+                    if (isPremium) {
+                        fwcColor = [205, 172, 93];
+                        fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
+                    }
+
+                    const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
+                        : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;
                     await interaction.editReply({
                         embeds: [new EmbedBuilder()
-                            .setDescription(`⏳ Podrás abrir el próximo sobre el **${date} a las ${time} hs...**`)
+                            .setDescription(description)
                             .setColor(fwcColor)
                             .setThumbnail(fwcThumb)]
                     });
-                    return;
-                }
 
-                const isPremium = isPremiumPackage();
+                    const playersIds = await getRandomPlayersIds(packageContent, isPremium);
 
-                if (isPremium) {
-                    fwcColor = [205, 172, 93];
-                    fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
-                }
+                    const { newOwned, newRepeated } = await addNewCards(playersIds, owned, repeated);
 
-                const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
-                    : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;
-                await interaction.editReply({
-                    embeds: [new EmbedBuilder()
-                        .setDescription(description)
-                        .setColor(fwcColor)
-                        .setThumbnail(fwcThumb)]
-                });
+                    const platinumKey = 'platinum';
+                    const notToCheck = [platinumKey, 'trades-10', 'trades-25', 'trades-50', 'trades-100'];
 
-                const playersIds = await getRandomPlayersIds(packageContent, isPremium);
+                    //check for new achievements
+                    const newAchievements = [];
+                    if (achievements.length < Object.keys(achievementsData).length)
+                        for (const key in achievementsData) if (Object.hasOwnProperty.call(achievementsData, key))
+                            if (!notToCheck.includes(key) && await achievementsData[key].check(newOwned) && !achievements.includes(key))
+                                newAchievements.push(key);
 
-                const { newOwned, newRepeated } = addNewCards(playersIds, owned, repeated);
+                    //check for platinum achievement
+                    const allAchievements = achievements.concat(newAchievements);
+                    if (await achievementsData[platinumKey].check(allAchievements)) {
+                        newAchievements.push(platinumKey);
+                        allAchievements.push(platinumKey);
+                    }
 
-                const platinumKey = 'platinum';
-                const notToCheck = [platinumKey, '10-trades', '25-trades', '50-trades', '100-trades'];
-
-                //check for new achievements
-                const newAchievements = [];
-                if (achievements.length < Object.keys(achievementsData).length)
-                    for (const key in achievementsData) if (Object.hasOwnProperty.call(achievementsData, key))
-                        if (!notToCheck.includes(key) && await achievementsData[key].check(newOwned) && !achievements.includes(key))
-                            newAchievements.push(key);
-
-                //check for platinum achievement
-                const allAchievements = achievements.concat(newAchievements);
-                if (await achievementsData[platinumKey].check(allAchievements)) {
-                    newAchievements.push(platinumKey);
-                    allAchievements.push(platinumKey);
-                }
-
-                await updateCollector({
-                    achievements: allAchievements,
-                    _id: user.id,
-                    lastOpened: { date: now, content: playersIds },
-                    owned: newOwned,
-                    repeated: newRepeated,
-                    timeout: now.setHours(now.getHours() + timeoutHours)
-                });
-                await updateCollectors();
-
-                const reply = { content: `**<@${user.id}> - ${!isPremium ? '🧧' : '⭐'} PAQUETE ${!isPremium ? 'NORMAL' : 'PREMIUM'}**\n\n✅ Obtuviste:\n\u200b` };
-
-                if (isPremium)
-                    await new Promise(res => setTimeout(res, 1000 * 3));
-
-                const embeds = [];
-                for (const id of playersIds) {
-                    embeds.push(await getPlayerEmbed(id));
-                    reply.embeds = embeds;
-                    await new Promise(res => setTimeout(res, 1000 * 3.5));
-                    await interaction.editReply(reply);
-                }
-
-                for (const id of newAchievements) {
-                    const achievement = achievementsData[id];
-                    await channel.send({
-                        content: `🔔 **¡<@${user.id}> consiguió un logro!**\n\u200b`,
-                        embeds: [new EmbedBuilder()
-                            .setColor([154, 16, 50])
-                            .setDescription(achievement.description)
-                            .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-${id}.png`)
-                            .setTitle(achievement.name)]
+                    await updateCollector({
+                        achievements: allAchievements,
+                        _id: user.id,
+                        lastOpened: { date: now, content: playersIds },
+                        owned: newOwned,
+                        repeated: newRepeated,
+                        timeout: now.setHours(now.getHours() + timeoutHours)
                     });
-                }
-                break;
+                    await updateCollectors();
 
-            case 'ver-tarjeta':
-                const cardId = interaction.options.getString('id');
+                    const reply = { content: `**<@${user.id}> - ${!isPremium ? '🧧' : '⭐'} PAQUETE ${!isPremium ? 'NORMAL' : 'PREMIUM'}**\n\n✅ Obtuviste:\n\u200b` };
 
-                const { players } = getFWCData() || await updateFWCData();
-                if (!Object.keys(players).includes(cardId)) {
-                    await interaction.reply({ content: '❌ El **ID** indicado es **inválido**.', ephemeral: true });
-                    return;
-                }
+                    if (isPremium)
+                        await new Promise(res => setTimeout(res, 1000 * 3));
 
-                await interaction.deferReply();
+                    const embeds = [];
+                    for (const id of playersIds) {
+                        embeds.push(await getPlayerEmbed(id));
+                        reply.embeds = embeds;
+                        await new Promise(res => setTimeout(res, 1000 * 3.5));
+                        await interaction.editReply(reply);
+                    }
 
-                await interaction.editReply({ embeds: [await getPlayerEmbed(cardId)] });
-                break;
+                    for (const id of newAchievements) {
+                        const achievement = achievementsData[id];
+                        const description = !achievement.description.includes('{REPLACEMENT}')
+                            ? achievement.description
+                            : achievement.description.replace('{REPLACEMENT}', await achievement.replacement());
+                        await channel.send({
+                            content: `🔔 **¡<@${user.id}> consiguió un logro!**\n\u200b`,
+                            embeds: [new EmbedBuilder()
+                                .setColor([154, 16, 50])
+                                .setDescription(description)
+                                .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-${id}.png`)
+                                .setTitle(achievement.name)]
+                        });
+                    }
+                    break;
 
-            case 'partidos':
-                await interaction.reply({
-                    components: getMatchesCategoriesButtons(),
-                    content: '⚽ \u200b **__Partidos de la Copa Mundial Catar 2022__**\n\u200b'
-                });
-                break;
+                case 'ver-tarjeta':
+                    const cardId = interaction.options.getString('id');
+
+                    const { players } = getFWCData() || await updateFWCData();
+                    if (!Object.keys(players).includes(cardId)) {
+                        await interaction.reply({ content: '❌ El **ID** indicado es **inválido**.', ephemeral: true });
+                        return;
+                    }
+
+                    await interaction.deferReply();
+
+                    if (!owned.includes(cardId))
+                        await interaction.editReply({ embeds: [await getMisteriousPlayerEmbed(cardId)] });
+                    else
+                        await interaction.editReply({ embeds: [await getPlayerEmbed(cardId)] });
+                    break;
+            }
+
+            return;
         }
+
+        if (subCommand === 'partidos')
+            await interaction.reply({
+                components: getMatchesCategoriesButtons(),
+                content: '⚽ \u200b **__Partidos de la Copa Mundial Catar 2022__**\n\u200b'
+            });
     }
 }
