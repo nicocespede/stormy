@@ -259,9 +259,13 @@ const getStatsEmbed = async guild => {
     const collectors = getCollectors() || await updateCollectors();
     const members = await guild.members.fetch(collectors.map(c => c._id)).catch(console.error);
 
+    const totalCards = await getTotalCards();
+    const totalGoals = await getTotalGoals();
+    const totalAchievements = Object.keys(achievementsData).length;
+
     for (let i = 0; i < collectors.length; i++) {
         const { _id, achievements, owned, repeated } = collectors[i];
-        const newStat = `🃏 ${owned.length}/${await getTotalCards()} | 🔁 ${repeated.length} | 📊 ${await getAverageRating(owned)} | ⚽ ${await getGoals(owned)}/${await getTotalGoals()} | 🏆 ${achievements.length}/${Object.keys(achievementsData).length}`;
+        const newStat = `🃏 ${owned.length}/${totalCards} | 🔁 ${repeated.length} | 📊 ${await getAverageRating(owned)} | ⚽ ${await getGoals(owned)}/${totalGoals} | 🏆 ${achievements.length}/${totalAchievements}`;
         const aux = statsField.value + `${newStat}\n\n`;
 
         if (aux.length <= 1024) {
