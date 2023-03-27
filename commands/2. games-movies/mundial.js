@@ -9,6 +9,11 @@ const packageContent = 5;
 const premiumPercentageChance = 1;
 const timeoutHours = 12;
 
+const fwcColor = [154, 16, 50];
+const fwcGoldColor = [205, 172, 93];
+const fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
+const fwcGoldThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
+
 const buttonsPrefix = 'fwc-matches-';
 const stagesData = {
     G1: { emoji: "1️⃣", label: "Fase 1" },
@@ -241,6 +246,70 @@ const achievementsData = {
     }*/
 };
 
+const getStatsEmbed = async guild => {
+    const embed = new EmbedBuilder()
+        .setTitle('Estadísticas de coleccionistas')
+        .setDescription(`**Referencias:**\n\n🃏 Obtenidas | 🔁 Repet. | 📊 Media prom. | ⚽ Goles | 🏆 Logros`)
+        .setColor(fwcColor)
+        .setThumbnail(fwcThumb);
+    const fields = [];
+    let namesField = { name: 'Coleccionista', value: '', inline: true };
+    let statsField = { name: '\u200b', value: '', inline: true };
+
+    const collectors = getCollectors() || await updateCollectors();
+    const members = await guild.members.fetch(collectors.map(c => c._id)).catch(console.error);
+
+    for (let i = 0; i < collectors.length; i++) {
+        const { _id, achievements, owned, repeated } = collectors[i];
+        const newStat = `🃏 ${owned.length}/${await getTotalCards()} | 🔁 ${repeated.length} | 📊 ${await getAverageRating(owned)} | ⚽ ${await getGoals(owned)}/${await getTotalGoals()} | 🏆 ${achievements.length}/${Object.keys(achievementsData).length}`;
+        const aux = statsField.value + `${newStat}\n\n`;
+
+        if (aux.length <= 1024) {
+            namesField.value += `**${i + 1}.** ${members.get(_id).user.username}\n\n`;
+            statsField.value += `${newStat}\n\n`;
+            continue;
+        }
+
+        fields.push({ name: '\u200b', value: '\u200b', inline: true }, namesField, statsField);
+
+        namesField = { name: 'Coleccionista (continuación)', value: `*${members.get(_id).user.username}*\n\n`, inline: true };
+        statsField = { name: '\u200b', value: `${newStat}\n\n`, inline: true };
+    }
+
+    if (fields.length === 0)
+        fields.push(namesField, statsField);
+    else
+        fields.push({ name: '\u200b', value: '\u200b', inline: true }, namesField, statsField);
+
+    embed.addFields(fields);
+    return embed;
+};
+
+const getAverageRating = async owned => {
+    const { players } = getFWCData() || await updateFWCData();
+    let amount = 0;
+    let sum = 0;
+    owned.forEach(c => {
+        amount++;
+        sum += players[c].rating;
+    });
+    return Math.round(sum / amount);
+};
+
+const getGoals = async owned => {
+    const { players } = getFWCData() || await updateFWCData();
+    let goals = 0;
+    owned.forEach(c => goals += players[c].goals ? players[c].goals : 0);
+    return goals;
+};
+
+const getTotalGoals = async () => {
+    const { players } = getFWCData() || await updateFWCData();
+    let goals = 0;
+    Object.entries(players).forEach(([_, p]) => goals += p.goals ? p.goals : 0);
+    return goals;
+};
+
 const sort = async array => {
     const { players } = getFWCData() || await updateFWCData();
     const ids = Object.keys(players);
@@ -368,7 +437,7 @@ const getMisteriousPlayerEmbed = async playerId => {
 
     let fields = [{ name: '#️ID', value: playerId },
     { name: 'Nacimiento', value: questionMarks, inline: true },
-    { name: `Nacionalidad`, value: `🏳 ${questionMarks}`, inline: true }];
+    { name: `Nacionalidad`, value: `🏳`, inline: true }];
 
     fields.push(goals ? { name: 'Goles', value: questionMarks, inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
 
@@ -452,7 +521,12 @@ module.exports = {
 
     options: [{
         name: 'abrir-paquete',
-        description: 'Abre un paquete de jugador.',
+        description: 'Abre un paquete de jugadores.',
+        type: ApplicationCommandOptionType.Subcommand
+    },
+    {
+        name: 'estadisticas',
+        description: 'Muestra las estadísticas de los coleccionistas.',
         type: ApplicationCommandOptionType.Subcommand
     },
     {
@@ -559,9 +633,6 @@ module.exports = {
                 case 'abrir-paquete':
                     await interaction.deferReply();
 
-                    let fwcColor = [154, 16, 50];
-                    let fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
-
                     const now = new Date();
                     if (now < timeout) {
                         const convertedDate = convertTZ(timeout);
@@ -578,18 +649,13 @@ module.exports = {
 
                     const isPremium = isPremiumPackage();
 
-                    if (isPremium) {
-                        fwcColor = [205, 172, 93];
-                        fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
-                    }
-
                     const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
                         : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;
                     await interaction.editReply({
                         embeds: [new EmbedBuilder()
                             .setDescription(description)
-                            .setColor(fwcColor)
-                            .setThumbnail(fwcThumb)]
+                            .setColor(!isPremium ? fwcColor : fwcGoldColor)
+                            .setThumbnail(!isPremium ? fwcThumb : fwcGoldThumb)]
                     });
 
                     const playersIds = await getRandomPlayersIds(packageContent, isPremium);
@@ -671,6 +737,12 @@ module.exports = {
             }
 
             return;
+        }
+
+        if (subCommand === 'estadisticas') {
+            await interaction.deferReply();
+
+            await interaction.editReply({ embeds: [await getStatsEmbed(guild)] });
         }
 
         if (subCommand === 'partidos')
