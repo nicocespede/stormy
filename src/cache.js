@@ -378,7 +378,7 @@ module.exports = {
                 date.setHours(date.getHours() - 2);
                 const match = {
                     date,
-                    remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text(),
+                    remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text().replace('w', 's').replace('mo', 'me'),
                     url: urlBase + el.attribs['href']
                 };
                 const teams = $(el).children('.m-item-team.text-of');
