@@ -40,7 +40,7 @@ module.exports = async client => {
         else
             exec = true;
 
-        timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 60);
+        timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 15);
     };
 
     check();
