@@ -80,8 +80,8 @@ module.exports = {
                 const oldGames = (await moviesAndGamesSchema.find({ _id: 'games' }))[0];
                 const games = await updateGamesCache();
                 for (const game of games) {
-                    const { lastUpdate, name, updateInfo, year } = game;
-                    const found = oldGames.data.filter(g => g.name === name)[0];
+                    const { id, lastUpdate, name, platform, updateInfo, year } = game;
+                    const found = oldGames.data.filter(g => g.id === `${platform}-${id}`)[0];
                     if (!found)
                         newStuff.games.push(name + ` (${year})`);
                     else if (lastUpdate !== found.lastUpdate)
@@ -159,8 +159,8 @@ module.exports = {
 
                         const dbUpdate = [];
                         for (const element of games) {
-                            const { name, lastUpdate } = element;
-                            dbUpdate.push({ name, lastUpdate });
+                            const { id, lastUpdate, platform } = element;
+                            dbUpdate.push({ id: `${platform}-${id}`, lastUpdate });
                         }
                         await updateGames(dbUpdate);
                     }
