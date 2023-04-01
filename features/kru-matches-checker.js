@@ -14,11 +14,12 @@ module.exports = async client => {
             for (const element of matches) {
                 const { date, team1Name, team2Name } = element;
                 const rivalTeam = team1Name.includes('KRÜ') ? team2Name : team1Name;
-                const difference = date - today;
+                const convertedDate = convertTZ(date);
+                const difference = convertedDate - today;
 
                 if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
                     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString('es-AR', { timeStyle: 'short' })} hs**.`)
+                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })} hs**.`)
                         .catch(_ => log("> Error al enviar alerta de partido de KRÜ", 'red'));
                 }
 

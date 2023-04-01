@@ -375,7 +375,7 @@ module.exports = {
             a.each((_, el) => {
                 const split = $(el).children('.m-item-date').text().trim().split(`\t`);
                 const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
-                date.setHours(date.getHours() + 5);
+                date.setHours(date.getHours() - 2);
                 const match = {
                     date,
                     remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text(),
