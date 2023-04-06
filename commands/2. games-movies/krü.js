@@ -27,7 +27,7 @@ module.exports = {
             const dateInt = convertedDate.getDate();
             const month = convertedDate.getMonth() + 1;
             datesField.value += `${dateInt < 10 ? `0${dateInt}` : dateInt}/${month < 10 ? `0${month}` : month} ${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })} **(${remaining})**\n\n`;
-            urlsField.value += `**[🌐](${url})**\n\n`;
+            urlsField.value += `**[🔗](${url})**\n\n`;
         }
 
         if (message) reply.content = null;
