@@ -1,9 +1,9 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
-const { color, prefix, githubRawURL } = require('../../src/constants');
+const { color, prefix, githubRawURL, EMBED_DESCRIPTION_MAX_LENGTH } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/general');
-const { splitEmbedDescription } = require('../../src/util');
+const { splitLines } = require('../../src/util');
 
 const buttonsPrefix = 'games-';
 const maxIdlingTime = 10;
@@ -140,7 +140,7 @@ module.exports = {
                     const dataString = customId !== 'instructions' ? `**Cantidad de archivos:** ${element.files}` : '';
                     const passwordString = customId !== 'instructions' && element.password ? `**Contraseña:** ${element.password}` : '';
                     const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${element[server].join('\n')}\n\n${passwordString}`;
-                    const chunks = splitEmbedDescription(description);
+                    const chunks = splitLines(description, EMBED_DESCRIPTION_MAX_LENGTH);
                     let counter = 1;
                     const prefix = customId.split('-')[0];
                     const { label } = data[prefix];

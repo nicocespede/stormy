@@ -3,7 +3,7 @@ const { getIds, updateIds, getFWCData, updateFWCData, getCollectors, updateColle
 const { addAnnouncementsRole } = require("../../src/general");
 const { githubRawURL } = require("../../src/constants");
 const { addCollector, updateCollector } = require("../../src/mongodb");
-const { convertTZ } = require("../../src/util");
+const { convertTZ, log } = require("../../src/util");
 
 const packageContent = 5;
 const premiumPercentageChance = 1;
@@ -246,6 +246,124 @@ const achievementsData = {
     }*/
 };
 
+const getAchievementsEmbeds = async achievements => {
+    const ret = [];
+    let actualArray = [];
+    for (const id of Object.keys(achievementsData)) {
+        if (actualArray.length === 10) {
+            ret.push(actualArray);
+            actualArray = [];
+        }
+
+        const embed = !achievements.includes(id) ? getMysteriousAchievementEmbed() : await getAchievementEmbed(id);
+        actualArray.push(embed);
+    }
+    ret.push(actualArray);
+    return ret;
+};
+
+const getMysteriousAchievementEmbed = () => {
+    return new EmbedBuilder()
+        .setColor([154, 16, 50])
+        .setDescription('???'.repeat(15))
+        .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-mystery.png`)
+        .setTitle('???');
+};
+
+const getAchievementEmbed = async achievementId => {
+    const achievement = achievementsData[achievementId];
+    const description = !achievement.description.includes('{REPLACEMENT}')
+        ? achievement.description
+        : achievement.description.replace('{REPLACEMENT}', await achievement.replacement());
+
+    return new EmbedBuilder()
+        .setColor([154, 16, 50])
+        .setDescription(description)
+        .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-${achievementId}.png`)
+        .setTitle(achievement.name);
+};
+
+const generateList = array => {
+    let list = '';
+    let lastCountry = '';
+    for (const id of array) {
+        const splitted = id.split('-');
+        const country = splitted.shift();
+        const number = splitted.shift();
+
+        if (country === lastCountry)
+            list += `, ${number}`;
+        else {
+            list += `\n**${country}**: ${number}`;
+            lastCountry = country;
+        }
+    }
+    return list.substring(1);
+};
+
+const getGroup = async teamId => {
+    const { teams } = getFWCData() || await updateFWCData();
+    const index = Object.keys(teams).indexOf(teamId);
+    if (index < 4)
+        return 'A';
+    else if (index < 8)
+        return 'B';
+    else if (index < 12)
+        return 'C';
+    else if (index < 16)
+        return 'D';
+    else if (index < 20)
+        return 'E';
+    else if (index < 24)
+        return 'F';
+    else if (index < 28)
+        return 'G';
+    else
+        return 'H';
+};
+
+const addFields = async (fields, fieldName, arrayToAdd) => {
+    const { teams } = getFWCData() || await updateFWCData();
+    const list = generateList(arrayToAdd);
+    let lastGroup = 'A';
+    let actualField = { name: fieldName, value: `**Grupo ${lastGroup}**\n` };
+    for (const line of list.split('\n')) {
+        const teamId = line.substring(2, 5);
+        const group = await getGroup(teamId);
+        const { flag } = teams[teamId];
+        if (group === lastGroup)
+            actualField.value += `${flag} ${line}\n`;
+        else {
+            fields.push(actualField);
+            lastGroup = group;
+            actualField = { name: `Grupo ${lastGroup}`, value: `${flag} ${line}\n` };
+        }
+    }
+    fields.push(actualField);
+};
+
+const getProfileEmbed = async user => {
+    const collectors = getCollectors() || await updateCollectors();
+    const { achievements, owned, repeated } = collectors.find(c => c._id === user.id);
+
+    const fields = [{ name: '📊 Media promedio', value: `${await getAverageRating(owned)}`, inline: true },
+    { name: '⚽ Goles', value: `${await getGoals(owned)}/${await getTotalGoals()}`, inline: true },
+    { name: '🏆 Logros', value: `${achievements.length}/${Object.keys(achievementsData).length}`, inline: true }];
+
+    const { players } = getFWCData() || await updateFWCData();
+
+    await addFields(fields, `🃏 Obtenidas: ${owned.length}/${await getTotalCards()}`, owned);
+    await addFields(fields, `🔁 Repetidas: ${repeated.length}`, repeated);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`Perfil de coleccionista: ${user.username}`)
+        .setFields(fields)
+        .setColor(fwcColor)
+        .setThumbnail(fwcThumb);
+
+    return embed;
+};
+
 const getStatsEmbed = async guild => {
     const embed = new EmbedBuilder()
         .setTitle('Estadísticas de coleccionistas')
@@ -432,7 +550,7 @@ const getRatingText = rating => {
         return `🟣 ${rating}`;
 };
 
-const getMisteriousPlayerEmbed = async playerId => {
+const getMysteriousPlayerEmbed = async playerId => {
     const { players, teams } = getFWCData() || await updateFWCData();
     const { goals } = players[playerId];
     const { color, flag } = teams[playerId.split('-')[0]];
@@ -524,6 +642,16 @@ module.exports = {
     description: 'Contiene los comandos relacionados a la Copa del Mundo Catar 2022.',
 
     options: [{
+        name: 'ver-perfil',
+        description: 'Muestra el perfil de un coleccionista.',
+        type: ApplicationCommandOptionType.Subcommand,
+        options: [{
+            name: 'usuario',
+            description: 'El usuario del coleccionista que se quiere ver.',
+            required: false,
+            type: ApplicationCommandOptionType.User
+        }]
+    }, {
         name: 'abrir-paquete',
         description: 'Abre un paquete de jugadores.',
         type: ApplicationCommandOptionType.Subcommand
@@ -543,6 +671,11 @@ module.exports = {
             required: true,
             type: ApplicationCommandOptionType.String
         }]
+    },
+    {
+        name: 'ver-logros',
+        description: 'Muestra los logros.',
+        type: ApplicationCommandOptionType.Subcommand
     },
     {
         name: 'partidos',
@@ -620,7 +753,7 @@ module.exports = {
         if (channel.id !== ids.channels.fwc)
             return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 
-        const sharedInitialBehaviour = ['abrir-paquete', 'ver-tarjeta'];
+        const sharedInitialBehaviour = ['ver-perfil', 'abrir-paquete', 'ver-tarjeta', 'ver-logros'];
         if (sharedInitialBehaviour.includes(subCommand)) {
             // shared behaviour
             await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
@@ -634,6 +767,25 @@ module.exports = {
             const { achievements, owned, repeated, timeout } = collectors.find(c => c._id === user.id);
 
             switch (subCommand) {
+                case 'ver-perfil':
+                    const target = interaction.options.getMember('usuario');
+
+                    const targetUser = !target ? user : target.user;
+
+                    if (!(await isCollector(targetUser.id)))
+                        return { content: `🛑 Este usuario no es un coleccionista.`, custom: true, ephemeral: true };
+
+                    await interaction.deferReply();
+
+                    try {
+                        await interaction.editReply({ embeds: [await getProfileEmbed(targetUser)] });
+                    } catch (error) {
+                        log(error, 'red');
+                        await interaction.editReply({ content: '❌ Lo siento, ocurrió un error al generar el mensaje.' });
+                    }
+
+                    break;
+
                 case 'abrir-paquete':
                     await interaction.deferReply();
 
@@ -706,24 +858,15 @@ module.exports = {
                         await interaction.editReply(reply);
                     }
 
-                    for (const id of newAchievements) {
-                        const achievement = achievementsData[id];
-                        const description = !achievement.description.includes('{REPLACEMENT}')
-                            ? achievement.description
-                            : achievement.description.replace('{REPLACEMENT}', await achievement.replacement());
-                        await channel.send({
+                    for (const id of newAchievements)
+                        await interaction.followUp({
                             content: `🔔 **¡<@${user.id}> consiguió un logro!**\n\u200b`,
-                            embeds: [new EmbedBuilder()
-                                .setColor([154, 16, 50])
-                                .setDescription(description)
-                                .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-${id}.png`)
-                                .setTitle(achievement.name)]
+                            embeds: [await getAchievementEmbed(id)]
                         });
-                    }
                     break;
 
                 case 'ver-tarjeta':
-                    const cardId = interaction.options.getString('id');
+                    const cardId = interaction.options.getString('id').replace('#', '');
 
                     const { players } = getFWCData() || await updateFWCData();
                     if (!Object.keys(players).includes(cardId)) {
@@ -734,25 +877,40 @@ module.exports = {
                     await interaction.deferReply();
 
                     if (!owned.includes(cardId))
-                        await interaction.editReply({ embeds: [await getMisteriousPlayerEmbed(cardId)] });
+                        await interaction.editReply({ embeds: [await getMysteriousPlayerEmbed(cardId)] });
                     else
                         await interaction.editReply({ embeds: [await getPlayerEmbed(cardId)] });
+                    break;
+
+                case 'ver-logros':
+                    await interaction.deferReply({ ephemeral: true });
+
+                    const achievementsEmbeds = await getAchievementsEmbeds(achievements);
+
+                    await interaction.editReply({ content: `🏆 **Logros obtenidos:** ${achievements.length}/${Object.keys(achievementsData).length}\n\u200b`, embeds: achievementsEmbeds.shift() });
+
+                    for (const embeds of achievementsEmbeds)
+                        await interaction.followUp({ embeds: embeds, ephemeral: true });
+
                     break;
             }
 
             return;
         }
 
-        if (subCommand === 'estadisticas') {
-            await interaction.deferReply();
+        switch (subCommand) {
+            case 'estadisticas':
+                await interaction.deferReply();
 
-            await interaction.editReply({ embeds: [await getStatsEmbed(guild)] });
+                await interaction.editReply({ embeds: [await getStatsEmbed(guild)] });
+                break;
+
+            case 'partidos':
+                await interaction.reply({
+                    components: getMatchesCategoriesButtons(),
+                    content: '⚽ \u200b **__Partidos de la Copa Mundial Catar 2022__**\n\u200b'
+                });
+                break;
         }
-
-        if (subCommand === 'partidos')
-            await interaction.reply({
-                components: getMatchesCategoriesButtons(),
-                content: '⚽ \u200b **__Partidos de la Copa Mundial Catar 2022__**\n\u200b'
-            });
     }
 }

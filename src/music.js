@@ -3,7 +3,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
-const { MusicActions, githubRawURL, color } = require("./constants");
+const { MusicActions, githubRawURL, color, EMBED_DESCRIPTION_MAX_LENGTH } = require("./constants");
 const { addQueue } = require("./mongodb");
 const { log } = require("./util");
 
@@ -46,7 +46,7 @@ const splitLyrics = lyrics => {
     for (let i = 0; i < split.length; i++) {
         const line = split[i];
         const aux = chunk + line + '\n';
-        if (aux.length > 4096) {
+        if (aux.length > EMBED_DESCRIPTION_MAX_LENGTH) {
             ret.push(chunk);
             chunk = '';
         }
@@ -233,7 +233,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                             const track = tracks[i];
                             const filteredTitle = await cleanTitle(track);
                             const aux = chunk + filteredTitle + '\n';
-                            if (aux.length > 4096) {
+                            if (aux.length > EMBED_DESCRIPTION_MAX_LENGTH) {
                                 ret.push(chunk);
                                 chunk = '';
                             }

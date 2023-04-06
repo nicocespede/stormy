@@ -54,14 +54,14 @@ module.exports = {
         console.log(`${now}: ${colored}`);
     },
 
-    splitEmbedDescription: string => {
+    splitLines: (string, maxLength) => {
         const split = string.split('\n');
         const ret = [];
         let chunk = '';
         for (let i = 0; i < split.length; i++) {
             const line = split[i];
             const aux = chunk + line + '\n';
-            if (aux.length > 4096) {
+            if (aux.length > maxLength) {
                 ret.push(chunk);
                 chunk = '';
             }

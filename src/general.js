@@ -5,9 +5,9 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, githubRawURL, prefix, Mode } = require('./constants');
+const { relativeSpecialDays, githubRawURL, prefix, Mode, EMBED_DESCRIPTION_MAX_LENGTH } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
-const { convertTZ, log, splitEmbedDescription } = require('./util');
+const { convertTZ, log, splitLines } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -692,7 +692,7 @@ module.exports = {
             const thumb = elementThumb || packageThumb || filteredName;
             for (const server in links) if (Object.hasOwnProperty.call(links, server)) {
                 const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${links[server].join('\n')}\n\n${passwordString}`;
-                const chunks = splitEmbedDescription(description);
+                const chunks = splitLines(description, EMBED_DESCRIPTION_MAX_LENGTH);
                 let counter = 1;
                 for (const c of chunks)
                     embeds.push(new EmbedBuilder()
