@@ -1,4 +1,4 @@
-const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require("discord.js");
 const { getIds, updateIds, getFWCData, updateFWCData, getCollectors, updateCollectors } = require('../../src/cache');
 const { addAnnouncementsRole } = require("../../src/general");
 const { githubRawURL } = require("../../src/constants");
@@ -14,7 +14,16 @@ const fwcGoldColor = [205, 172, 93];
 const fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
 const fwcGoldThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
 
-const buttonsPrefix = 'fwc-matches-';
+const MATCHES_BUTTONS_PREFIX = 'fwc-matches-';
+const SELECT_MENUS_PREFIX = 'fwc-teams-';
+const GROUP_SELECTOR_CUSTOM_ID = `group-selector`;
+const TEAM_SELECTOR_CUSTOM_ID = 'team-selector';
+const PAGINATOR_PREFIX = 'teams-paginator';
+const PREVIOUS_ARROW_CUSTOM_ID = 'prev-page';
+const NEXT_ARROW_CUSTOM_ID = 'next-page';
+
+const GROUPS_LETTERS = 'ABCDEFGH';
+
 const stagesData = {
     G1: { emoji: "1️⃣", label: "Fase 1" },
     G2: { emoji: "2️⃣", label: "Fase 2" },
@@ -246,6 +255,111 @@ const achievementsData = {
     }*/
 };
 
+const getTeamMessageContent = async (teamId, owned, page, totalPages) => {
+    const { teams } = getFWCData() || await updateFWCData();
+    const { flag, name, players } = teams[teamId];
+    return `${flag} **${name}:** ${getOwnedAmountFromTeam(owned, teamId)}/${players} obtenidas\n\nPágina ${page} | ${totalPages}`;
+};
+
+const destructureMessageContent = async content => {
+    const splitted = content.split(' ');
+    const teamId = await getTeamIdByName(splitted[1].replace(/[*]|[:]/g, ''));
+    const page = parseInt(splitted[splitted.length - 3]) - 1;
+    return { teamId, page };
+};
+
+const getTeamIdByName = async name => {
+    const { teams } = getFWCData() || await updateFWCData();
+    return Object.entries(teams).filter(([_, team]) => team.name === name).map(([id, _]) => id).shift();
+};
+
+const getOwnedAmountFromTeam = (owned, teamId) => owned.filter(c => c.startsWith(teamId)).length;
+
+const getCollector = async id => {
+    const collectors = getCollectors() || await updateCollectors();
+    return collectors.find(c => c._id === id);
+};
+
+const getTeamEmbeds = async (owned, teamId) => {
+    const ret = [];
+    let actualArray = [];
+
+    const { players } = getFWCData() || await updateFWCData();
+
+    for (const id of Object.keys(players).filter(id => id.startsWith(teamId))) {
+        if (actualArray.length === 10) {
+            ret.push(actualArray);
+            actualArray = [];
+        }
+
+        const embed = !owned.includes(id) ? await getMysteriousPlayerEmbed(id) : await getPlayerEmbed(id);
+        actualArray.push(embed);
+    }
+    ret.push(actualArray);
+    return ret;
+};
+
+const getArrowsButtons = (page, messages) => {
+    const row = new ActionRowBuilder();
+
+    row.addComponents(new ButtonBuilder()
+        .setCustomId(`${PAGINATOR_PREFIX}${PREVIOUS_ARROW_CUSTOM_ID}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('⬅')
+        .setLabel('Anterior')
+        .setDisabled(page === 0));
+
+    row.addComponents(new ButtonBuilder()
+        .setCustomId(`${PAGINATOR_PREFIX}${NEXT_ARROW_CUSTOM_ID}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('➡')
+        .setLabel('Siguiente')
+        .setDisabled(page === messages.length - 1));
+
+    return row;
+};
+
+const getGroupSelectMenu = defaultValue => {
+    const groupSelectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`${SELECT_MENUS_PREFIX}${GROUP_SELECTOR_CUSTOM_ID}`)
+        .setPlaceholder('Seleccione un grupo')
+        .setMinValues(1)
+        .setMaxValues(1);
+
+    for (const letter of GROUPS_LETTERS) {
+        const options = { label: `Grupo ${letter}`, value: letter };
+        if (defaultValue && options.value === defaultValue)
+            options.default = true;
+        groupSelectMenu.addOptions(options);
+    }
+
+    return new ActionRowBuilder().addComponents(groupSelectMenu);
+};
+
+const getTeamSelectMenu = async (group, defaultValue) => {
+    const { teams } = getFWCData() || await updateFWCData();
+
+    const teamSelectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`${SELECT_MENUS_PREFIX}${TEAM_SELECTOR_CUSTOM_ID}`)
+        .setPlaceholder('Seleccione un equipo')
+        .setMinValues(1)
+        .setMaxValues(1);
+
+    const letterIndex = GROUPS_LETTERS.indexOf(group);
+    const index = letterIndex + (3 * (letterIndex + 1)) + 1;
+
+    const teamsEntries = Object.entries(teams);
+    for (let i = index - 4; i < index; i++) {
+        const [id, team] = teamsEntries[i];
+        const options = { label: team.name, value: id };
+        if (defaultValue && options.value === defaultValue)
+            options.default = true;
+        teamSelectMenu.addOptions(options);
+    }
+
+    return new ActionRowBuilder().addComponents(teamSelectMenu);
+};
+
 const getAchievementsEmbeds = async achievements => {
     const ret = [];
     let actualArray = [];
@@ -343,14 +457,12 @@ const addFields = async (fields, fieldName, arrayToAdd) => {
 };
 
 const getProfileEmbed = async user => {
-    const collectors = getCollectors() || await updateCollectors();
-    const { achievements, owned, repeated } = collectors.find(c => c._id === user.id);
+    const { achievements, lastOpened, owned, repeated } = await getCollector(user.id);
 
     const fields = [{ name: '📊 Media promedio', value: `${await getAverageRating(owned)}`, inline: true },
     { name: '⚽ Goles', value: `${await getGoals(owned)}/${await getTotalGoals()}`, inline: true },
-    { name: '🏆 Logros', value: `${achievements.length}/${Object.keys(achievementsData).length}`, inline: true }];
-
-    const { players } = getFWCData() || await updateFWCData();
+    { name: '🏆 Logros', value: `${achievements.length}/${Object.keys(achievementsData).length}`, inline: true },
+    { name: '🧧 Último paquete abierto', value: `${lastOpened.content.join(', ')}` }];
 
     await addFields(fields, `🃏 Obtenidas: ${owned.length}/${await getTotalCards()}`, owned);
     await addFields(fields, `🔁 Repetidas: ${repeated.length}`, repeated);
@@ -498,11 +610,7 @@ const addNewCards = async (newCards, ownedCards, repeatedCards) => {
     return { newOwned, newRepeated };
 };
 
-const isCollector = async id => {
-    const collectors = getCollectors() || await updateCollectors();
-    const found = collectors.find(c => c._id === id);
-    return found ? true : false;
-};
+const isCollector = async id => (await getCollector(id)) ? true : false;
 
 const getGoalsString = goals => {
     const emoji = `⚽ `;
@@ -608,7 +716,7 @@ const getMatchesCategoriesButtons = () => {
             row = new ActionRowBuilder();
         }
         row.addComponents(new ButtonBuilder()
-            .setCustomId(buttonsPrefix + id)
+            .setCustomId(MATCHES_BUTTONS_PREFIX + id)
             .setEmoji(emoji)
             .setLabel(label)
             .setStyle(ButtonStyle.Secondary));
@@ -628,13 +736,22 @@ const getMatchesButtons = stageId => {
             row = new ActionRowBuilder();
         }
         row.addComponents(new ButtonBuilder()
-            .setCustomId(`${buttonsPrefix}${stageId}-${matchId}`)
+            .setCustomId(`${MATCHES_BUTTONS_PREFIX}${stageId}-${matchId}`)
             .setEmoji(emoji)
             .setLabel(label)
             .setStyle(ButtonStyle.Secondary));
     }
     rows.push(row);
     return rows;
+};
+
+const getBackButton = id => {
+    return new ActionRowBuilder()
+        .addComponents(new ButtonBuilder()
+            .setCustomId(`${MATCHES_BUTTONS_PREFIX}back-${id}`)
+            .setEmoji('⬅')
+            .setLabel('Volver')
+            .setStyle(ButtonStyle.Danger));
 };
 
 module.exports = {
@@ -662,15 +779,9 @@ module.exports = {
         type: ApplicationCommandOptionType.Subcommand
     },
     {
-        name: 'ver-tarjeta',
-        description: 'Muestra la tarjeta indicada.',
-        type: ApplicationCommandOptionType.Subcommand,
-        options: [{
-            name: 'id',
-            description: 'El ID de la tarjeta que se quiere ver.',
-            required: true,
-            type: ApplicationCommandOptionType.String
-        }]
+        name: 'ver-equipos',
+        description: 'Muestra las tarjetas de cada equipo.',
+        type: ApplicationCommandOptionType.Subcommand
     },
     {
         name: 'ver-logros',
@@ -686,33 +797,81 @@ module.exports = {
     guildOnly: true,
 
     init: client => {
-        const getBackButton = id => {
-            return new ActionRowBuilder()
-                .addComponents(new ButtonBuilder()
-                    .setCustomId(`${buttonsPrefix}back-${id}`)
-                    .setEmoji('⬅')
-                    .setLabel('Volver')
-                    .setStyle(ButtonStyle.Danger));
-        };
+        client.on('interactionCreate', async interaction => {
+            // select menus
+            if (interaction.isStringSelectMenu()) {
+                let { customId, user } = interaction;
+                if (!customId.startsWith(SELECT_MENUS_PREFIX)) return;
 
-        client.on('interactionCreate', interaction => {
+                customId = customId.replace(SELECT_MENUS_PREFIX, '');
+
+                const value = interaction.values.shift();
+
+                // group selector
+                if (customId === GROUP_SELECTOR_CUSTOM_ID) {
+                    interaction.update({
+                        content: `⚽ **Seleccione el grupo y equipo que desea ver:**\n\u200b`,
+                        components: [getGroupSelectMenu(value), await getTeamSelectMenu(value)]
+                    });
+                    return;
+                }
+
+                // team selector
+                const { owned } = await getCollector(user.id);
+                const embeds = await getTeamEmbeds(owned, value);
+
+                interaction.reply({
+                    content: await getTeamMessageContent(value, owned, 1, embeds.length),
+                    components: [getArrowsButtons(0, embeds)],
+                    embeds: embeds[0],
+                    ephemeral: true
+                });
+
+                return;
+            }
+
             if (!interaction.isButton()) return;
 
-            const { customId } = interaction;
-            if (!customId.startsWith(buttonsPrefix)) return;
+            let { customId } = interaction;
+
+            // team embeds
+            if (customId.startsWith(PAGINATOR_PREFIX)) {
+
+                customId = customId.replace(PAGINATOR_PREFIX, '');
+
+                const { message, user } = interaction;
+                let { teamId: actualTeamId, page: actualPage } = await destructureMessageContent(message.content);
+
+                const { owned } = await getCollector(user.id);
+                const embeds = await getTeamEmbeds(owned, actualTeamId);
+
+                if (customId === PREVIOUS_ARROW_CUSTOM_ID && actualPage > 0) --actualPage;
+                else if (customId === NEXT_ARROW_CUSTOM_ID && actualPage < embeds.length - 1) ++actualPage;
+
+                await interaction.update({
+                    content: await getTeamMessageContent(actualTeamId, owned, actualPage + 1, embeds.length),
+                    components: [getArrowsButtons(actualPage, embeds)],
+                    embeds: embeds[actualPage]
+                });
+
+                return;
+            }
+
+            // matches buttons
+            if (!customId.startsWith(MATCHES_BUTTONS_PREFIX)) return;
 
             if (interaction.user.id !== interaction.message.interaction.user.id) {
                 interaction.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
                 return;
             }
 
-            let id = customId.replace(buttonsPrefix, '');
+            customId = customId.replace(MATCHES_BUTTONS_PREFIX, '');
 
-            let split = id.split('-');
+            let split = customId.split('-');
             if (split[0] === 'back') {
                 const goTo = split[1];
                 if (goTo !== 'main') {
-                    id = goTo;
+                    customId = goTo;
                     split = [goTo];
                 } else {
                     interaction.update({
@@ -725,9 +884,9 @@ module.exports = {
             }
 
             if (split.length === 1) {
-                const { label } = stagesData[id];
+                const { label } = stagesData[customId];
                 interaction.update({
-                    components: getMatchesButtons(id).concat([getBackButton('main')]),
+                    components: getMatchesButtons(customId).concat([getBackButton('main')]),
                     content: `⚽ \u200b **__${label}__**\n\u200b`,
                     files: []
                 });
@@ -753,7 +912,7 @@ module.exports = {
         if (channel.id !== ids.channels.fwc)
             return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 
-        const sharedInitialBehaviour = ['ver-perfil', 'abrir-paquete', 'ver-tarjeta', 'ver-logros'];
+        const sharedInitialBehaviour = ['ver-perfil', 'abrir-paquete', 'ver-equipos', 'ver-logros'];
         if (sharedInitialBehaviour.includes(subCommand)) {
             // shared behaviour
             await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
@@ -763,8 +922,7 @@ module.exports = {
                 await updateCollectors();
             }
 
-            const collectors = getCollectors() || await updateCollectors();
-            const { achievements, owned, repeated, timeout } = collectors.find(c => c._id === user.id);
+            const { achievements, owned, repeated, timeout } = await getCollector(user.id);
 
             switch (subCommand) {
                 case 'ver-perfil':
@@ -865,21 +1023,14 @@ module.exports = {
                         });
                     break;
 
-                case 'ver-tarjeta':
-                    const cardId = interaction.options.getString('id').replace('#', '');
+                case 'ver-equipos':
+                    await interaction.deferReply({ ephemeral: true });
 
-                    const { players } = getFWCData() || await updateFWCData();
-                    if (!Object.keys(players).includes(cardId)) {
-                        await interaction.reply({ content: '❌ El **ID** indicado es **inválido**.', ephemeral: true });
-                        return;
-                    }
+                    await interaction.editReply({
+                        components: [getGroupSelectMenu()],
+                        content: `⚽ **Seleccione el grupo que desea ver:**\n\u200b`
+                    });
 
-                    await interaction.deferReply();
-
-                    if (!owned.includes(cardId))
-                        await interaction.editReply({ embeds: [await getMysteriousPlayerEmbed(cardId)] });
-                    else
-                        await interaction.editReply({ embeds: [await getPlayerEmbed(cardId)] });
                     break;
 
                 case 'ver-logros':
