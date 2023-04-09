@@ -6,5 +6,5 @@
 git fetch
 git pull
 git checkout temp-deferReplyFix
-npm install --save --omit=dev
-node index.js
+#npm install --save --omit=dev
+#node index.js
