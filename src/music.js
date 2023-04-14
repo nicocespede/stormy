@@ -1,4 +1,5 @@
-const { QueryType } = require("discord-player");
+const { Queue } = require("@discord-player/utils");
+const { QueryType, useMasterPlayer, Track } = require("discord-player");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
@@ -100,19 +101,19 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
         switch (event) {
             default:
-                const track = queue.current;
+                const track = queue.currentTrack;
                 const { author, playlist, requestedBy, thumbnail: thumb, title, url } = track;
 
                 const filteredTitle = await cleanTitle(title);
                 embed.setTitle(filteredTitle + (!url.includes('youtube') || !containsAuthor(track) ? ` | ${author}` : ''));
                 embed.setURL(url);
 
-                const progressBar = queue.createProgressBar();
-                const timestamp = queue.getPlayerTimestamp();
+                const progressBar = queue.node.createProgressBar();
+                const timestamp = queue.node.getTimestamp(true);
                 const splittedDescription = [
                     `${progressBar}\n`,
                     `**Progreso:** ${timestamp.progress}%`,
-                    `**Volumen:** ${queue.volume}%`,
+                    `**Volumen:** ${queue.node.volume}%`,
                     `**Agregada por:** ${requestedBy.tag}`
                 ];
                 if (playlist)
@@ -132,8 +133,9 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 };
                 thumbnail = thumbs[event];
                 embed.setImage(thumb);
-                if (queue.tracks.length !== 0)
-                    embed.setFooter({ text: `${queue.tracks.length} ${queue.tracks.length === 1 ? 'canción' : 'canciones'} restante${queue.tracks.length > 1 ? 's' : ''} en la cola` });
+                const tracksAmount = queue.getSize();
+                if (tracksAmount !== 0)
+                    embed.setFooter({ text: `${tracksAmount} ${tracksAmount === 1 ? 'canción' : 'canciones'} restante${tracksAmount > 1 ? 's' : ''} en la cola` });
                 break;
 
             case 'help':
@@ -242,7 +244,13 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                         }
                         return ret;
                     };
-                    const tracks = data.tracks.map((track, i) => `**${i + 1}**. ${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''} - ** ${track.duration} ** `);
+                    const tracks = data.tracks.map((track, i) => {
+                        try {
+                            return `**${i + 1}**. ${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''} - ** ${track.duration} ** `
+                        } catch (e) {
+                            console.log(`${i} - ${track}: ${e}`)
+                        }
+                    });
                     const chunks = await splitQueue(tracks);
                     for (const chunk of chunks)
                         embeds.push(new EmbedBuilder()
@@ -346,7 +354,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
     let lastEvent;
 
     collector.on('collect', async i => {
-        if (!queue.connection.channel.members.has(i.user.id)) {
+        if (!queue.channel.members.has(i.user.id)) {
             i.reply({ embeds: [await getEmbed('notInVoiceChannel')], ephemeral: true });
             return;
         }
@@ -354,7 +362,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         let action;
         switch (i.customId) {
             case 'pause':
-                if (!queue.setPaused(true)) {
+                if (!queue.node.pause()) {
                     i.reply({ embeds: [await getEmbed('error')], ephemeral: true });
                     return;
                 }
@@ -363,7 +371,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 break;
 
             case 'play':
-                if (!queue.setPaused(false)) {
+                if (!queue.node.resume()) {
                     i.reply({ embeds: [await getEmbed('error')], ephemeral: true });
                     return;
                 }
@@ -378,39 +386,37 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 return;
 
             case 'previous':
-                if (!queue.previousTracks[1]) {
+                if (!queue.history.previousTrack) {
                     i.reply({ embeds: [await getEmbed('noPreviousTrack')], ephemeral: true });
                     return;
                 }
                 updateLastAction(MusicActions.GOING_BACK, i.user.tag);
                 i.deferUpdate();
-                await queue.back();
+                await queue.history.back();
                 return;
 
             case 'skip':
                 updateLastAction(MusicActions.SKIPPING, i.user.tag);
-                queue.skip();
+                queue.node.skip();
                 i.deferUpdate();
                 return;
 
             case 'shuffle':
-                if (queue.tracks.length <= 1) {
+                if (queue.getSize() <= 1) {
                     i.reply({ embeds: [await getEmbed('cantShuffle')], ephemeral: true });
                     return;
-                } else if (!queue.shuffle()) {
-                    i.reply({ embeds: [await getEmbed('error')], ephemeral: true });
-                    return;
                 }
+                queue.tracks.shuffle()
                 lastEvent = 'shuffled';
                 action = `🔀 ${i.user.tag} mezcló la cola de reproducción.`;
                 break;
 
             case 'clear':
-                if (!queue.tracks[0]) {
+                if (queue.isEmpty()) {
                     i.reply({ embeds: [await getEmbed('cantClear')], ephemeral: true });
                     return;
                 }
-                await queue.clear();
+                await queue.tracks.clear();
                 lastEvent = 'cleared';
                 action = `❌ ${i.user.tag} limpió la cola de reproducción.`;
                 break;
@@ -422,7 +428,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     deleteMessage('lyrics');
                 } else
                     try {
-                        const { author, title, url } = queue.current;
+                        const { author, title, url } = queue.currentTrack;
                         const filteredTitle = await cleanTitle(title);
                         const searches = await Client.songs.search(filteredTitle + (!url.includes('youtube') || !containsAuthor(track) ? ` - ${author}` : ``));
 
@@ -473,7 +479,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     i.deferUpdate();
                     deleteMessage('queue');
                 } else {
-                    if (!queue.tracks[0]) {
+                    if (queue.isEmpty()) {
                         i.reply({ embeds: [await getEmbed('queueEmpty')], ephemeral: true });
                         return;
                     }
@@ -523,7 +529,8 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         switch (lastAction) {
             case MusicActions.STOPPING:
                 event = 'stopped';
-                queue.destroy();
+                if (!queue.deleted)
+                    queue.delete();
                 break;
             case MusicActions.ENDING:
                 event = 'queueEnd';
@@ -533,7 +540,8 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 break;
             case MusicActions.BEING_KICKED:
                 event = 'kicked';
-                queue.destroy();
+                if (!queue.deleted)
+                    queue.delete();
                 break;
             case MusicActions.RESTARTING:
                 event = 'restarting';
@@ -549,12 +557,75 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
     setMusicPlayerData('player', musicPlayerMessage, collector);
 };
 
+const handleErrorInMusicChannel = async (message, interaction, reply, channel) => {
+    if (message) {
+        const temp = await message.reply(reply);
+        setTimeout(async () => {
+            const musicPlayerMessage = getMusicPlayerData('player');
+            if (musicPlayerMessage) {
+                temp.delete();
+                const originalMessage = await channel.fetch(temp.reference.messageId);
+                if (originalMessage) originalMessage.delete();
+            }
+        }, 1000 * 30);
+    } else
+        await interaction.editReply(reply);
+};
+
+const handleError = (reply, embed, description, message, interaction, channel) => {
+    reply.embeds = [embed.setDescription(description).setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
+    handleErrorInMusicChannel(message, interaction, reply, channel);
+};
+
+const createQueue = (player, guild, metadata) => {
+    const queue = player.nodes.create(guild, {
+        metadata,
+        leaveOnEnd: true,
+        leaveOnStop: true,
+        leaveOnEmpty: true,
+        leaveOnEmptyCooldown: 60000,
+        selfDeaf: true
+    });
+    return queue;
+};
+
+const connectToVoiceChannel = async (queue, member, player, reply, embed, message, interaction, voiceChannel, metadata, schema) => {
+    try {
+        if (!queue.connection)
+            await queue.connect(voiceChannel || member.voice.channel);
+        return true;
+    } catch {
+        player.nodes.delete(queue);
+        embed.setDescription(`🛑 ${member ? `${member.user}, n` : 'N'}o me puedo unir al canal de voz.`)
+            .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`);
+
+        if (metadata) {
+            metadata.send({ embeds: [embed] });
+            await schema.deleteMany({});
+        } else {
+            reply.embeds = [embed];
+            message ? await message.reply(reply) : await interaction.editReply(reply);
+        }
+        return false;
+    }
+};
+
+const generateTracksArray = (rawTracksArray, player, membersCollection) => {
+    const ret = [];
+    rawTracksArray.forEach(({ author, description, duration, thumbnail, title, url, views, playlist, requestedBy }) => {
+        const track = new Track(player, { author, description, duration, thumbnail, title, url, views, playlist, requestedBy: membersCollection.get(requestedBy).user });
+        ret.push(track);
+    });
+    return ret;
+};
+
 module.exports = {
-    setNewVoiceChannel: (client, guild, channel) => {
+    setNewVoiceChannel: (guild, channel) => {
         updateLastAction(MusicActions.CHANGING_CHANNEL);
-        const queue = client.player.getQueue(guild.id);
+        const player = useMasterPlayer();
+        const queue = player.nodes.get(guild.id);
         if (queue)
-            setMusicPlayerMessage(queue, queue.current, `🔃 Bot movido al canal de voz **${channel.name}**.`);
+            setMusicPlayerMessage(queue, queue.currentTrack, `🔃 Bot movido al canal de voz **${channel.name}**.`);
     },
 
     setKicked: () => {
@@ -565,38 +636,35 @@ module.exports = {
 
     containsAuthor,
 
-    leaveEmptyChannel: (client, guild) => {
+    leaveEmptyChannel: guild => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
-        const queue = client.player.getQueue(guild.id);
+        const player = useMasterPlayer();
+        const queue = player.nodes.get(guild.id);
         if (queue) {
-            queue.destroy();
+            if (!queue.deleted)
+                queue.delete();
             const { collector } = getMusicPlayerData('player');
             collector.stop();
         }
     },
 
-    emergencyShutdown: async (client, guildId) => {
+    emergencyShutdown: async guildId => {
         updateLastAction(MusicActions.RESTARTING);
-        const queue = client.player.getQueue(guildId);
+        const player = useMasterPlayer();
+        const queue = player.nodes.get(guildId);
         if (queue) {
             log('> Guardando cola de reproducción actual', 'yellow');
             const { collector } = getMusicPlayerData('player');
             collector.stop();
 
-            const previousTracks = queue.previousTracks.slice();
-            const currenTrack = previousTracks.pop();
+            const previousTracks = { tracks: JSON.stringify(queue.history.tracks.data), strategy: queue.history.tracks.strategy };
+            const currenTrack = queue.history.currentTrack;
             const current = { url: currenTrack.url, requestedBy: currenTrack.requestedBy };
-            const previous = [];
-            const tracks = [];
-            previousTracks.forEach(track => {
-                previous.push({ url: track.url, requestedBy: track.requestedBy });
-            });
-            queue.tracks.forEach(track => {
-                tracks.push({ url: track.url, requestedBy: track.requestedBy });
-            });
-            await addQueue(current, queue.guild.id, queue.metadata.id, previous, tracks, queue.connection.channel.id);
-            if (!queue.destroyed)
-                queue.destroy(true);
+            const tracks = { tracks: JSON.stringify(queue.tracks.data), strategy: queue.tracks.strategy };
+
+            await addQueue(current, queue.guild.id, queue.metadata.id, previousTracks, tracks, queue.channel.id);
+            if (!queue.deleted)
+                queue.delete();
         }
     },
 
@@ -611,8 +679,10 @@ module.exports = {
         const current = previousQueue.current;
         const guild = await client.guilds.fetch(previousQueue.guildId).catch(console.error);
         const metadata = await guild.channels.fetch(previousQueue.metadataId).catch(console.error);
-        const previousTracks = previousQueue.previousTracks;
-        const tracks = previousQueue.tracks;
+        let { tracks: previousTracks, strategy: previousStrategy } = previousQueue.previousTracks;
+        previousTracks = JSON.parse(previousTracks);
+        let { tracks, strategy } = previousQueue.tracks;
+        tracks = JSON.parse(tracks);
         const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId).catch(console.error);
         const embed = new EmbedBuilder().setColor(color);
 
@@ -632,38 +702,20 @@ module.exports = {
             .concat(tracks.map(({ requestedBy }) => requestedBy)))];
         const members = await guild.members.fetch(membersIds);
 
-        var res = await client.player.search(current.url, {
+        const player = useMasterPlayer();
+        var res = await player.search(current.url, {
             requestedBy: members.get(current.requestedBy),
             searchEngine: QueryType.AUTO
         });
 
-        const queue = await client.player.createQueue(guild, {
-            metadata: metadata
-        });
+        const queue = createQueue(player, guild, metadata);
 
-        try {
-            if (!queue.connection) await queue.connect(voiceChannel)
-        } catch {
-            await client.player.deleteQueue(guild.id);
-            metadata.send({
-                embeds: [embed.setDescription(`🛑 No me puedo unir al canal de voz.`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)]
-            });
-            await previousQueueSchema.deleteMany({});
+        if (!(await connectToVoiceChannel(queue, null, player, null, embed, null, null, voiceChannel, metadata, previousQueueSchema)))
             return;
-        }
 
         const message = await metadata.send({
             embeds: [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
                 .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)]
-        });
-
-        const { joinVoiceChannel } = require('@discordjs/voice');
-        joinVoiceChannel({
-            channelId: voiceChannel.id,
-            guildId: voiceChannel.guild.id,
-            adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-            selfDeaf: true
         });
 
         updateLastAction(MusicActions.RESTARTING);
@@ -671,23 +723,12 @@ module.exports = {
 
         queue.addTrack(res.tracks[0]);
 
-        if (!queue.playing) await queue.play();
+        if (!queue.node.isPlaying())
+            await queue.node.play();
 
-        for (const track of previousTracks) {
-            res = await client.player.search(track.url, {
-                requestedBy: members.get(track.requestedBy),
-                searchEngine: QueryType.AUTO
-            });
-            queue.previousTracks.push(res.tracks[0]);
-        }
+        queue.history.tracks = Queue.from(generateTracksArray(previousTracks, player, members), previousStrategy);
+        queue.tracks = Queue.from(generateTracksArray(tracks, player, members), strategy);
 
-        for (const track of tracks) {
-            res = await client.player.search(track.url, {
-                requestedBy: members.get(track.requestedBy),
-                searchEngine: QueryType.AUTO
-            });
-            queue.tracks.push(res.tracks[0]);
-        }
         await previousQueueSchema.deleteMany({});
     },
 
@@ -697,18 +738,14 @@ module.exports = {
 
     splitLyrics,
 
-    handleErrorInMusicChannel: async (message, interaction, reply, channel) => {
-        if (message) {
-            const temp = await message.reply(reply);
-            setTimeout(async () => {
-                const musicPlayerMessage = getMusicPlayerData('player');
-                if (musicPlayerMessage) {
-                    temp.delete();
-                    const originalMessage = await channel.fetch(temp.reference.messageId);
-                    if (originalMessage) originalMessage.delete();
-                }
-            }, 1000 * 30);
-        } else
-            await interaction.editReply(reply);
-    }
+    handleError,
+
+    handleErrorEphemeral: async (reply, embed, description, message, interaction, channel) => {
+        if (interaction) await interaction.deferReply({ ephemeral: true });
+        handleError(reply, embed, description, message, interaction, channel);
+    },
+
+    createQueue,
+
+    connectToVoiceChannel
 }

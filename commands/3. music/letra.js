@@ -3,7 +3,7 @@ const { githubRawURL } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { getIds, updateIds } = require('../../src/cache');
-const { splitLyrics } = require('../../src/music');
+const { splitLyrics, handleErrorEphemeral } = require('../../src/music');
 
 module.exports = {
     category: 'Música',
@@ -26,12 +26,12 @@ module.exports = {
     callback: async ({ user, message, channel, interaction, text, instance }) => {
         const messageOrInteraction = message ? message : interaction;
         const song = message ? text : interaction.options.getString('canción');
-        const reply = { custom: true, ephemeral: true };
+        const reply = { ephemeral: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            return reply;
+            handleErrorEphemeral(reply, new EmbedBuilder().setColor(instance.color), `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
+            return;
         }
 
         try {

@@ -317,7 +317,7 @@ module.exports = {
             collector.on('end', async collected => {
                 if (collected.size === 0) {
                     emoji = await getNewEmoji();
-                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${prefix}db**.`;
+                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${prefix}${collectionId}**.`;
                     reply.components = [];
                     message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
                     return;
@@ -585,7 +585,7 @@ module.exports = {
             finalCollector.on('end', async _ => {
                 reply.components = [];
                 emoji = await getNewEmoji();
-                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}db**.\n\u200b`;
+                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}${collectionId}**.\n\u200b`;
                 message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
             });
         };

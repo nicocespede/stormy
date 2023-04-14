@@ -2,6 +2,7 @@ const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../src/cache');
 const { prefix, githubRawURL } = require('../../src/constants');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
+const { handleErrorEphemeral } = require('../../src/music');
 
 module.exports = {
     category: 'Música',
@@ -49,16 +50,15 @@ module.exports = {
 
     callback: async ({ user, channel, message, interaction, args, instance, guild }) => {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
-        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
-
         const reply = { ephemeral: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `⚠ Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+            handleErrorEphemeral(reply, new EmbedBuilder().setColor(instance.color), `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
             return;
         }
+
+        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
         if (subCommand === 'ver') {
             const playlists = getPlaylists() || await updatePlaylists();

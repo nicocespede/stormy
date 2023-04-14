@@ -52,29 +52,15 @@ client.on('ready', async () => {
     await checkBansCorrelativity(client);
 
     const musicEmbed = new EmbedBuilder().setColor(color);
-    client.player = new Player(client, {
-        leaveOnEnd: false,
-        leaveOnStop: true,
-        leaveOnEmpty: true,
-        leaveOnEmptyCooldown: 60000,
+
+    const player = new Player(client, {
         ytdlOptions: {
             quality: 'highestaudio',
             highWaterMark: 1 << 25
         }
-    }).on('connectionCreate', queue => {
-        queue.connection.voiceConnection.on('stateChange', (oldState, newState) => {
-            const oldNetworking = Reflect.get(oldState, 'networking');
-            const newNetworking = Reflect.get(newState, 'networking');
+    });
 
-            const networkStateChangeHandler = (oldNetworkState, newNetworkState) => {
-                const newUdp = Reflect.get(newNetworkState, 'udp');
-                clearInterval(newUdp?.keepAliveInterval);
-            }
-
-            oldNetworking?.off('stateChange', networkStateChangeHandler);
-            newNetworking?.on('stateChange', networkStateChangeHandler);
-        });
-    }).on('trackStart', async (queue, track) => {
+    player.events.on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
             updateLastAction(MusicActions.STARTING_TRACK);
@@ -89,9 +75,9 @@ client.on('ready', async () => {
             updateLastAction(MusicActions.STARTING_TRACK);
             setMusicPlayerMessage(queue, track, action);
         }
-    }).on('trackAdd', async (queue, track) => {
+    }).on('audioTrackAdd', async (queue, track) => {
         const { action: lastAction } = getLastAction();
-        if (queue.playing && lastAction !== MusicActions.MOVING_SONG && lastAction !== MusicActions.ADDING_NEXT) {
+        if (queue.node.isPlaying() && lastAction !== MusicActions.MOVING_SONG && lastAction !== MusicActions.ADDING_NEXT) {
             const { interaction, message } = (getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
             const temporalReply = {
@@ -105,9 +91,9 @@ client.on('ready', async () => {
             setMusicPlayerMessage(queue, track, action);
 
         }
-    }).on('tracksAdd', async (queue, tracks) => {
+    }).on('audioTracksAdd', async (queue, tracks) => {
         const { action: lastAction } = getLastAction();
-        if (queue.playing && lastAction !== MusicActions.ADDING_NEXT) {
+        if (queue.node.isPlaying() && lastAction !== MusicActions.ADDING_NEXT) {
             const { interaction, message } = (getSongsInQueue())[tracks[0].url];
             const playlist = tracks[0].playlist;
             const temporalReply = {
@@ -121,13 +107,13 @@ client.on('ready', async () => {
             const action = `☑️ ${message ? message.mentions.repliedUser.tag : interaction.user.tag} agregó a la cola **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''}.`;
             setMusicPlayerMessage(queue, tracks[0], action);
         }
-    }).on('channelEmpty', _ => {
+    }).on('emptyChannel', _ => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
         const { collector } = getMusicPlayerData('player');
         collector.stop();
-    }).on('queueEnd', async queue => {
+    }).on('emptyQueue', async queue => {
         const { action: lastAction } = getLastAction();
-        const queueEnded = queue.connection.channel.members.size > 1
+        const queueEnded = queue.channel.members.size > 1
             && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
@@ -135,15 +121,15 @@ client.on('ready', async () => {
             const { collector } = getMusicPlayerData('player');
             collector.stop();
         }
-    }).on('connectionError', (queue, error) => {
-        log(`Error in Player.on('connectionError'):\n${error.stack}`, 'red');
+    }).on('playerError', (queue, error) => {
+        log(`Error in Player.on('playerError'):\n${error.stack}`, 'red');
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
                 .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
         });
-        if (!queue.destroyed)
-            queue.destroy();
+        if (!queue.deleted)
+            queue.delete();
     }).on('error', (queue, error) => {
         log(`Error in Player.on('error'):\n${error.stack}`, 'red');
         if (error.message !== 'write EPIPE')
@@ -152,11 +138,9 @@ client.on('ready', async () => {
                 embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
                     .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
             });
-        if (!queue.destroyed)
-            queue.destroy();
-    })/*.on('debug', (queue, message) => {
-        log(message)
-    })*/;
+        if (!queue.deleted)
+            queue.delete();
+    });
 
     playInterruptedQueue(client);
 
@@ -169,7 +153,7 @@ process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
     log('> Reinicio inminente...', 'yellow');
     // disconnects music bot
     const ids = getIds() || await updateIds();
-    await emergencyShutdown(client, ids.guilds.default);
+    await emergencyShutdown(ids.guilds.default);
 
     // send stats
     const timestamps = getTimestamps();

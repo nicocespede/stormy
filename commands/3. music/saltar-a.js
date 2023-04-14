@@ -1,7 +1,8 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { getIds, updateIds, updateLastAction } = require("../../src/cache");
 const { githubRawURL, MusicActions } = require("../../src/constants");
-const { handleErrorInMusicChannel } = require("../../src/music");
+const { handleErrorEphemeral } = require("../../src/music");
+const { useMasterPlayer } = require("discord-player");
 
 module.exports = {
     category: 'Música',
@@ -23,50 +24,43 @@ module.exports = {
     expectedArgs: '<número>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, args, client, interaction, instance }) => {
+    callback: async ({ guild, member, user, message, channel, args, interaction, instance }) => {
         const embed = new EmbedBuilder().setColor(instance.color);
         const number = message ? args[0] : interaction.options.getInteger('número');
         const reply = { ephemeral: true, fetchReply: true };
 
         const ids = getIds() || await updateIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            return reply;
+            handleErrorEphemeral(reply, embed, `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
+            return;
         }
 
         if (!member.voice.channel) {
-            reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            handleErrorEphemeral(reply, embed, "🛑 ¡Debes estar en un canal de voz para usar este comando!", message, interaction, channel);
             return;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
-            reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            handleErrorEphemeral(reply, embed, "🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!", message, interaction, channel);
             return;
         }
 
-        const queue = client.player.getQueue(guild.id);
+        const player = useMasterPlayer();
+        const queue = player.nodes.get(guild.id);
 
-        if (!queue || !queue.playing) {
-            reply.embeds = [embed.setDescription("🛑 ¡No hay ninguna canción para saltear!")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+        if (!queue || !queue.node.isPlaying()) {
+            handleErrorEphemeral(reply, embed, "🛑 ¡No hay ninguna canción para saltear!", message, interaction, channel);
             return;
         }
 
         const index = parseInt(number) - 1;
 
-        if (index < 0 || index >= queue.tracks.length || isNaN(index)) {
-            reply.embeds = [embed.setDescription(`🛑 El número ingresado es inválido.`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+        if (index < 0 || index >= queue.getSize() || isNaN(index)) {
+            handleErrorEphemeral(reply, embed, `🛑 El número ingresado es inválido.`, message, interaction, channel);
             return;
         }
 
-        queue.skipTo(index);
+        queue.node.skipTo(index);
         reply.embeds = [embed.setDescription(`⏭️ **${index + 1} canciones** salteadas.`)
             .setThumbnail(`${githubRawURL}/assets/thumbs/music/go-to-end.png`)];
         reply.ephemeral = false;
