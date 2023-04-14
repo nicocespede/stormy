@@ -31,7 +31,7 @@
     "unofficial-valorant-api": "^2.3.0-stable.0",
     "wokcommands": "^1.5.3",
     "xml-js": "^1.6.11",
-    "ytdl-core": "github:khlevon/node-ytdl-core#v4.11.3-patch.1"
+    "ytdl-core": "^4.11.4"
   },
   "overrides": {
     "wokcommands": {
