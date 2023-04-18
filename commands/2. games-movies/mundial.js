@@ -5,14 +5,15 @@ const { githubRawURL } = require("../../src/constants");
 const { addCollector, updateCollector } = require("../../src/mongodb");
 const { convertTZ, log } = require("../../src/util");
 
-const packageContent = 5;
-const premiumPercentageChance = 1;
-const timeoutHours = 12;
+const PACKAGE_CONTENT = 5;
+const TIMEOUT_HOURS = 12;
+const PREMIUM_PACKAGE_PERCENTAGE_CHANCE = 1;
+const PREMIUM_PACKAGE_MINIMUM_RATING = 90;
 
-const fwcColor = [154, 16, 50];
-const fwcGoldColor = [205, 172, 93];
-const fwcThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
-const fwcGoldThumb = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
+const FWC_COLOR = [154, 16, 50];
+const FWC_GOLD_COLOR = [205, 172, 93];
+const FWC_THUMB = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
+const FWC_GOLD_THUMB = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
 
 const MATCHES_BUTTONS_PREFIX = 'fwc-matches-';
 const SELECT_MENUS_PREFIX = 'fwc-teams-';
@@ -470,8 +471,8 @@ const getProfileEmbed = async user => {
     const embed = new EmbedBuilder()
         .setTitle(`Perfil de coleccionista: ${user.username}`)
         .setFields(fields)
-        .setColor(fwcColor)
-        .setThumbnail(fwcThumb);
+        .setColor(FWC_COLOR)
+        .setThumbnail(FWC_THUMB);
 
     return embed;
 };
@@ -480,8 +481,8 @@ const getStatsEmbed = async guild => {
     const embed = new EmbedBuilder()
         .setTitle('Estadísticas de coleccionistas')
         .setDescription(`**Referencias:**\n\n🃏 Obtenidas | 🔁 Repet. | 📊 Media prom. | ⚽ Goles | 🏆 Logros`)
-        .setColor(fwcColor)
-        .setThumbnail(fwcThumb);
+        .setColor(FWC_COLOR)
+        .setThumbnail(FWC_THUMB);
     const fields = [];
     let namesField = { name: 'Coleccionista', value: '', inline: true };
     let statsField = { name: '\u200b', value: '', inline: true };
@@ -626,13 +627,13 @@ const getGoalsString = goals => {
 
 const isPremiumPackage = () => {
     const random = Math.floor(Math.random() * 99) + 1;
-    return random <= premiumPercentageChance;
+    return random <= PREMIUM_PACKAGE_PERCENTAGE_CHANCE;
 };
 
 const getRandomPlayersIds = async (amount, premium) => {
     const { players } = getFWCData() || await updateFWCData();
     const playersIds = !premium ? Object.keys(players)
-        : Object.entries(players).filter(([_, player]) => player.rating > 88).map(([id, _]) => id);
+        : Object.entries(players).filter(([_, player]) => player.rating >= PREMIUM_PACKAGE_MINIMUM_RATING).map(([id, _]) => id);
     const ids = [];
     for (let i = 0; i < amount; i++) {
         const random = Math.floor(Math.random() * playersIds.length);
@@ -955,8 +956,8 @@ module.exports = {
                         await interaction.editReply({
                             embeds: [new EmbedBuilder()
                                 .setDescription(`⏳ Podrás abrir el próximo sobre el **${date} a las ${time} hs...**`)
-                                .setColor(fwcColor)
-                                .setThumbnail(fwcThumb)]
+                                .setColor(FWC_COLOR)
+                                .setThumbnail(FWC_THUMB)]
                         });
                         return;
                     }
@@ -964,15 +965,15 @@ module.exports = {
                     const isPremium = isPremiumPackage();
 
                     const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
-                        : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${premiumPercentageChance}%.`;
+                        : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${PREMIUM_PACKAGE_PERCENTAGE_CHANCE}%.`;
                     await interaction.editReply({
                         embeds: [new EmbedBuilder()
                             .setDescription(description)
-                            .setColor(!isPremium ? fwcColor : fwcGoldColor)
-                            .setThumbnail(!isPremium ? fwcThumb : fwcGoldThumb)]
+                            .setColor(!isPremium ? FWC_COLOR : FWC_GOLD_COLOR)
+                            .setThumbnail(!isPremium ? FWC_THUMB : FWC_GOLD_THUMB)]
                     });
 
-                    const playersIds = await getRandomPlayersIds(packageContent, isPremium);
+                    const playersIds = await getRandomPlayersIds(PACKAGE_CONTENT, isPremium);
 
                     const { newOwned, newRepeated } = await addNewCards(playersIds, owned, repeated);
 
@@ -999,7 +1000,7 @@ module.exports = {
                         lastOpened: { date: now, content: playersIds },
                         owned: newOwned,
                         repeated: newRepeated,
-                        timeout: now.setHours(now.getHours() + timeoutHours)
+                        timeout: now.setHours(now.getHours() + TIMEOUT_HOURS)
                     });
                     await updateCollectors();
 
