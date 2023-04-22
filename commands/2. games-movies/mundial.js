@@ -1,4 +1,5 @@
-const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require("discord.js");
+const { CommandArgs } = require("../../src/typedefs");
+const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild, Client } = require("discord.js");
 const { getIds, updateIds, getFWCData, updateFWCData, getCollectors, updateCollectors } = require('../../src/cache');
 const { addAnnouncementsRole } = require("../../src/general");
 const { githubRawURL } = require("../../src/constants");
@@ -256,12 +257,27 @@ const achievementsData = {
     }*/
 };
 
+/**
+ * Builds a string with the information of a team.
+ * 
+ * @param {String} teamId The ID of the team.
+ * @param {String[]} owned The IDs of the owned players.
+ * @param {Number} page The current page number.
+ * @param {Number} totalPages The total pages number.
+ * @returns The content for a message.
+ */
 const getTeamMessageContent = async (teamId, owned, page, totalPages) => {
     const { teams } = getFWCData() || await updateFWCData();
     const { flag, name, players } = teams[teamId];
     return `${flag} **${name}:** ${getOwnedAmountFromTeam(owned, teamId)}/${players} obtenidas\n\nPágina ${page} | ${totalPages}`;
 };
 
+/**
+ * Destructures the content of a message into a team ID and the current page.
+ * 
+ * @param {String} content The content of a message.
+ * @returns The team ID and the current page.
+ */
 const destructureMessageContent = async content => {
     const splitted = content.split(' ');
     const teamId = await getTeamIdByName(splitted[1].replace(/[*]|[:]/g, ''));
@@ -269,18 +285,44 @@ const destructureMessageContent = async content => {
     return { teamId, page };
 };
 
+/**
+ * Gets a team ID by its name.
+ *
+ * @param {String} name The name of the team.
+ * @returns The team ID.
+ */
 const getTeamIdByName = async name => {
     const { teams } = getFWCData() || await updateFWCData();
     return Object.entries(teams).filter(([_, team]) => team.name === name).map(([id, _]) => id).shift();
 };
 
+/**
+ * Counts how many players of a team are owned.
+ * 
+ * @param {String[]} owned The IDs of the owned players.
+ * @param {String} teamId The ID of the team.
+ * @returns The amount of players owned from a team.
+ */
 const getOwnedAmountFromTeam = (owned, teamId) => owned.filter(c => c.startsWith(teamId)).length;
 
+/**
+ * Gets a collector by it's ID.
+ * 
+ * @param {String} id The ID of the collector.
+ * @returns The collector.
+ */
 const getCollector = async id => {
     const collectors = getCollectors() || await updateCollectors();
     return collectors.find(c => c._id === id);
 };
 
+/**
+ * Builds an array of arrays of embeds with information of the players.
+ * 
+ * @param {String[]} owned The IDs of the owned players.
+ * @param {String} teamId The ID of the team.
+ * @returns A collection of embeds.
+ */
 const getTeamEmbeds = async (owned, teamId) => {
     const ret = [];
     let actualArray = [];
@@ -300,7 +342,14 @@ const getTeamEmbeds = async (owned, teamId) => {
     return ret;
 };
 
-const getArrowsButtons = (page, messages) => {
+/**
+ * Builds a row with the next and previous arrow buttons.
+ * 
+ * @param {Number} page The current page number.
+ * @param {Number} totalPages The total amount of pages.
+ * @returns A row with the arrow buttons.
+ */
+const getArrowsButtons = (page, totalPages) => {
     const row = new ActionRowBuilder();
 
     row.addComponents(new ButtonBuilder()
@@ -315,11 +364,17 @@ const getArrowsButtons = (page, messages) => {
         .setStyle(ButtonStyle.Secondary)
         .setEmoji('➡')
         .setLabel('Siguiente')
-        .setDisabled(page === messages.length - 1));
+        .setDisabled(page === totalPages - 1));
 
     return row;
 };
 
+/**
+ * Builds a row with a string select menu for all groups.
+ * 
+ * @param {String} defaultValue The default value for the select menu.
+ * @returns A row with the select menu.
+ */
 const getGroupSelectMenu = defaultValue => {
     const groupSelectMenu = new StringSelectMenuBuilder()
         .setCustomId(`${SELECT_MENUS_PREFIX}${GROUP_SELECTOR_CUSTOM_ID}`)
@@ -337,6 +392,13 @@ const getGroupSelectMenu = defaultValue => {
     return new ActionRowBuilder().addComponents(groupSelectMenu);
 };
 
+/**
+ * Builds a row with a string select menu for all teams.
+ * 
+ * @param {String} group The letter of the group.
+ * @param {String} defaultValue The default value for the select menu.
+ * @returns A row with the select menu.
+ */
 const getTeamSelectMenu = async (group, defaultValue) => {
     const { teams } = getFWCData() || await updateFWCData();
 
@@ -361,6 +423,12 @@ const getTeamSelectMenu = async (group, defaultValue) => {
     return new ActionRowBuilder().addComponents(teamSelectMenu);
 };
 
+/**
+ * Builds an array of arrays of embeds with the achievements information.
+ * 
+ * @param {String[]} achievements The IDs of the owned achievements.
+ * @returns A collection of embeds.
+ */
 const getAchievementsEmbeds = async achievements => {
     const ret = [];
     let actualArray = [];
@@ -377,6 +445,11 @@ const getAchievementsEmbeds = async achievements => {
     return ret;
 };
 
+/**
+ * Builds an embed of a not owned achievement.
+ * 
+ * @returns An embed of a not owned achievement.
+ */
 const getMysteriousAchievementEmbed = () => {
     return new EmbedBuilder()
         .setColor([154, 16, 50])
@@ -385,6 +458,12 @@ const getMysteriousAchievementEmbed = () => {
         .setTitle('???');
 };
 
+/**
+ * Builds an embed which contains the information of an achievement.
+ * 
+ * @param {String} achievementId The ID of the achievement.
+ * @returns An embed with the information of the achievement.
+ */
 const getAchievementEmbed = async achievementId => {
     const achievement = achievementsData[achievementId];
     const description = !achievement.description.includes('{REPLACEMENT}')
@@ -398,6 +477,12 @@ const getAchievementEmbed = async achievementId => {
         .setTitle(achievement.name);
 };
 
+/**
+ * Builds a list of every owned player.
+ * 
+ * @param {String[]} array The IDs of players.
+ * @returns A text formatted as a list with all the owned players.
+ */
 const generateList = array => {
     let list = '';
     let lastCountry = '';
@@ -416,6 +501,12 @@ const generateList = array => {
     return list.substring(1);
 };
 
+/**
+ * Gets the letter of the group which a team belongs to.
+ * 
+ * @param {String} teamId The ID of the team.
+ * @returns The letter of the group the team belongs to.
+ */
 const getGroup = async teamId => {
     const { teams } = getFWCData() || await updateFWCData();
     const index = Object.keys(teams).indexOf(teamId);
@@ -437,6 +528,13 @@ const getGroup = async teamId => {
         return 'H';
 };
 
+/**
+ * Adds new fields to an already existing collection of fields.
+ * 
+ * @param {EmbedField[]} fields An already existing collection of fields.
+ * @param {String} fieldName The name of the new fields.
+ * @param {String[]} arrayToAdd The elements to be added.
+ */
 const addFields = async (fields, fieldName, arrayToAdd) => {
     const { teams } = getFWCData() || await updateFWCData();
     const list = generateList(arrayToAdd);
@@ -457,6 +555,12 @@ const addFields = async (fields, fieldName, arrayToAdd) => {
     fields.push(actualField);
 };
 
+/**
+ * Builds an embed with the information of a collector's profile.
+ * 
+ * @param {User} user The collector's user.
+ * @returns An embed with the collector's profile information.
+ */
 const getProfileEmbed = async user => {
     const { achievements, lastOpened, owned, repeated } = await getCollector(user.id);
 
@@ -477,6 +581,12 @@ const getProfileEmbed = async user => {
     return embed;
 };
 
+/**
+ * Builds an embed with the general information regarding every collector's statistics.
+ * 
+ * @param {Guild} guild The guild where the command is being executed.
+ * @returns An embed with the stats of every collector.
+ */
 const getStatsEmbed = async guild => {
     const embed = new EmbedBuilder()
         .setTitle('Estadísticas de coleccionistas')
@@ -520,6 +630,12 @@ const getStatsEmbed = async guild => {
     return embed;
 };
 
+/**
+ * Calculates the average rating of all the owned players.
+ * 
+ * @param {String[]} owned The IDs of the players owned.
+ * @returns The average rating of all owned players.
+ */
 const getAverageRating = async owned => {
     const { players } = getFWCData() || await updateFWCData();
     let amount = 0;
@@ -531,6 +647,12 @@ const getAverageRating = async owned => {
     return Math.round(sum / amount);
 };
 
+/**
+ * Calculates the sum of goals of all the owned players.
+ * 
+ * @param {String[]} owned The IDs of the players owned.
+ * @returns The sum of goals of all the owned players.
+ */
 const getGoals = async owned => {
     const { players } = getFWCData() || await updateFWCData();
     let goals = 0;
@@ -538,6 +660,11 @@ const getGoals = async owned => {
     return goals;
 };
 
+/**
+ * Calculates the sum of goals of all the players.
+ * 
+ * @returns The total sum of goals of all the players.
+ */
 const getTotalGoals = async () => {
     const { players } = getFWCData() || await updateFWCData();
     let goals = 0;
@@ -545,12 +672,23 @@ const getTotalGoals = async () => {
     return goals;
 };
 
+/**
+ * Sorts an array.
+ * 
+ * @param {String[]} array The array of IDs to be sorted.
+ */
 const sort = async array => {
     const { players } = getFWCData() || await updateFWCData();
     const ids = Object.keys(players);
     array.sort((a, b) => ids.indexOf(a) - ids.indexOf(b));
 };
 
+/**
+ * Gets a formatted text of the name of a player by it's ID.
+ * 
+ * @param {String} id The ID of the player.
+ * @returns The formatted name of the player.
+ */
 const getPlayerName = async id => {
     const { players, teams } = getFWCData() || await updateFWCData();
     const player = players[id];
@@ -558,49 +696,106 @@ const getPlayerName = async id => {
     return `${team.flag} **${player.name}**`;
 };
 
+/**
+ * Gets a formatted text of the name of a team by it's ID.
+ * 
+ * @param {String} id The ID of the team.
+ * @returns The formatted name of the team.
+ */
 const getTeamName = async id => {
     const { teams } = getFWCData() || await updateFWCData();
     const team = teams[id];
     return `${team.flag} **${team.name}**`;
 };
 
+/**
+ * Determines if the collector owns all of the tournament scorers or not.
+ * 
+ * @param {String[]} owned The IDs of the players owned.
+ * @returns True if the collector owns every scorer, or false if not.
+ */
 const hasAllScorers = async owned => {
     const { players } = getFWCData() || await updateFWCData();
     const filtered = owned.filter(c => players[c].goals);
     return filtered.length === await getTotalScorers();
 };
 
+/**
+ * Calculates the total amount of players who scored at the tournament.
+ * 
+ * @returns The total amount of scorers.
+ */
 const getTotalScorers = async () => {
     const { players } = getFWCData() || await updateFWCData();
     const filtered = Object.entries(players).filter(([_, player]) => player.goals);
     return Object.keys(filtered).length;
 };
 
+/**
+ * Determines whether a player is owned or not.
+ * 
+ * @param {String} id The ID of the player.
+ * @param {String[]} owned The IDs of the owned players.
+ * @returns If the array includes the ID or not.
+ */
 const hasPlayer = (id, owned) => owned.includes(id);
 
+/**
+ * Determines if all of the players from a position are owned.
+ * 
+ * @param {String []} owned The IDs of the owned players.
+ * @param {String} position The player position to be checked for.
+ * @returns True if all of the players from the indicated position are owned, or false if not.
+ */
 const hasAllPlayersFromPosition = async (owned, position) => {
     const { achievements, players } = getFWCData() || await updateFWCData();
     const filtered = owned.filter(c => achievements[position].includes(players[c].position));
     return filtered.length === await getTotalPlayersFromPosition(position);
 };
 
+/**
+ * Calculates the total amount of players who play in a position.
+ * 
+ * @param {String} position The players position.
+ * @returns The total amount of existing players in that position.
+ */
 const getTotalPlayersFromPosition = async position => {
     const { achievements, players } = getFWCData() || await updateFWCData();
     const filtered = Object.entries(players).filter(([_, player]) => achievements[position].includes(player.position));
     return Object.keys(filtered).length;
 };
 
+/**
+ * Determines if the collector owns all the players of a team or not.
+ * 
+ * @param {String[]} owned The IDs of the players owned.
+ * @param {String} team The ID of the team.
+ * @returns True if the collector owns every player of the team, or false if not.
+ */
 const hasAllPlayersFromTeam = async (owned, team) => {
     const { teams } = getFWCData() || await updateFWCData();
     const filtered = owned.filter(c => c.startsWith(`${team}-`));
     return filtered.length === teams[team].players;
 };
 
+/**
+ * Calculates the total amount of existing collectible cards.
+ * 
+ * @returns The total amount of cards.
+ */
 const getTotalCards = async () => {
     const { players } = getFWCData() || await updateFWCData();
     return Object.keys(players).length;
 };
 
+/**
+ * Adds new cards to the owned and repeated collections.
+ * 
+ * @param {String[]} newCards The new cards to be added.
+ * @param {String[]} ownedCards The already owned cards.
+ * @param {String[]} repeatedCards The repeated cards.
+ * @returns The owned and repeated cards with the new cards added.
+ */
 const addNewCards = async (newCards, ownedCards, repeatedCards) => {
     const newOwned = ownedCards.slice();
     const newRepeated = repeatedCards.slice();
@@ -611,8 +806,20 @@ const addNewCards = async (newCards, ownedCards, repeatedCards) => {
     return { newOwned, newRepeated };
 };
 
+/**
+ * Determines if a collector with the passed ID exists.
+ * 
+ * @param {String} id The ID of a potential collector.
+ * @returns True if the collector exists, or false if not.
+ */
 const isCollector = async id => (await getCollector(id)) ? true : false;
 
+/**
+ * Formats a player's goals amount text.
+ * 
+ * @param {Number} goals The amount of goals of the player.
+ * @returns The formatted goals text.
+ */
 const getGoalsString = goals => {
     const emoji = `⚽ `;
 
@@ -625,11 +832,23 @@ const getGoalsString = goals => {
     return `${emoji.repeat(firstLineLength)}\n${emoji.repeat(secondLineLength)}`;
 };
 
+/**
+ * Determines if a package will be premium or not.
+ * 
+ * @returns True if the package will be premium, or false if not.
+ */
 const isPremiumPackage = () => {
     const random = Math.floor(Math.random() * 99) + 1;
     return random <= PREMIUM_PACKAGE_PERCENTAGE_CHANCE;
 };
 
+/**
+ * Gets an array of random players IDs.
+ * 
+ * @param {Number} amount The amount of players wanted.
+ * @param {Boolean} premium If the package is premium or not.
+ * @returns A collection of players IDs.
+ */
 const getRandomPlayersIds = async (amount, premium) => {
     const { players } = getFWCData() || await updateFWCData();
     const playersIds = !premium ? Object.keys(players)
@@ -642,6 +861,12 @@ const getRandomPlayersIds = async (amount, premium) => {
     return ids;
 };
 
+/**
+ * Formats the rating of a player.
+ * 
+ * @param {Number} rating The rating of the player.
+ * @returns The formatted rating text.
+ */
 const getRatingText = rating => {
     if (rating <= 69)
         return `🟠 ${rating}`;
@@ -659,6 +884,12 @@ const getRatingText = rating => {
         return `🟣 ${rating}`;
 };
 
+/**
+ * Builds an embed that contains a not owned player information.
+ * 
+ * @param {String} playerId The ID of the player.
+ * @returns An embed with the not owned player information.
+ */
 const getMysteriousPlayerEmbed = async playerId => {
     const { players, teams } = getFWCData() || await updateFWCData();
     const { goals } = players[playerId];
@@ -684,6 +915,12 @@ const getMysteriousPlayerEmbed = async playerId => {
         .setColor(color);
 };
 
+/**
+ * Builds an embed that contains the player information.
+ * 
+ * @param {String} playerId The ID of the player.
+ * @returns An embed with the player information.
+ */
 const getPlayerEmbed = async playerId => {
     const { players, positions, teams } = getFWCData() || await updateFWCData();
     const { birth, club, goals, name, nationality, picture, position, rating } = players[playerId];
@@ -707,6 +944,11 @@ const getPlayerEmbed = async playerId => {
         .setColor(color);
 };
 
+/**
+ * Builds rows with all of the tournament stages buttons.
+ * 
+ * @returns Rows with the stages buttons.
+ */
 const getMatchesCategoriesButtons = () => {
     const rows = [];
     let row = new ActionRowBuilder();
@@ -726,6 +968,12 @@ const getMatchesCategoriesButtons = () => {
     return rows;
 };
 
+/**
+ * Builds rows with all of the matches buttons of a stage.
+ * 
+ * @param {String} stageId The ID of the stage.
+ * @returns Rows with the matches buttons.
+ */
 const getMatchesButtons = stageId => {
     const rows = [];
     let row = new ActionRowBuilder();
@@ -746,6 +994,12 @@ const getMatchesButtons = stageId => {
     return rows;
 };
 
+/**
+ * Builds a row with a back button.
+ * 
+ * @param {String} id The custom ID for the button.
+ * @returns A row with a button.
+ */
 const getBackButton = id => {
     return new ActionRowBuilder()
         .addComponents(new ButtonBuilder()
@@ -797,6 +1051,7 @@ module.exports = {
     slash: true,
     guildOnly: true,
 
+    /** @param {Client} client */
     init: client => {
         client.on('interactionCreate', async interaction => {
             // select menus
@@ -823,7 +1078,7 @@ module.exports = {
 
                 interaction.reply({
                     content: await getTeamMessageContent(value, owned, 1, embeds.length),
-                    components: [getArrowsButtons(0, embeds)],
+                    components: [getArrowsButtons(0, embeds.length)],
                     embeds: embeds[0],
                     ephemeral: true
                 });
@@ -851,7 +1106,7 @@ module.exports = {
 
                 await interaction.update({
                     content: await getTeamMessageContent(actualTeamId, owned, actualPage + 1, embeds.length),
-                    components: [getArrowsButtons(actualPage, embeds)],
+                    components: [getArrowsButtons(actualPage, embeds.length)],
                     embeds: embeds[actualPage]
                 });
 
@@ -906,6 +1161,7 @@ module.exports = {
     },
 
     //callback: async ({ instance, message, args,  }) => {
+    /** @param {CommandArgs} */
     callback: async ({ channel, guild, interaction, member, user }) => {
         const subCommand = interaction.options.getSubcommand();
 

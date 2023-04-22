@@ -1,3 +1,4 @@
+const { CollectorsData, FWCData } = require("./typedefs");
 const { githubRawURL, testing, local } = require('./constants');
 const { convertTime, log } = require('./util');
 const fetch = require('node-fetch');
@@ -38,8 +39,11 @@ let reminders;
 let characters;
 let songsInQueue = {};
 let musicPlayerData = {};
-let fwcData;
+
+/**@type {CollectorsData} */
 let collectors;
+/** @type {FWCData} */
+let fwcData;
 
 const getChronology = id => chronologies[id];
 
@@ -439,8 +443,18 @@ module.exports = {
     clearMusicPlayerData: key => delete musicPlayerData[key],
     updatePage: (key, page) => musicPlayerData[key].page = page,
 
+    /**
+     * Gets the FWC data (players, teams, positions and achievements) stored in cache.
+     * 
+     * @returns All cached FWC data.
+     */
     getFWCData: () => fwcData,
 
+    /**
+     * Retrieves the FWC data from the fwc-2022.json file.
+     * 
+     * @returns All cached FWC data.
+     */
     updateFWCData: async () => {
         try {
             let data;
@@ -458,7 +472,18 @@ module.exports = {
         return fwcData;
     },
 
+    /**
+     * Gets the collectors data stored in cache.
+     * 
+     * @returns All cached collectors data.
+     */
     getCollectors: () => collectors,
+
+    /**
+     * Retrieves the collectors data from the database.
+     * 
+     * @returns All cached collectors data.
+     */
     updateCollectors: async () => {
         const collectorSchema = require('../models/collector-schema');
         collectors = await collectorSchema.find({});
