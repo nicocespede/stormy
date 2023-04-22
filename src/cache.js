@@ -1,4 +1,4 @@
-const { githubRawURL, testing, local } = require('./constants');
+const { githubRawURL, devEnv, localEnv } = require('./constants');
 const { convertTime, log } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
@@ -45,7 +45,7 @@ const getChronology = id => chronologies[id];
 const updateChronology = async id => {
     try {
         let data;
-        if (local)
+        if (localEnv)
             data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
         else {
             const res = await fetch(`${githubRawURL}/chronologies/${id}.json`);
@@ -122,7 +122,7 @@ module.exports = {
     updateDownloadsData: async id => {
         try {
             let data;
-            if (local)
+            if (localEnv)
                 data = fs.readFileSync(`../stormy-data/downloads/${id}.json`, 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/downloads/${id}.json`);
@@ -140,7 +140,7 @@ module.exports = {
     updateGames: async () => {
         try {
             let data;
-            if (local)
+            if (localEnv)
                 data = fs.readFileSync('../stormy-data/downloads/games.json', 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/downloads/games.json`);
@@ -346,10 +346,10 @@ module.exports = {
 
     getIds: () => ids,
     updateIds: async () => {
-        const fileName = !testing ? 'ids.json' : 'testingIds.json';
+        const fileName = !devEnv ? 'ids.json' : 'testingIds.json';
         try {
             let data;
-            if (local)
+            if (localEnv)
                 data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/${fileName}`);
@@ -411,7 +411,7 @@ module.exports = {
     updateCharacters: async () => {
         try {
             let data;
-            if (local)
+            if (localEnv)
                 data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/characters.json`);
@@ -443,7 +443,7 @@ module.exports = {
     updateFWCData: async () => {
         try {
             let data;
-            if (local)
+            if (localEnv)
                 data = fs.readFileSync(`../stormy-data/fwc-2022.json`, 'utf8');
             else {
                 const res = await fetch(`${githubRawURL}/fwc-2022.json`);

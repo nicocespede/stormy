@@ -1,9 +1,17 @@
+const ENVIRONMENT = process.env.ENVIRONMENT;
+
+const isADevEnvironment = () => ENVIRONMENT !== 'PRO';
+
+const isLocalEnvironment = () => ENVIRONMENT === 'LOCAL';
+
 module.exports = {
     prefix: '-',
 
-    testing: process.env.TESTING ? true : false,
+    ENVIRONMENT,
 
-    local: process.env.LOCAL ? true : false,
+    devEnv: isADevEnvironment(),
+
+    localEnv: isLocalEnvironment(),
 
     githubRawURL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
 

@@ -1,4 +1,4 @@
-const { testing } = require("../../src/constants");
+const { devEnv } = require("../../src/constants");
 const { isOwner } = require("../../src/general");
 
 module.exports = {
@@ -12,6 +12,6 @@ module.exports = {
             return { content: '❌ Lo siento, no estás autorizado para usar este comando.', custom: true, ephemeral: true };
 
         await interaction.reply({ content: '🔄 Comenzando reinicio, ¡adiós!', ephemeral: true });
-        process.emit(!testing ? 'SIGTERM' : 'SIGINT');
+        process.emit(!devEnv ? 'SIGTERM' : 'SIGINT');
     }
 }

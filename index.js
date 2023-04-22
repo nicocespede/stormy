@@ -7,13 +7,13 @@ const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsIn
 const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/general');
 const { log } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./src/constants');
+const { prefix, MusicActions, categorySettings, devEnv, githubRawURL, color, ENVIRONMENT } = require('./src/constants');
 
 const client = new Client({
     intents: [
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildBans,
+        GatewayIntentBits.GuildModeration,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildMessages,
@@ -144,12 +144,12 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    log(`¡Loggeado como ${client.user.tag}!`, 'green');
+    log(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT}`, 'green');
 });
 
 client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
 
-process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
+process.on(!devEnv ? 'SIGTERM' : 'SIGINT', async () => {
     log('> Reinicio inminente...', 'yellow');
     // disconnects music bot
     const ids = getIds() || await updateIds();
