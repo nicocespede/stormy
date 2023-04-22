@@ -7,7 +7,7 @@ const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsIn
 const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { log } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT } = require('./src/constants');
+const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH } = require('./src/constants');
 
 const client = new Client({
     intents: [
@@ -144,7 +144,7 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    log(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT}`, 'green');
+    log(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, 'green');
 });
 
 client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));

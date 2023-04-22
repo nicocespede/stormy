@@ -11,16 +11,20 @@ const getActualBranch = () => {
     return splitted.pop().replace('\n', '');
 };
 
+const BRANCH = getActualBranch();
+
 module.exports = {
     prefix: '-',
 
     ENVIRONMENT,
 
+    BRANCH,
+
     DEV_ENV: isADevEnvironment(),
 
     LOCAL_ENV: isLocalEnvironment(),
 
-    GITHUB_RAW_URL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${getActualBranch()}`,
+    GITHUB_RAW_URL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${BRANCH}`,
 
     color: [4, 134, 164],
 
