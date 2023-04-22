@@ -4,6 +4,13 @@ const isADevEnvironment = () => ENVIRONMENT !== 'PRO';
 
 const isLocalEnvironment = () => ENVIRONMENT === 'LOCAL';
 
+const getActualBranch = () => {
+    const fs = require('fs');
+    const data = fs.readFileSync(`.git/HEAD`, 'utf8');
+    const splitted = data.split('/');
+    return splitted.pop().replace('\n', '');
+};
+
 module.exports = {
     prefix: '-',
 
@@ -13,7 +20,7 @@ module.exports = {
 
     LOCAL_ENV: isLocalEnvironment(),
 
-    GITHUB_RAW_URL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
+    GITHUB_RAW_URL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${getActualBranch()}`,
 
     color: [4, 134, 164],
 
