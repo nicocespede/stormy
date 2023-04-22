@@ -376,9 +376,12 @@ module.exports = {
                 const split = $(el).children('.m-item-date').text().trim().split(`\t`);
                 const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
                 date.setHours(date.getHours() - 2);
+                let remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text().replace('w', 's').replace('mo', 'me');
+                if (!remaining || remaining === '')
+                    remaining = 'En vivo';
                 const match = {
                     date,
-                    remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text().replace('w', 's').replace('mo', 'me'),
+                    remaining,
                     url: urlBase + el.attribs['href']
                 };
                 const teams = $(el).children('.m-item-team.text-of');
