@@ -1,11 +1,8 @@
 const local = process.env.LOCAL ? true : false;
 
 const getActualBranch = () => {
-    if (!local)
-        return 'main';
-
     const fs = require('fs');
-    const data = fs.readFileSync(`../stormy-data/.git/HEAD`, 'utf8');
+    const data = fs.readFileSync(`.git/HEAD`, 'utf8');
     const splitted = data.split('/');
     return splitted.pop().replace('\n', '');
 };
