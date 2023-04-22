@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
 const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
-const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/general');
+const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { log } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
 const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT } = require('./src/constants');

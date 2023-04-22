@@ -1,5 +1,5 @@
 const { getStats, updateStats } = require("../../src/cache");
-const { fullToSeconds, secondsToFull } = require("../../src/general");
+const { fullToSeconds, secondsToFull } = require("../../src/common");
 const { updateStat } = require("../../src/mongodb");
 
 module.exports = {

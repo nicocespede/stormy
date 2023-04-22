@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../src/cache');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
-const { isOwner } = require('../../src/general');
+const { isOwner } = require('../../src/common');
 
 module.exports = {
     category: 'Privados',

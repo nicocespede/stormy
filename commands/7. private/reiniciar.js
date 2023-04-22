@@ -1,5 +1,5 @@
 const { DEV_ENV } = require("../../src/constants");
-const { isOwner } = require("../../src/general");
+const { isOwner } = require("../../src/common");
 
 module.exports = {
     category: 'Privados',

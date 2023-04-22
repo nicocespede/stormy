@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
-const { pushDifference } = require('../../src/general');
+const { pushDifference } = require('../../src/common');
 const { log } = require('../../src/util');
 const { GITHUB_RAW_URL } = require('../../src/constants');
 const Versions = {

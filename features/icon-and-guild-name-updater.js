@@ -1,6 +1,6 @@
 const { timeouts, getIds, updateIds, getMode, updateMode } = require('../src/cache');
 const { Mode } = require('../src/constants');
-const { updateIcon, updateGuildName } = require('../src/general');
+const { updateIcon, updateGuildName } = require('../src/common');
 const { convertTZ } = require('../src/util');
 
 module.exports = client => {

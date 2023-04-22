@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { prefix } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
-const { isOwner } = require('../../src/general');
+const { isOwner } = require('../../src/common');
 
 module.exports = {
     category: 'General',

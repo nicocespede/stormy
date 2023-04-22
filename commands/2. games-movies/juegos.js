@@ -2,7 +2,7 @@ const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuil
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
 const { color, prefix, GITHUB_RAW_URL } = require('../../src/constants');
-const { lastUpdateToString, addAnnouncementsRole } = require('../../src/general');
+const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
 const { splitEmbedDescription } = require('../../src/util');
 
 const buttonsPrefix = 'games-';

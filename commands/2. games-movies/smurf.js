@@ -3,7 +3,7 @@ const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
 const { prefix, GITHUB_RAW_URL, color } = require('../../src/constants');
-const { isOwner } = require('../../src/general');
+const { isOwner } = require('../../src/common');
 const { log, convertTZ } = require('../../src/util');
 
 const translateRank = rank => {

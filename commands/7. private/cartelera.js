@@ -3,7 +3,7 @@ const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo }
 const { updateBillboardMessage } = require('../../src/mongodb');
 const { GITHUB_RAW_URL } = require('../../src/constants');
 const { log } = require('../../src/util');
-const { isOwner } = require('../../src/general');
+const { isOwner } = require('../../src/common');
 
 const prefix = 'billboard-';
 

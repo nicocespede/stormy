@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
 const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible, getIds, updateIds } = require("../src/cache");
 const { getBannedMemberEmbedInfo } = require("../src/characters");
-const { countMembers } = require("../src/general");
+const { countMembers } = require("../src/common");
 const { addBan, addSombraBan } = require("../src/mongodb");
 
 module.exports = client => {

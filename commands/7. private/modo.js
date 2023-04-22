@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const { updateIcon: updateIconCache, getIds, updateIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
 const { GITHUB_RAW_URL, Mode } = require("../../src/constants");
-const { updateIcon, isOwner, updateGuildName } = require("../../src/general");
+const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
 const { log } = require("../../src/util");
 

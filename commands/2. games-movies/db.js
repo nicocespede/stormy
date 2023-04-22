@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { getIds, updateIds } = require('../../src/cache');
-const { addAnnouncementsRole, sendChronologySettingMessage, sendChronologyElement } = require('../../src/general');
+const { addAnnouncementsRole, sendChronologySettingMessage, sendChronologyElement } = require('../../src/common');
 
 module.exports = {
     category: 'Juegos/Películas',

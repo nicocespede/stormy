@@ -1,5 +1,5 @@
 const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
-const { pushDifference, getMembersStatus } = require("../src/general");
+const { pushDifference, getMembersStatus } = require("../src/common");
 const { log } = require("../src/util");
 
 module.exports = client => {
