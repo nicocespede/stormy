@@ -4,7 +4,7 @@ const CoinGeckoClient = new CoinGecko();
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Canvas = require('canvas');
-const { currencies, githubRawURL } = require('../../src/constants');
+const { currencies, GITHUB_RAW_URL } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
 const { log } = require('../../src/util');
 
@@ -77,15 +77,15 @@ module.exports = {
             else {
                 const canvas = Canvas.createCanvas(500, 250);
                 const context = canvas.getContext('2d');
-                const swapImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/sorting-arrows-horizontal.png`);
-                const pesoImage = await Canvas.loadImage(`${githubRawURL}/assets/currencies/peso.png`);
+                const swapImage = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/currencies/sorting-arrows-horizontal.png`);
+                const pesoImage = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/currencies/peso.png`);
 
                 const variantsField = { name: 'Variante', value: '', inline: true };
                 const valuesField = { name: 'Conversión', value: ``, inline: true };
                 const pricesField = { name: 'Valores tomados en cuenta:', value: `` };
                 let coinID;
                 let currency = 'Dólares';
-                let imageURL = `${githubRawURL}/assets/thumbs/us-dollar-circled.png`;
+                let imageURL = `${GITHUB_RAW_URL}/assets/thumbs/us-dollar-circled.png`;
                 let coinPrice;
 
                 if (argsCurrency !== 'usd') {
@@ -118,7 +118,7 @@ module.exports = {
                     .setFields([variantsField, valuesField, pricesField])
                     .setColor(instance.color)
                     .setImage('attachment://image.png')
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/exchange.png`)
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/exchange.png`)
                     .setFooter({ text: 'Cotización del dólar obtenida de DolarHoy.' })];
                 reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
                 reply.content = null;

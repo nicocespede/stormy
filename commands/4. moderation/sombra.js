@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { getSombraBans, updateSombraBans } = require('../../src/cache');
-const { githubRawURL } = require('../../src/constants');
+const { GITHUB_RAW_URL } = require('../../src/constants');
 
 module.exports = {
     category: 'Moderación',
@@ -23,7 +23,7 @@ module.exports = {
                 .setTitle('Bans de **Sombra#9370**')
                 .setDescription(description)
                 .setColor(instance.color)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/sombra.jpeg`)],
+                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/sombra.jpeg`)],
             ephemeral: true
         };
     }

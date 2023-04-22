@@ -2,12 +2,12 @@ const { AttachmentBuilder } = require("discord.js");
 const Canvas = require('canvas');
 const { getIds, updateIds } = require("../src/cache");
 const { countMembers, applyText, getImageType } = require("../src/general");
-const { githubRawURL } = require("../src/constants");
+const { GITHUB_RAW_URL } = require("../src/constants");
 
 const generateWelcomeImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage(`${githubRawURL}/assets/welcome${await getImageType()}.png`);
+    const background = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/welcome${await getImageType()}.png`);
     const avatarWidth = 250;
     const avatarHeight = avatarWidth
     const avatarX = 450;

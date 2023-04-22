@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction, getIds, updateIds } = require("../../src/cache");
-const { MusicActions, githubRawURL } = require("../../src/constants");
+const { MusicActions, GITHUB_RAW_URL } = require("../../src/constants");
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
 
@@ -94,7 +94,7 @@ module.exports = {
 
         const filteredTitle = await cleanTitle(song.title);
         reply.embeds = [embed.setDescription(`🔁 **${filteredTitle}${!song.url.includes('youtube') || !containsAuthor(song) ? ` | ${song.author}` : ``}** movida ${auxString}.`)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/sorting-arrows.png`)];
+            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/sorting-arrows.png`)];
         reply.ephemeral = false;
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
         updateLastAction(MusicActions.MOVING_SONG);

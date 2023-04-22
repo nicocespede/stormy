@@ -1,15 +1,15 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
-const { color, prefix, githubRawURL } = require('../../src/constants');
+const { color, prefix, GITHUB_RAW_URL } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/general');
 const { splitEmbedDescription } = require('../../src/util');
 
 const buttonsPrefix = 'games-';
 const maxIdlingTime = 10;
 const thumbnailsData = {
-    steam: `${githubRawURL}/assets/thumbs/games/steam.png`,
-    others: `${githubRawURL}/assets/thumbs/games/control.png`
+    steam: `${GITHUB_RAW_URL}/assets/thumbs/games/steam.png`,
+    others: `${GITHUB_RAW_URL}/assets/thumbs/games/control.png`
 };
 const data = {
     instructions: { emoji: '📄', label: 'Instrucciones', style: ButtonStyle.Secondary },
@@ -264,7 +264,7 @@ module.exports = {
                 .setColor(instance.color)
                 .addFields([gamesField, updatesField])
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
-                .setThumbnail(`${githubRawURL}/assets/thumbs/games/games-folder.png`)];
+                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/games/games-folder.png`)];
 
             reply.content = null;
             message ? replyMessage.edit(reply) : interaction.editReply(reply);

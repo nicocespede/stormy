@@ -5,7 +5,7 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, githubRawURL, prefix, Mode } = require('./constants');
+const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
 const { convertTZ, log, splitEmbedDescription } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -182,7 +182,7 @@ module.exports = {
         const actualIcon = getIcon() || await updateIcon();
         const newIcon = `kgprime${await getImageType()}`;
         if (actualIcon !== newIcon) {
-            await guild.setIcon(`${githubRawURL}/assets/icons/${newIcon}.png`).catch(console.error);
+            await guild.setIcon(`${GITHUB_RAW_URL}/assets/icons/${newIcon}.png`).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
             await updateIcon();
         }
@@ -374,7 +374,7 @@ module.exports = {
             emoji = await getNewEmoji();
             reply.content = `${emoji} ${title}\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
             reply.components = getFiltersRows(filters).concat([secondaryRow]);
-            reply.files = [`${githubRawURL}/assets/${collectionId}/poster.jpg`];
+            reply.files = [`${GITHUB_RAW_URL}/assets/${collectionId}/poster.jpg`];
 
             if (!replyMessage)
                 replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
@@ -500,7 +500,7 @@ module.exports = {
                 embeds.push(new EmbedBuilder()
                     .setColor(instance.color)
                     .addFields([moviesField, typesField])
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/${collection.thumb}.png`));
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/${collection.thumb}.png`));
 
                 moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                 typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
@@ -512,7 +512,7 @@ module.exports = {
             embeds.push(new EmbedBuilder()
                 .setColor(instance.color)
                 .addFields([moviesField, typesField])
-                .setThumbnail(`${githubRawURL}/assets/thumbs/${collection.thumb}.png`));
+                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/${collection.thumb}.png`));
 
             for (let i = 0; i < embeds.length; i++) {
                 const msg = embeds[i];
@@ -612,7 +612,7 @@ module.exports = {
             const filteredName = elementName.replace(/[:|?]/g, '').replace(/ /g, '%20');
 
             reply.content = `**${elementName} (${elementYear})**\n\n⚠ Este elemento no cuenta con contenido descargable.\n\u200b`;
-            reply.files = [`${githubRawURL}/assets/${collectionId}/${filteredName}.jpg`];
+            reply.files = [`${GITHUB_RAW_URL}/assets/${collectionId}/${filteredName}.jpg`];
 
             message ? await message.reply(reply) : await interaction.editReply(reply);
             return;
@@ -653,7 +653,7 @@ module.exports = {
 
             reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
             reply.components = [getVersionsRow()];
-            reply.files = [`${githubRawURL}/assets/${collectionId}/${filteredName}.jpg`];
+            reply.files = [`${GITHUB_RAW_URL}/assets/${collectionId}/${filteredName}.jpg`];
 
             const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
@@ -699,7 +699,7 @@ module.exports = {
                         .setTitle(`${packageName} (${packageYear}) - ${customId} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`)
                         .setColor(color)
                         .setDescription(c)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/${collectionId}/${thumb}.png`));
+                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/${collectionId}/${thumb}.png`));
             }
 
             for (let i = 0; i < embeds.length; i++)

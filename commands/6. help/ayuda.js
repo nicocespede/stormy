@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const { githubRawURL } = require("../../src/constants");
+const { GITHUB_RAW_URL } = require("../../src/constants");
 const _get_first_embed_1 = __importDefault(require("./!get-first-embed"));
 const _InteractionListener_1 = __importStar(require("./!InteractionListener"));
 const sendHelpMenu = (messageOrInteraction, instance) => {
@@ -81,7 +81,7 @@ module.exports = {
         const embed = new discord_js_1.EmbedBuilder()
             .setTitle(`${instance.displayName} ${instance.messageHandler.getEmbed(guild, 'HELP_MENU', 'TITLE')} - ${arg}`)
             .setDescription(description)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/help.png`);
+            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/help.png`);
         if (instance.color)
             embed.setColor(instance.color);
         if (interaction) {

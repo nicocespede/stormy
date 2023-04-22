@@ -4,7 +4,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
-const { MusicActions, githubRawURL, color } = require("./constants");
+const { MusicActions, GITHUB_RAW_URL, color } = require("./constants");
 const { addQueue } = require("./mongodb");
 const { log } = require("./util");
 
@@ -140,7 +140,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
             case 'help':
                 embed.setTitle('❓ Ayuda: Reproductor de música');
-                embed.setThumbnail(`${githubRawURL}/assets/thumbs/help.png`);
+                embed.setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/help.png`);
                 const controlsInfo = [
                     '**[ ❌ ]** Limpiar cola de reproducción',
                     '**[ 🎤 ]** Mostrar/ocultar letra de la canción actual',
@@ -209,7 +209,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         }
 
         embed.setDescription(description)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/${thumbnail}.png`);
+            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/${thumbnail}.png`);
         return embed;
     };
 
@@ -221,7 +221,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 for (const chunk of chunks)
                     embeds.push(new EmbedBuilder()
                         .setDescription(chunk)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/genius.png`)
+                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/genius.png`)
                         .setColor(color));
                 embeds[embeds.length - 1].setFooter({ text: 'Letra obtenida de genius.com' });
                 break;
@@ -256,7 +256,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                         embeds.push(new EmbedBuilder()
                             .setTitle(`📄 Cola de reproducción - ${tracks.length} canciones`)
                             .setDescription(chunk)
-                            .setThumbnail(`${githubRawURL}/assets/thumbs/music/numbered-list.png`)
+                            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/numbered-list.png`)
                             .setColor(color));
                 }
                 break;
@@ -573,7 +573,7 @@ const handleErrorInMusicChannel = async (message, interaction, reply, channel) =
 };
 
 const handleError = (reply, embed, description, message, interaction, channel) => {
-    reply.embeds = [embed.setDescription(description).setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
+    reply.embeds = [embed.setDescription(description).setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
     handleErrorInMusicChannel(message, interaction, reply, channel);
 };
 
@@ -597,7 +597,7 @@ const connectToVoiceChannel = async (queue, member, player, reply, embed, messag
     } catch {
         player.nodes.delete(queue);
         embed.setDescription(`🛑 ${member ? `${member.user}, n` : 'N'}o me puedo unir al canal de voz.`)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`);
+            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`);
 
         if (metadata) {
             metadata.send({ embeds: [embed] });
@@ -689,7 +689,7 @@ module.exports = {
         if (voiceChannel.members.size === 0) {
             await metadata.send({
                 embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/so-so.png`)]
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/so-so.png`)]
             });
             await previousQueueSchema.deleteMany({});
             return;
@@ -715,7 +715,7 @@ module.exports = {
 
         const message = await metadata.send({
             embeds: [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)]
         });
 
         updateLastAction(MusicActions.RESTARTING);

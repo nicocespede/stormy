@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix, githubRawURL } = require('../../src/constants');
+const { prefix, GITHUB_RAW_URL } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
 
 module.exports = {
@@ -42,7 +42,7 @@ module.exports = {
         else {
             reply.content = `🪰 ¡Moscardón ${type} enviado!`;
             reply.ephemeral = false;
-            await target.send({ files: [{ attachment: `${githubRawURL}/assets/moscas/moscardon.png` }] }).catch(() => {
+            await target.send({ files: [{ attachment: `${GITHUB_RAW_URL}/assets/moscas/moscardon.png` }] }).catch(() => {
                 reply.content = `❌ Lo siento, no pude enviarle el mensaje a este usuario.`;
                 reply.ephemeral = true;
             });

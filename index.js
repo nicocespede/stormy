@@ -7,7 +7,7 @@ const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsIn
 const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/general');
 const { log } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, devEnv, githubRawURL, color, ENVIRONMENT } = require('./src/constants');
+const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT } = require('./src/constants');
 
 const client = new Client({
     intents: [
@@ -83,7 +83,7 @@ client.on('ready', async () => {
             const temporalReply = {
                 embeds: [musicEmbed
                     .setDescription(`☑️ Agregado a la cola:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/add-song.png`)]
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
 
@@ -99,7 +99,7 @@ client.on('ready', async () => {
             const temporalReply = {
                 embeds: [musicEmbed
                     .setDescription(`☑️ **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''} agregadas a la cola.`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/add-song.png`)
                 ]
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
@@ -126,7 +126,7 @@ client.on('ready', async () => {
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
+                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/broken-robot.png`)]
         });
         if (!queue.deleted)
             queue.delete();
@@ -136,7 +136,7 @@ client.on('ready', async () => {
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
                 embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/broken-robot.png`)]
             });
         if (!queue.deleted)
             queue.delete();
@@ -149,7 +149,7 @@ client.on('ready', async () => {
 
 client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
 
-process.on(!devEnv ? 'SIGTERM' : 'SIGINT', async () => {
+process.on(!DEV_ENV ? 'SIGTERM' : 'SIGINT', async () => {
     log('> Reinicio inminente...', 'yellow');
     // disconnects music bot
     const ids = getIds() || await updateIds();

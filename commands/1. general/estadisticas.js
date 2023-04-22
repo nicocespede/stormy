@@ -3,7 +3,7 @@ const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
 const { pushDifference } = require('../../src/general');
 const { log } = require('../../src/util');
-const { githubRawURL } = require('../../src/constants');
+const { GITHUB_RAW_URL } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
@@ -85,7 +85,7 @@ module.exports = {
             .setDescription(description)
             .addFields(fields)
             .setColor(instance.color)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/bar-chart.png`)
+            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/bar-chart.png`)
 
         if (needsFooter)
             embed.setFooter({ text: 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' });

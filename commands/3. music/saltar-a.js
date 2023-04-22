@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { getIds, updateIds, updateLastAction } = require("../../src/cache");
-const { githubRawURL, MusicActions } = require("../../src/constants");
+const { GITHUB_RAW_URL, MusicActions } = require("../../src/constants");
 const { handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
 
@@ -62,7 +62,7 @@ module.exports = {
 
         queue.node.skipTo(index);
         reply.embeds = [embed.setDescription(`⏭️ **${index + 1} canciones** salteadas.`)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/go-to-end.png`)];
+            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/go-to-end.png`)];
         reply.ephemeral = false;
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
         updateLastAction(MusicActions.SKIPPING_MANY, user.tag);

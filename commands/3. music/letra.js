@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { githubRawURL } = require('../../src/constants');
+const { GITHUB_RAW_URL } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { getIds, updateIds } = require('../../src/cache');
@@ -47,7 +47,7 @@ module.exports = {
             for (const chunk of chunks)
                 embeds.push(new EmbedBuilder()
                     .setDescription(chunk)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/genius.png`)
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/genius.png`)
                     .setColor(instance.color));
             embeds[embeds.length - 1].setFooter({ text: 'Letra obtenida de genius.com' });
 
@@ -102,7 +102,7 @@ module.exports = {
                             components: [], embeds: [new EmbedBuilder()
                                 .setDescription('⌛ Esta acción expiró...')
                                 .setColor(instance.color)
-                                .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)]
                         });
                 });
             }
@@ -112,11 +112,11 @@ module.exports = {
             const notFound = notFoundErrors.includes(error.message);
             if (notFound)
                 reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
             else {
                 console.log(error);
                 reply.embeds = [embed.setDescription(`🛑 ¡Lo siento, ocurrió un error!`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
+                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
             }
             await messageOrInteraction.reply(reply);
         }

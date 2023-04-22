@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
 const { updateBillboardMessage } = require('../../src/mongodb');
-const { githubRawURL } = require('../../src/constants');
+const { GITHUB_RAW_URL } = require('../../src/constants');
 const { log } = require('../../src/util');
 const { isOwner } = require('../../src/general');
 
@@ -123,7 +123,7 @@ module.exports = {
                         .setColor(instance.color)
                         .setDescription(`**🕔 Fecha y horario:**\n${date}`)
                         .setImage(url)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/movies/${thumbs[random]}.png`)
+                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/movies/${thumbs[random]}.png`)
                         .setTitle(title)]
                 };
                 const channel = await client.channels.fetch(ids.channels.cartelera).catch(console.error);

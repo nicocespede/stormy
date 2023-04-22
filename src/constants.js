@@ -9,11 +9,11 @@ module.exports = {
 
     ENVIRONMENT,
 
-    devEnv: isADevEnvironment(),
+    DEV_ENV: isADevEnvironment(),
 
-    localEnv: isLocalEnvironment(),
+    LOCAL_ENV: isLocalEnvironment(),
 
-    githubRawURL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
+    GITHUB_RAW_URL: 'https://raw.githubusercontent.com/nicocespede/stormy-data/main',
 
     color: [4, 134, 164],
 

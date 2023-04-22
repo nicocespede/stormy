@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 //const { getIds, updateIds, getFWCData, updateFWCData } = require('../../src/cache');
-const { githubRawURL } = require("../../src/constants");
+const { GITHUB_RAW_URL } = require("../../src/constants");
 
 const buttonsPrefix = 'fwc-matches-';
 const stagesData = {
@@ -237,7 +237,7 @@ module.exports = {
             interaction.update({
                 components: [getBackButton(stageId)],
                 content: null,
-                files: [`${githubRawURL}/assets/fwc/${stageId}-${matchId}.png`]
+                files: [`${GITHUB_RAW_URL}/assets/fwc/${stageId}-${matchId}.png`]
             });
         });
     },
@@ -253,7 +253,7 @@ module.exports = {
         await interaction.deferReply();
 
         // const fwcColor = [154, 16, 50];
-        // const fwcThumb = `${githubRawURL}/assets/thumbs/fwc-2022.png`;
+        // const fwcThumb = `${GITHUB_RAW_URL}/assets/thumbs/fwc-2022.png`;
 
         switch (subCommand) {
             // case 'abrir-paquete':

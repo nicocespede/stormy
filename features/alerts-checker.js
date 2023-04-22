@@ -4,14 +4,14 @@ const { getIds, updateIds, updateBirthdays, timeouts } = require('../src/cache')
 const { applyText, isOwner } = require('../src/general');
 const { log, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
-const { relativeSpecialDays, githubRawURL } = require('../src/constants');
+const { relativeSpecialDays, GITHUB_RAW_URL } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
 const birthdaySchema = require('../models/birthday-schema');
 
 const generateBirthdayImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage(`${githubRawURL}/assets/happy-bday.png`);
+    const background = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/happy-bday.png`);
     const avatarWidth = 300;
     const avatarHeight = avatarWidth;
     const avatarX = (background.width / 2) - (avatarWidth / 2);
