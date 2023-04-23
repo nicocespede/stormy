@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
 const { updateReminders, getReminders } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
-const { GITHUB_RAW_URL } = require('../../src/constants');
+const { GITHUB_RAW_URL, CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { convertTZ, log } = require('../../src/util');
 
 module.exports = {
@@ -57,7 +57,7 @@ module.exports = {
                 let description = `Hola <@${user.id}>, tus recordatorios guardados son:\n\n`;
                 for (let i = 0; i < filtered.length; i++) {
                     const { date, description: desc } = filtered[i];
-                    description += `**${i + 1}.** ${desc}: **${convertTZ(date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
+                    description += `**${i + 1}.** ${desc}: **${convertTZ(date).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
                 }
 
                 interaction.reply({
@@ -139,11 +139,11 @@ module.exports = {
             }
 
             await new reminderSchema({ description: description, userId: user.id, date }).save();
-            log('> Recordatorio agregado a la base de datos', 'green');
+            log('> Recordatorio agregado a la base de datos', CONSOLE_GREEN);
             updateReminders();
 
             const convertedDate = convertTZ(date);
-            reply.content = `✅ Tu recordatorio para el **${convertedDate.toLocaleDateString('es-AR')}** a las **${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
+            reply.content = `✅ Tu recordatorio para el **${convertedDate.toLocaleDateString(ARGENTINA_LOCALE_STRING)}** a las **${convertedDate.toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
             return reply;
 
         } else if (subCommand === 'borrar') {
@@ -162,7 +162,7 @@ module.exports = {
             const selected = filtered[id - 1];
             const deletion = await reminderSchema.deleteOne({ _id: selected._id }).catch(console.error);
             if (deletion.deletedCount > 0) {
-                log(`> Recordatorio eliminado de la base de datos`, 'green');
+                log(`> Recordatorio eliminado de la base de datos`, CONSOLE_GREEN);
                 updateReminders();
                 return { content: `✅ Recordatorio borrado satisfactoriamente.`, custom: true, ephemeral: true };
             }

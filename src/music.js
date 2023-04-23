@@ -4,7 +4,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
-const { MusicActions, GITHUB_RAW_URL, color } = require("./constants");
+const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW } = require("./constants");
 const { addQueue } = require("./mongodb");
 const { log } = require("./util");
 
@@ -653,7 +653,7 @@ module.exports = {
         const player = useMasterPlayer();
         const queue = player.nodes.get(guildId);
         if (queue) {
-            log('> Guardando cola de reproducción actual', 'yellow');
+            log('> Guardando cola de reproducción actual', CONSOLE_YELLOW);
             const { collector } = getMusicPlayerData('player');
             collector.stop();
 
@@ -695,7 +695,7 @@ module.exports = {
             return;
         }
 
-        log('> Reanudando reproducción interrumpida por el reinicio', 'yellow');
+        log('> Reanudando reproducción interrumpida por el reinicio', CONSOLE_YELLOW);
 
         const membersIds = [...new Set([current.requestedBy]
             .concat(previousTracks.map(({ requestedBy }) => requestedBy))

@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL } = require('../../src/constants');
+const { prefix, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
 const { log } = require('../../src/util');
 
@@ -99,7 +99,7 @@ module.exports = {
                     const member = members.get(key);
 
                     if (!member) {
-                        log(`> El usuario ${username} ya no está en el servidor.`, 'yellow');
+                        log(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
                         continue;
                     }
 

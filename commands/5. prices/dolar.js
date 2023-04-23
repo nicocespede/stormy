@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { GITHUB_RAW_URL } = require('../../src/constants');
+const { GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
 const { log } = require('../../src/util');
 
 module.exports = {
@@ -35,7 +35,7 @@ module.exports = {
             }
         } catch (e) {
             error = true;
-            log(e, 'red');
+            log(e, CONSOLE_RED);
         }
 
         const reply = {};

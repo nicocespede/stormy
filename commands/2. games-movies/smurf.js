@@ -2,7 +2,7 @@ const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelTy
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL, color } = require('../../src/constants');
+const { prefix, GITHUB_RAW_URL, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
 const { log, convertTZ } = require('../../src/util');
 
@@ -100,7 +100,7 @@ const getEmbed = async (color, guild, userId) => {
             ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
         } else {
             errorsCounter++;
-            log(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, 'red');
+            log(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
             accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
             ranksField.value += `???\n\n`;
         }
@@ -113,7 +113,7 @@ const getEmbed = async (color, guild, userId) => {
         .setColor(color)
         .setDescription(description)
         .addFields([accountsField, commandsField, ranksField])
-        .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}` })
+        .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}` })
         .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/games/valorant.png`)
         .setTitle(`**Cuentas smurf**`);
 };
@@ -187,7 +187,7 @@ module.exports = {
                     });
                     await interaction.update({ components: [getRow('success')] });
                 } catch (e) {
-                    log(`> Error sending report:\n${e.stack}`, 'red');
+                    log(`> Error sending report:\n${e.stack}`, CONSOLE_RED);
                     await interaction.update({ components: [getRow('retry')] });
                 }
             }
@@ -263,7 +263,7 @@ module.exports = {
                     version: 'v1'
                 }).catch(console.error);
                 if (mmr.error) {
-                    log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, 'red');
+                    log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(account.name)
                         .setColor(getRankColor(null))];
@@ -276,7 +276,7 @@ module.exports = {
                     reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
                 if (account.bannedUntil)
-                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString('es-AR')}** ⚠`);
+                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ⚠`);
                 else if (user.id !== ids.users.stormer)
                     reply.components = [getRow('report')];
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },

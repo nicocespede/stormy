@@ -1,5 +1,6 @@
 const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus } = require("../src/common");
+const { CONSOLE_BLUE } = require("../src/constants");
 const { log } = require("../src/util");
 
 module.exports = client => {
@@ -86,7 +87,7 @@ module.exports = client => {
         if (exec) {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
-                log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, 'blue');
+                log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, CONSOLE_BLUE);
                 for (const id in timestamps)
                     if (Object.hasOwnProperty.call(timestamps, id)) {
                         await pushDifference(id);

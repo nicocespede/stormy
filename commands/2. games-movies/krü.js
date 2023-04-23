@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { updateKruMatches } = require('../../src/cache');
-const { GITHUB_RAW_URL } = require('../../src/constants');
+const { GITHUB_RAW_URL, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { convertTZ } = require('../../src/util');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
             const convertedDate = convertTZ(date);
             const dateInt = convertedDate.getDate();
             const month = convertedDate.getMonth() + 1;
-            datesField.value += `${dateInt < 10 ? `0${dateInt}` : dateInt}/${month < 10 ? `0${month}` : month} ${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })} **(${remaining})**\n\n`;
+            datesField.value += `${dateInt < 10 ? `0${dateInt}` : dateInt}/${month < 10 ? `0${month}` : month} ${convertedDate.toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} **(${remaining})**\n\n`;
             urlsField.value += `**[🔗](${url})**\n\n`;
         }
 

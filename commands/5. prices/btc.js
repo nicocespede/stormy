@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
-const { currencies } = require('../../src/constants');
+const { currencies, ARGENTINA_TZ_STRING, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 
 const availableCurrencies = Object.keys(currencies);
 availableCurrencies.splice(availableCurrencies.indexOf('btc'), 1);
@@ -28,7 +28,7 @@ module.exports = {
             custom: true,
             embeds: [new EmbedBuilder()
                 .setTitle(`**${currency}**`)
-                .setDescription(`Hola <@${user.id}>, la cotización del **${currency}** es **${price.toLocaleString('es-AR', { currency: 'USD', style: "currency", maximumFractionDigits: 20 })}**.\n\n*Actualizado por última vez el ${date.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}.*`)
+                .setDescription(`Hola <@${user.id}>, la cotización del **${currency}** es **${price.toLocaleString(ARGENTINA_LOCALE_STRING, { currency: 'USD', style: "currency", maximumFractionDigits: 20 })}**.\n\n*Actualizado por última vez el ${date.toLocaleString(ARGENTINA_LOCALE_STRING, { timeZone: ARGENTINA_TZ_STRING })}.*`)
                 .setColor(color)
                 .setThumbnail(imageURL)]
         };

@@ -1,4 +1,5 @@
 const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../src/cache');
+const { ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../src/constants');
 const { convertTZ, log } = require('../src/util');
 
 module.exports = async client => {
@@ -18,14 +19,14 @@ module.exports = async client => {
 
                 if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
                     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString('es-AR', { timeStyle: 'short' })} hs**.`)
-                        .catch(_ => log("> Error al enviar alerta de partido de KRÜ", 'red'));
+                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} hs**.`)
+                        .catch(_ => log("> Error al enviar alerta de partido de KRÜ", CONSOLE_RED));
                 }
 
                 if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9)) {
                     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
                     channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
-                        .catch(_ => log("> Error al enviar alerta de partido de KRÜ", 'red'));
+                        .catch(_ => log("> Error al enviar alerta de partido de KRÜ", CONSOLE_RED));
                 }
             }
         }

@@ -1,5 +1,6 @@
 const { ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { convertTZ } = require("../../src/util");
+const { ARGENTINA_LOCALE_STRING } = require("../../src/constants");
 
 const title = '🎲 __**Sorteo**__\n';
 
@@ -108,14 +109,14 @@ module.exports = {
 
         interactionsCollector.on('collect', async btnInt => {
             if (!btnInt.isButton()) return;
-            
+
             const { customId } = btnInt;
             if (!Object.keys(buttonsData).includes(customId)) return;
 
             if (btnInt.user.id !== user.id) {
                 btnInt.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
                 return;
-            }    
+            }
 
             const messagesFilter = message => user.id === message.author.id;
 
@@ -191,7 +192,7 @@ module.exports = {
                 winners.push(elementsCopy.splice(random, 1));
             }
 
-            date = convertTZ(new Date()).toLocaleString('es-AR');
+            date = convertTZ(new Date()).toLocaleString(ARGENTINA_LOCALE_STRING);
             btnInt.update({ content: `${title}\n🏆 ${winnersAmount > 1 ? 'Los ganadores del sorteo son:' : 'El ganador del sorteo es:'}\n\n- ${winners.join('\n- ')}\n\n_Sorteo realizado el ${date}_` });
         });
 

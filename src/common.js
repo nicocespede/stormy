@@ -5,8 +5,8 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode } = require('./constants');
-const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
+const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE } = require('./constants');
+const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
 const { convertTZ, log, splitEmbedDescription } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
@@ -85,10 +85,10 @@ const addAnnouncementsRole = async (id, guild, member) => {
         const role = await guild.roles.fetch(id);
         if (!role.members.has(member.user.id)) {
             await member.roles.add(id);
-            log(`> Rol '${role.name}' agregado a ${member.user.tag}`, 'green');
+            log(`> Rol '${role.name}' agregado a ${member.user.tag}`, CONSOLE_GREEN);
         }
     } catch (error) {
-        log(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, 'red');
+        log(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, CONSOLE_RED);
     }
 };
 
@@ -122,11 +122,33 @@ module.exports = {
         const timestamps = getTimestamps();
         const stat = stats[id];
         const now = new Date();
-        const totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
+        const totalTime = (Math.abs(now - timestamps[id]) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
         if (!isNaN(totalTime)) {
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
             await updateStat(id, days, hours, minutes, seconds, username);
         }
+        await updateStats();
+    },
+
+    pushDifferences: async () => {
+        const now = new Date();
+        const updates = [];
+        const stats = getStats() || await updateStats();
+        const timestamps = getTimestamps();
+        for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id)) {
+            const stat = stats[id];
+
+            let totalTime = Math.abs(now - timestamps[id]) / 1000;
+
+            if (stat)
+                totalTime += fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+
+            if (!isNaN(totalTime)) {
+                const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                updates.push({ filter: { _id: id }, update: { days, hours, minutes, seconds } });
+            }
+        }
+        await updateManyStats(updates);
         await updateStats();
     },
 
@@ -145,7 +167,7 @@ module.exports = {
         for (const key in banned)
             if (!bans.has(key)) {
                 needUpdate = true;
-                log(`> El ban de ${banned[key].user} no corresponde a este servidor`, 'yellow');
+                log(`> El ban de ${banned[key].user} no corresponde a este servidor`, CONSOLE_YELLOW);
                 await deleteBan(key);
             }
         if (needUpdate)
@@ -174,7 +196,7 @@ module.exports = {
         const channel = await guild.channels.fetch(ids.channels.members).catch(console.error);
         if (channel.name !== totalMembersName) {
             await channel.setName(totalMembersName).catch(console.error);
-            log('> Contador de miembros actualizado', 'blue');
+            log('> Contador de miembros actualizado', CONSOLE_BLUE);
         }
     },
 
@@ -211,7 +233,7 @@ module.exports = {
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         if (guild.name !== newGuildName) {
             await guild.setName(newGuildName).catch(console.error);
-            log('> Nombre de servidor actualizado', 'green');
+            log('> Nombre de servidor actualizado', CONSOLE_GREEN);
         }
     },
 

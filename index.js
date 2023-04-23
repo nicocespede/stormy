@@ -4,10 +4,10 @@ const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
 const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
-const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
+const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { log } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH } = require('./src/constants');
+const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const client = new Client({
     intents: [
@@ -122,7 +122,7 @@ client.on('ready', async () => {
             collector.stop();
         }
     }).on('playerError', (queue, error) => {
-        log(`Error in Player.on('playerError'):\n${error.stack}`, 'red');
+        log(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -131,7 +131,7 @@ client.on('ready', async () => {
         if (!queue.deleted)
             queue.delete();
     }).on('error', (queue, error) => {
-        log(`Error in Player.on('error'):\n${error.stack}`, 'red');
+        log(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
@@ -144,13 +144,13 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    log(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, 'green');
+    log(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, CONSOLE_GREEN);
 });
 
-client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
+client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
 
 process.on(!DEV_ENV ? 'SIGTERM' : 'SIGINT', async () => {
-    log('> Reinicio inminente...', 'yellow');
+    log('> Reinicio inminente...', CONSOLE_YELLOW);
     // disconnects music bot
     const ids = getIds() || await updateIds();
     await emergencyShutdown(ids.guilds.default);
@@ -158,24 +158,22 @@ process.on(!DEV_ENV ? 'SIGTERM' : 'SIGINT', async () => {
     // send stats
     const timestamps = getTimestamps();
     if (Object.keys(timestamps).length > 0) {
-        log('> Enviando estadísticas a la base de datos', 'yellow');
-        for (const key in timestamps)
-            if (Object.hasOwnProperty.call(timestamps, key))
-                await pushDifference(key);
+        log('> Enviando estadísticas a la base de datos', CONSOLE_YELLOW);
+        await pushDifferences();
     }
 
     //clears timeouts
-    log(`> Terminando ${Object.keys(timeouts).length} loops`, 'yellow');
+    log(`> Terminando ${Object.keys(timeouts).length} loops`, CONSOLE_YELLOW);
     for (const key in timeouts)
         if (Object.hasOwnProperty.call(timeouts, key))
             clearTimeout(timeouts[key]);
 
     //ends discord client
-    log('> Desconectando bot', 'yellow');
+    log('> Desconectando bot', CONSOLE_YELLOW);
     client.destroy();
 
     //exits process
-    log('> Terminando proceso', 'yellow');
+    log('> Terminando proceso', CONSOLE_YELLOW);
     process.exit();
 });
 

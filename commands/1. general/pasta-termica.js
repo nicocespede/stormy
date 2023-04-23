@@ -1,7 +1,7 @@
 const { getThermalPasteDates, updateThermalPasteDates } = require('../../src/cache');
 const { convertTZ } = require('../../src/util');
 const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { prefix } = require('../../src/constants');
+const { prefix, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../src/mongodb');
 
 const validateDate = date => {
@@ -77,7 +77,7 @@ module.exports = {
             else {
                 const totalTime = Math.abs(new Date() - userDate) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
-                reply.content = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${convertTZ(userDate).toLocaleDateString('es-AR')}**).`;
+                reply.content = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${convertTZ(userDate).toLocaleDateString(ARGENTINA_LOCALE_STRING)}**).`;
             }
             return reply;
         }

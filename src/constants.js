@@ -26,7 +26,15 @@ module.exports = {
 
     GITHUB_RAW_URL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${BRANCH}`,
 
+    ARGENTINA_TZ_STRING: 'America/Argentina/Buenos_Aires',
+    ARGENTINA_LOCALE_STRING: 'es-AR',
+
     color: [4, 134, 164],
+
+    CONSOLE_BLUE: 'BLUE',
+    CONSOLE_GREEN: 'GREEN',
+    CONSOLE_RED: 'RED',
+    CONSOLE_YELLOW: 'YELLOW',
 
     currencies: {
         slp: {

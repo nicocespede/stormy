@@ -4,13 +4,13 @@ const CoinGeckoClient = new CoinGecko();
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Canvas = require('canvas');
-const { currencies, GITHUB_RAW_URL } = require('../../src/constants');
+const { currencies, GITHUB_RAW_URL, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
 const { log } = require('../../src/util');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
 
-const formatNumber = (value, maximumFractionDigits, currency) => value.toLocaleString('es-AR', { currency, style: 'currency', maximumFractionDigits });
+const formatNumber = (value, maximumFractionDigits, currency) => value.toLocaleString(ARGENTINA_LOCALE_STRING, { currency, style: 'currency', maximumFractionDigits });
 
 module.exports = {
     category: 'Cotizaciones',
@@ -69,7 +69,7 @@ module.exports = {
                     }
             } catch (e) {
                 error = true;
-                log(e, 'red');
+                log(e, CONSOLE_RED);
             }
 
             if (error)

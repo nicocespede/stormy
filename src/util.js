@@ -1,8 +1,9 @@
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE } = require('./constants');
 const chalk = require('chalk');
 chalk.level = 1;
 
 const convertTZ = (date, tzString) => {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString || 'America/Argentina/Buenos_Aires' }));
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString || ARGENTINA_TZ_STRING }));
 };
 
 module.exports = {
@@ -35,16 +36,16 @@ module.exports = {
         const now = `${day}-${month}-${date.getFullYear()} ${hours}:${minutes}:${seconds}`;
         let colored;
         switch (color) {
-            case 'blue':
+            case CONSOLE_BLUE:
                 colored = chalk.blue(string);
                 break;
-            case 'green':
+            case CONSOLE_GREEN:
                 colored = chalk.green(string);
                 break;
-            case 'red':
+            case CONSOLE_RED:
                 colored = chalk.red(string);
                 break;
-            case 'yellow':
+            case CONSOLE_YELLOW:
                 colored = chalk.yellow(string);
                 break;
             default:

@@ -3,7 +3,7 @@ const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
 const { pushDifference } = require('../../src/common');
 const { log } = require('../../src/util');
-const { GITHUB_RAW_URL } = require('../../src/constants');
+const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
@@ -60,7 +60,7 @@ module.exports = {
                 const member = members.get(key);
 
                 if (!member) {
-                    log(`> El usuario con ID ${key} ya no está en el servidor.`, 'yellow');
+                    log(`> El usuario con ID ${key} ya no está en el servidor.`, CONSOLE_YELLOW);
                     continue;
                 }
 

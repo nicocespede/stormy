@@ -1,4 +1,4 @@
-const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV } = require('./constants');
+const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, log } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
@@ -52,9 +52,9 @@ const updateChronology = async id => {
             data = await res.text();
         }
         chronologies[id] = JSON.parse(data);
-        log(`> chronologies/${id}.json cargado`, 'green');
+        log(`> chronologies/${id}.json cargado`, CONSOLE_GREEN);
     } catch (err) {
-        log(`> Error al cargar chronologies/${id}.json\n${err.stack}`, 'red');
+        log(`> Error al cargar chronologies/${id}.json\n${err.stack}`, CONSOLE_RED);
     }
     return chronologies[id];
 };
@@ -82,10 +82,10 @@ module.exports = {
             filters[id] = result.choices ? { filters: result.filters, choices: result.choices } : { filters: result.filters };
         else {
             await new filtersSchema({ _id: id, filters: ['all'] }).save();
-            log(`> Filtros de '${id}' agregados a la base de datos`, 'green');
+            log(`> Filtros de '${id}' agregados a la base de datos`, CONSOLE_GREEN);
             filters[id] = { filters: ['all'] };
         }
-        log(`> Caché de filtros de '${id}' actualizado`, 'green');
+        log(`> Caché de filtros de '${id}' actualizado`, CONSOLE_GREEN);
         return filters[id];
     },
 
@@ -113,7 +113,7 @@ module.exports = {
             movies[id] = array;
         }
 
-        log(`> Caché de '${id}' actualizado`, 'green');
+        log(`> Caché de '${id}' actualizado`, CONSOLE_GREEN);
         return movies[id];
     },
 
@@ -129,9 +129,9 @@ module.exports = {
                 data = await res.text();
             }
             downloadsData[id] = JSON.parse(data);
-            log(`> downloads/${id}.json cargado`, 'green');
+            log(`> downloads/${id}.json cargado`, CONSOLE_GREEN);
         } catch (err) {
-            log(`> Error al cargar downloads/${id}.json\n${err.stack}`, 'red');
+            log(`> Error al cargar downloads/${id}.json\n${err.stack}`, CONSOLE_RED);
         }
         return downloadsData[id];
     },
@@ -146,7 +146,7 @@ module.exports = {
                 const res = await fetch(`${GITHUB_RAW_URL}/downloads/games.json`);
                 data = await res.text();
             }
-            log('> games.json cargado', 'green');
+            log('> games.json cargado', CONSOLE_GREEN);
             games = [];
             const parsed = JSON.parse(data);
             for (const key in parsed) if (Object.hasOwnProperty.call(parsed, key))
@@ -161,7 +161,7 @@ module.exports = {
                     games.push(game);
                 }
         } catch (err) {
-            log(`> Error al cargar games.json\n${err.stack}`, 'red');
+            log(`> Error al cargar games.json\n${err.stack}`, CONSOLE_RED);
         }
         return games.sort((a, b) => a.name.localeCompare(b.name));
     },
@@ -177,7 +177,7 @@ module.exports = {
                 user: element.username
             };
         });
-        log('> Caché de cumpleaños actualizado', 'green');
+        log('> Caché de cumpleaños actualizado', CONSOLE_GREEN);
         return birthdays;
     },
 
@@ -192,7 +192,7 @@ module.exports = {
             user: element.tag,
             character: element.character
         });
-        log('> Caché de baneados actualizado', 'green');
+        log('> Caché de baneados actualizado', CONSOLE_GREEN);
         return banned;
     },
 
@@ -204,7 +204,7 @@ module.exports = {
         results.forEach(element => {
             sombraBans.push(element.reason);
         });
-        log('> Caché de baneos de Sombra actualizado', 'green');
+        log('> Caché de baneos de Sombra actualizado', CONSOLE_GREEN);
         return sombraBans;
     },
 
@@ -215,7 +215,7 @@ module.exports = {
             isActive: result.isActive,
             messageId: result.messageId
         };
-        log('> Caché de recolector de reacciones actualizado', 'green');
+        log('> Caché de recolector de reacciones actualizado', CONSOLE_GREEN);
         return billboardMessageInfo;
     },
 
@@ -226,7 +226,7 @@ module.exports = {
             messageId: result.messageId,
             channelId: result.channelId
         };
-        log('> Caché de mensaje de roles actualizado', 'green');
+        log('> Caché de mensaje de roles actualizado', CONSOLE_GREEN);
         return rolesMessageInfo;
     },
 
@@ -234,7 +234,7 @@ module.exports = {
     updateIcon: async () => {
         const result = await iconSchema.findById(1, 'name');
         icon = result.name;
-        log('> Caché de ícono actualizado', 'green');
+        log('> Caché de ícono actualizado', CONSOLE_GREEN);
         return icon;
     },
 
@@ -242,7 +242,7 @@ module.exports = {
     updateMode: async () => {
         const result = await iconSchema.findById(1, 'mode');
         mode = result.mode;
-        log('> Caché de modo actualizado', 'green');
+        log('> Caché de modo actualizado', CONSOLE_GREEN);
         return mode;
     },
 
@@ -255,7 +255,7 @@ module.exports = {
         const results = await playlistSchema.find({}).sort({ _id: 'asc' });
         playlists = {};
         results.forEach(pl => playlists[pl._id] = { url: pl.url, ownerId: pl.ownerId });
-        log('> Caché de playlists actualizado', 'green');
+        log('> Caché de playlists actualizado', CONSOLE_GREEN);
         return playlists;
     },
 
@@ -272,7 +272,7 @@ module.exports = {
                 seconds: element.seconds
             };
         });
-        log('> Caché de estadísticas actualizado', 'green');
+        log('> Caché de estadísticas actualizado', CONSOLE_GREEN);
         return stats;
     },
     getTimestamps: () => timestamps,
@@ -285,7 +285,7 @@ module.exports = {
         const results = await thermalPasteDateSchema.find({});
         thermalPasteDates = {};
         results.forEach(element => thermalPasteDates[element._id] = element.date);
-        log('> Caché de fechas de cambio de pasta térmica actualizado', 'green');
+        log('> Caché de fechas de cambio de pasta térmica actualizado', CONSOLE_GREEN);
         return thermalPasteDates;
     },
 
@@ -303,7 +303,7 @@ module.exports = {
             code: ch.code,
             owner: ch.ownerId
         });
-        log('> Caché de miras actualizado', 'green');
+        log('> Caché de miras actualizado', CONSOLE_GREEN);
         return crosshairs;
     },
 
@@ -319,7 +319,7 @@ module.exports = {
             vip: account.vip,
             bannedUntil: account.bannedUntil
         });
-        log('> Caché de smurfs actualizado', 'green');
+        log('> Caché de smurfs actualizado', CONSOLE_GREEN);
         return smurfs;
     },
 
@@ -328,8 +328,8 @@ module.exports = {
         await fetch(`${GITHUB_RAW_URL}/tracksNameExtras.json`)
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
-                log('> tracksNameExtras.json cargado', 'green');
-            }).catch(err => log(`> Error al cargar tracksNameExtras.json\n${err.stack}`, 'red'));
+                log('> tracksNameExtras.json cargado', CONSOLE_GREEN);
+            }).catch(err => log(`> Error al cargar tracksNameExtras.json\n${err.stack}`, CONSOLE_RED));
         return tracksNameExtras;
     },
 
@@ -339,8 +339,8 @@ module.exports = {
         await fetch(`${GITHUB_RAW_URL}/blacklistedTracks.json`)
             .then(res => res.text()).then(data => {
                 blacklistedSongs = JSON.parse(data);
-                log('> blacklistedTracks.json cargado', 'green');
-            }).catch(err => log(`> Error al cargar blacklistedTracks.json\n${err.stack}`, 'red'));
+                log('> blacklistedTracks.json cargado', CONSOLE_GREEN);
+            }).catch(err => log(`> Error al cargar blacklistedTracks.json\n${err.stack}`, CONSOLE_RED));
         return blacklistedSongs;
     },//
 
@@ -356,9 +356,9 @@ module.exports = {
                 data = await res.text();
             }
             ids = JSON.parse(data);
-            log(`> ${fileName} cargado`, 'green');
+            log(`> ${fileName} cargado`, CONSOLE_GREEN);
         } catch (err) {
-            log(`> Error al cargar ${fileName}\n${err.stack}`, 'red')
+            log(`> Error al cargar ${fileName}\n${err.stack}`, CONSOLE_RED);
         }
         return ids;
     },
@@ -397,7 +397,7 @@ module.exports = {
         } catch (e) {
             if (!kruMatches)
                 kruMatches = [];
-            log(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, 'red');
+            log(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, CONSOLE_RED);
         }
         return kruMatches;
     },
@@ -406,7 +406,7 @@ module.exports = {
     updateReminders: async () => {
         const reminderSchema = require('../models/reminder-schema');
         reminders = await reminderSchema.find({});
-        log('> Caché de recordatorios actualizado', 'green');
+        log('> Caché de recordatorios actualizado', CONSOLE_GREEN);
         return reminders;
     },
 
@@ -421,9 +421,9 @@ module.exports = {
                 data = await res.text();
             }
             characters = JSON.parse(data);
-            log('> characters.json cargado', 'green');
+            log('> characters.json cargado', CONSOLE_GREEN);
         } catch (err) {
-            log(`> Error al cargar characters.json\n${err.stack}`, 'red');
+            log(`> Error al cargar characters.json\n${err.stack}`, CONSOLE_RED);
         }
         return characters;
     },
@@ -453,9 +453,9 @@ module.exports = {
                 data = await res.text();
             }
             fwcData = JSON.parse(data);
-            log(`> fwc-2022.json cargado`, 'green');
+            log(`> fwc-2022.json cargado`, CONSOLE_GREEN);
         } catch (err) {
-            log(`> Error al cargar fwc-2022.json\n${err.stack}`, 'red');
+            log(`> Error al cargar fwc-2022.json\n${err.stack}`, CONSOLE_RED);
         }
         return fwcData;
     }
