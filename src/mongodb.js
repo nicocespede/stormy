@@ -150,8 +150,8 @@ module.exports = {
         log('> Fecha de cambio de pasta térmica actualizada en la base de datos', 'green');
     },
 
-    addCollector: async id => {
-        await new collectorSchema({ _id: id, achievements: [], exchanges: 0, lastOpened: {}, owned: [], repeated: [], timeout: null }).save();
+    addCollector: async (_id, achievements, exchanges, lastOpened, owned, repeated, timeout) => {
+        await new collectorSchema({ _id, achievements, exchanges, lastOpened, owned, repeated, timeout }).save();
         log('> Coleccionista agregado a la base de datos', 'green');
     },
     updateCollector: async ({ _id, achievements, exchanges, lastOpened, owned, repeated, timeout }) => {

@@ -1,4 +1,4 @@
-const { CommandArgs } = require("../../src/typedefs");
+const { CommandArgs, Collector } = require("../../src/typedefs");
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild, Client } = require("discord.js");
 const { getIds, updateIds, getFWCData, updateFWCData, getCollectors, updateCollectors } = require('../../src/cache');
 const { addAnnouncementsRole } = require("../../src/general");
@@ -255,6 +255,19 @@ const achievementsData = {
         description: "Consigue al jugador **más joven del torneo**: ? **???**.",
         name: "Cuidado con el niño"
     }*/
+};
+
+/**
+ * Adds a new collector to the database.
+ * 
+ * @param {String} id The ID of the new collector.
+ * @returns The new Collector.
+ */
+const addNewCollector = async id => {
+    /** @type {Collector} */
+    const collector = { _id: id, achievements: [], exchanges: 0, lastOpened: {}, owned: [], repeated: [], timeout: null };
+    await addCollector(collector);
+    return collector;
 };
 
 /**
@@ -807,14 +820,6 @@ const addNewCards = async (newCards, ownedCards, repeatedCards) => {
 };
 
 /**
- * Determines if a collector with the passed ID exists.
- * 
- * @param {String} id The ID of a potential collector.
- * @returns True if the collector exists, or false if not.
- */
-const isCollector = async id => (await getCollector(id)) ? true : false;
-
-/**
  * Formats a player's goals amount text.
  * 
  * @param {Number} goals The amount of goals of the player.
@@ -1174,21 +1179,20 @@ module.exports = {
             // shared behaviour
             await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
 
-            if (!(await isCollector(user.id))) {
-                await addCollector(user.id);
+            let collector = await getCollector(user.id);
+
+            if (!collector) {
+                collector = await addNewCollector(user.id);
                 await updateCollectors();
             }
 
-            const { achievements, owned, repeated, timeout } = await getCollector(user.id);
+            const { achievements, owned, repeated, timeout } = collector;
 
             switch (subCommand) {
                 case 'ver-perfil':
                     const target = interaction.options.getMember('usuario');
 
                     const targetUser = !target ? user : target.user;
-
-                    if (!(await isCollector(targetUser.id)))
-                        return { content: `🛑 Este usuario no es un coleccionista.`, custom: true, ephemeral: true };
 
                     await interaction.deferReply();
 

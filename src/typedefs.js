@@ -14,9 +14,9 @@ const { default: WOKCommands } = require("wokcommands");
  * 
  * @typedef {{players: PlayersData, teams: TeamsData, positions: PositionsData, achievements: AchievementsData}} FWCData
  * 
- * @typedef {{_id: String, achievements: String[], trades: Number, lastOpened: String[], owned: String[], repeated: String[], timeout: Date}} Collector
+ * @typedef {{_id: String, achievements: String[], trades: Number, lastOpened: {date: Date, content: String[]}, owned: String[], repeated: String[], timeout: Date}} Collector
  * 
- * @typedef {{[key: String]: Collector}} CollectorsData
+ * @typedef {Collector[]} CollectorsData
  */
 
 exports.unused = {};
