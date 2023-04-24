@@ -69,11 +69,11 @@ module.exports = client => {
             if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
                 const membersInOldChannel = await getMembersStatus(oldState.channel);
                 if (membersInOldChannel.size < 2) {
-                    const lastMember = oldState.channel.members.first();
-                    if (!lastMember.user.bot && timestamps[lastMember.id]) {
-                        await pushDifference(lastMember.id, lastMember.user.tag);
-                        removeTimestamp(lastMember.id)
-                    }
+                    await pushDifferences(oldState.channel.members.map(m => m.id));
+                    oldState.channel.members.each(member => {
+                        if (!member.user.bot && timestamps[member.id])
+                            removeTimestamp(member.id)
+                    });
                 }
             }
             return;
