@@ -5,7 +5,7 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE } = require('./constants');
+const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
 const { convertTZ, log, splitEmbedDescription } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -130,12 +130,16 @@ module.exports = {
         await updateStats();
     },
 
-    pushDifferences: async () => {
+    pushDifferences: async ids => {
         const now = new Date();
         const updates = [];
         const stats = getStats() || await updateStats();
         const timestamps = getTimestamps();
-        for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id)) {
+
+        if (!ids)
+            ids = Object.keys(timestamps);
+
+        ids.forEach(id => {
             const stat = stats[id];
 
             let totalTime = Math.abs(now - timestamps[id]) / 1000;
@@ -147,7 +151,7 @@ module.exports = {
                 const { days, hours, minutes, seconds } = secondsToFull(totalTime);
                 updates.push({ filter: { _id: id }, update: { days, hours, minutes, seconds } });
             }
-        }
+        });
         await updateManyStats(updates);
         await updateStats();
     },

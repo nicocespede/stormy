@@ -1,5 +1,5 @@
 const { addTimestamp, getTimestamps } = require("../../src/cache");
-const { pushDifference } = require("../../src/common");
+const { pushDifferences } = require("../../src/common");
 
 module.exports = {
     category: 'Privados',
@@ -13,11 +13,9 @@ module.exports = {
     callback: async () => {
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
-            for (const key in timestamps)
-                if (Object.hasOwnProperty.call(timestamps, key)) {
-                    await pushDifference(key);
-                    addTimestamp(key, new Date());
-                }
+            await pushDifferences();
+            for (const key in timestamps) if (Object.hasOwnProperty.call(timestamps, key))
+                addTimestamp(key, new Date());
             return '¡Estadísticas enviadas a la base de datos!';
         }
         return '¡No hay estadísticas para enviar!';

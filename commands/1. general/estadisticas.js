@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
-const { pushDifference } = require('../../src/common');
+const { pushDifferences } = require('../../src/common');
 const { log } = require('../../src/util');
 const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const Versions = {
@@ -35,12 +35,10 @@ module.exports = {
     callback: async ({ guild, message, interaction, user, instance }) => {
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });
+        await pushDifferences();
         const timestamps = getTimestamps();
-        for (const key in timestamps)
-            if (Object.hasOwnProperty.call(timestamps, key)) {
-                await pushDifference(key);
-                addTimestamp(key, new Date());
-            }
+        for (const key in timestamps) if (Object.hasOwnProperty.call(timestamps, key))
+            addTimestamp(key, new Date());
         const stats = getStats() || await updateStats();
         let description = `Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n`;
         let fields = [];

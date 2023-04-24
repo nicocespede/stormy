@@ -1,8 +1,10 @@
+const { Client } = require("discord.js");
 const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
-const { pushDifference, getMembersStatus } = require("../src/common");
+const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
 const { log } = require("../src/util");
 
+/** @param {Client} client */
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
         const ids = getIds() || await updateIds();
@@ -20,23 +22,20 @@ module.exports = client => {
                     const membersInChannel = await getMembersStatus(oldState.channel);
 
                     if (membersInChannel.size >= 2) {
-                        membersInChannel.valid.forEach(member => {
+                        for (const member of membersInChannel.valid)
                             if (!timestamps[member.id])
                                 addTimestamp(member.id, new Date());
-                        });
-                        membersInChannel.invalid.forEach(async member => {
-                            if (timestamps[member.id]) {
+
+                        await pushDifferences(membersInChannel.invalid.map(m => m.id));
+                        for (const member of membersInChannel.invalid)
+                            if (timestamps[member.id])
+                                removeTimestamp(member.id);
+                    } else
+                        oldState.channel.members.each(async member => {
+                            if (!member.user.bot && timestamps[member.id]) {
                                 await pushDifference(member.id, member.user.tag);
                                 removeTimestamp(member.id);
                             }
-                        });
-                    } else
-                        oldState.channel.members.each(async member => {
-                            if (!member.user.bot)
-                                if (timestamps[member.id]) {
-                                    await pushDifference(member.id, member.user.tag);
-                                    removeTimestamp(member.id);
-                                }
                         });
                 }
                 return;
@@ -69,14 +68,13 @@ module.exports = client => {
             //check for old channel
             if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
                 const membersInOldChannel = await getMembersStatus(oldState.channel);
-                if (membersInOldChannel.size < 2)
-                    oldState.channel.members.each(async member => {
-                        if (!member.user.bot)
-                            if (timestamps[member.id]) {
-                                await pushDifference(member.id, member.user.tag);
-                                removeTimestamp(member.id)
-                            }
-                    });
+                if (membersInOldChannel.size < 2) {
+                    const lastMember = oldState.channel.members.first();
+                    if (!lastMember.user.bot && timestamps[lastMember.id]) {
+                        await pushDifference(lastMember.id, lastMember.user.tag);
+                        removeTimestamp(lastMember.id)
+                    }
+                }
             }
             return;
         }
@@ -88,11 +86,9 @@ module.exports = client => {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
                 log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, CONSOLE_BLUE);
-                for (const id in timestamps)
-                    if (Object.hasOwnProperty.call(timestamps, id)) {
-                        await pushDifference(id);
-                        addTimestamp(id, new Date());
-                    }
+                await pushDifferences();
+                for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
+                    addTimestamp(id, new Date());
             }
         } else exec = true;
 
