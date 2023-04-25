@@ -68,13 +68,13 @@ module.exports = client => {
             //check for old channel
             if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
                 const membersInOldChannel = await getMembersStatus(oldState.channel);
-                if (membersInOldChannel.size < 2) {
-                    await pushDifferences(oldState.channel.members.map(m => m.id));
-                    oldState.channel.members.each(member => {
-                        if (!member.user.bot && timestamps[member.id])
-                            removeTimestamp(member.id)
+                if (membersInOldChannel.size < 2)
+                    oldState.channel.members.each(async member => {
+                        if (!member.user.bot && timestamps[member.id]) {
+                            await pushDifference(member.id, member.user.tag);
+                            removeTimestamp(member.id);
+                        }
                     });
-                }
             }
             return;
         }
