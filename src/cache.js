@@ -1,3 +1,4 @@
+const { StatsData, TimestampsData } = require("./typedefs");
 const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, fileLog } = require('./util');
 const fetch = require('node-fetch');
@@ -23,8 +24,6 @@ let icon;
 let mode;
 let lastAction;
 let playlists;
-var stats;
-var timestamps = {};
 var thermalPasteDates;
 var bansResponsibles = {};
 var crosshairs;
@@ -39,6 +38,11 @@ let characters;
 let songsInQueue = {};
 let musicPlayerData = {};
 let fwcData;
+
+/** @type {StatsData}*/
+let stats;
+/** @type {TimestampsData}*/
+let timestamps = {};
 
 const getChronology = id => chronologies[id];
 
@@ -259,7 +263,18 @@ module.exports = {
         return playlists;
     },
 
+    /**
+     *  Gets the stats data stored in cache.
+     * 
+     * @returns All cached stats data.
+     */
     getStats: () => stats,
+
+    /**
+     * Retrieves the stats data from the database.
+     * 
+     * @returns All cached stats data.
+     */
     updateStats: async () => {
         const statSchema = require('../models/stat-schema');
         const results = await statSchema.find({}).sort({ days: 'desc', hours: 'desc', minutes: 'desc', seconds: 'desc' });
@@ -275,6 +290,12 @@ module.exports = {
         consoleLog('> Caché de estadísticas actualizado', CONSOLE_GREEN);
         return stats;
     },
+
+    /**
+     * Gets the timestamps stored in cache.
+     * 
+     * @returns All cached timestamps.
+     */
     getTimestamps: () => timestamps,
 
     /**

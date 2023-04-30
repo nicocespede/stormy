@@ -37,11 +37,11 @@ module.exports = {
             : await interaction.deferReply({ ephemeral: true });
 
         fileLog(`[estadisticas.callback] Pushing all stats and restarting all timestamps`);
-        
+
         await pushDifferences();
         const timestamps = getTimestamps();
-        for (const key in timestamps) if (Object.hasOwnProperty.call(timestamps, key))
-            addTimestamp(key, new Date());
+        for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
+            addTimestamp(id, new Date());
 
         const stats = getStats() || await updateStats();
         let description = `Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n`;
