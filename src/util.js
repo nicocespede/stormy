@@ -1,4 +1,5 @@
 const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE } = require('./constants');
+const log = require('log-to-file');
 const chalk = require('chalk');
 chalk.level = 1;
 
@@ -26,7 +27,13 @@ module.exports = {
         return ret;
     },
 
-    log: (string, color) => {
+    /**
+     * Logs a message to the console with custom color.
+     * 
+     * @param {String} string The message to be logged.
+     * @param {String} color The color of the text.
+     */
+    consoleLog: (string, color) => {
         const date = convertTZ(new Date());
         const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
         const month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
@@ -53,6 +60,18 @@ module.exports = {
                 break;
         }
         console.log(`${now}: ${colored}`);
+    },
+
+    /**
+     * Logs a message to a file.
+     * 
+     * @param {String} string The message to be logged.
+     */
+    fileLog: string => {
+        const now = new Date();
+        const dateString = `${now.getDate()}-${now.getMonth() + 1}-${now.getUTCFullYear()}`;
+        const path = `./logs/log_${dateString}.log`;
+        log(string, path);
     },
 
     splitEmbedDescription: string => {

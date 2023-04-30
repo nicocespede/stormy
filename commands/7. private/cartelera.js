@@ -2,7 +2,7 @@ const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuil
 const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
 const { updateBillboardMessage } = require('../../src/mongodb');
 const { GITHUB_RAW_URL, CONSOLE_GREEN, CONSOLE_YELLOW } = require('../../src/constants');
-const { log } = require('../../src/util');
+const { consoleLog } = require('../../src/util');
 const { isOwner } = require('../../src/common');
 
 const prefix = 'billboard-';
@@ -72,10 +72,10 @@ module.exports = {
 
             if (buttonId === 'out' && member.roles.cache.has(roleId)) {
                 await member.roles.remove(roleId);
-                log(`> Rol 'función' quitado a ${member.user.tag}`, CONSOLE_YELLOW);
+                consoleLog(`> Rol 'función' quitado a ${member.user.tag}`, CONSOLE_YELLOW);
             } else if (buttonId === 'in' && !member.roles.cache.has(roleId)) {
                 await member.roles.add(roleId);
-                log(`> Rol 'función' asignado a ${member.user.tag}`, CONSOLE_GREEN);
+                consoleLog(`> Rol 'función' asignado a ${member.user.tag}`, CONSOLE_GREEN);
             } else {
                 interaction.deferUpdate();
                 return;
@@ -153,7 +153,7 @@ module.exports = {
             const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
             role.members.forEach(async member => {
                 await member.roles.remove(role).catch(console.error);
-                log(`> Rol 'función' quitado a ${member.user.tag}`, CONSOLE_YELLOW);
+                consoleLog(`> Rol 'función' quitado a ${member.user.tag}`, CONSOLE_YELLOW);
             });
             await updateBillboardMessage(false, messageId).catch(console.error);
             await updateBillboardMessageInfo();

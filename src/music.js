@@ -4,9 +4,9 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
-const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW } = require("./constants");
+const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { log } = require("./util");
+const { consoleLog } = require("./util");
 
 const containsAuthor = track => {
     const author = track.author.split(' ');
@@ -248,7 +248,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                         try {
                             return `**${i + 1}**. ${track.title}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ''} - ** ${track.duration} ** `
                         } catch (e) {
-                            console.log(`${i} - ${track}: ${e}`)
+                            consoleLog(`${i} - ${track}: ${e}`, CONSOLE_RED);
                         }
                     });
                     const chunks = await splitQueue(tracks);
@@ -467,7 +467,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     } catch (error) {
                         const notFoundErrors = ['No result was found', "Cannot read properties of undefined (reading 'lyrics')"];
                         const notFound = notFoundErrors.includes(error.message)
-                        if (!notFound) console.log(error);
+                        if (!notFound) consoleLog(error, CONSOLE_RED);
                         const event = notFound ? 'noLyrics' : 'error';
                         i.reply({ embeds: [await getEmbed(event)], ephemeral: true });
                     }
@@ -653,7 +653,7 @@ module.exports = {
         const player = useMasterPlayer();
         const queue = player.nodes.get(guildId);
         if (queue) {
-            log('> Guardando cola de reproducción actual', CONSOLE_YELLOW);
+            consoleLog('> Guardando cola de reproducción actual', CONSOLE_YELLOW);
             const { collector } = getMusicPlayerData('player');
             collector.stop();
 
@@ -695,7 +695,7 @@ module.exports = {
             return;
         }
 
-        log('> Reanudando reproducción interrumpida por el reinicio', CONSOLE_YELLOW);
+        consoleLog('> Reanudando reproducción interrumpida por el reinicio', CONSOLE_YELLOW);
 
         const membersIds = [...new Set([current.requestedBy]
             .concat(previousTracks.map(({ requestedBy }) => requestedBy))

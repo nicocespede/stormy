@@ -4,7 +4,7 @@ const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
 const { prefix, GITHUB_RAW_URL, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
-const { log, convertTZ } = require('../../src/util');
+const { consoleLog, convertTZ } = require('../../src/util');
 
 const translateRank = rank => {
     if (!rank)
@@ -100,7 +100,7 @@ const getEmbed = async (color, guild, userId) => {
             ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
         } else {
             errorsCounter++;
-            log(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
+            consoleLog(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
             accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
             ranksField.value += `???\n\n`;
         }
@@ -187,7 +187,7 @@ module.exports = {
                     });
                     await interaction.update({ components: [getRow('success')] });
                 } catch (e) {
-                    log(`> Error sending report:\n${e.stack}`, CONSOLE_RED);
+                    consoleLog(`> Error sending report:\n${e.stack}`, CONSOLE_RED);
                     await interaction.update({ components: [getRow('retry')] });
                 }
             }
@@ -229,7 +229,7 @@ module.exports = {
                 await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, guild, user.id)] });
                 reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
             } catch (error) {
-                log(`> Error al enviar cuentas smurfs:\n${error.stack}`);
+                consoleLog(`> Error al enviar cuentas smurfs:\n${error.stack}`);
                 reply.content = `❌ Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
             }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -263,7 +263,7 @@ module.exports = {
                     version: 'v1'
                 }).catch(console.error);
                 if (mmr.error) {
-                    log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
+                    consoleLog(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(account.name)
                         .setColor(getRankColor(null))];

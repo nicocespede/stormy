@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionT
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
 const { prefix, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { log } = require('../../src/util');
+const { consoleLog } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     const ret = {
@@ -99,7 +99,7 @@ module.exports = {
                     const member = members.get(key);
 
                     if (!member) {
-                        log(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
+                        consoleLog(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
                         continue;
                     }
 

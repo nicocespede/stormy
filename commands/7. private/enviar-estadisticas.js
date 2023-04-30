@@ -1,5 +1,6 @@
 const { addTimestamp, getTimestamps } = require("../../src/cache");
 const { pushDifferences } = require("../../src/common");
+const { fileLog } = require("../../src/util");
 
 module.exports = {
     category: 'Privados',
@@ -13,6 +14,8 @@ module.exports = {
     callback: async () => {
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
+            fileLog(`[enviar-estadisticas.callback] Pushing all stats and restarting all timestamps`);
+
             await pushDifferences();
             for (const key in timestamps) if (Object.hasOwnProperty.call(timestamps, key))
                 addTimestamp(key, new Date());

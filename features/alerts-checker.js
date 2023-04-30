@@ -2,7 +2,7 @@ const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
 const { getIds, updateIds, updateBirthdays, timeouts } = require('../src/cache');
 const { applyText, isOwner } = require('../src/common');
-const { log, convertTZ } = require('../src/util');
+const { consoleLog, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
 const { relativeSpecialDays, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
@@ -73,7 +73,7 @@ module.exports = async client => {
                 const member = members.get(_id);
 
                 if (!member) {
-                    log(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
+                    consoleLog(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
                     continue;
                 }
 
@@ -106,7 +106,7 @@ module.exports = async client => {
                 const member2 = members.get(id2);
 
                 if (!member1 || !member2) {
-                    log(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`, CONSOLE_YELLOW);
+                    consoleLog(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`, CONSOLE_YELLOW);
                     continue;
                 }
 
