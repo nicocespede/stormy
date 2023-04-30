@@ -1,15 +1,15 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
+const { PREFIX, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { log } = require('../../src/util');
+const { consoleLog } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     const ret = {
         valid: false,
         reason: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
             REASON: "Debe haber una fecha luego de la mención.",
-            PREFIX: prefix,
+            PREFIX: PREFIX,
             COMMAND: "cumples agregar",
             ARGUMENTS: "`<@amigo>` `<DD/MM>`"
         })
@@ -99,7 +99,7 @@ module.exports = {
                     const member = members.get(key);
 
                     if (!member) {
-                        log(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
+                        consoleLog(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
                         continue;
                     }
 
@@ -136,7 +136,7 @@ module.exports = {
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                         REASON: "Debe haber una mención luego del comando.",
-                        PREFIX: prefix,
+                        PREFIX: PREFIX,
                         COMMAND: "cumples agregar",
                         ARGUMENTS: "`<@amigo>` `<DD/MM>`"
                     }),
@@ -203,7 +203,7 @@ module.exports = {
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                         REASON: "Debe haber una mención luego del comando.",
-                        PREFIX: prefix,
+                        PREFIX: PREFIX,
                         COMMAND: "cumples borrar",
                         ARGUMENTS: "`<@amigo>`"
                     }),

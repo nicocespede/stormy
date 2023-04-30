@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
-const { color, prefix, GITHUB_RAW_URL } = require('../../src/constants');
+const { color, PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
 const { splitEmbedDescription } = require('../../src/util');
 
@@ -260,7 +260,7 @@ module.exports = {
             }
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Juegos crackeados**`)
-                .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: prefix }))
+                .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: PREFIX }))
                 .setColor(instance.color)
                 .addFields([gamesField, updatesField])
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })

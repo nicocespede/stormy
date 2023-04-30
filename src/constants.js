@@ -14,7 +14,7 @@ const getActualBranch = () => {
 const BRANCH = getActualBranch();
 
 module.exports = {
-    prefix: '-',
+    PREFIX: '-',
 
     ENVIRONMENT,
 

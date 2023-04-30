@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix } = require('../../src/constants');
+const { PREFIX } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
 const { isOwner } = require('../../src/common');
 
@@ -38,7 +38,7 @@ module.exports = {
         else if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando.",
-                PREFIX: prefix,
+                PREFIX: PREFIX,
                 COMMAND: "apodo",
                 ARGUMENTS: "`<@amigo>` `[apodo]`"
             });

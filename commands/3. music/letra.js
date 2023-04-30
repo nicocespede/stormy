@@ -1,9 +1,10 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { GITHUB_RAW_URL } = require('../../src/constants');
+const { GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { getIds, updateIds } = require('../../src/cache');
 const { splitLyrics, handleErrorEphemeral } = require('../../src/music');
+const { consoleLog } = require('../../src/util');
 
 module.exports = {
     category: 'Música',
@@ -114,7 +115,7 @@ module.exports = {
                 reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
                     .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
             else {
-                console.log(error);
+                consoleLog(error, CONSOLE_RED);
                 reply.embeds = [embed.setDescription(`🛑 ¡Lo siento, ocurrió un error!`)
                     .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
             }

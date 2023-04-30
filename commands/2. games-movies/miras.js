@@ -2,9 +2,9 @@ const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getCrosshairs, updateCrosshairs } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
+const { PREFIX, GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
-const { log } = require("../../src/util");
+const { consoleLog } = require("../../src/util");
 
 module.exports = {
     category: 'Juegos/Películas',
@@ -79,7 +79,7 @@ module.exports = {
             if (message) reply.content = null;
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Miras**`)
-                .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${prefix}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
+                .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${PREFIX}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
                 .setFields([userCrosshairsField, crosshairsField])
                 .setColor(instance.color)
                 .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/games/valorant.png`)];
@@ -93,7 +93,7 @@ module.exports = {
             if (!name || !code) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: `Debés introducir un nombre y un código para la mira.`,
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "miras agregar",
                     ARGUMENTS: "`<nombre>` `<codigo>`"
                 });
@@ -104,7 +104,7 @@ module.exports = {
             await addCrosshair(name, code, user.id).then(async () => {
                 reply.content = `✅ Se agregó la mira **${name}**.`;
             }).catch(error => {
-                log(error, CONSOLE_RED);
+                consoleLog(error, CONSOLE_RED);
                 reply.content = `❌ Lo siento, se produjo un error al agregar la mira.`;
             });
 
@@ -118,7 +118,7 @@ module.exports = {
             if (!id) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir el ID de la mira.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "miras borrar",
                     ARGUMENTS: "`<id>`"
                 });
@@ -136,7 +136,7 @@ module.exports = {
                     await updateCrosshairs();
                     reply.content = `✅ La mira **${crosshairs[id].name}** fue borrada de manera exitosa.`;
                 }).catch(error => {
-                    log(error, CONSOLE_RED);
+                    consoleLog(error, CONSOLE_RED);
                     reply.content = `❌ Lo siento, se produjo un error al borrar la mira.`;
                 });
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -148,7 +148,7 @@ module.exports = {
             if (!id) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir el ID de la mira.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "miras ver",
                     ARGUMENTS: "`<id>`"
                 });

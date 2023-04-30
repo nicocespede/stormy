@@ -2,7 +2,7 @@ const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
 const { updateReminders, getReminders } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
 const { GITHUB_RAW_URL, CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
-const { convertTZ, log } = require('../../src/util');
+const { convertTZ, consoleLog } = require('../../src/util');
 
 module.exports = {
     category: 'General',
@@ -139,7 +139,7 @@ module.exports = {
             }
 
             await new reminderSchema({ description: description, userId: user.id, date }).save();
-            log('> Recordatorio agregado a la base de datos', CONSOLE_GREEN);
+            consoleLog('> Recordatorio agregado a la base de datos', CONSOLE_GREEN);
             updateReminders();
 
             const convertedDate = convertTZ(date);
@@ -162,7 +162,7 @@ module.exports = {
             const selected = filtered[id - 1];
             const deletion = await reminderSchema.deleteOne({ _id: selected._id }).catch(console.error);
             if (deletion.deletedCount > 0) {
-                log(`> Recordatorio eliminado de la base de datos`, CONSOLE_GREEN);
+                consoleLog(`> Recordatorio eliminado de la base de datos`, CONSOLE_GREEN);
                 updateReminders();
                 return { content: `✅ Recordatorio borrado satisfactoriamente.`, custom: true, ephemeral: true };
             }

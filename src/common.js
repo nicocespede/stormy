@@ -5,9 +5,9 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
+const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, log, splitEmbedDescription } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, fileLog } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -85,10 +85,10 @@ const addAnnouncementsRole = async (id, guild, member) => {
         const role = await guild.roles.fetch(id);
         if (!role.members.has(member.user.id)) {
             await member.roles.add(id);
-            log(`> Rol '${role.name}' agregado a ${member.user.tag}`, CONSOLE_GREEN);
+            consoleLog(`> Rol '${role.name}' agregado a ${member.user.tag}`, CONSOLE_GREEN);
         }
     } catch (error) {
-        log(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, CONSOLE_RED);
     }
 };
 
@@ -112,21 +112,35 @@ module.exports = {
         }
     },
 
+    /**
+     * Calculates and pushes the time difference for the stats of a member.
+     * 
+     * @param {String} id The ID of the member.
+     * @param {String} username The username of the member.
+     */
     pushDifference: async (id, username) => {
         let stats = getStats() || await updateStats();
+
         if (!Object.keys(stats).includes(id)) {
+            fileLog(`[common.pushDifference] Adding new stats record for user ${username}`);
+
             await addStat(id);
             await new Promise(res => setTimeout(res, 1000 * 2));
             stats = await updateStats();
         }
+
         const timestamps = getTimestamps();
         const stat = stats[id];
         const now = new Date();
         const totalTime = (Math.abs(now - timestamps[id]) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+
         if (!isNaN(totalTime)) {
+            fileLog(`[common.pushDifference] Updating stats for user ${username}`);
+
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
             await updateStat(id, days, hours, minutes, seconds, username);
         }
+
         await updateStats();
     },
 
@@ -171,7 +185,7 @@ module.exports = {
         for (const key in banned)
             if (!bans.has(key)) {
                 needUpdate = true;
-                log(`> El ban de ${banned[key].user} no corresponde a este servidor`, CONSOLE_YELLOW);
+                consoleLog(`> El ban de ${banned[key].user} no corresponde a este servidor`, CONSOLE_YELLOW);
                 await deleteBan(key);
             }
         if (needUpdate)
@@ -200,7 +214,7 @@ module.exports = {
         const channel = await guild.channels.fetch(ids.channels.members).catch(console.error);
         if (channel.name !== totalMembersName) {
             await channel.setName(totalMembersName).catch(console.error);
-            log('> Contador de miembros actualizado', CONSOLE_BLUE);
+            consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
         }
     },
 
@@ -237,7 +251,7 @@ module.exports = {
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         if (guild.name !== newGuildName) {
             await guild.setName(newGuildName).catch(console.error);
-            log('> Nombre de servidor actualizado', CONSOLE_GREEN);
+            consoleLog('> Nombre de servidor actualizado', CONSOLE_GREEN);
         }
     },
 
@@ -343,7 +357,7 @@ module.exports = {
             collector.on('end', async collected => {
                 if (collected.size === 0) {
                     emoji = await getNewEmoji();
-                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${prefix}${collectionId}**.`;
+                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${PREFIX}${collectionId}**.`;
                     reply.components = [];
                     message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
                     return;
@@ -460,7 +474,7 @@ module.exports = {
 
                 if (status !== 'CONFIRMED') {
                     emoji = await getNewEmoji();
-                    const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${prefix}db**.\n\u200b` };
+                    const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${PREFIX}db**.\n\u200b` };
                     message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                     return;
                 }
@@ -547,7 +561,7 @@ module.exports = {
                     msg.setDescription(instance.messageHandler.get(guild, 'MOVIES', {
                         CMD: collection.cmd || collectionId,
                         ID: member.user.id,
-                        PREFIX: prefix
+                        PREFIX: PREFIX
                     }));
             }
 
@@ -611,7 +625,7 @@ module.exports = {
             finalCollector.on('end', async _ => {
                 reply.components = [];
                 emoji = await getNewEmoji();
-                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}${collectionId}**.\n\u200b`;
+                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${PREFIX}${collectionId}**.\n\u200b`;
                 message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
             });
         };
@@ -701,7 +715,7 @@ module.exports = {
                 if (versionsMessage) versionsMessage.delete();
                 const edit = {
                     components: [],
-                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${PREFIX}ucm ${index + 1}**.\n\u200b`,
                     embeds: [],
                     files: reply.files
                 };

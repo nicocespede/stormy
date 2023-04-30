@@ -5,9 +5,9 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
-const { log } = require('./src/util');
+const { consoleLog, fileLog } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
+const { PREFIX, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const client = new Client({
     intents: [
@@ -25,7 +25,7 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
+    client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
 
     const ids = getIds() || await updateIds();
 
@@ -45,7 +45,7 @@ client.on('ready', async () => {
         testServers: [ids.guilds.testing],
         mongoUri: process.env.MONGO_URI,
         dbOptions: { keepAlive: true }
-    }).setDefaultPrefix(prefix)
+    }).setDefaultPrefix(PREFIX)
         .setCategorySettings(categorySettings)
         .setColor(color);
 
@@ -122,7 +122,7 @@ client.on('ready', async () => {
             collector.stop();
         }
     }).on('playerError', (queue, error) => {
-        log(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -131,7 +131,7 @@ client.on('ready', async () => {
         if (!queue.deleted)
             queue.delete();
     }).on('error', (queue, error) => {
-        log(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
@@ -144,13 +144,14 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    log(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, CONSOLE_GREEN);
+    consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, CONSOLE_GREEN);
 });
 
-client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
+client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
 
-process.on(!DEV_ENV ? 'SIGTERM' : 'SIGINT', async () => {
-    log('> Reinicio inminente...', CONSOLE_YELLOW);
+const shutdownEvent = !DEV_ENV ? 'SIGTERM' : 'SIGINT';
+process.on(shutdownEvent, async () => {
+    consoleLog('> Reinicio inminente...', CONSOLE_YELLOW);
     // disconnects music bot
     const ids = getIds() || await updateIds();
     await emergencyShutdown(ids.guilds.default);
@@ -158,22 +159,24 @@ process.on(!DEV_ENV ? 'SIGTERM' : 'SIGINT', async () => {
     // send stats
     const timestamps = getTimestamps();
     if (Object.keys(timestamps).length > 0) {
-        log('> Enviando estadísticas a la base de datos', CONSOLE_YELLOW);
+        consoleLog('> Enviando estadísticas a la base de datos', CONSOLE_YELLOW);
+        fileLog(`[index.${shutdownEvent}Listener] Pushing all stats before shutdown`);
+
         await pushDifferences();
     }
 
     //clears timeouts
-    log(`> Terminando ${Object.keys(timeouts).length} loops`, CONSOLE_YELLOW);
+    consoleLog(`> Terminando ${Object.keys(timeouts).length} loops`, CONSOLE_YELLOW);
     for (const key in timeouts)
         if (Object.hasOwnProperty.call(timeouts, key))
             clearTimeout(timeouts[key]);
 
     //ends discord client
-    log('> Desconectando bot', CONSOLE_YELLOW);
+    consoleLog('> Desconectando bot', CONSOLE_YELLOW);
     client.destroy();
 
     //exits process
-    log('> Terminando proceso', CONSOLE_YELLOW);
+    consoleLog('> Terminando proceso', CONSOLE_YELLOW);
     process.exit();
 });
 

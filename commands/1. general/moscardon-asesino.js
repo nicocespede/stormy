@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix, GITHUB_RAW_URL } = require('../../src/constants');
+const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
 
 module.exports = {
@@ -31,7 +31,7 @@ module.exports = {
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",
-                PREFIX: prefix,
+                PREFIX: PREFIX,
                 COMMAND: cmd,
                 ARGUMENTS: "`<@amigo>`"
             });

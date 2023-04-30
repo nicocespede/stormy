@@ -1,6 +1,6 @@
 const { getIds, updateIds, timeouts } = require('../src/cache');
 const { CONSOLE_RED } = require('../src/constants');
-const { log } = require('../src/util');
+const { consoleLog } = require('../src/util');
 
 module.exports = async client => {
     const ids = getIds() || await updateIds();
@@ -15,7 +15,7 @@ module.exports = async client => {
             if (channel.name !== connectedMembersName)
                 await channel.setName(connectedMembersName);
         } catch (error) {
-            log(`> Error al actualizar el contador de miembros conectados:\n${error.stack}`, CONSOLE_RED);
+            consoleLog(`> Error al actualizar el contador de miembros conectados:\n${error.stack}`, CONSOLE_RED);
         }
 
         timeouts['connected-members-updater'] = setTimeout(check, 1000 * 60 * 5);

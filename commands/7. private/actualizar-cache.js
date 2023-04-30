@@ -4,7 +4,7 @@ const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, up
     updateBlacklistedSongs//
 } = require("../../src/cache");
 const { updateMovies, updateGames } = require("../../src/mongodb");
-const { log } = require("../../src/util");
+const { consoleLog } = require("../../src/util");
 const { CONSOLE_RED } = require("../../src/constants");
 
 const choices = [
@@ -181,7 +181,7 @@ module.exports = {
 
             await interaction.editReply({ content: '✅ Caché actualizado.' });
         } catch (e) {
-            log(`Error in actualizar-cache.js:\n${e.stack}`, CONSOLE_RED);
+            consoleLog(`Error in actualizar-cache.js:\n${e.stack}`, CONSOLE_RED);
             await interaction.editReply({ content: '❌ Ocurrió un error.' });
         }
         return;

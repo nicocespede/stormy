@@ -3,7 +3,7 @@ const { updateIcon: updateIconCache, getIds, updateIds, getMode, updateMode: upd
 const { GITHUB_RAW_URL, Mode, CONSOLE_GREEN } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
-const { log } = require("../../src/util");
+const { consoleLog } = require("../../src/util");
 
 const choices = [
     { name: '🤟🏼 KRÜ', value: Mode.KRU },
@@ -77,7 +77,7 @@ module.exports = {
         await updateIconCache();
         await client.user.setUsername(username).catch(console.error);
         await guild.setName(guildname).catch(console.error);
-        log('> Nombre de usuario actualizado', CONSOLE_GREEN);
+        consoleLog('> Nombre de usuario actualizado', CONSOLE_GREEN);
         if (roleName) {
             const role = await guild.roles.fetch(ids.roles[roleName]).catch(console.error);
             role.members.each(async member => {

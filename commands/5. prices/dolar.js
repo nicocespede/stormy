@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
-const { log } = require('../../src/util');
+const { consoleLog } = require('../../src/util');
 
 module.exports = {
     category: 'Cotizaciones',
@@ -35,7 +35,7 @@ module.exports = {
             }
         } catch (e) {
             error = true;
-            log(e, CONSOLE_RED);
+            consoleLog(e, CONSOLE_RED);
         }
 
         const reply = {};

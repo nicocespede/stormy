@@ -6,7 +6,7 @@ const cheerio = require('cheerio');
 const Canvas = require('canvas');
 const { currencies, GITHUB_RAW_URL, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { getIds, updateIds } = require('../../src/cache');
-const { log } = require('../../src/util');
+const { consoleLog } = require('../../src/util');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
 
@@ -69,7 +69,7 @@ module.exports = {
                     }
             } catch (e) {
                 error = true;
-                log(e, CONSOLE_RED);
+                consoleLog(e, CONSOLE_RED);
             }
 
             if (error)

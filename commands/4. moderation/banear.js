@@ -1,6 +1,6 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { addBanResponsible, getIds, updateIds } = require('../../src/cache');
-const { prefix } = require('../../src/constants');
+const { PREFIX } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
 
 module.exports = {
@@ -41,7 +41,7 @@ module.exports = {
         } else if (!target) {
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención y (opcionalmente) la razón del baneo luego del comando.",
-                PREFIX: prefix,
+                PREFIX: PREFIX,
                 COMMAND: "banear",
                 ARGUMENTS: "`<@amigo>` `[razón]`"
             });

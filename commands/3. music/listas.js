@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL } = require('../../src/constants');
+const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
 const { handleErrorEphemeral } = require('../../src/music');
 
@@ -126,7 +126,7 @@ module.exports = {
             }
 
             embed.setFields(fields)
-                .setDescription(`Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\n`);
+                .setDescription(`Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${PREFIX}play\` seguido del nombre de la lista.\n\n`);
             reply.content = null;
             reply.embeds = [embed];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -140,7 +140,7 @@ module.exports = {
             if (!argsName) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir un nombre para la lista.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "listas agregar",
                     ARGUMENTS: "`<nombre>` `<url>`"
                 });
@@ -153,7 +153,7 @@ module.exports = {
             if (!url || !url.includes('http') || !url.includes('www'))
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir una URL válida.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "listas agregar",
                     ARGUMENTS: "`<nombre>` `<url>`"
                 });
@@ -175,7 +175,7 @@ module.exports = {
             if (!argsName) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir un nombre para la lista.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "listas borrar",
                     ARGUMENTS: "`<nombre>`"
                 });
