@@ -2,7 +2,7 @@ const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelTy
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
+const { PREFIX, GITHUB_RAW_URL, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
 const { consoleLog, convertTZ } = require('../../src/util');
 
@@ -107,7 +107,7 @@ const getEmbed = async (color, guild, userId) => {
         commandsField.value += `${command}\n\n`;
     }
 
-    description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`;
+    description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${PREFIX}smurf\` seguido del ID de la cuenta deseada.\n\n`;
 
     return new EmbedBuilder()
         .setColor(color)

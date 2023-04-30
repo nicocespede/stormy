@@ -1,10 +1,23 @@
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX } = require('./constants');
 const log = require('log-to-file');
 const chalk = require('chalk');
+const { User, Message, CommandInteraction } = require('discord.js');
 chalk.level = 1;
 
 const convertTZ = (date, tzString) => {
     return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString || ARGENTINA_TZ_STRING }));
+};
+
+/**
+* Logs a message to a file.
+* 
+* @param {String} string The message to be logged.
+*/
+const fileLog = string => {
+    const now = new Date();
+    const dateString = `${now.getDate()}-${now.getMonth() + 1}-${now.getUTCFullYear()}`;
+    const path = `./logs/log_${dateString}.log`;
+    log(string, path);
 };
 
 module.exports = {
@@ -62,16 +75,19 @@ module.exports = {
         console.log(`${now}: ${colored}`);
     },
 
+    fileLog,
+
     /**
-     * Logs a message to a file.
+     * Logs to a file the usage of a command.
      * 
-     * @param {String} string The message to be logged.
+     * @param {String} commandName The name of the command used.
+     * @param {CommandInteraction} interaction The interaction of the command.
+     * @param {Message} message The message of the command.
+     * @param {User} user The user who used the command.
      */
-    fileLog: string => {
-        const now = new Date();
-        const dateString = `${now.getDate()}-${now.getMonth() + 1}-${now.getUTCFullYear()}`;
-        const path = `./logs/log_${dateString}.log`;
-        log(string, path);
+    fileLogCommandUsage: (commandName, interaction, message, user) => {
+        const prefix = interaction ? '/' : PREFIX;
+        fileLog(`[${commandName}.callback] ${user.tag} used ${prefix}${commandName}`);
     },
 
     splitEmbedDescription: string => {

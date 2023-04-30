@@ -1,6 +1,6 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBanned, updateBanned, getIds, updateIds } = require('../../src/cache');
-const { prefix } = require('../../src/constants');
+const { PREFIX } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
     options: [
         {
             name: 'indice',
-            description: `El índice otorgado por el comando \`${prefix}baneados\`.`,
+            description: `El índice otorgado por el comando \`${PREFIX}baneados\`.`,
             required: true,
             type: ApplicationCommandOptionType.Integer
         }

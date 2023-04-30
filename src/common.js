@@ -5,7 +5,7 @@ const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, GITHUB_RAW_URL, prefix, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
+const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, splitEmbedDescription, fileLog } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -357,7 +357,7 @@ module.exports = {
             collector.on('end', async collected => {
                 if (collected.size === 0) {
                     emoji = await getNewEmoji();
-                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${prefix}${collectionId}**.`;
+                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${PREFIX}${collectionId}**.`;
                     reply.components = [];
                     message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
                     return;
@@ -474,7 +474,7 @@ module.exports = {
 
                 if (status !== 'CONFIRMED') {
                     emoji = await getNewEmoji();
-                    const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${prefix}db**.\n\u200b` };
+                    const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${PREFIX}db**.\n\u200b` };
                     message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                     return;
                 }
@@ -561,7 +561,7 @@ module.exports = {
                     msg.setDescription(instance.messageHandler.get(guild, 'MOVIES', {
                         CMD: collection.cmd || collectionId,
                         ID: member.user.id,
-                        PREFIX: prefix
+                        PREFIX: PREFIX
                     }));
             }
 
@@ -625,7 +625,7 @@ module.exports = {
             finalCollector.on('end', async _ => {
                 reply.components = [];
                 emoji = await getNewEmoji();
-                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}${collectionId}**.\n\u200b`;
+                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${PREFIX}${collectionId}**.\n\u200b`;
                 message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
             });
         };
@@ -715,7 +715,7 @@ module.exports = {
                 if (versionsMessage) versionsMessage.delete();
                 const edit = {
                     components: [],
-                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${PREFIX}ucm ${index + 1}**.\n\u200b`,
                     embeds: [],
                     files: reply.files
                 };

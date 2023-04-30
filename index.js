@@ -7,7 +7,7 @@ const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsIn
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, fileLog } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
+const { PREFIX, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const client = new Client({
     intents: [
@@ -25,7 +25,7 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
+    client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
 
     const ids = getIds() || await updateIds();
 
@@ -45,7 +45,7 @@ client.on('ready', async () => {
         testServers: [ids.guilds.testing],
         mongoUri: process.env.MONGO_URI,
         dbOptions: { keepAlive: true }
-    }).setDefaultPrefix(prefix)
+    }).setDefaultPrefix(PREFIX)
         .setCategorySettings(categorySettings)
         .setColor(color);
 

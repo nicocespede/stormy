@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBirthdays, updateBirthdays } = require('../../src/cache');
-const { prefix, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
+const { PREFIX, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
 const { consoleLog } = require('../../src/util');
 
@@ -9,7 +9,7 @@ const validateDate = (instance, guild, date) => {
         valid: false,
         reason: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
             REASON: "Debe haber una fecha luego de la mención.",
-            PREFIX: prefix,
+            PREFIX: PREFIX,
             COMMAND: "cumples agregar",
             ARGUMENTS: "`<@amigo>` `<DD/MM>`"
         })
@@ -136,7 +136,7 @@ module.exports = {
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                         REASON: "Debe haber una mención luego del comando.",
-                        PREFIX: prefix,
+                        PREFIX: PREFIX,
                         COMMAND: "cumples agregar",
                         ARGUMENTS: "`<@amigo>` `<DD/MM>`"
                     }),
@@ -203,7 +203,7 @@ module.exports = {
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                         REASON: "Debe haber una mención luego del comando.",
-                        PREFIX: prefix,
+                        PREFIX: PREFIX,
                         COMMAND: "cumples borrar",
                         ARGUMENTS: "`<@amigo>`"
                     }),
