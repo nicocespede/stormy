@@ -36,10 +36,8 @@ client.on('ready', async () => {
     const ids = getIds() || await updateIds();
 
     startStatsCounters(client);
-    fileLog(moduleName, `Stats counters successfully started`);
 
     countMembers(client);
-    fileLog(moduleName, `Guild members succesfully counted`);
 
     new WOKCommands(client, {
         botOwners: ids.users.stormer,
@@ -59,7 +57,6 @@ client.on('ready', async () => {
     fileLog(moduleName, `WOKCommands client initialized succesfully`);
 
     await checkBansCorrelativity(client);
-    fileLog(moduleName, `Bans correlativity succesfully checked`);
 
     const musicEmbed = new EmbedBuilder().setColor(color);
 
@@ -154,7 +151,6 @@ client.on('ready', async () => {
     fileLog(moduleName, `Discord-player instance initialized successfully`);
 
     playInterruptedQueue(client);
-    fileLog(moduleName, `Interrupted queue checked successfully`);
 
     consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, CONSOLE_GREEN);
     fileLog(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | BRANCH: ${BRANCH}`);

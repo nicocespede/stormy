@@ -16,7 +16,7 @@ const convertTZ = (date, tzString) => {
 */
 const fileLog = (moduleName, string) => {
     const now = new Date();
-    const dateString = `${now.getDate()}-${now.getMonth() + 1}-${now.getUTCFullYear()}`;
+    const dateString = `${now.getUTCFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
     const path = `./logs/log_${dateString}.log`;
     if (!moduleName)
         log(string, path);

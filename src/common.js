@@ -200,6 +200,8 @@ module.exports = {
                 }
             if (needUpdate)
                 await updateBanned();
+
+            fileLog(`${MODULE_NAME}.checkBansCorrelativity`, `Bans correlativity succesfully checked`);
         } catch (error) {
             fileLogError(`${MODULE_NAME}.checkBansCorrelativity`, error);
         }
@@ -222,6 +224,8 @@ module.exports = {
                     if (membersInChannel.size >= 2)
                         membersInChannel.valid.forEach(member => addTimestamp(member.id, new Date()));
                 }
+
+            fileLog(`${MODULE_NAME}.startStatsCounters`, `Stats counters successfully started`);
         } catch (error) {
             fileLogError(`${MODULE_NAME}.startStatsCounters`, error);
         }
@@ -245,7 +249,11 @@ module.exports = {
             if (channel.name !== totalMembersName) {
                 await channel.setName(totalMembersName);
                 consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
+
+                fileLog(`${MODULE_NAME}.countMembers`, `Guild members counter updated`);
             }
+
+            fileLog(`${MODULE_NAME}.countMembers`, `Guild members succesfully counted`);
         } catch (error) {
             fileLogError(`${MODULE_NAME}.countMembers`, error);
         }

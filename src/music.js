@@ -6,7 +6,7 @@ const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
 const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog, fileLogFunctionTriggered } = require("./util");
+const { consoleLog, fileLogFunctionTriggered, fileLogError, fileLog } = require("./util");
 
 const MODULE_NAME = 'src.music';
 
@@ -603,7 +603,6 @@ const connectToVoiceChannel = async (queue, member, player, reply, embed, messag
 
         if (metadata) {
             metadata.send({ embeds: [embed] });
-            await schema.deleteMany({});
         } else {
             reply.embeds = [embed];
             message ? await message.reply(reply) : await interaction.editReply(reply);
@@ -681,64 +680,69 @@ module.exports = {
         const previousQueueSchema = require('../models/previousQueue-schema');
         const results = await previousQueueSchema.find({});
 
-        if (results.length === 0)
-            return;
+        if (results.length > 0) {
+            try {
+                const previousQueue = results[0];
+                const current = previousQueue.current;
+                const guild = await client.guilds.fetch(previousQueue.guildId);
+                const metadata = await guild.channels.fetch(previousQueue.metadataId);
+                let { tracks: previousTracks, strategy: previousStrategy } = previousQueue.previousTracks;
+                previousTracks = JSON.parse(previousTracks);
+                let { tracks, strategy } = previousQueue.tracks;
+                tracks = JSON.parse(tracks);
+                const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId);
+                const embed = new EmbedBuilder().setColor(color);
 
-        const previousQueue = results[0];
-        const current = previousQueue.current;
-        const guild = await client.guilds.fetch(previousQueue.guildId).catch(console.error);
-        const metadata = await guild.channels.fetch(previousQueue.metadataId).catch(console.error);
-        let { tracks: previousTracks, strategy: previousStrategy } = previousQueue.previousTracks;
-        previousTracks = JSON.parse(previousTracks);
-        let { tracks, strategy } = previousQueue.tracks;
-        tracks = JSON.parse(tracks);
-        const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId).catch(console.error);
-        const embed = new EmbedBuilder().setColor(color);
+                if (voiceChannel.members.size === 0) {
+                    await metadata.send({
+                        embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
+                            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/so-so.png`)]
+                    });
+                } else {
+                    consoleLog('> Reanudando reproducción interrumpida por el reinicio', CONSOLE_YELLOW);
 
-        if (voiceChannel.members.size === 0) {
-            await metadata.send({
-                embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/so-so.png`)]
-            });
-            await previousQueueSchema.deleteMany({});
-            return;
+                    const membersIds = [...new Set([current.requestedBy]
+                        .concat(previousTracks.map(({ requestedBy }) => requestedBy))
+                        .concat(tracks.map(({ requestedBy }) => requestedBy)))];
+                    const members = await guild.members.fetch(membersIds);
+
+                    const player = useMasterPlayer();
+                    var res = await player.search(current.url, {
+                        requestedBy: members.get(current.requestedBy),
+                        searchEngine: QueryType.AUTO
+                    });
+
+                    const queue = createQueue(player, guild, metadata);
+
+                    if (await connectToVoiceChannel(queue, null, player, null, embed, null, null, voiceChannel, metadata, previousQueueSchema)) {
+                        const message = await metadata.send({
+                            embeds: [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
+                                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                        });
+
+                        updateLastAction(MusicActions.RESTARTING);
+                        addSongInQueue(res.tracks[0].url, 'message', message);
+
+                        queue.addTrack(res.tracks[0]);
+
+                        if (!queue.node.isPlaying())
+                            await queue.node.play();
+
+                        queue.history.tracks = Queue.from(generateTracksArray(previousTracks, player, members), previousStrategy);
+                        queue.tracks = Queue.from(generateTracksArray(tracks, player, members), strategy);
+
+                        fileLog(`${MODULE_NAME}.playInterruptedQueue`, 'Playing interrupted music queue');
+                    }
+
+                }
+
+                await previousQueueSchema.deleteMany({});
+            } catch (error) {
+                fileLogError(`${MODULE_NAME}.playInterruptedQueue`, error);
+            }
         }
 
-        consoleLog('> Reanudando reproducción interrumpida por el reinicio', CONSOLE_YELLOW);
-
-        const membersIds = [...new Set([current.requestedBy]
-            .concat(previousTracks.map(({ requestedBy }) => requestedBy))
-            .concat(tracks.map(({ requestedBy }) => requestedBy)))];
-        const members = await guild.members.fetch(membersIds);
-
-        const player = useMasterPlayer();
-        var res = await player.search(current.url, {
-            requestedBy: members.get(current.requestedBy),
-            searchEngine: QueryType.AUTO
-        });
-
-        const queue = createQueue(player, guild, metadata);
-
-        if (!(await connectToVoiceChannel(queue, null, player, null, embed, null, null, voiceChannel, metadata, previousQueueSchema)))
-            return;
-
-        const message = await metadata.send({
-            embeds: [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)]
-        });
-
-        updateLastAction(MusicActions.RESTARTING);
-        addSongInQueue(res.tracks[0].url, 'message', message);
-
-        queue.addTrack(res.tracks[0]);
-
-        if (!queue.node.isPlaying())
-            await queue.node.play();
-
-        queue.history.tracks = Queue.from(generateTracksArray(previousTracks, player, members), previousStrategy);
-        queue.tracks = Queue.from(generateTracksArray(tracks, player, members), strategy);
-
-        await previousQueueSchema.deleteMany({});
+        fileLog(`${MODULE_NAME}.playInterruptedQueue`, `Interrupted music queue checked successfully`);
     },
 
     cleanTitle,
