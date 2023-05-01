@@ -1,6 +1,9 @@
+const { CommandArgs } = require("../../src/typedefs");
 const { addTimestamp, getTimestamps } = require("../../src/cache");
 const { pushDifferences } = require("../../src/common");
-const { fileLog } = require("../../src/util");
+const { fileLog, fileLogCommandUsage } = require("../../src/util");
+
+const MODULE_NAME = 'enviar-estadisticas';
 
 module.exports = {
     category: 'Privados',
@@ -11,10 +14,13 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    callback: async () => {
+    /** @param {CommandArgs}*/
+    callback: async ({ interaction, message, user }) => {
+        fileLogCommandUsage(MODULE_NAME, interaction, message, user);
+
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
-            fileLog(`[enviar-estadisticas.callback] Pushing all stats and restarting all timestamps`);
+            fileLog(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
 
             await pushDifferences();
             for (const key in timestamps) if (Object.hasOwnProperty.call(timestamps, key))

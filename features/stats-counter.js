@@ -2,11 +2,16 @@ const { Client } = require("discord.js");
 const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
-const { consoleLog, fileLog } = require("../src/util");
+const { consoleLog, fileLog, fileLogFunctionTriggered, fileLogListenerTriggered } = require("../src/util");
+
+const MODULE_NAME = 'stats-counter';
 
 /** @param {Client} client */
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
+        fileLogListenerTriggered(MODULE_NAME, 'voiceStateUpdate');
+        const moduleName = `${MODULE_NAME}.voiceStateUpdateListener`;
+
         const ids = getIds() || await updateIds();
         if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
 
@@ -26,14 +31,14 @@ module.exports = client => {
                             if (!timestamps[member.id])
                                 addTimestamp(member.id, new Date());
 
-                        fileLog(`[stats-counter.voiceStateUpdateListener] Pushing stats and removing timestamps from muted/deafened members in channel ${oldState.channel.name}`);
+                        fileLog(moduleName, `Pushing stats and removing timestamps from muted/deafened members in channel ${oldState.channel.name}`);
 
                         await pushDifferences(membersInChannel.invalid.map(m => m.id));
                         for (const member of membersInChannel.invalid)
                             if (timestamps[member.id])
                                 removeTimestamp(member.id);
                     } else {
-                        fileLog(`[stats-counter.voiceStateUpdateListener] Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
+                        fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
 
                         for (const [id, member] of oldState.channel.members)
                             if (!member.user.bot && timestamps[id]) {
@@ -57,7 +62,7 @@ module.exports = client => {
                     if (!timestamps[oldState.member.id])
                         addTimestamp(oldState.member.id, new Date());
                 } else if (timestamps[newState.member.id]) {
-                    fileLog(`[stats-counter.voiceStateUpdateListener] Pushing stats and removing timestamp from a member who left a voice channel`);
+                    fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
 
                     await pushDifference(newState.member.id, newState.member.user.tag);
                     removeTimestamp(newState.member.id);
@@ -66,7 +71,7 @@ module.exports = client => {
                 const id = newState.member ? newState.member.id : newState.id;
                 const tag = newState.member ? newState.member.user.tag : newState.id;
                 if (timestamps[id]) {
-                    fileLog(`[stats-counter.voiceStateUpdateListener] Pushing stats and removing timestamp from a member who left a voice channel`);
+                    fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
 
                     await pushDifference(id, tag);
                     removeTimestamp(id);
@@ -77,7 +82,7 @@ module.exports = client => {
             if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
                 const membersInOldChannel = await getMembersStatus(oldState.channel);
                 if (membersInOldChannel.size < 2 && Object.keys(timestamps).length > 0) {
-                    fileLog(`[stats-counter.voiceStateUpdateListener] Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
+                    fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
 
                     for (const [id, member] of oldState.channel.members)
                         if (!member.user.bot && timestamps[id]) {
@@ -92,11 +97,13 @@ module.exports = client => {
 
     let exec = false;
     const save = async () => {
+        fileLogFunctionTriggered(MODULE_NAME, 'save');
+
         if (exec) {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
                 consoleLog(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, CONSOLE_BLUE);
-                fileLog(`[stats-counter.save] Pushing all stats and restarting all timestamps after 1 hour loop completed`);
+                fileLog(`${MODULE_NAME}.save`, `Pushing all stats and restarting all timestamps after 1 hour loop completed`);
 
                 await pushDifferences();
                 for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
@@ -104,7 +111,7 @@ module.exports = client => {
             }
         } else exec = true;
 
-        timeouts['stats-counter'] = setTimeout(save, 1000 * 60 * 60);
+        timeouts[MODULE_NAME] = setTimeout(save, 1000 * 60 * 60);
     };
     save();
 };

@@ -1,13 +1,16 @@
+const { CommandArgs } = require('../../src/typedefs');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
-const { consoleLog, fileLog } = require('../../src/util');
+const { consoleLog, fileLog, fileLogCommandUsage } = require('../../src/util');
 const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
 };
+
+const MODULE_NAME = 'estadisticas';
 
 const timeToString = (version, seconds, minutes, hours, days) => {
     const strings = Versions[version];
@@ -32,16 +35,21 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
+    /** @param {CommandArgs}*/
     callback: async ({ guild, message, interaction, user, instance }) => {
+        fileLogCommandUsage(MODULE_NAME, interaction, message, user);
+
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });
 
-        fileLog(`[estadisticas.callback] Pushing all stats and restarting all timestamps`);
-
-        await pushDifferences();
         const timestamps = getTimestamps();
-        for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
-            addTimestamp(id, new Date());
+        if (Object.keys(timestamps).length > 0) {
+            fileLog(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
+
+            await pushDifferences();
+            for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
+                addTimestamp(id, new Date());
+        }
 
         const stats = getStats() || await updateStats();
         let description = `Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n`;

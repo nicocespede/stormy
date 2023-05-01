@@ -5,9 +5,11 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
-const { consoleLog, fileLog } = require('./src/util');
+const { consoleLog, fileLog, fileLogListenerTriggered } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
+
+const MODULE_NAME = 'index';
 
 const client = new Client({
     intents: [
@@ -25,14 +27,19 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
+    const moduleName = `${MODULE_NAME}.readyListener`;
+    fileLog(null, `-`.repeat(100));
 
-    const ids = getIds() || await updateIds();
+    client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
+    fileLog(moduleName, `Setting bot presence succesfully`);
 
     startStatsCounters(client);
+    fileLog(moduleName, `Stats counters successfully started`);
 
     countMembers(client);
+    fileLog(moduleName, `Guild members succesfully counted`);
 
+    const ids = getIds() || await updateIds();
     new WOKCommands(client, {
         botOwners: ids.users.stormer,
         commandDir: path.join(__dirname, 'commands'),
@@ -48,8 +55,10 @@ client.on('ready', async () => {
     }).setDefaultPrefix(PREFIX)
         .setCategorySettings(categorySettings)
         .setColor(color);
+    fileLog(moduleName, `WOKCommands client initialized succesfully`);
 
     await checkBansCorrelativity(client);
+    fileLog(moduleName, `Bans correlativity succesfully checked`);
 
     const musicEmbed = new EmbedBuilder().setColor(color);
 
@@ -141,16 +150,21 @@ client.on('ready', async () => {
         if (!queue.deleted)
             queue.delete();
     });
+    fileLog(moduleName, `Discord-player instance initialized successfully`);
 
     playInterruptedQueue(client);
+    fileLog(moduleName, `Interrupted queue checked successfully`);
 
     consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, CONSOLE_GREEN);
+    fileLog(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | BRANCH: ${BRANCH}`);
 });
 
 client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
 
 const shutdownEvent = !DEV_ENV ? 'SIGTERM' : 'SIGINT';
 process.on(shutdownEvent, async () => {
+    fileLogListenerTriggered(MODULE_NAME, shutdownEvent);
+
     consoleLog('> Reinicio inminente...', CONSOLE_YELLOW);
     // disconnects music bot
     const ids = getIds() || await updateIds();
@@ -160,7 +174,7 @@ process.on(shutdownEvent, async () => {
     const timestamps = getTimestamps();
     if (Object.keys(timestamps).length > 0) {
         consoleLog('> Enviando estadísticas a la base de datos', CONSOLE_YELLOW);
-        fileLog(`[index.${shutdownEvent}Listener] Pushing all stats before shutdown`);
+        fileLog(`${MODULE_NAME}.${shutdownEvent}Listener`, `Pushing all stats before shutdown`);
 
         await pushDifferences();
     }

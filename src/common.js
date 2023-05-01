@@ -1,4 +1,4 @@
-const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
+const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
@@ -7,9 +7,11 @@ const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, upda
     getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
 const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, splitEmbedDescription, fileLog } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, fileLog, fileLogFunctionTriggered, fileLogError } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
+
+const MODULE_NAME = 'common';
 
 const getImageType = async () => {
     const mode = getMode() || await updateMode();
@@ -122,7 +124,7 @@ module.exports = {
         let stats = getStats() || await updateStats();
 
         if (!Object.keys(stats).includes(id)) {
-            fileLog(`[common.pushDifference] Adding new stats record for user ${username}`);
+            fileLog(`${MODULE_NAME}.pushDifference`, `Adding new stats record for user ${username}`);
 
             await addStat(id);
             await new Promise(res => setTimeout(res, 1000 * 2));
@@ -135,7 +137,7 @@ module.exports = {
         const totalTime = (Math.abs(now - timestamps[id]) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
 
         if (!isNaN(totalTime)) {
-            fileLog(`[common.pushDifference] Updating stats for user ${username}`);
+            fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for user ${username}`);
 
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
             await updateStat(id, days, hours, minutes, seconds, username);
@@ -176,45 +178,76 @@ module.exports = {
 
     getMembersStatus,
 
+    /**
+     * Checks that the bans stored in database are correlated with the bans of the default guild.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
     checkBansCorrelativity: async client => {
-        const ids = getIds() || await updateIds();
-        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const bans = await guild.bans.fetch().catch(console.error);
-        const banned = getBanned() || await updateBanned();
-        let needUpdate = false;
-        for (const key in banned)
-            if (!bans.has(key)) {
-                needUpdate = true;
-                consoleLog(`> El ban de ${banned[key].user} no corresponde a este servidor`, CONSOLE_YELLOW);
-                await deleteBan(key);
-            }
-        if (needUpdate)
-            await updateBanned();
+        fileLogFunctionTriggered(MODULE_NAME, 'checkBansCorrelativity');
+
+        try {
+            const ids = getIds() || await updateIds();
+            const guild = await client.guilds.fetch(ids.guilds.default);
+            const bans = await guild.bans.fetch();
+            const banned = getBanned() || await updateBanned();
+            let needUpdate = false;
+            for (const key in banned)
+                if (!bans.has(key)) {
+                    needUpdate = true;
+                    consoleLog(`> El ban de ${banned[key].user} no corresponde a este servidor`, CONSOLE_YELLOW);
+                    await deleteBan(key);
+                }
+            if (needUpdate)
+                await updateBanned();
+        } catch (error) {
+            fileLogError(`${MODULE_NAME}.checkBansCorrelativity`, error);
+        }
     },
 
+    /**
+     * Starts the stats counters for the members connected to voice channels.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
     startStatsCounters: async client => {
-        const ids = getIds() || await updateIds();
-        client.guilds.fetch(ids.guilds.default).then(guild => {
-            guild.channels.cache.each(async channel => {
-                if (channel.type === ChannelType.GuildVoice && channel.id != ids.channels.afk) {
+        fileLogFunctionTriggered(MODULE_NAME, 'startStatsCounters');
+
+        try {
+            const ids = getIds() || await updateIds();
+            const guild = await client.guilds.fetch(ids.guilds.default);
+            for (const [id, channel] of guild.channels.cache)
+                if (channel.type === ChannelType.GuildVoice && id != ids.channels.afk) {
                     const membersInChannel = await getMembersStatus(channel);
                     if (membersInChannel.size >= 2)
                         membersInChannel.valid.forEach(member => addTimestamp(member.id, new Date()));
                 }
-            });
-        }).catch(console.error);
+        } catch (error) {
+            fileLogError(`${MODULE_NAME}.startStatsCounters`, error);
+        }
     },
 
+    /**
+     * Counts the members in the default guild and updates the members counter.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
     countMembers: async client => {
-        const ids = getIds() || await updateIds();
-        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const members = await guild.members.fetch();
-        const membersCounter = members.filter(m => !m.user.bot).size;
-        const totalMembersName = `👥 Totales: ${membersCounter}`;
-        const channel = await guild.channels.fetch(ids.channels.members).catch(console.error);
-        if (channel.name !== totalMembersName) {
-            await channel.setName(totalMembersName).catch(console.error);
-            consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
+        fileLogFunctionTriggered(MODULE_NAME, 'countMembers');
+
+        try {
+            const ids = getIds() || await updateIds();
+            const guild = await client.guilds.fetch(ids.guilds.default);
+            const members = await guild.members.fetch();
+            const membersCounter = members.filter(m => !m.user.bot).size;
+            const totalMembersName = `👥 Totales: ${membersCounter}`;
+            const channel = await guild.channels.fetch(ids.channels.members);
+            if (channel.name !== totalMembersName) {
+                await channel.setName(totalMembersName);
+                consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
+            }
+        } catch (error) {
+            fileLogError(`${MODULE_NAME}.countMembers`, error);
         }
     },
 

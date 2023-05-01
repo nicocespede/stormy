@@ -1,12 +1,14 @@
 const { Queue } = require("@discord-player/utils");
 const { QueryType, useMasterPlayer, Track } = require("discord-player");
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require("discord.js");
 const Genius = require("genius-lyrics");
-const Client = new Genius.Client();
+const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
 const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog } = require("./util");
+const { consoleLog, fileLog, fileLogFunctionTriggered } = require("./util");
+
+const MODULE_NAME = 'music';
 
 const containsAuthor = track => {
     const author = track.author.split(' ');
@@ -430,7 +432,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     try {
                         const { author, title, url } = queue.currentTrack;
                         const filteredTitle = await cleanTitle(title);
-                        const searches = await Client.songs.search(filteredTitle + (!url.includes('youtube') || !containsAuthor(track) ? ` - ${author}` : ``));
+                        const searches = await GeniusClient.songs.search(filteredTitle + (!url.includes('youtube') || !containsAuthor(track) ? ` - ${author}` : ``));
 
                         let lyrics = await searches[0].lyrics();
                         lyrics = lyrics.replace(/[[]/g, '**[').replace(/[\]]/g, ']**');
@@ -668,7 +670,14 @@ module.exports = {
         }
     },
 
+    /**
+     * Checks if there's an interrupted music queue, and if so, plays it.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
     playInterruptedQueue: async client => {
+        fileLogFunctionTriggered(MODULE_NAME, 'playInterruptedQueue');
+
         const previousQueueSchema = require('../models/previousQueue-schema');
         const results = await previousQueueSchema.find({});
 

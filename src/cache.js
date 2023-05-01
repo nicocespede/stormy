@@ -10,6 +10,8 @@ const fs = require('fs');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 const iconSchema = require('../models/icon-schema');
 
+const MODULE_NAME = 'cache';
+
 let chronologies = {};
 let downloadsData = {};
 let movies = {};
@@ -305,7 +307,7 @@ module.exports = {
      * @param {Date} timestamp The timestamp to be added.
      */
     addTimestamp: (id, timestamp) => {
-        fileLog(`[cache.addTimestamp] Adding timestamp of user with ID ${id}`);
+        fileLog(`${MODULE_NAME}.addTimestamp`, `Adding timestamp of user with ID ${id}`);
         timestamps[id] = timestamp;
     },
 
@@ -315,7 +317,7 @@ module.exports = {
      * @param {String} id The ID of the user.
      */
     removeTimestamp: id => {
-        fileLog(`[cache.removeTimestamp] Removing timestamp of user with ID ${id}`);
+        fileLog(`${MODULE_NAME}.removeTimestamp`, `Removing timestamp of user with ID ${id}`);
         delete timestamps[id];
     },
 

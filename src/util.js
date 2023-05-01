@@ -11,13 +11,17 @@ const convertTZ = (date, tzString) => {
 /**
 * Logs a message to a file.
 * 
+* @param {String} moduleName The name of the module where the log is called from.
 * @param {String} string The message to be logged.
 */
-const fileLog = string => {
+const fileLog = (moduleName, string) => {
     const now = new Date();
     const dateString = `${now.getDate()}-${now.getMonth() + 1}-${now.getUTCFullYear()}`;
     const path = `./logs/log_${dateString}.log`;
-    log(string, path);
+    if (!moduleName)
+        log(string, path);
+    else
+        log(`[${moduleName}] ${string}`, path);
 };
 
 module.exports = {
@@ -82,13 +86,37 @@ module.exports = {
      * 
      * @param {String} commandName The name of the command used.
      * @param {CommandInteraction} interaction The interaction of the command.
-     * @param {Message} message The message of the command.
+     * @param {Message} _ The message of the command.
      * @param {User} user The user who used the command.
      */
-    fileLogCommandUsage: (commandName, interaction, message, user) => {
+    fileLogCommandUsage: (commandName, interaction, _, user) => {
         const prefix = interaction ? '/' : PREFIX;
-        fileLog(`[${commandName}.callback] ${user.tag} used ${prefix}${commandName}`);
+        fileLog(`${commandName}.callback`, `${user.tag} used ${prefix}${commandName}`);
     },
+
+    /**
+     * Logs to a file when a function is called.
+     * 
+     * @param {String} moduleName The name of the module the log is called from.
+     * @param {String} functionName The name of the function called.
+     */
+    fileLogFunctionTriggered: (moduleName, functionName) => fileLog(moduleName, `Function triggered: ${functionName}`),
+
+    /**
+     * Logs to a file when a listener is triggered.
+     * 
+     * @param {String} moduleName The name of the module the log is called from.
+     * @param {String} listenerName The name of the listener triggered.
+     */
+    fileLogListenerTriggered: (moduleName, listenerName) => fileLog(moduleName, `Listener triggered: ${listenerName}`),
+
+    /**
+     * Logs to a file when an error ocurrs.
+     * 
+     * @param {String} moduleName The name of the module the log is called from.
+     * @param {Error} error The error to be logged.
+     */
+    fileLogError: (moduleName, error) => fileLog(moduleName, `Error: ${error}`),
 
     splitEmbedDescription: string => {
         const split = string.split('\n');
