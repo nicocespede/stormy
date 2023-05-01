@@ -4,7 +4,7 @@ const { pushDifference, getMembersStatus, pushDifferences } = require("../src/co
 const { CONSOLE_BLUE } = require("../src/constants");
 const { consoleLog, fileLog, fileLogFunctionTriggered, fileLogListenerTriggered } = require("../src/util");
 
-const MODULE_NAME = 'stats-counter';
+const MODULE_NAME = 'features.stats-counter';
 
 /** @param {Client} client */
 module.exports = client => {

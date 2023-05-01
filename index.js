@@ -33,13 +33,14 @@ client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
     fileLog(moduleName, `Setting bot presence succesfully`);
 
+    const ids = getIds() || await updateIds();
+
     startStatsCounters(client);
     fileLog(moduleName, `Stats counters successfully started`);
 
     countMembers(client);
     fileLog(moduleName, `Guild members succesfully counted`);
 
-    const ids = getIds() || await updateIds();
     new WOKCommands(client, {
         botOwners: ids.users.stormer,
         commandDir: path.join(__dirname, 'commands'),

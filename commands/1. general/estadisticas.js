@@ -10,7 +10,7 @@ const Versions = {
     short: ['día', 'hora', 'min.', 'seg.']
 };
 
-const MODULE_NAME = 'estadisticas';
+const MODULE_NAME = 'commands.general.estadisticas';
 
 const timeToString = (version, seconds, minutes, hours, days) => {
     const strings = Versions[version];

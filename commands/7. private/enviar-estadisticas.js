@@ -3,7 +3,7 @@ const { addTimestamp, getTimestamps } = require("../../src/cache");
 const { pushDifferences } = require("../../src/common");
 const { fileLog, fileLogCommandUsage } = require("../../src/util");
 
-const MODULE_NAME = 'enviar-estadisticas';
+const MODULE_NAME = 'commands.private.enviar-estadisticas';
 
 module.exports = {
     category: 'Privados',

@@ -11,7 +11,7 @@ const { convertTZ, consoleLog, splitEmbedDescription, fileLog, fileLogFunctionTr
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
-const MODULE_NAME = 'common';
+const MODULE_NAME = 'src.common';
 
 const getImageType = async () => {
     const mode = getMode() || await updateMode();

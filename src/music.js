@@ -6,9 +6,9 @@ const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
 const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog, fileLog, fileLogFunctionTriggered } = require("./util");
+const { consoleLog, fileLogFunctionTriggered } = require("./util");
 
-const MODULE_NAME = 'music';
+const MODULE_NAME = 'src.music';
 
 const containsAuthor = track => {
     const author = track.author.split(' ');

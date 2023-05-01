@@ -10,7 +10,7 @@ const fs = require('fs');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 const iconSchema = require('../models/icon-schema');
 
-const MODULE_NAME = 'cache';
+const MODULE_NAME = 'src.cache';
 
 let chronologies = {};
 let downloadsData = {};
