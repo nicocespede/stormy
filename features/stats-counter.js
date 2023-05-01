@@ -1,5 +1,5 @@
 const { Client } = require("discord.js");
-const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
+const { addTimestamp, getTimestamps, getIds, updateIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
 const { consoleLog, fileLog, fileLogFunctionTriggered, fileLogListenerTriggered } = require("../src/util");
@@ -34,17 +34,12 @@ module.exports = client => {
                         fileLog(moduleName, `Pushing stats and removing timestamps from muted/deafened members in channel ${oldState.channel.name}`);
 
                         await pushDifferences(membersInChannel.invalid.map(m => m.id));
-                        for (const member of membersInChannel.invalid)
-                            if (timestamps[member.id])
-                                removeTimestamp(member.id);
                     } else {
                         fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
 
                         for (const [id, member] of oldState.channel.members)
-                            if (!member.user.bot && timestamps[id]) {
+                            if (!member.user.bot)
                                 await pushDifference(id, member.user.tag);
-                                removeTimestamp(id);
-                            }
                     }
                 }
                 return;
@@ -61,21 +56,17 @@ module.exports = client => {
                 else if (membersInNewChannel.size > 2 || oldState.member.user.bot) {
                     if (!timestamps[oldState.member.id])
                         addTimestamp(oldState.member.id, new Date());
-                } else if (timestamps[newState.member.id]) {
+                } else {
                     fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
 
                     await pushDifference(newState.member.id, newState.member.user.tag);
-                    removeTimestamp(newState.member.id);
                 }
             } else {
+                fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
+
                 const id = newState.member ? newState.member.id : newState.id;
                 const tag = newState.member ? newState.member.user.tag : newState.id;
-                if (timestamps[id]) {
-                    fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
-
-                    await pushDifference(id, tag);
-                    removeTimestamp(id);
-                }
+                await pushDifference(id, tag);
             }
 
             //check for old channel
@@ -85,10 +76,8 @@ module.exports = client => {
                     fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
 
                     for (const [id, member] of oldState.channel.members)
-                        if (!member.user.bot && timestamps[id]) {
+                        if (!member.user.bot)
                             await pushDifference(id, member.user.tag);
-                            removeTimestamp(id);
-                        }
                 }
             }
             return;

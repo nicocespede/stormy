@@ -4,7 +4,7 @@ const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
 const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
-    getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
+    getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp } = require('./cache');
 const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, splitEmbedDescription, fileLog, fileLogFunctionTriggered, fileLogError } = require('./util');
@@ -123,31 +123,42 @@ module.exports = {
     pushDifference: async (id, username) => {
         fileLogFunctionTriggered(MODULE_NAME, 'pushDifference');
 
-        let stats = getStats() || await updateStats();
-
-        if (!Object.keys(stats).includes(id)) {
-            fileLog(`${MODULE_NAME}.pushDifference`, `Adding new stats record for user ${username}`);
-
-            await addStat(id);
-            await new Promise(res => setTimeout(res, 1000 * 2));
-            stats = await updateStats();
-        }
-
         const timestamps = getTimestamps();
-        const stat = stats[id];
-        const now = new Date();
-        const totalTime = (Math.abs(now - timestamps[id]) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+        const timestamp = timestamps[id];
 
-        if (!isNaN(totalTime)) {
-            fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for user ${username}`);
+        if (timestamp) {
+            removeTimestamp(id);
 
-            const { days, hours, minutes, seconds } = secondsToFull(totalTime);
-            await updateStat(id, days, hours, minutes, seconds, username);
+            let stats = getStats() || await updateStats();
+
+            if (!Object.keys(stats).includes(id)) {
+                fileLog(`${MODULE_NAME}.pushDifference`, `Adding new stats record for user ${username}`);
+
+                await addStat(id);
+                await new Promise(res => setTimeout(res, 1000 * 2));
+                stats = await updateStats();
+            }
+
+            const stat = stats[id];
+            const now = new Date();
+            const totalTime = (Math.abs(now - timestamp) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+
+            if (!isNaN(totalTime)) {
+                fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for user ${username}`);
+
+                const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                await updateStat(id, days, hours, minutes, seconds, username);
+            }
+
+            await updateStats();
         }
-
-        await updateStats();
     },
 
+    /**
+     * Calculates and pushes the time difference for the stats of many/all members.
+     * 
+     * @param {String} [ids] The IDs of the members.
+     */
     pushDifferences: async ids => {
         fileLogFunctionTriggered(MODULE_NAME, 'pushDifferences');
 
@@ -159,24 +170,32 @@ module.exports = {
         if (!ids)
             ids = Object.keys(timestamps);
 
-        ids.forEach(id => {
-            const stat = stats[id];
+        for (const id of ids) {
+            const timestamp = timestamps[id];
 
-            let totalTime = Math.abs(now - timestamps[id]) / 1000;
+            if (timestamp) {
+                removeTimestamp(id);
 
-            if (stat)
-                totalTime += fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+                const stat = stats[id];
 
-            if (!isNaN(totalTime)) {
-                const { days, hours, minutes, seconds } = secondsToFull(totalTime);
-                updates.push({ filter: { _id: id }, update: { days, hours, minutes, seconds } });
+                let totalTime = Math.abs(now - timestamp) / 1000;
+
+                if (stat)
+                    totalTime += fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+
+                if (!isNaN(totalTime)) {
+                    const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                    updates.push({ filter: { _id: id }, update: { days, hours, minutes, seconds } });
+                }
             }
-        });
+        }
 
-        fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for ${updates.length} users`);
+        if (updates.length > 0) {
+            fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for ${updates.length} users`);
 
-        await updateManyStats(updates);
-        await updateStats();
+            await updateManyStats(updates);
+            await updateStats();
+        }
     },
 
     fullToSeconds,
