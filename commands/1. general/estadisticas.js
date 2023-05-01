@@ -10,7 +10,8 @@ const Versions = {
     short: ['día', 'hora', 'min.', 'seg.']
 };
 
-const MODULE_NAME = 'commands.general.estadisticas';
+const COMMAND_NAME = 'estadisticas';
+const MODULE_NAME = `commands.general.${COMMAND_NAME}`;
 
 const timeToString = (version, seconds, minutes, hours, days) => {
     const strings = Versions[version];
@@ -37,7 +38,7 @@ module.exports = {
 
     /** @param {CommandArgs}*/
     callback: async ({ guild, message, interaction, user, instance }) => {
-        fileLogCommandUsage(MODULE_NAME, interaction, message, user);
+        fileLogCommandUsage(COMMAND_NAME, interaction, message, user);
 
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });

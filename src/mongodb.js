@@ -9,7 +9,9 @@ const playlistSchema = require('../models/playlist-schema');
 const smurfSchema = require('../models/smurf-schema');
 const statSchema = require('../models/stat-schema');
 const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
-const { consoleLog } = require('./util');
+const { consoleLog, fileLog } = require('./util');
+
+const MODULE_NAME = 'src.mongodb';
 
 module.exports = {
     updateAnniversary: async (id1, id2, date) => {
@@ -132,25 +134,50 @@ module.exports = {
         consoleLog('> Ban de Sombra agregado a la base de datos', CONSOLE_GREEN);
     },
 
-    addStat: async id => {
+    /**
+     * Adds a new stats document to the database.
+     * 
+     * @param {String} id The ID of the user.
+     * @param {String} username The username of the user.
+     */
+    addStat: async (id, username) => {
         await new statSchema({ _id: id, days: 0, hours: 0, minutes: 0, seconds: 0 }).save();
         consoleLog('> Estadística agregada a la base de datos', CONSOLE_GREEN);
+        fileLog(`${MODULE_NAME}.addStat`, `Adding new stats record for user ${username}`);
     },
+
+    /**
+     * Updates a single stats document in database.
+     * 
+     * @param {String} id The ID of the user.
+     * @param {Number} days The new days value.
+     * @param {Number} hours The new hours value.
+     * @param {Number} minutes The new minutes value.
+     * @param {Number} seconds The new seconds value.
+     * @param {String} username The username of the user.
+     */
     updateStat: async (id, days, hours, minutes, seconds, username) => {
         await statSchema.updateOne({ _id: id }, { days: days, hours: hours, minutes: minutes, seconds: seconds });
+
         consoleLog(`> Estadística ${username ? `de ${username} ` : ''}actualizada en la base de datos`, CONSOLE_GREEN);
+        fileLog(`${MODULE_NAME}.updateStat`, `Updating stats for user ${username}`);
     },
+
     updateManyStats: async updates => {
         const operations = updates.map(({ filter, update }) => ({ updateOne: { filter, update, upsert: true } }));
         const result = await statSchema.bulkWrite(operations);
 
         const inserted = result.upsertedCount;
-        if (inserted > 0)
+        if (inserted > 0) {
             consoleLog(`> ${inserted} estadística${inserted > 1 ? 's' : ''} agregada${inserted > 1 ? 's' : ''} a la base de datos`, CONSOLE_GREEN);
+            fileLog(`${MODULE_NAME}.updateManyStats`, `Adding new stats record for ${inserted} user${inserted > 1 ? 's' : ''}`);
+        }
 
         const updated = result.modifiedCount;
-        if (updated > 0)
+        if (updated > 0) {
             consoleLog(`> ${updated} estadística${updated > 1 ? 's' : ''} actualizada${updated > 1 ? 's' : ''} en la base de datos`, CONSOLE_GREEN);
+            fileLog(`${MODULE_NAME}.updateManyStats`, `Updating stats for ${updated} user${updated > 1 ? 's' : ''}`);
+        }
     },
 
     addThermalPasteDate: async (id, date) => {

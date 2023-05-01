@@ -132,9 +132,7 @@ module.exports = {
             let stats = getStats() || await updateStats();
 
             if (!Object.keys(stats).includes(id)) {
-                fileLog(`${MODULE_NAME}.pushDifference`, `Adding new stats record for user ${username}`);
-
-                await addStat(id);
+                await addStat(id, username);
                 await new Promise(res => setTimeout(res, 1000 * 2));
                 stats = await updateStats();
             }
@@ -144,8 +142,6 @@ module.exports = {
             const totalTime = (Math.abs(now - timestamp) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
 
             if (!isNaN(totalTime)) {
-                fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for user ${username}`);
-
                 const { days, hours, minutes, seconds } = secondsToFull(totalTime);
                 await updateStat(id, days, hours, minutes, seconds, username);
             }
@@ -191,8 +187,6 @@ module.exports = {
         }
 
         if (updates.length > 0) {
-            fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for ${updates.length} users`);
-
             await updateManyStats(updates);
             await updateStats();
         }
@@ -244,14 +238,18 @@ module.exports = {
         try {
             const ids = getIds() || await updateIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
+            let counter = 0;
             for (const [id, channel] of guild.channels.cache)
                 if (channel.type === ChannelType.GuildVoice && id != ids.channels.afk) {
-                    const membersInChannel = await getMembersStatus(channel);
-                    if (membersInChannel.size >= 2)
-                        membersInChannel.valid.forEach(member => addTimestamp(member.id, new Date()));
+                    const { size, valid } = await getMembersStatus(channel);
+                    if (size >= 2)
+                        for (const member of valid) {
+                            counter++;
+                            addTimestamp(member.id, new Date());
+                        }
                 }
 
-            fileLog(`${MODULE_NAME}.startStatsCounters`, `Stats counters successfully started`);
+            fileLog(`${MODULE_NAME}.startStatsCounters`, `${counter} stats counters started`);
         } catch (error) {
             fileLogError(`${MODULE_NAME}.startStatsCounters`, error);
         }
@@ -277,9 +275,8 @@ module.exports = {
                 consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
 
                 fileLog(`${MODULE_NAME}.countMembers`, `Guild members counter updated`);
-            }
-
-            fileLog(`${MODULE_NAME}.countMembers`, `Guild members succesfully counted`);
+            } else
+                fileLog(`${MODULE_NAME}.countMembers`, `No changes in guild members counter`);
         } catch (error) {
             fileLogError(`${MODULE_NAME}.countMembers`, error);
         }
