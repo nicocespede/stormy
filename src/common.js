@@ -121,6 +121,8 @@ module.exports = {
      * @param {String} username The username of the member.
      */
     pushDifference: async (id, username) => {
+        fileLogFunctionTriggered(MODULE_NAME, 'pushDifference');
+
         let stats = getStats() || await updateStats();
 
         if (!Object.keys(stats).includes(id)) {
@@ -147,6 +149,8 @@ module.exports = {
     },
 
     pushDifferences: async ids => {
+        fileLogFunctionTriggered(MODULE_NAME, 'pushDifferences');
+
         const now = new Date();
         const updates = [];
         const stats = getStats() || await updateStats();
@@ -168,6 +172,9 @@ module.exports = {
                 updates.push({ filter: { _id: id }, update: { days, hours, minutes, seconds } });
             }
         });
+
+        fileLog(`${MODULE_NAME}.pushDifference`, `Updating stats for ${updates.length} users`);
+
         await updateManyStats(updates);
         await updateStats();
     },
