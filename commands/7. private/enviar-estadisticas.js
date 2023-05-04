@@ -17,7 +17,7 @@ module.exports = {
 
     /** @param {CommandArgs}*/
     callback: async ({ interaction, message, user }) => {
-        fileLogCommandUsage(COMMAND_NAME, interaction, message, user);
+        fileLogCommandUsage(COMMAND_NAME, null, interaction, message, user);
 
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {

@@ -85,13 +85,18 @@ module.exports = {
      * Logs to a file the usage of a command.
      * 
      * @param {String} commandName The name of the command used.
+     * @param {String} [args] The args of the command used.
      * @param {CommandInteraction} interaction The interaction of the command.
      * @param {Message} _ The message of the command.
      * @param {User} user The user who used the command.
      */
-    fileLogCommandUsage: (commandName, interaction, _, user) => {
+    fileLogCommandUsage: (commandName, args, interaction, _, user) => {
         const prefix = interaction ? '/' : PREFIX;
-        fileLog(`${commandName}.callback`, `${user.tag} used ${prefix}${commandName}`);
+        if (!args)
+            args = '';
+        else
+            args = ` [${args}]`;
+        fileLog(`${commandName}.callback`, `${user.tag} used ${prefix}${commandName}${args}`);
     },
 
     /**

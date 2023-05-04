@@ -38,7 +38,7 @@ module.exports = {
 
     /** @param {CommandArgs}*/
     callback: async ({ guild, message, interaction, user, instance }) => {
-        fileLogCommandUsage(COMMAND_NAME, interaction, message, user);
+        fileLogCommandUsage(COMMAND_NAME, null, interaction, message, user);
 
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });

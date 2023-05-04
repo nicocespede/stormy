@@ -11,7 +11,7 @@ module.exports = {
 
     /** @param {CommandArgs}*/
     callback: async ({ interaction, message, user }) => {
-        fileLogCommandUsage('salas', interaction, message, user);
+        fileLogCommandUsage('salas', null, interaction, message, user);
 
         const row = new ActionRowBuilder()
             .addComponents(new ButtonBuilder()
