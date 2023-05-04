@@ -2,7 +2,7 @@ const { Client, Message, CommandInteraction, Guild, GuildMember, User, Channel }
 const { default: WOKCommands } = require("wokcommands");
 
 /**
- * @typedef {{client: Client, instance: WOKCommands, message: Message, interaction: CommandInteraction, args: String, text: String, guild: Guild, member: GuildMember, user: User, channel: Channel}} CommandArgs
+ * @typedef {{client: Client, instance: WOKCommands, message: Message, interaction: CommandInteraction, args: String[], text: String, guild: Guild, member: GuildMember, user: User, channel: Channel}} CommandArgs
  * 
  * @typedef {{birth: String, club: String, goals?: Number, name: String, nationality: String, picture: String, position: String, rating: Number }} Player
  * @typedef {{color: Number[], emblem: String, flag: String, name: String, players: Number}} Team
