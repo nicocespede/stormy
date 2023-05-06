@@ -24,55 +24,69 @@ module.exports = client => {
                 if ((oldState.serverDeaf != newState.serverDeaf) || (oldState.selfDeaf != newState.selfDeaf)
                     || (oldState.streaming != newState.streaming)) {
 
-                    const membersInChannel = await getMembersStatus(oldState.channel);
+                    const { invalid, size, valid } = await getMembersStatus(oldState.channel);
 
-                    if (membersInChannel.size >= 2) {
-                        for (const member of membersInChannel.valid)
-                            if (!timestamps[member.id])
-                                addTimestamp(member.id, new Date());
+                    if (size >= 2) {
+                        for (const member of valid) {
+                            const { id } = member;
+                            if (!timestamps[id])
+                                addTimestamp(id, new Date());
+                        }
 
-                        fileLog(moduleName, `Pushing stats and removing timestamps from muted/deafened members in channel ${oldState.channel.name}`);
+                        fileLog(moduleName, `Pushing stats and removing timestamps of muted/deafened members in the channel ${oldState.channel.name}`);
 
-                        await pushDifferences(membersInChannel.invalid.map(m => m.id));
+                        await pushDifferences(invalid.map(m => m.id));
                     } else {
-                        fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
+                        fileLog(moduleName, `Pushing stats and removing timestamp of the last member of the channel ${oldState.channel.name}`);
 
-                        for (const [id, member] of oldState.channel.members)
-                            if (!member.user.bot)
-                                await pushDifference(id, member.user.tag);
+                        for (const [id, member] of oldState.channel.members) {
+                            const { user } = member;
+                            if (!user.bot)
+                                await pushDifference(id, user.tag);
+                        }
                     }
                 }
                 return;
             }
 
+            const { channel: newChannel, member: newMember } = newState;
+
             //check for new channel
-            if (newState.channelId && newState.channelId !== ids.channels.afk && newState.guild.id === ids.guilds.default) {
-                const membersInNewChannel = await getMembersStatus(newState.channel);
-                if (membersInNewChannel.size === 2)
-                    membersInNewChannel.valid.forEach(member => {
-                        if (!timestamps[member.id])
-                            addTimestamp(member.id, new Date());
-                    });
-                else if (membersInNewChannel.size > 2 || oldState.member.user.bot) {
+            if (newMember && newChannel && newState.channelId && newState.channelId !== ids.channels.afk && newState.guild.id === ids.guilds.default) {
+
+                const { size, valid } = await getMembersStatus(newChannel);
+
+                if (size === 2)
+                    for (const member of valid) {
+                        const { id } = member;
+                        if (!timestamps[id])
+                            addTimestamp(id, new Date());
+                    }
+                else if (size > 2 || oldState.member.user.bot) {
                     if (!timestamps[oldState.member.id])
                         addTimestamp(oldState.member.id, new Date());
                 } else {
-                    fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
+                    const { id, user } = newMember;
+                    const { tag } = user;
 
-                    await pushDifference(newState.member.id, newState.member.user.tag);
+                    fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}, pushing stats and removing timestamp`);
+
+                    await pushDifference(id, tag);
                 }
             } else {
-                fileLog(moduleName, `Pushing stats and removing timestamp from a member who left a voice channel`);
+                const tag = newMember ? newMember.user.tag : newState.id;
+                fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}, pushing stats and removing timestamp`);
 
-                const id = newState.member ? newState.member.id : newState.id;
-                const tag = newState.member ? newState.member.user.tag : newState.id;
+                const id = newMember ? newMember.id : newState.id;
                 await pushDifference(id, tag);
             }
 
             //check for old channel
             if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
-                const membersInOldChannel = await getMembersStatus(oldState.channel);
-                if (membersInOldChannel.size < 2 && Object.keys(timestamps).length > 0) {
+
+                const { size } = await getMembersStatus(oldState.channel);
+
+                if (size < 2 && Object.keys(timestamps).length > 0) {
                     fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
 
                     for (const [id, member] of oldState.channel.members)

@@ -1,4 +1,4 @@
-const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require('discord.js')
+const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, VoiceBasedChannel } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
@@ -53,22 +53,31 @@ const secondsToFull = (seconds) => {
     return { days, hours, minutes, seconds };
 };
 
+/**
+ * Gets the information regarding voice status of the members connected to a voice channel.
+ * 
+ * @param {VoiceBasedChannel} channel The voice channel.
+ * @returns The number of members in the channel, a list of the members who are farming stats and a list of the members who are not.
+ */
 const getMembersStatus = async channel => {
-    let membersSize = channel.members.size;
     const valid = [];
     const invalid = [];
-    channel.members.each(member => {
-        if (member.user.bot) {
-            membersSize--;
+
+    const { members } = channel;
+    let { size } = members;
+
+    for (const [_, member] of members) {
+        const { user, voice } = member;
+        if (user.bot) {
+            size--;
             valid.push(member);
-        } else if (member.voice.deaf && !member.voice.streaming) {
-            membersSize--;
+        } else if (voice.deaf && !voice.streaming) {
+            size--;
             invalid.push(member);
-        }
-        else
+        } else
             valid.push(member);
-    });
-    return { size: membersSize, valid: valid, invalid: invalid };
+    }
+    return { size, valid, invalid };
 };
 
 const lastUpdateToString = (lastUpdate, upperCase) => {
