@@ -69,7 +69,10 @@ module.exports = client => {
                     const { id, user } = newMember;
                     const { tag } = user;
 
-                    fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}, pushing stats and removing timestamp`);
+                    if (oldState)
+                        fileLog(moduleName, `Pushing stats and removing timestamp of ${tag}`);
+                    else
+                        fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}, pushing stats and removing timestamp`);
 
                     await pushDifference(id, tag);
                 }
