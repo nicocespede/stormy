@@ -308,7 +308,7 @@ module.exports = {
      * @param {Date} timestamp The timestamp to be added.
      */
     addTimestamp: (id, timestamp) => {
-        fileLog(`${MODULE_NAME}.addTimestamp`, `Adding timestamp of user with ID ${id}`);
+        fileLog(`${MODULE_NAME}.addTimestamp`, `${!timestamps[id] ? 'Adding' : 'Restarting'} timestamp of user with ID ${id}`);
         timestamps[id] = timestamp;
     },
 
