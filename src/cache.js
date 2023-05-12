@@ -1,4 +1,4 @@
-const { StatsData, TimestampsData } = require("./typedefs");
+const { IDsData, StatsData, TimestampsData } = require("./typedefs");
 const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, fileLog } = require('./util');
 const fetch = require('node-fetch');
@@ -33,7 +33,6 @@ var smurfs;
 var tracksNameExtras;
 //TEMP SOLUTION
 var blacklistedSongs;//
-var ids;
 var kruMatches;
 let reminders;
 let characters;
@@ -41,6 +40,8 @@ let songsInQueue = {};
 let musicPlayerData = {};
 let fwcData;
 
+/** @type {IDsData}*/
+let ids;
 /** @type {StatsData}*/
 let stats;
 /** @type {TimestampsData}*/
@@ -386,7 +387,18 @@ module.exports = {
         return blacklistedSongs;
     },//
 
+    /**
+     * Gets the IDs data stored in cache.
+     * 
+     * @returns All cached IDs data.
+     */
     getIds: () => ids,
+
+    /**
+     * Retrieves the IDs data from the ids.json file.
+     * 
+     * @returns All cached IDs data.
+     */
     updateIds: async () => {
         const fileName = !DEV_ENV ? 'ids.json' : 'testingIds.json';
         try {

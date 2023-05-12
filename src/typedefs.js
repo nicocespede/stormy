@@ -23,6 +23,13 @@ const { default: WOKCommands } = require("wokcommands");
  * @typedef {{seconds: Number, minutes: Number, hours: Number, days: Number}} Stat
  * 
  * @typedef {{[key: String]: Stat}} StatsData
+ * 
+ * @typedef {{[key: String]: String, musica: String[]}} ChannelsIDsCategory
+ * @typedef {{[key: String]: String, mcuCharacters: EmojisIDsCategory}} EmojisIDsCategory
+ * @typedef {{[key: String]: String}} GuildsIDsCategory
+ * @typedef {{[key: String]: String}} RolesIDsCategory
+ * @typedef {{[key: String]: String}} UsersIDsCategory
+ * @typedef {{channels: ChannelsIDsCategory, emojis: EmojisIDsCategory, guilds: GuildsIDsCategory, roles: RolesIDsCategory, users: UsersIDsCategory}} IDsData
  */
 
 exports.unused = {};

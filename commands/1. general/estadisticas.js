@@ -1,7 +1,7 @@
 const { CommandArgs } = require('../../src/typedefs');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
-const { getStats, updateStats, addTimestamp, getTimestamps } = require('../../src/cache');
+const { getStats, updateStats, getTimestamps } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
 const { consoleLog, fileLog, fileLogCommandUsage } = require('../../src/util');
 const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
@@ -47,9 +47,7 @@ module.exports = {
         if (Object.keys(timestamps).length > 0) {
             fileLog(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
 
-            await pushDifferences();
-            for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
-                addTimestamp(id, new Date());
+            await pushDifferences(true);
         }
 
         const stats = getStats() || await updateStats();

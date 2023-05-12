@@ -35,7 +35,7 @@ module.exports = client => {
 
                         fileLog(moduleName, `Pushing stats and removing timestamps of muted/deafened members in the channel ${oldState.channel.name}`);
 
-                        await pushDifferences(invalid.map(m => m.id));
+                        await pushDifferences(false, invalid.map(m => m.id));
                     } else {
                         fileLog(moduleName, `Pushing stats and removing timestamp of the last member of the channel ${oldState.channel.name}`);
 
@@ -111,9 +111,7 @@ module.exports = client => {
                 consoleLog(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, CONSOLE_BLUE);
                 fileLog(`${MODULE_NAME}.save`, `Pushing all stats and restarting all timestamps after 1 hour loop completed`);
 
-                await pushDifferences();
-                for (const id in timestamps) if (Object.hasOwnProperty.call(timestamps, id))
-                    addTimestamp(id, new Date());
+                await pushDifferences(true);
             }
         } else exec = true;
 

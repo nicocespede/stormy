@@ -1,5 +1,5 @@
 const { CommandArgs } = require("../../src/typedefs");
-const { addTimestamp, getTimestamps } = require("../../src/cache");
+const { getTimestamps } = require("../../src/cache");
 const { pushDifferences } = require("../../src/common");
 const { fileLog, fileLogCommandUsage } = require("../../src/util");
 
@@ -23,9 +23,8 @@ module.exports = {
         if (Object.keys(timestamps).length > 0) {
             fileLog(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
 
-            await pushDifferences();
-            for (const key in timestamps) if (Object.hasOwnProperty.call(timestamps, key))
-                addTimestamp(key, new Date());
+            await pushDifferences(true);
+
             return '¡Estadísticas enviadas a la base de datos!';
         }
         return '¡No hay estadísticas para enviar!';

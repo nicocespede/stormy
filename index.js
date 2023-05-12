@@ -173,7 +173,7 @@ process.on(shutdownEvent, async () => {
         consoleLog('> Enviando estadísticas a la base de datos', CONSOLE_YELLOW);
         fileLog(`${MODULE_NAME}.${shutdownEvent}Listener`, `Pushing all stats before shutdown`);
 
-        await pushDifferences();
+        await pushDifferences(false);
     }
 
     //clears timeouts

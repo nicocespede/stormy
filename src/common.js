@@ -162,9 +162,10 @@ module.exports = {
     /**
      * Calculates and pushes the time difference for the stats of many/all members.
      * 
+     * @param {Boolean} restart If re-adding the timestamps is needed or not.
      * @param {String} [ids] The IDs of the members.
      */
-    pushDifferences: async ids => {
+    pushDifferences: async (restart, ids) => {
         fileLogFunctionTriggered(MODULE_NAME, 'pushDifferences');
 
         const now = new Date();
@@ -179,11 +180,14 @@ module.exports = {
             const timestamp = timestamps[id];
 
             if (timestamp) {
-                removeTimestamp(id);
-
                 const stat = stats[id];
 
                 let totalTime = Math.abs(now - timestamp) / 1000;
+
+                if (restart)
+                    addTimestamp(id, new Date());
+                else
+                    removeTimestamp(id);
 
                 if (stat)
                     totalTime += fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
@@ -249,7 +253,7 @@ module.exports = {
             const guild = await client.guilds.fetch(ids.guilds.default);
             let counter = 0;
             for (const [id, channel] of guild.channels.cache)
-                if (channel.type === ChannelType.GuildVoice && id != ids.channels.afk) {
+                if (channel.type === ChannelType.GuildVoice && id !== ids.channels.afk) {
                     const { size, valid } = await getMembersStatus(channel);
                     if (size >= 2)
                         for (const member of valid) {
