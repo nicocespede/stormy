@@ -64,7 +64,7 @@ module.exports = _ => {
 
         if (deleted > 0) {
             fileLog(FULL_MODULE_NAME, `${deleted} log file${deleted > 1 ? 's' : ''} deleted`);
-            consoleLog(`${deleted} archivo${deleted > 1 ? 's' : ''} de log eliminados`, CONSOLE_YELLOW);
+            consoleLog(`> ${deleted} archivo${deleted > 1 ? 's' : ''} de log eliminados`, CONSOLE_YELLOW);
         }
 
         timeouts[MODULE_NAME] = setTimeout(checkAndDelete, ONE_DAY_MILLIS);
