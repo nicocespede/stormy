@@ -33,11 +33,11 @@ module.exports = client => {
                                 addTimestamp(id, new Date());
                         }
 
-                        fileLog(moduleName, `Pushing stats and removing timestamps of muted/deafened members in the channel ${oldState.channel.name}`);
+                        fileLog(moduleName, `A member has been muted/deafened in the channel ${oldState.channel.name}`);
 
                         await pushDifferences(false, invalid.map(m => m.id));
                     } else {
-                        fileLog(moduleName, `Pushing stats and removing timestamp of the last member of the channel ${oldState.channel.name}`);
+                        fileLog(moduleName, `One member left in the channel ${oldState.channel.name}`);
 
                         for (const [id, member] of oldState.channel.members) {
                             const { user } = member;
@@ -69,16 +69,16 @@ module.exports = client => {
                     const { id, user } = newMember;
                     const { tag } = user;
 
-                    if (oldState)
+                    if (!oldState)
                         fileLog(moduleName, `Pushing stats and removing timestamp of ${tag}`);
                     else
-                        fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}, pushing stats and removing timestamp`);
+                        fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}`);
 
                     await pushDifference(id, tag);
                 }
             } else {
                 const tag = newMember ? newMember.user.tag : newState.id;
-                fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}, pushing stats and removing timestamp`);
+                fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}`);
 
                 const id = newMember ? newMember.id : newState.id;
                 await pushDifference(id, tag);
@@ -90,7 +90,7 @@ module.exports = client => {
                 const { size } = await getMembersStatus(oldState.channel);
 
                 if (size < 2 && Object.keys(timestamps).length > 0) {
-                    fileLog(moduleName, `Pushing stats and removing timestamp from the last member of channel ${oldState.channel.name}`);
+                    fileLog(moduleName, `One member left in the channel ${oldState.channel.name}`);
 
                     for (const [id, member] of oldState.channel.members)
                         if (!member.user.bot)

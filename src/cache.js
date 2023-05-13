@@ -45,7 +45,7 @@ let ids;
 /** @type {StatsData}*/
 let stats;
 /** @type {TimestampsData}*/
-let timestamps = {};
+const timestamps = {};
 
 const getChronology = id => chronologies[id];
 
