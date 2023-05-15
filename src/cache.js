@@ -1,6 +1,6 @@
 const { IDsData, StatsData, TimestampsData } = require("./typedefs");
 const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
-const { convertTime, consoleLog, fileLog } = require('./util');
+const { convertTime, consoleLog, fileLog, fileLogError } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -451,7 +451,8 @@ module.exports = {
         } catch (e) {
             if (!kruMatches)
                 kruMatches = [];
-            consoleLog(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, CONSOLE_RED);
+            consoleLog(`> Error al obtener información de partidos programados de KRÜ`, CONSOLE_RED);
+            fileLogError(`${MODULE_NAME}.updateKruMatches`, e);
         }
         return kruMatches;
     },

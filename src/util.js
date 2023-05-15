@@ -121,7 +121,7 @@ module.exports = {
      * @param {String} moduleName The name of the module the log is called from.
      * @param {Error} error The error to be logged.
      */
-    fileLogError: (moduleName, error) => fileLog(moduleName, `Error: ${error}`),
+    fileLogError: (moduleName, error) => fileLog(moduleName, !error.stack ? error : error.stack),
 
     splitEmbedDescription: string => {
         const split = string.split('\n');

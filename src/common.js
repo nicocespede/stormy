@@ -236,6 +236,7 @@ module.exports = {
 
             fileLog(`${MODULE_NAME}.checkBansCorrelativity`, `Bans correlativity succesfully checked`);
         } catch (error) {
+            consoleLog(`> Error al chequear correlatividad de baneos`, CONSOLE_RED);
             fileLogError(`${MODULE_NAME}.checkBansCorrelativity`, error);
         }
     },
@@ -264,6 +265,7 @@ module.exports = {
 
             fileLog(`${MODULE_NAME}.startStatsCounters`, `${counter} stats counters started`);
         } catch (error) {
+            consoleLog(`> Error al iniciar contadores de estadísticas`, CONSOLE_RED);
             fileLogError(`${MODULE_NAME}.startStatsCounters`, error);
         }
     },
@@ -291,6 +293,7 @@ module.exports = {
             } else
                 fileLog(`${MODULE_NAME}.countMembers`, `No changes in guild members counter`);
         } catch (error) {
+            consoleLog(`> Error al actualizar contador de miembros`, CONSOLE_RED);
             fileLogError(`${MODULE_NAME}.countMembers`, error);
         }
     },

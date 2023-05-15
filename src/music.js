@@ -738,6 +738,7 @@ module.exports = {
 
                 await previousQueueSchema.deleteMany({});
             } catch (error) {
+                consoleLog(`> Error al reanudar cola de reproducción interrumpida`, CONSOLE_RED);
                 fileLogError(`${MODULE_NAME}.playInterruptedQueue`, error);
             }
         }
