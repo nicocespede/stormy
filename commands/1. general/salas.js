@@ -1,6 +1,6 @@
 const { CommandArgs } = require("../../src/typedefs");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { fileLogCommandUsage } = require("../../src/util");
+const { logToFileCommandUsage } = require("../../src/util");
 
 module.exports = {
     category: 'General',
@@ -11,7 +11,7 @@ module.exports = {
 
     /** @param {CommandArgs}*/
     callback: async ({ interaction, message, user }) => {
-        fileLogCommandUsage('salas', null, interaction, message, user);
+        logToFileCommandUsage('salas', null, interaction, message, user);
 
         const row = new ActionRowBuilder()
             .addComponents(new ButtonBuilder()

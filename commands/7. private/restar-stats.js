@@ -2,7 +2,7 @@ const { CommandArgs } = require("../../src/typedefs");
 const { getStats, updateStats } = require("../../src/cache");
 const { fullToSeconds, secondsToFull } = require("../../src/common");
 const { updateStat } = require("../../src/mongodb");
-const { fileLogCommandUsage } = require("../../src/util");
+const { logToFileCommandUsage } = require("../../src/util");
 
 module.exports = {
     category: 'Privados',
@@ -16,7 +16,7 @@ module.exports = {
 
     /** @param {CommandArgs} */
     callback: async ({ args, guild, interaction, message, text, user }) => {
-        fileLogCommandUsage('restar-stats', text, interaction, message, user);
+        logToFileCommandUsage('restar-stats', text, interaction, message, user);
 
         const stats = getStats() || await updateStats();
         const id = args[0];

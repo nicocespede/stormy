@@ -1,6 +1,6 @@
 const { timeouts } = require('../src/cache');
 const { CONSOLE_YELLOW } = require('../src/constants');
-const { fileLog, fileLogFunctionTriggered, consoleLog } = require('../src/util');
+const { logToFile, logToFileFunctionTriggered, consoleLog } = require('../src/util');
 const fs = require('fs');
 
 const LOG_FILES_PATH = './logs/';
@@ -47,7 +47,7 @@ const needsDeletion = (fileName, now) => isLogFile(fileName) && isOlderThanAWeek
 
 module.exports = _ => {
     const checkAndDelete = () => {
-        fileLogFunctionTriggered(FULL_MODULE_NAME, 'checkAndDelete');
+        logToFileFunctionTriggered(FULL_MODULE_NAME, 'checkAndDelete');
 
         const files = fs.readdirSync(LOG_FILES_PATH);
 
@@ -63,7 +63,7 @@ module.exports = _ => {
             }
 
         if (deleted > 0) {
-            fileLog(FULL_MODULE_NAME, `${deleted} log file${deleted > 1 ? 's' : ''} deleted`);
+            logToFile(FULL_MODULE_NAME, `${deleted} log file${deleted > 1 ? 's' : ''} deleted`);
             consoleLog(`> ${deleted} archivo${deleted > 1 ? 's' : ''} de log eliminados`, CONSOLE_YELLOW);
         }
 

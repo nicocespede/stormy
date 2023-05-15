@@ -6,7 +6,7 @@ const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
 const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog, fileLogFunctionTriggered, fileLogError, fileLog } = require("./util");
+const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile } = require("./util");
 
 const MODULE_NAME = 'src.music';
 
@@ -675,7 +675,7 @@ module.exports = {
      * @param {Client} client The Discord client instance.
      */
     playInterruptedQueue: async client => {
-        fileLogFunctionTriggered(MODULE_NAME, 'playInterruptedQueue');
+        logToFileFunctionTriggered(MODULE_NAME, 'playInterruptedQueue');
 
         const previousQueueSchema = require('../models/previousQueue-schema');
         const results = await previousQueueSchema.find({});
@@ -731,7 +731,7 @@ module.exports = {
                         queue.history.tracks = Queue.from(generateTracksArray(previousTracks, player, members), previousStrategy);
                         queue.tracks = Queue.from(generateTracksArray(tracks, player, members), strategy);
 
-                        fileLog(`${MODULE_NAME}.playInterruptedQueue`, 'Playing interrupted music queue');
+                        logToFile(`${MODULE_NAME}.playInterruptedQueue`, 'Playing interrupted music queue');
                     }
 
                 }
@@ -739,11 +739,11 @@ module.exports = {
                 await previousQueueSchema.deleteMany({});
             } catch (error) {
                 consoleLog(`> Error al reanudar cola de reproducción interrumpida`, CONSOLE_RED);
-                fileLogError(`${MODULE_NAME}.playInterruptedQueue`, error);
+                logToFileError(`${MODULE_NAME}.playInterruptedQueue`, error);
             }
         }
 
-        fileLog(`${MODULE_NAME}.playInterruptedQueue`, `Interrupted music queue checked successfully`);
+        logToFile(`${MODULE_NAME}.playInterruptedQueue`, `Interrupted music queue checked successfully`);
     },
 
     cleanTitle,

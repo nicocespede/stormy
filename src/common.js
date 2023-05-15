@@ -7,7 +7,7 @@ const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, upda
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp } = require('./cache');
 const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, splitEmbedDescription, fileLog, fileLogFunctionTriggered, fileLogError } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -130,7 +130,7 @@ module.exports = {
      * @param {String} username The username of the member.
      */
     pushDifference: async (id, username) => {
-        fileLogFunctionTriggered(MODULE_NAME, 'pushDifference');
+        logToFileFunctionTriggered(MODULE_NAME, 'pushDifference');
 
         const timestamps = getTimestamps();
         const timestamp = timestamps[id];
@@ -166,7 +166,7 @@ module.exports = {
      * @param {String} [ids] The IDs of the members.
      */
     pushDifferences: async (restart, ids) => {
-        fileLogFunctionTriggered(MODULE_NAME, 'pushDifferences');
+        logToFileFunctionTriggered(MODULE_NAME, 'pushDifferences');
 
         const now = new Date();
         const updates = [];
@@ -217,7 +217,7 @@ module.exports = {
      * @param {Client} client The Discord client instance.
      */
     checkBansCorrelativity: async client => {
-        fileLogFunctionTriggered(MODULE_NAME, 'checkBansCorrelativity');
+        logToFileFunctionTriggered(MODULE_NAME, 'checkBansCorrelativity');
 
         try {
             const ids = getIds() || await updateIds();
@@ -234,10 +234,10 @@ module.exports = {
             if (needUpdate)
                 await updateBanned();
 
-            fileLog(`${MODULE_NAME}.checkBansCorrelativity`, `Bans correlativity succesfully checked`);
+            logToFile(`${MODULE_NAME}.checkBansCorrelativity`, `Bans correlativity succesfully checked`);
         } catch (error) {
             consoleLog(`> Error al chequear correlatividad de baneos`, CONSOLE_RED);
-            fileLogError(`${MODULE_NAME}.checkBansCorrelativity`, error);
+            logToFileError(`${MODULE_NAME}.checkBansCorrelativity`, error);
         }
     },
 
@@ -247,7 +247,7 @@ module.exports = {
      * @param {Client} client The Discord client instance.
      */
     startStatsCounters: async client => {
-        fileLogFunctionTriggered(MODULE_NAME, 'startStatsCounters');
+        logToFileFunctionTriggered(MODULE_NAME, 'startStatsCounters');
 
         try {
             const ids = getIds() || await updateIds();
@@ -263,10 +263,10 @@ module.exports = {
                         }
                 }
 
-            fileLog(`${MODULE_NAME}.startStatsCounters`, `${counter} stats counters started`);
+            logToFile(`${MODULE_NAME}.startStatsCounters`, `${counter} stats counters started`);
         } catch (error) {
             consoleLog(`> Error al iniciar contadores de estadísticas`, CONSOLE_RED);
-            fileLogError(`${MODULE_NAME}.startStatsCounters`, error);
+            logToFileError(`${MODULE_NAME}.startStatsCounters`, error);
         }
     },
 
@@ -276,7 +276,7 @@ module.exports = {
      * @param {Client} client The Discord client instance.
      */
     countMembers: async client => {
-        fileLogFunctionTriggered(MODULE_NAME, 'countMembers');
+        logToFileFunctionTriggered(MODULE_NAME, 'countMembers');
 
         try {
             const ids = getIds() || await updateIds();
@@ -289,12 +289,12 @@ module.exports = {
                 await channel.setName(totalMembersName);
                 consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
 
-                fileLog(`${MODULE_NAME}.countMembers`, `Guild members counter updated`);
+                logToFile(`${MODULE_NAME}.countMembers`, `Guild members counter updated`);
             } else
-                fileLog(`${MODULE_NAME}.countMembers`, `No changes in guild members counter`);
+                logToFile(`${MODULE_NAME}.countMembers`, `No changes in guild members counter`);
         } catch (error) {
             consoleLog(`> Error al actualizar contador de miembros`, CONSOLE_RED);
-            fileLogError(`${MODULE_NAME}.countMembers`, error);
+            logToFileError(`${MODULE_NAME}.countMembers`, error);
         }
     },
 

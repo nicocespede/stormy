@@ -2,14 +2,14 @@ const { Client } = require("discord.js");
 const { addTimestamp, getTimestamps, getIds, updateIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
-const { consoleLog, fileLog, fileLogFunctionTriggered, fileLogListenerTriggered } = require("../src/util");
+const { consoleLog, logToFile, logToFileFunctionTriggered, logToFileListenerTriggered } = require("../src/util");
 
 const MODULE_NAME = 'features.stats-counter';
 
 /** @param {Client} client */
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
-        fileLogListenerTriggered(MODULE_NAME, 'voiceStateUpdate');
+        logToFileListenerTriggered(MODULE_NAME, 'voiceStateUpdate');
         const moduleName = `${MODULE_NAME}.voiceStateUpdateListener`;
 
         const ids = getIds() || await updateIds();
@@ -33,11 +33,11 @@ module.exports = client => {
                                 addTimestamp(id, new Date());
                         }
 
-                        fileLog(moduleName, `A member has been muted/deafened in the channel ${oldState.channel.name}`);
+                        logToFile(moduleName, `A member has been muted/deafened in the channel ${oldState.channel.name}`);
 
                         await pushDifferences(false, invalid.map(m => m.id));
                     } else {
-                        fileLog(moduleName, `One member left in the channel ${oldState.channel.name}`);
+                        logToFile(moduleName, `One member left in the channel ${oldState.channel.name}`);
 
                         for (const [id, member] of oldState.channel.members) {
                             const { user } = member;
@@ -70,13 +70,13 @@ module.exports = client => {
                     const { tag } = user;
 
                     if (oldState)
-                        fileLog(moduleName, `Pushing stats and removing timestamp of ${tag}`);
+                        logToFile(moduleName, `Pushing stats and removing timestamp of ${tag}`);
 
                     await pushDifference(id, tag);
                 }
             } else {
                 const tag = newMember ? newMember.user.tag : newState.id;
-                fileLog(moduleName, `${tag} left the voice channel ${oldState.channel.name}`);
+                logToFile(moduleName, `${tag} left the voice channel ${oldState.channel.name}`);
 
                 const id = newMember ? newMember.id : newState.id;
                 await pushDifference(id, tag);
@@ -88,7 +88,7 @@ module.exports = client => {
                 const { size } = await getMembersStatus(oldState.channel);
 
                 if (size < 2 && Object.keys(timestamps).length > 0) {
-                    fileLog(moduleName, `One member left in the channel ${oldState.channel.name}`);
+                    logToFile(moduleName, `One member left in the channel ${oldState.channel.name}`);
 
                     for (const [id, member] of oldState.channel.members)
                         if (!member.user.bot)
@@ -101,13 +101,13 @@ module.exports = client => {
 
     let exec = false;
     const save = async () => {
-        fileLogFunctionTriggered(MODULE_NAME, 'save');
+        logToFileFunctionTriggered(MODULE_NAME, 'save');
 
         if (exec) {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
                 consoleLog(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, CONSOLE_BLUE);
-                fileLog(`${MODULE_NAME}.save`, `Pushing all stats and restarting all timestamps after 1 hour loop completed`);
+                logToFile(`${MODULE_NAME}.save`, `Pushing all stats and restarting all timestamps after 1 hour loop completed`);
 
                 await pushDifferences(true);
             }

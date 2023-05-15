@@ -1,6 +1,6 @@
 const { IDsData, StatsData, TimestampsData } = require("./typedefs");
 const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
-const { convertTime, consoleLog, fileLog, fileLogError } = require('./util');
+const { convertTime, consoleLog, logToFile, logToFileError } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -308,7 +308,7 @@ module.exports = {
      * @param {Date} timestamp The timestamp to be added.
      */
     addTimestamp: (id, timestamp) => {
-        fileLog(`${MODULE_NAME}.addTimestamp`, `${!timestamps[id] ? 'Adding' : 'Restarting'} timestamp of user with ID ${id}`);
+        logToFile(`${MODULE_NAME}.addTimestamp`, `${!timestamps[id] ? 'Adding' : 'Restarting'} timestamp of user with ID ${id}`);
         timestamps[id] = timestamp;
     },
 
@@ -318,7 +318,7 @@ module.exports = {
      * @param {String} id The ID of the user.
      */
     removeTimestamp: id => {
-        fileLog(`${MODULE_NAME}.removeTimestamp`, `Removing timestamp of user with ID ${id}`);
+        logToFile(`${MODULE_NAME}.removeTimestamp`, `Removing timestamp of user with ID ${id}`);
         delete timestamps[id];
     },
 
@@ -452,7 +452,7 @@ module.exports = {
             if (!kruMatches)
                 kruMatches = [];
             consoleLog(`> Error al obtener información de partidos programados de KRÜ`, CONSOLE_RED);
-            fileLogError(`${MODULE_NAME}.updateKruMatches`, e);
+            logToFileError(`${MODULE_NAME}.updateKruMatches`, e);
         }
         return kruMatches;
     },

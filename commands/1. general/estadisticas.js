@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, updateStats, getTimestamps } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
-const { consoleLog, fileLog, fileLogCommandUsage } = require('../../src/util');
+const { consoleLog, logToFile, logToFileCommandUsage } = require('../../src/util');
 const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
@@ -38,14 +38,14 @@ module.exports = {
 
     /** @param {CommandArgs}*/
     callback: async ({ guild, message, interaction, user, instance }) => {
-        fileLogCommandUsage(COMMAND_NAME, null, interaction, message, user);
+        logToFileCommandUsage(COMMAND_NAME, null, interaction, message, user);
 
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });
 
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
-            fileLog(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
+            logToFile(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
 
             await pushDifferences(true);
         }
