@@ -1,6 +1,6 @@
 const { timeouts } = require('../src/cache');
 const { CONSOLE_YELLOW } = require('../src/constants');
-const { logToFile, logToFileFunctionTriggered, consoleLog } = require('../src/util');
+const { logToFile, logToFileFunctionTriggered, consoleLog, convertTZ } = require('../src/util');
 const fs = require('fs');
 
 const LOG_FILES_PATH = './logs/';
@@ -51,7 +51,7 @@ module.exports = _ => {
 
         const files = fs.readdirSync(LOG_FILES_PATH);
 
-        const now = new Date();
+        const now = convertTZ(new Date());
         now.setHours(0, 0, 0, 0);
 
         let deleted = 0;
