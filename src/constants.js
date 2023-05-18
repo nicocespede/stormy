@@ -4,14 +4,28 @@ const isADevEnvironment = () => ENVIRONMENT !== 'PRO';
 
 const isLocalEnvironment = () => ENVIRONMENT === 'LOCAL';
 
-const getActualBranch = () => {
+const GITHUB_RAW_PARENT_PATH = `https://raw.githubusercontent.com/nicocespede/stormy-data/`;
+
+/**
+ * Gets the name of the tracked Github branch, and checks if a stormy-data branch with the same name exists.
+ * 
+ * @returns The name of the current branch.
+ */
+const getActualBranch = async () => {
     const fs = require('fs');
+    const fetch = require('node-fetch');
+
     const data = fs.readFileSync(`.git/HEAD`, 'utf8');
     const splitted = data.split('/');
-    return splitted.pop().replace('\n', '');
+
+    const branchName = splitted.pop().replace('\n', '');
+    const res = await fetch(`${GITHUB_RAW_PARENT_PATH + branchName}/branchChecker.txt`);
+
+    const exists = !(await res.text()).startsWith('404');
+    return exists ? branchName : 'main';
 };
 
-const BRANCH = getActualBranch();
+const BRANCH = await getActualBranch();
 
 module.exports = {
     PREFIX: '-',
@@ -24,7 +38,7 @@ module.exports = {
 
     LOCAL_ENV: isLocalEnvironment(),
 
-    GITHUB_RAW_URL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${BRANCH}`,
+    GITHUB_RAW_URL: GITHUB_RAW_PARENT_PATH + BRANCH,
 
     ARGENTINA_TZ_STRING: 'America/Argentina/Buenos_Aires',
     ARGENTINA_LOCALE_STRING: 'es-AR',
