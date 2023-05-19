@@ -7,10 +7,7 @@ const { splitEmbedDescription } = require('../../src/util');
 
 const buttonsPrefix = 'games-';
 const maxIdlingTime = 10;
-const thumbnailsData = {
-    steam: await getGithubRawUrl('assets/thumbs/games/steam.png'),
-    others: await getGithubRawUrl('assets/thumbs/games/control.png')
-};
+
 const data = {
     instructions: { emoji: '📄', label: 'Instrucciones', style: ButtonStyle.Secondary },
     game: { emoji: '🎮', label: 'Juego base' },
@@ -145,6 +142,12 @@ module.exports = {
                     const prefix = customId.split('-')[0];
                     const { label } = data[prefix];
                     const title = `${name} (${year}) ${version} -${label ? ` ${label}` : ''} ${customId.replace(prefix, '').replace('-', '')} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`;
+                    
+                    const thumbnailsData = {
+                        steam: await getGithubRawUrl('assets/thumbs/games/steam.png'),
+                        others: await getGithubRawUrl('assets/thumbs/games/control.png')
+                    };
+                    
                     for (const c of chunks)
                         embeds.push(new EmbedBuilder()
                             .setTitle(title)
