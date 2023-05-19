@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { PREFIX } = require('../../src/constants');
-const { getIds, updateIds } = require('../../src/cache');
+const { getIds } = require('../../src/cache');
 
 module.exports = {
     category: 'General',
@@ -33,7 +33,7 @@ module.exports = {
             return options;
         } else {
             var key = 'EVERYONE';
-            const ids = !getIds() ? await updateIds() : getIds();
+            const ids = await getIds();
             if (target.user.id === ids.users.sombra) key = 'SOMBRA';
             else if (target.user.id === ids.users.jimmy) key = 'JIMMY';
             const reminders = instance.messageHandler.getEmbed(guild, 'REMINDERS', key);

@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../src/cache');
+const { getPlaylists, updatePlaylists, getIds } = require('../../src/cache');
 const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
 const { handleErrorEphemeral } = require('../../src/music');
@@ -52,7 +52,7 @@ module.exports = {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
         const reply = { ephemeral: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             handleErrorEphemeral(reply, new EmbedBuilder().setColor(instance.color), `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
             return;

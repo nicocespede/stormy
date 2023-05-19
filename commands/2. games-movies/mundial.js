@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-//const { getIds, updateIds, getFWCData, updateFWCData } = require('../../src/cache');
+//const { getIds, getFWCData, updateFWCData } = require('../../src/cache');
 const { GITHUB_RAW_URL } = require("../../src/constants");
 
 const buttonsPrefix = 'fwc-matches-';
@@ -246,7 +246,7 @@ module.exports = {
     callback: async ({ channel, interaction, user }) => {
         const subCommand = interaction.options.getSubcommand();
 
-        // const ids = getIds() || await updateIds();
+        // const ids = await getIds();
         // if (channel.id !== ids.channels.fwc)
         //     return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 

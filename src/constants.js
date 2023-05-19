@@ -4,6 +4,11 @@ const isADevEnvironment = () => ENVIRONMENT !== 'PRO';
 
 const isLocalEnvironment = () => ENVIRONMENT === 'LOCAL';
 
+/**
+ * Gets the name of the tracked Github branch.
+ * 
+ * @returns The name of the current branch.
+ */
 const getActualBranch = () => {
     const fs = require('fs');
     const data = fs.readFileSync(`.git/HEAD`, 'utf8');

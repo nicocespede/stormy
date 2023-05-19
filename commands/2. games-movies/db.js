@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { getIds, updateIds } = require('../../src/cache');
+const { getIds } = require('../../src/cache');
 const { addAnnouncementsRole, sendChronologySettingMessage, sendChronologyElement } = require('../../src/common');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
     callback: async ({ member, message, args, interaction, channel, guild, instance }) => {
         if (interaction) await interaction.deferReply({ ephemeral: true });
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         await addAnnouncementsRole(ids.roles.anunciosDb, guild, member);
 
         const number = message ? args[0] : interaction.options.getInteger('numero');

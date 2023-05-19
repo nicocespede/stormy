@@ -5,7 +5,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const Canvas = require('canvas');
 const { currencies, GITHUB_RAW_URL, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
-const { getIds, updateIds } = require('../../src/cache');
+const { getIds } = require('../../src/cache');
 const { consoleLog } = require('../../src/util');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
@@ -41,7 +41,7 @@ module.exports = {
         const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
         const reply = {};
         if (!availableCurrencies.includes(argsCurrency)) {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             reply.content = instance.messageHandler.get(guild, 'INVALID_CURRENCY', {
                 CURRENCIES: availableCurrencies.join(', '),
                 ID: ids.users.stormer

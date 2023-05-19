@@ -1,7 +1,7 @@
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
+const { getSmurfs, updateSmurfs, getIds } = require('../../src/cache');
 const { PREFIX, GITHUB_RAW_URL, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
 const { consoleLog, convertTZ } = require('../../src/util');
@@ -61,7 +61,7 @@ const getRankColor = rank => {
 };
 
 const getEmbed = async (color, guild, userId) => {
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
     const isVip = await isOwner(userId) || vipRole.members.has(userId);
 
@@ -173,7 +173,7 @@ module.exports = {
             const { customId, message, user } = interaction;
             if (customId !== 'report-ban' && customId !== 'update-smurfs') return;
 
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             if (customId === 'report-ban') {
                 const stormer = await client.users.fetch(ids.users.stormer).catch(console.error);
                 try {
@@ -206,7 +206,7 @@ module.exports = {
     callback: async ({ guild, member, user, message, interaction, client, args, channel, instance }) => {
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
 
         if (!id) {
             if (channel.type === ChannelType.DM) {

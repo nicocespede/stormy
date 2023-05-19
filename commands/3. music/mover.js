@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { updateLastAction, getIds, updateIds } = require("../../src/cache");
+const { updateLastAction, getIds } = require("../../src/cache");
 const { MusicActions, GITHUB_RAW_URL } = require("../../src/constants");
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
@@ -36,7 +36,7 @@ module.exports = {
         const position = message ? args[1] : interaction.options.getInteger('posición');
         const reply = { ephemeral: true, fetchReply: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             handleErrorEphemeral(reply, embed, `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
             return;

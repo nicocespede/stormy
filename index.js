@@ -3,7 +3,7 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
+const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, logToFile, logToFileListenerTriggered } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
@@ -33,7 +33,7 @@ client.on('ready', async () => {
     client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
     logToFile(moduleName, `Setting bot presence succesfully`);
 
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
 
     startStatsCounters(client);
 
@@ -164,7 +164,7 @@ process.on(shutdownEvent, async () => {
 
     consoleLog('> Reinicio inminente...', CONSOLE_YELLOW);
     // disconnects music bot
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     await emergencyShutdown(ids.guilds.default);
 
     // send stats

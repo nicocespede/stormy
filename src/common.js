@@ -2,7 +2,7 @@ const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
-const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
+const { getStats, updateStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp } = require('./cache');
 const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
@@ -220,7 +220,7 @@ module.exports = {
         logToFileFunctionTriggered(MODULE_NAME, 'checkBansCorrelativity');
 
         try {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
             const bans = await guild.bans.fetch();
             const banned = getBanned() || await updateBanned();
@@ -250,7 +250,7 @@ module.exports = {
         logToFileFunctionTriggered(MODULE_NAME, 'startStatsCounters');
 
         try {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
             let counter = 0;
             for (const [id, channel] of guild.channels.cache)
@@ -279,7 +279,7 @@ module.exports = {
         logToFileFunctionTriggered(MODULE_NAME, 'countMembers');
 
         try {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
             const members = await guild.members.fetch();
             const membersCounter = members.filter(m => !m.user.bot).size;
@@ -327,7 +327,7 @@ module.exports = {
                 newGuildName += date >= 26 ? ' 🥂' : ' 🎅🏻';
                 break;
         }
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         if (guild.name !== newGuildName) {
             await guild.setName(newGuildName).catch(console.error);
@@ -371,7 +371,7 @@ module.exports = {
         const breakpoints = chronology.filter(({ choices }) => choices).map(({ choices }) => choices);
 
         const getNewEmoji = async () => {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const obj = ids.emojis[collection.emoji];
             if (typeof obj === 'string')
                 return `<:${collection.emoji}:${obj}>`;
@@ -884,7 +884,7 @@ module.exports = {
     },
 
     isOwner: async id => {
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         return id === ids.users.stormer || id === ids.users.darkness;
     }
 }

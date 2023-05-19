@@ -1,4 +1,4 @@
-const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../src/cache');
+const { getKruMatches, updateKruMatches, getIds, timeouts } = require('../src/cache');
 const { ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../src/constants');
 const { convertTZ, consoleLog } = require('../src/util');
 
@@ -8,7 +8,7 @@ module.exports = async client => {
 
         if (matches.length > 0) {
             const today = new Date();
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const oneDay = 1000 * 60 * 60 * 24;
             const oneMinute = 1000 * 60;
 

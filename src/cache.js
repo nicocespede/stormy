@@ -75,6 +75,29 @@ const sortBirthdays = array => {
     return newArray;
 };
 
+/**
+ * Retrieves the IDs data from the ids.json file.
+ * 
+ * @returns All cached IDs data.
+ */
+const updateIds = async () => {
+    const fileName = !DEV_ENV ? 'ids.json' : 'testingIds.json';
+    try {
+        let data;
+        if (LOCAL_ENV)
+            data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
+        else {
+            const res = await fetch(`${GITHUB_RAW_URL}/${fileName}`);
+            data = await res.text();
+        }
+        ids = JSON.parse(data);
+        consoleLog(`> ${fileName} cargado`, CONSOLE_GREEN);
+    } catch (err) {
+        consoleLog(`> Error al cargar ${fileName}\n${err.stack}`, CONSOLE_RED);
+    }
+    return ids;
+};
+
 module.exports = {
     timeouts: {},
 
@@ -392,30 +415,9 @@ module.exports = {
      * 
      * @returns All cached IDs data.
      */
-    getIds: () => ids,
+    getIds: async () => ids || await updateIds(),
 
-    /**
-     * Retrieves the IDs data from the ids.json file.
-     * 
-     * @returns All cached IDs data.
-     */
-    updateIds: async () => {
-        const fileName = !DEV_ENV ? 'ids.json' : 'testingIds.json';
-        try {
-            let data;
-            if (LOCAL_ENV)
-                data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
-            else {
-                const res = await fetch(`${GITHUB_RAW_URL}/${fileName}`);
-                data = await res.text();
-            }
-            ids = JSON.parse(data);
-            consoleLog(`> ${fileName} cargado`, CONSOLE_GREEN);
-        } catch (err) {
-            consoleLog(`> Error al cargar ${fileName}\n${err.stack}`, CONSOLE_RED);
-        }
-        return ids;
-    },
+    updateIds,
 
     getKruMatches: () => kruMatches,
     updateKruMatches: async () => {

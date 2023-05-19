@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require("discord.js");
 const Canvas = require('canvas');
-const { getIds, updateIds } = require("../src/cache");
+const { getIds } = require("../src/cache");
 const { countMembers, applyText, getImageType } = require("../src/common");
 const { GITHUB_RAW_URL } = require("../src/constants");
 
@@ -43,7 +43,7 @@ const generateWelcomeImage = async user => {
 
 module.exports = (client, instance) => {
     client.on('guildMemberAdd', async member => {
-        const ids = !getIds() ? await updateIds() : getIds();
+        const ids = await getIds();
         client.channels.fetch(ids.channels.welcome).then(channel => {
             generateWelcomeImage(member.user).then(attachment => {
                 const { guild } = member;

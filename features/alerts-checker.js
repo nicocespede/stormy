@@ -1,6 +1,6 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateIds, updateBirthdays, timeouts } = require('../src/cache');
+const { getIds, updateBirthdays, timeouts } = require('../src/cache');
 const { applyText, isOwner } = require('../src/common');
 const { consoleLog, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
@@ -52,7 +52,7 @@ const generateBirthdayImage = async user => {
 };
 
 module.exports = async client => {
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
     const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
 

@@ -2,7 +2,7 @@ const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuil
 const { GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
-const { getIds, updateIds } = require('../../src/cache');
+const { getIds } = require('../../src/cache');
 const { splitLyrics, handleErrorEphemeral } = require('../../src/music');
 const { consoleLog } = require('../../src/util');
 
@@ -29,7 +29,7 @@ module.exports = {
         const song = message ? text : interaction.options.getString('canción');
         const reply = { ephemeral: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             handleErrorEphemeral(reply, new EmbedBuilder().setColor(instance.color), `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
             return;

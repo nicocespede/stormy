@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
-const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
+const { getGames, updateGames, getIds } = require('../../src/cache');
 const { color, PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
 const { splitEmbedDescription } = require('../../src/util');
@@ -238,7 +238,7 @@ module.exports = {
         const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         await addAnnouncementsRole(ids.roles.anunciosJuegos, guild, member);
 
         const games = getGames() || await updateGames();

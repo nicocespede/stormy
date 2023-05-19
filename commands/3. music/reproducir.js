@@ -1,6 +1,6 @@
 const { QueryType, useMasterPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addSongInQueue,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../src/cache');
@@ -30,7 +30,7 @@ module.exports = {
         let song = message ? text : interaction.options.getString('canción');
         const reply = { ephemeral: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
             handleErrorEphemeral(reply, embed, `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
             return;

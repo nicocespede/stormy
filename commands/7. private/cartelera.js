@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getIds, updateIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
+const { getIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
 const { updateBillboardMessage } = require('../../src/mongodb');
 const { GITHUB_RAW_URL, CONSOLE_GREEN, CONSOLE_YELLOW } = require('../../src/constants');
 const { consoleLog } = require('../../src/util');
@@ -11,7 +11,7 @@ const getNewEmbed = async (interaction) => {
     await new Promise(res => setTimeout(res, 1000 * 0.5));
     const { message, guild } = interaction;
     const embed = EmbedBuilder.from(message.embeds[0]);
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
     if (role.members.size === 0)
         embed.setFields([]);
@@ -65,7 +65,7 @@ module.exports = {
             const { guild, customId } = interaction;
             if (!guild || !customId.startsWith(prefix)) return;
 
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const buttonId = customId.replace(prefix, '');
             const roleId = ids.roles.funcion;
             const member = interaction.member;
@@ -88,7 +88,7 @@ module.exports = {
     callback: async ({ client, instance, interaction, user, guild }) => {
         const reply = { custom: true, ephemeral: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!(await isOwner(user.id))) {
             reply.content = '⚠ No estás autorizado para usar este comando.';
             reply.ephemeral = false;

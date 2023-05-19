@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
-const { getIds, updateIds } = require('../../src/cache');
+const { getIds } = require('../../src/cache');
 
 const files = ['mosca0.png', 'mosca1.png', 'mosca2.png', 'mosca3.gif'];
 
@@ -26,7 +26,7 @@ module.exports = {
     callback: async ({ user, message, interaction, instance, guild }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",

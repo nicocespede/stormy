@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType } = require("discord.js");
-const { updateIcon: updateIconCache, getIds, updateIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
+const { updateIcon: updateIconCache, getIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
 const { GITHUB_RAW_URL, Mode, CONSOLE_GREEN } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
@@ -33,7 +33,7 @@ module.exports = {
                 ephemeral: true
             };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const modesData = {
             afa: { guildname: 'NCKG ⭐⭐⭐', name: 'Selección', username: 'AFA StormY ⭐⭐⭐', on: '¡VAMOS CARAJO! 🇦🇷' },
             kru: { guildname: 'NCKG 🤟🏼', name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }

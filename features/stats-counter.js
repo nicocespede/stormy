@@ -1,5 +1,5 @@
 const { Client } = require("discord.js");
-const { addTimestamp, getTimestamps, getIds, updateIds, timeouts } = require("../src/cache");
+const { addTimestamp, getTimestamps, getIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
 const { consoleLog, logToFile, logToFileFunctionTriggered, logToFileListenerTriggered } = require("../src/util");
@@ -12,7 +12,7 @@ module.exports = client => {
         logToFileListenerTriggered(MODULE_NAME, 'voiceStateUpdate');
         const moduleName = `${MODULE_NAME}.voiceStateUpdateListener`;
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
 
             const timestamps = getTimestamps();

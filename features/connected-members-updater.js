@@ -1,9 +1,9 @@
-const { getIds, updateIds, timeouts } = require('../src/cache');
+const { getIds, timeouts } = require('../src/cache');
 const { CONSOLE_RED } = require('../src/constants');
 const { consoleLog } = require('../src/util');
 
 module.exports = async client => {
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
 
     const check = async () => {
