@@ -93,7 +93,7 @@ module.exports = {
                 const updatedStuffKeys = Object.keys(updatedStuff).filter(k => k !== 'games');
                 if (updatedStuff.games.length > 0 || updatedStuffKeys.length > 0
                     || newStuff.games.length > 0 || newStuffKeys.length > 0) {
-                    const ids = getIds() || await updateIds();
+                    const ids = await getIds();
                     const collectionsData = {
                         'db': { emoji: 'dragon_ball', role: 'anunciosDb', title: 'Universo de Dragon Ball' },
                         'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' }

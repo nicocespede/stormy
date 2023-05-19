@@ -1,8 +1,8 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const { getCrosshairs, updateCrosshairs } = require('../../src/cache');
-const { PREFIX, GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
+const { getCrosshairs, updateCrosshairs, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX, CONSOLE_RED } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
 const { consoleLog } = require("../../src/util");
 
@@ -82,7 +82,7 @@ module.exports = {
                 .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${PREFIX}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
                 .setFields([userCrosshairsField, crosshairsField])
                 .setColor(instance.color)
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/games/valorant.png`)];
+                .setThumbnail(await getGithubRawUrl('assets/thumbs/games/valorant.png'))];
             reply.ephemeral = true;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
@@ -177,7 +177,7 @@ module.exports = {
                     .setDescription(`Código de importación de la mira:\n\n` + code)
                     .setColor(instance.color)
                     .setImage(crosshairData.url)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/games/valorant.png`)];
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/games/valorant.png'))];
                 reply.ephemeral = true;
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             }

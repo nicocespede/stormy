@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { getBirthdays, updateBirthdays } = require('../../src/cache');
-const { PREFIX, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
+const { getBirthdays, updateBirthdays, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
 const { consoleLog } = require('../../src/util');
 
@@ -125,7 +125,7 @@ module.exports = {
                     .setDescription(description)
                     .setColor(instance.color)
                     .addFields(fields)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/birthday.png`)],
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/birthday.png'))],
                 ephemeral: true
             };
         }

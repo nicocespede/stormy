@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { PREFIX } = require('../../src/constants');
-const { getIds, updateIds } = require('../../src/cache');
+const { getIds } = require('../../src/cache');
 const { isOwner } = require('../../src/common');
 
 module.exports = {
@@ -29,7 +29,7 @@ module.exports = {
     callback: async ({ guild, user, message, args, interaction, instance }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const role = await guild.roles.fetch(ids.roles.mod).catch(console.error);
         const isAuthorized = await isOwner(user.id) || role.members.has(user.id);
         const newNickname = args.slice(1).join(' ');

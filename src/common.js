@@ -2,10 +2,10 @@ const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
-const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
+const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
-    getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp } = require('./cache');
-const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
+    getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
+const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -138,13 +138,10 @@ module.exports = {
         if (timestamp) {
             removeTimestamp(id);
 
-            let stats = getStats() || await updateStats();
+            let stats = await getStats();
 
-            if (!Object.keys(stats).includes(id)) {
-                await addStat(id, username);
-                await new Promise(res => setTimeout(res, 1000 * 2));
-                stats = await updateStats();
-            }
+            if (!Object.keys(stats).includes(id))
+                stats = await addStat(id, username);
 
             const stat = stats[id];
             const now = new Date();
@@ -154,8 +151,6 @@ module.exports = {
                 const { days, hours, minutes, seconds } = secondsToFull(totalTime);
                 await updateStat(id, days, hours, minutes, seconds, username);
             }
-
-            await updateStats();
         }
     },
 
@@ -170,7 +165,7 @@ module.exports = {
 
         const now = new Date();
         const updates = [];
-        const stats = getStats() || await updateStats();
+        const stats = await getStats();
         const timestamps = getTimestamps();
 
         if (!ids)
@@ -199,10 +194,8 @@ module.exports = {
             }
         }
 
-        if (updates.length > 0) {
+        if (updates.length > 0)
             await updateManyStats(updates);
-            await updateStats();
-        }
     },
 
     fullToSeconds,
@@ -220,7 +213,7 @@ module.exports = {
         logToFileFunctionTriggered(MODULE_NAME, 'checkBansCorrelativity');
 
         try {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
             const bans = await guild.bans.fetch();
             const banned = getBanned() || await updateBanned();
@@ -250,7 +243,7 @@ module.exports = {
         logToFileFunctionTriggered(MODULE_NAME, 'startStatsCounters');
 
         try {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
             let counter = 0;
             for (const [id, channel] of guild.channels.cache)
@@ -279,7 +272,7 @@ module.exports = {
         logToFileFunctionTriggered(MODULE_NAME, 'countMembers');
 
         try {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const guild = await client.guilds.fetch(ids.guilds.default);
             const members = await guild.members.fetch();
             const membersCounter = members.filter(m => !m.user.bot).size;
@@ -302,7 +295,7 @@ module.exports = {
         const actualIcon = getIcon() || await updateIcon();
         const newIcon = `kgprime${await getImageType()}`;
         if (actualIcon !== newIcon) {
-            await guild.setIcon(`${GITHUB_RAW_URL}/assets/icons/${newIcon}.png`).catch(console.error);
+            await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
             await updateIcon();
         }
@@ -327,7 +320,7 @@ module.exports = {
                 newGuildName += date >= 26 ? ' 🥂' : ' 🎅🏻';
                 break;
         }
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         if (guild.name !== newGuildName) {
             await guild.setName(newGuildName).catch(console.error);
@@ -371,7 +364,7 @@ module.exports = {
         const breakpoints = chronology.filter(({ choices }) => choices).map(({ choices }) => choices);
 
         const getNewEmoji = async () => {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const obj = ids.emojis[collection.emoji];
             if (typeof obj === 'string')
                 return `<:${collection.emoji}:${obj}>`;
@@ -494,7 +487,7 @@ module.exports = {
             emoji = await getNewEmoji();
             reply.content = `${emoji} ${title}\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
             reply.components = getFiltersRows(filters).concat([secondaryRow]);
-            reply.files = [`${GITHUB_RAW_URL}/assets/${collectionId}/poster.jpg`];
+            reply.files = [await getGithubRawUrl(`assets/${collectionId}/poster.jpg`)];
 
             if (!replyMessage)
                 replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
@@ -620,7 +613,7 @@ module.exports = {
                 embeds.push(new EmbedBuilder()
                     .setColor(instance.color)
                     .addFields([moviesField, typesField])
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/${collection.thumb}.png`));
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/${collection.thumb}.png`)));
 
                 moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                 typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
@@ -632,7 +625,7 @@ module.exports = {
             embeds.push(new EmbedBuilder()
                 .setColor(instance.color)
                 .addFields([moviesField, typesField])
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/${collection.thumb}.png`));
+                .setThumbnail(await getGithubRawUrl(`assets/thumbs/${collection.thumb}.png`)));
 
             for (let i = 0; i < embeds.length; i++) {
                 const msg = embeds[i];
@@ -732,7 +725,7 @@ module.exports = {
             const filteredName = elementName.replace(/[:|?]/g, '').replace(/ /g, '%20');
 
             reply.content = `**${elementName} (${elementYear})**\n\n⚠ Este elemento no cuenta con contenido descargable.\n\u200b`;
-            reply.files = [`${GITHUB_RAW_URL}/assets/${collectionId}/${filteredName}.jpg`];
+            reply.files = [await getGithubRawUrl(`assets/${collectionId}/${filteredName}.jpg`)];
 
             message ? await message.reply(reply) : await interaction.editReply(reply);
             return;
@@ -773,7 +766,7 @@ module.exports = {
 
             reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
             reply.components = [getVersionsRow()];
-            reply.files = [`${GITHUB_RAW_URL}/assets/${collectionId}/${filteredName}.jpg`];
+            reply.files = [await getGithubRawUrl(`assets/${collectionId}/${filteredName}.jpg`)];
 
             const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
@@ -819,7 +812,7 @@ module.exports = {
                         .setTitle(`${packageName} (${packageYear}) - ${customId} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`)
                         .setColor(color)
                         .setDescription(c)
-                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/${collectionId}/${thumb}.png`));
+                        .setThumbnail(await getGithubRawUrl(`assets/thumbs/${collectionId}/${thumb}.png`)));
             }
 
             for (let i = 0; i < embeds.length; i++)
@@ -884,7 +877,7 @@ module.exports = {
     },
 
     isOwner: async id => {
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         return id === ids.users.stormer || id === ids.users.darkness;
     }
 }

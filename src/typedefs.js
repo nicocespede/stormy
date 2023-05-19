@@ -15,13 +15,11 @@ const { default: WOKCommands } = require("wokcommands");
  * @typedef {{players: PlayersData, teams: TeamsData, positions: PositionsData, achievements: AchievementsData}} FWCData
  * 
  * @typedef {{_id: String, achievements: String[], trades: Number, lastOpened: {date: Date, content: String[]}, owned: String[], repeated: String[], timeout: Date}} Collector
- * 
  * @typedef {Collector[]} CollectorsData
  * 
  * @typedef {{[key: String]: Date}} TimestampsData
  * 
  * @typedef {{seconds: Number, minutes: Number, hours: Number, days: Number}} Stat
- * 
  * @typedef {{[key: String]: Stat}} StatsData
  * 
  * @typedef {{[key: String]: String, musica: String[]}} ChannelsIDsCategory

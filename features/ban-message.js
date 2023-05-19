@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible, getIds, updateIds } = require("../src/cache");
+const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible, getIds } = require("../src/cache");
 const { getBannedMemberEmbedInfo } = require("../src/characters");
 const { countMembers } = require("../src/common");
 const { addBan, addSombraBan } = require("../src/mongodb");
@@ -15,7 +15,7 @@ module.exports = client => {
         const embedInfo = await getBannedMemberEmbedInfo(ban.user.tag, reason);
         await addBan(ban.user.id, ban.user.tag, responsible, embedInfo.character, reason).catch(console.error);
         await updateBanned();
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const channel = await client.channels.fetch(ids.channels.welcome).catch(console.error);
         channel.send({
             embeds: [new EmbedBuilder()

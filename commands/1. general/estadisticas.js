@@ -1,10 +1,10 @@
 const { CommandArgs } = require('../../src/typedefs');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
-const { getStats, updateStats, getTimestamps } = require('../../src/cache');
+const { getStats, getTimestamps, getGithubRawUrl } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
 const { consoleLog, logToFile, logToFileCommandUsage } = require('../../src/util');
-const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
+const { CONSOLE_YELLOW } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
@@ -50,7 +50,7 @@ module.exports = {
             await pushDifferences(true);
         }
 
-        const stats = getStats() || await updateStats();
+        const stats = await getStats();
         let description = `Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n`;
         let fields = [];
         let needsFooter = false;
@@ -89,12 +89,13 @@ module.exports = {
 
             fields = [usersField, timeField];
         }
+
         const embed = new EmbedBuilder()
             .setTitle(`**Estadísticas**`)
             .setDescription(description)
             .addFields(fields)
             .setColor(instance.color)
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/bar-chart.png`)
+            .setThumbnail(await getGithubRawUrl('assets/thumbs/bar-chart.png'));
 
         if (needsFooter)
             embed.setFooter({ text: 'Si no aparecés en la lista significa que estás muy abajo como para aparecer, ¡conectáte más seguido!' });

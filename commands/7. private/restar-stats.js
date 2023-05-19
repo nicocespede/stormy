@@ -1,5 +1,5 @@
 const { CommandArgs } = require("../../src/typedefs");
-const { getStats, updateStats } = require("../../src/cache");
+const { getStats } = require("../../src/cache");
 const { fullToSeconds, secondsToFull } = require("../../src/common");
 const { updateStat } = require("../../src/mongodb");
 const { logToFileCommandUsage } = require("../../src/util");
@@ -18,7 +18,7 @@ module.exports = {
     callback: async ({ args, guild, interaction, message, text, user }) => {
         logToFileCommandUsage('restar-stats', text, interaction, message, user);
 
-        const stats = getStats() || await updateStats();
+        const stats = await getStats();
         const id = args[0];
         const argsDays = args[1];
         const argsHours = args[2];
@@ -38,7 +38,6 @@ module.exports = {
             await updateStat(id, days, hours, minutes, seconds, member ? member.user.tag : id);
         }
 
-        await updateStats();
         return '¡Tiempo restado!';
     }
 }

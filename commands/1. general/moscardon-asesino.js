@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
-const { getIds, updateIds } = require('../../src/cache');
+const { PREFIX } = require('../../src/constants');
+const { getIds, getGithubRawUrl } = require('../../src/cache');
 
 module.exports = {
     aliases: ['moscardondelamuerte', 'moscardóndelamuerte', 'moscardón-asesino'],
@@ -27,7 +27,7 @@ module.exports = {
         const cmd = message ? message.content.toLowerCase().split(' ')[0].substring(1) : 'moscardon-asesino';
         if (cmd === 'moscardondelamuerte') type = 'de la muerte';
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención luego del comando.",
@@ -42,7 +42,8 @@ module.exports = {
         else {
             reply.content = `🪰 ¡Moscardón ${type} enviado!`;
             reply.ephemeral = false;
-            await target.send({ files: [{ attachment: `${GITHUB_RAW_URL}/assets/moscas/moscardon.png` }] }).catch(() => {
+
+            await target.send({ files: [{ attachment: await getGithubRawUrl('assets/moscas/moscardon.png') }] }).catch(() => {
                 reply.content = `❌ Lo siento, no pude enviarle el mensaje a este usuario.`;
                 reply.ephemeral = true;
             });
