@@ -103,7 +103,7 @@ const getCurrentContentBranchName = async () => {
  */
 const getGithubRawUrl = async string => {
     if (!contentBranchName)
-        githubRawURL = await getCurrentContentBranchName();
+        await getCurrentContentBranchName();
 
     return `${githubRawURL}/${string}`;
 };
