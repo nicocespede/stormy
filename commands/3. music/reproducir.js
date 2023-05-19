@@ -64,7 +64,7 @@ module.exports = {
         });
 
         if (!res || !res.tracks.length) {
-            handleError(reply, embed, `🛑 ¡${user}, no se encontraron resultados! `, message, interaction, channel);
+            await handleError(reply, embed, `🛑 ¡${user}, no se encontraron resultados! `, message, interaction, channel);
             return;
         }
 

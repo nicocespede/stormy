@@ -574,9 +574,8 @@ const handleErrorInMusicChannel = async (message, interaction, reply, channel) =
         await interaction.editReply(reply);
 };
 
-const noEntryThumbnailUrl = await getGithubRawUrl(`assets/thumbs/music/no-entry.png`);
-const handleError = (reply, embed, description, message, interaction, channel) => {
-    reply.embeds = [embed.setDescription(description).setThumbnail(noEntryThumbnailUrl)];
+const handleError = async (reply, embed, description, message, interaction, channel) => {
+    reply.embeds = [embed.setDescription(description).setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
     handleErrorInMusicChannel(message, interaction, reply, channel);
 };
 
@@ -757,7 +756,7 @@ module.exports = {
 
     handleErrorEphemeral: async (reply, embed, description, message, interaction, channel) => {
         if (interaction) await interaction.deferReply({ ephemeral: true });
-        handleError(reply, embed, description, message, interaction, channel);
+        await handleError(reply, embed, description, message, interaction, channel);
     },
 
     createQueue,
