@@ -1,5 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { GITHUB_RAW_URL } = require('../../src/constants');
+const { getGithubRawUrl } = require('../../src/cache');
 
 const secondsToHours = seconds => {
     // calculate (and subtract) whole hours
@@ -63,7 +63,7 @@ module.exports = {
                     .setDescription(`Tiempo restante para tener **${limit} ${currency === 'energy' ? 'de energía' : 'puntos de aumento'}**:\n\n**${remainingTime}**`)
                     .setColor(currency === 'energy' ? [200, 125, 10] : [76, 0, 2])
                     .setThumbnail(`attachment://mff-${currency}.png`)],
-                files: [`${GITHUB_RAW_URL}/assets/thumbs/games/mff-${currency}.png`]
+                files: [await getGithubRawUrl(`assets/thumbs/games/mff-${currency}.png`)]
             };
         }
     }

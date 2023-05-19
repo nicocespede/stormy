@@ -1,7 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getIds, getBillboardMessageInfo, updateBillboardMessageInfo } = require('../../src/cache');
+const { getIds, getBillboardMessageInfo, updateBillboardMessageInfo, getGithubRawUrl } = require('../../src/cache');
 const { updateBillboardMessage } = require('../../src/mongodb');
-const { GITHUB_RAW_URL, CONSOLE_GREEN, CONSOLE_YELLOW } = require('../../src/constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW } = require('../../src/constants');
 const { consoleLog } = require('../../src/util');
 const { isOwner } = require('../../src/common');
 
@@ -123,7 +123,7 @@ module.exports = {
                         .setColor(instance.color)
                         .setDescription(`**🕔 Fecha y horario:**\n${date}`)
                         .setImage(url)
-                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/movies/${thumbs[random]}.png`)
+                        .setThumbnail(await getGithubRawUrl(`assets/thumbs/movies/${thumbs[random]}.png`))
                         .setTitle(title)]
                 };
                 const channel = await client.channels.fetch(ids.channels.cartelera).catch(console.error);

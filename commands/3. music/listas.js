@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { getPlaylists, updatePlaylists, getIds } = require('../../src/cache');
-const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
+const { getPlaylists, updatePlaylists, getIds, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX } = require('../../src/constants');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
 const { handleErrorEphemeral } = require('../../src/music');
 
@@ -65,7 +65,7 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setTitle(`**Listas de reproducción**`)
                 .setColor(instance.color)
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/playlist.png`);
+                .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/playlist.png`));
 
             if (Object.keys(playlists).length === 0) {
                 embed.setDescription('_No hay ninguna lista de reproducción guardada aún._');

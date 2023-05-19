@@ -1,8 +1,8 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
+const { CONSOLE_RED } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
-const { getIds } = require('../../src/cache');
+const { getIds, getGithubRawUrl } = require('../../src/cache');
 const { splitLyrics, handleErrorEphemeral } = require('../../src/music');
 const { consoleLog } = require('../../src/util');
 
@@ -48,7 +48,7 @@ module.exports = {
             for (const chunk of chunks)
                 embeds.push(new EmbedBuilder()
                     .setDescription(chunk)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/genius.png`)
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/genius.png`))
                     .setColor(instance.color));
             embeds[embeds.length - 1].setFooter({ text: 'Letra obtenida de genius.com' });
 
@@ -94,7 +94,7 @@ module.exports = {
                     btnInt.update(reply);
                 });
 
-                collector.on('end', _ => {
+                collector.on('end', async _ => {
                     if (message) {
                         targetMessage.delete();
                         message.delete();
@@ -103,7 +103,7 @@ module.exports = {
                             components: [], embeds: [new EmbedBuilder()
                                 .setDescription('⌛ Esta acción expiró...')
                                 .setColor(instance.color)
-                                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                                .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/hourglass-sand-top.png`))]
                         });
                 });
             }
@@ -113,11 +113,11 @@ module.exports = {
             const notFound = notFoundErrors.includes(error.message);
             if (notFound)
                 reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
             else {
                 consoleLog(error, CONSOLE_RED);
                 reply.embeds = [embed.setDescription(`🛑 ¡Lo siento, ocurrió un error!`)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
             }
             await messageOrInteraction.reply(reply);
         }

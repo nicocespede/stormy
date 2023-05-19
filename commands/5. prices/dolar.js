@@ -1,7 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { GITHUB_RAW_URL, CONSOLE_RED } = require('../../src/constants');
+const { getGithubRawUrl } = require('../../src/cache');
+const { CONSOLE_RED } = require('../../src/constants');
 const { consoleLog } = require('../../src/util');
 
 module.exports = {
@@ -59,7 +60,7 @@ module.exports = {
                 .setDescription(`Hola <@${user.id}>, la cotización del dólar es:`)
                 .setColor(instance.color)
                 .addFields([variantsField, bidField, askField])
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/us-dollar-circled.png`)
+                .setThumbnail(await getGithubRawUrl('assets/thumbs/us-dollar-circled.png'))
                 .setFooter({ text: 'Información obtenida de DolarHoy.' })]
             reply.content = null;
         }

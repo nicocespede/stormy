@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
-const { updateIcon: updateIconCache, getIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
-const { GITHUB_RAW_URL, Mode, CONSOLE_GREEN } = require("../../src/constants");
+const { updateIcon: updateIconCache, getIds, getMode, updateMode: updateModeCache, getGithubRawUrl } = require("../../src/cache");
+const { Mode, CONSOLE_GREEN } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
 const { consoleLog } = require("../../src/util");
@@ -72,7 +72,7 @@ module.exports = {
         const newIcon = `kgprime-${mode}`;
         await updateMode(mode);
         await updateModeCache();
-        await guild.setIcon(`${GITHUB_RAW_URL}/assets/icons/${newIcon}.png`).catch(console.error);
+        await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
         await updateIconString(newIcon).catch(console.error);
         await updateIconCache();
         await client.user.setUsername(username).catch(console.error);

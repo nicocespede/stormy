@@ -1,10 +1,10 @@
 const { QueryType, useMasterPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../src/cache');
-const { MusicActions, GITHUB_RAW_URL } = require('../../src/constants');
+const { MusicActions } = require('../../src/constants');
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral, handleError, createQueue, connectToVoiceChannel } = require("../../src/music");
 
 module.exports = {
@@ -75,7 +75,7 @@ module.exports = {
             return;
 
         reply.embeds = [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)];
+            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/hourglass-sand-top.png`))];
         reply.ephemeral = false;
         const deferringMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
@@ -127,7 +127,7 @@ module.exports = {
         }
         const edit = {
             embeds: [embed.setDescription(description)
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/add-song.png`)]
+                .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/add-song.png`))]
         };
         message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
 

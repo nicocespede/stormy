@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
-const { updateReminders, getReminders } = require('../../src/cache');
+const { updateReminders, getReminders, getGithubRawUrl } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
-const { GITHUB_RAW_URL, CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
+const { CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { convertTZ, consoleLog } = require('../../src/util');
 
 module.exports = {
@@ -65,7 +65,7 @@ module.exports = {
                         .setTitle('🔔 Tus recordatorios')
                         .setDescription(description)
                         .setColor(instance.color)
-                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/alarm-clock.png`)],
+                        .setThumbnail(await getGithubRawUrl('assets/thumbs/alarm-clock.png'))],
                     ephemeral: true
                 });
                 return;

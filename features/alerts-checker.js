@@ -1,17 +1,17 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateBirthdays, timeouts } = require('../src/cache');
+const { getIds, updateBirthdays, timeouts, getGithubRawUrl } = require('../src/cache');
 const { applyText, isOwner } = require('../src/common');
 const { consoleLog, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
-const { relativeSpecialDays, GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../src/constants');
+const { relativeSpecialDays, CONSOLE_YELLOW } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
 const birthdaySchema = require('../models/birthday-schema');
 
 const generateBirthdayImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/happy-bday.png`);
+    const background = await Canvas.loadImage(await getGithubRawUrl('assets/happy-bday.png'));
     const avatarWidth = 300;
     const avatarHeight = avatarWidth;
     const avatarX = (background.width / 2) - (avatarWidth / 2);

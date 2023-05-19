@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
-const { updateKruMatches } = require('../../src/cache');
-const { GITHUB_RAW_URL, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
+const { updateKruMatches, getGithubRawUrl } = require('../../src/cache');
+const { ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { convertTZ } = require('../../src/util');
 
 module.exports = {
@@ -34,7 +34,7 @@ module.exports = {
         reply.embeds = [new EmbedBuilder()
             .setTitle(`**Próximos partidos de KRÜ Esports**`)
             .setColor(instance.color)
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/kru.png`)];
+            .setThumbnail(await getGithubRawUrl('assets/thumbs/kru.png'))];
 
         if (duelsField.value !== ``) {
             reply.embeds[0].setFields([duelsField, datesField, urlsField]);

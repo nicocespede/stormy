@@ -4,8 +4,8 @@ const CoinGeckoClient = new CoinGecko();
 const axios = require('axios');
 const cheerio = require('cheerio');
 const Canvas = require('canvas');
-const { currencies, GITHUB_RAW_URL, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
-const { getIds } = require('../../src/cache');
+const { currencies, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
+const { getIds, getGithubRawUrl } = require('../../src/cache');
 const { consoleLog } = require('../../src/util');
 
 const availableCurrencies = ['usd'].concat(Object.keys(currencies));
@@ -77,15 +77,15 @@ module.exports = {
             else {
                 const canvas = Canvas.createCanvas(500, 250);
                 const context = canvas.getContext('2d');
-                const swapImage = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/currencies/sorting-arrows-horizontal.png`);
-                const pesoImage = await Canvas.loadImage(`${GITHUB_RAW_URL}/assets/currencies/peso.png`);
+                const swapImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/sorting-arrows-horizontal.png`));
+                const pesoImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/peso.png`));
 
                 const variantsField = { name: 'Variante', value: '', inline: true };
                 const valuesField = { name: 'Conversión', value: ``, inline: true };
                 const pricesField = { name: 'Valores tomados en cuenta:', value: `` };
                 let coinID;
                 let currency = 'Dólares';
-                let imageURL = `${GITHUB_RAW_URL}/assets/thumbs/us-dollar-circled.png`;
+                let imageURL = await getGithubRawUrl(`assets/thumbs/us-dollar-circled.png`);
                 let coinPrice;
 
                 if (argsCurrency !== 'usd') {
@@ -118,7 +118,7 @@ module.exports = {
                     .setFields([variantsField, valuesField, pricesField])
                     .setColor(instance.color)
                     .setImage('attachment://image.png')
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/exchange.png`)
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/exchange.png`))
                     .setFooter({ text: 'Cotización del dólar obtenida de DolarHoy.' })];
                 reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
                 reply.content = null;

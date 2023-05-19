@@ -3,8 +3,8 @@ const { QueryType, useMasterPlayer, Track } = require("discord-player");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require("discord.js");
 const Genius = require("genius-lyrics");
 const GeniusClient = new Genius.Client();
-const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue } = require("./cache");
-const { MusicActions, GITHUB_RAW_URL, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
+const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue, getGithubRawUrl } = require("./cache");
+const { MusicActions, color, CONSOLE_YELLOW, CONSOLE_RED } = require("./constants");
 const { addQueue } = require("./mongodb");
 const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile } = require("./util");
 
@@ -142,7 +142,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
             case 'help':
                 embed.setTitle('❓ Ayuda: Reproductor de música');
-                embed.setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/help.png`);
+                embed.setThumbnail(await getGithubRawUrl(`assets/thumbs/help.png`));
                 const controlsInfo = [
                     '**[ ❌ ]** Limpiar cola de reproducción',
                     '**[ 🎤 ]** Mostrar/ocultar letra de la canción actual',
@@ -211,7 +211,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         }
 
         embed.setDescription(description)
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/${thumbnail}.png`);
+            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/${thumbnail}.png`));
         return embed;
     };
 
@@ -223,7 +223,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 for (const chunk of chunks)
                     embeds.push(new EmbedBuilder()
                         .setDescription(chunk)
-                        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/genius.png`)
+                        .setThumbnail(await getGithubRawUrl(`assets/thumbs/genius.png`))
                         .setColor(color));
                 embeds[embeds.length - 1].setFooter({ text: 'Letra obtenida de genius.com' });
                 break;
@@ -258,7 +258,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                         embeds.push(new EmbedBuilder()
                             .setTitle(`📄 Cola de reproducción - ${tracks.length} canciones`)
                             .setDescription(chunk)
-                            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/numbered-list.png`)
+                            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/numbered-list.png`))
                             .setColor(color));
                 }
                 break;
@@ -574,8 +574,9 @@ const handleErrorInMusicChannel = async (message, interaction, reply, channel) =
         await interaction.editReply(reply);
 };
 
+const noEntryThumbnailUrl = await getGithubRawUrl(`assets/thumbs/music/no-entry.png`);
 const handleError = (reply, embed, description, message, interaction, channel) => {
-    reply.embeds = [embed.setDescription(description).setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`)];
+    reply.embeds = [embed.setDescription(description).setThumbnail(noEntryThumbnailUrl)];
     handleErrorInMusicChannel(message, interaction, reply, channel);
 };
 
@@ -599,7 +600,7 @@ const connectToVoiceChannel = async (queue, member, player, reply, embed, messag
     } catch {
         player.nodes.delete(queue);
         embed.setDescription(`🛑 ${member ? `${member.user}, n` : 'N'}o me puedo unir al canal de voz.`)
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/no-entry.png`);
+            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`));
 
         if (metadata) {
             metadata.send({ embeds: [embed] });
@@ -693,12 +694,12 @@ module.exports = {
                 const voiceChannel = await guild.channels.fetch(previousQueue.voiceChannelId);
                 const embed = new EmbedBuilder().setColor(color);
 
-                if (voiceChannel.members.size === 0) {
+                if (voiceChannel.members.size === 0)
                     await metadata.send({
                         embeds: [embed.setDescription(`🤷🏼‍♂️ Se fueron todos, ¡así que yo también!`)
-                            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/so-so.png`)]
+                            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/so-so.png`))]
                     });
-                } else {
+                else {
                     consoleLog('> Reanudando reproducción interrumpida por el reinicio', CONSOLE_YELLOW);
 
                     const membersIds = [...new Set([current.requestedBy]
@@ -717,7 +718,7 @@ module.exports = {
                     if (await connectToVoiceChannel(queue, null, player, null, embed, null, null, voiceChannel, metadata, previousQueueSchema)) {
                         const message = await metadata.send({
                             embeds: [embed.setDescription(`⌛ Cargando cola de canciones interrumpida...`)
-                                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)]
+                                .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/hourglass-sand-top.png`))]
                         });
 
                         updateLastAction(MusicActions.RESTARTING);

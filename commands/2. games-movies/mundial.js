@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 //const { getIds, getFWCData, updateFWCData } = require('../../src/cache');
-const { GITHUB_RAW_URL } = require("../../src/constants");
+const { getGithubRawUrl } = require("../../src/cache");
 
 const buttonsPrefix = 'fwc-matches-';
 const stagesData = {
@@ -192,7 +192,7 @@ module.exports = {
                     .setStyle(ButtonStyle.Danger));
         };
 
-        client.on('interactionCreate', interaction => {
+        client.on('interactionCreate', async interaction => {
             if (!interaction.isButton()) return;
 
             const { customId } = interaction;
@@ -237,7 +237,7 @@ module.exports = {
             interaction.update({
                 components: [getBackButton(stageId)],
                 content: null,
-                files: [`${GITHUB_RAW_URL}/assets/fwc/${stageId}-${matchId}.png`]
+                files: [await getGithubRawUrl(`assets/fwc/${stageId}-${matchId}.png`)]
             });
         });
     },
@@ -253,7 +253,7 @@ module.exports = {
         await interaction.deferReply();
 
         // const fwcColor = [154, 16, 50];
-        // const fwcThumb = `${GITHUB_RAW_URL}/assets/thumbs/fwc-2022.png`;
+        // const fwcThumb = await getGithubRawUrl('assets/thumbs/fwc-2022.png');
 
         switch (subCommand) {
             // case 'abrir-paquete':

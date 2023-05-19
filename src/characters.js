@@ -1,5 +1,4 @@
-const { getCharacters, updateCharacters } = require("./cache");
-const { GITHUB_RAW_URL } = require("./constants");
+const { getCharacters, updateCharacters, getGithubRawUrl } = require("./cache");
 
 const voicelessCharacters = ['blackbolt', 'echo1'];
 
@@ -16,7 +15,7 @@ module.exports = {
             character: characterName,
             description: line.replace('{TAG}', tag).replace('{REASON}', reason ? ` por **${reason}**` : ''),
             title: `${character[0]}:`,
-            thumbnail: `${GITHUB_RAW_URL}/assets/characters/${characterName}.png`
+            thumbnail: await getGithubRawUrl(`assets/characters/${characterName}.png`)
         }
     },
 
@@ -36,7 +35,7 @@ module.exports = {
             color: (character[1])[characterName],
             description: line.replace('{TAG}', tag),
             title: `${character[0]}:`,
-            thumbnail: `${GITHUB_RAW_URL}/assets/characters/${characterName}.png`
+            thumbnail: await getGithubRawUrl(`assets/characters/${characterName}.png`)
         }
     },
 
@@ -51,7 +50,7 @@ module.exports = {
             color: (character[1])[characterName],
             description: line.replace('{TAG}', tag),
             title: `${character[0]}:`,
-            thumbnail: `${GITHUB_RAW_URL}/assets/characters/${characterName}.png`
+            thumbnail: await getGithubRawUrl(`assets/characters/${characterName}.png`)
         }
     }
 }

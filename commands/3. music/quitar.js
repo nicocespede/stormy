@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateLastAction } = require("../../src/cache");
-const { GITHUB_RAW_URL, MusicActions } = require("../../src/constants");
+const { getIds, updateLastAction, getGithubRawUrl } = require("../../src/cache");
+const { MusicActions } = require("../../src/constants");
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
 
@@ -85,7 +85,7 @@ module.exports = {
         }
 
         reply.embeds = [embed.setDescription('❌ Se quitó de la cola de reproducción:\n\n' + description.reverse().join(''))
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/delete.png`)];
+            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/delete.png`))];
         reply.ephemeral = false;
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
         updateLastAction(MusicActions.REMOVING);

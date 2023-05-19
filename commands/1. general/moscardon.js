@@ -1,6 +1,6 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { PREFIX, GITHUB_RAW_URL } = require('../../src/constants');
-const { getIds } = require('../../src/cache');
+const { PREFIX } = require('../../src/constants');
+const { getIds, getGithubRawUrl } = require('../../src/cache');
 
 const files = ['mosca0.png', 'mosca1.png', 'mosca2.png', 'mosca3.gif'];
 
@@ -41,8 +41,9 @@ module.exports = {
         else {
             reply.content = `🪰 ¡Moscardón enviado!`;
             reply.ephemeral = false;
+
             const random = Math.floor(Math.random() * (files.length));
-            await target.send({ files: [{ attachment: `${GITHUB_RAW_URL}/assets/moscas/${files[random]}` }] }).catch(() => {
+            await target.send({ files: [{ attachment: await getGithubRawUrl(`assets/moscas/${files[random]}`) }] }).catch(() => {
                 reply.content = `❌ Lo siento, no pude enviarle el mensaje a este usuario.`
                 reply.ephemeral = true;
             });

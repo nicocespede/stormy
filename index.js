@@ -3,11 +3,11 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
+const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData, getCurrentBranchName, getGithubRawUrl } = require('./src/cache');
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, logToFile, logToFileListenerTriggered } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { PREFIX, MusicActions, categorySettings, DEV_ENV, GITHUB_RAW_URL, color, ENVIRONMENT, BRANCH, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
+const { PREFIX, MusicActions, categorySettings, DEV_ENV, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const MODULE_NAME = 'index';
 
@@ -90,7 +90,7 @@ client.on('ready', async () => {
             const temporalReply = {
                 embeds: [musicEmbed
                     .setDescription(`☑️ Agregado a la cola:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/add-song.png`)]
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/music/add-song.png'))]
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
 
@@ -106,7 +106,7 @@ client.on('ready', async () => {
             const temporalReply = {
                 embeds: [musicEmbed
                     .setDescription(`☑️ **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''} agregadas a la cola.`)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/add-song.png`)
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/music/add-song.png'))
                 ]
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
@@ -128,22 +128,22 @@ client.on('ready', async () => {
             const { collector } = getMusicPlayerData('player');
             collector.stop();
         }
-    }).on('playerError', (queue, error) => {
+    }).on('playerError', async (queue, error) => {
         consoleLog(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/broken-robot.png`)]
+                .setThumbnail(await getGithubRawUrl('assets/thumbs/broken-robot.png'))]
         });
         if (!queue.deleted)
             queue.delete();
-    }).on('error', (queue, error) => {
+    }).on('error', async (queue, error) => {
         consoleLog(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
                 embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                    .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/broken-robot.png`)]
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/broken-robot.png'))]
             });
         if (!queue.deleted)
             queue.delete();
@@ -152,8 +152,9 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${BRANCH}`, CONSOLE_GREEN);
-    logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | BRANCH: ${BRANCH}`);
+    const branch = await getCurrentBranchName();
+    consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${branch}`, CONSOLE_GREEN);
+    logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | BRANCH: ${branch}`);
 });
 
 client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));

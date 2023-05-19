@@ -1,10 +1,10 @@
 const { QueryType, useMasterPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl,
     //TEMP SOLUTION
     getBlacklistedSongs, updateBlacklistedSongs//
 } = require('../../src/cache');
-const { MusicActions, GITHUB_RAW_URL } = require('../../src/constants');
+const { MusicActions } = require('../../src/constants');
 const { handleError, handleErrorEphemeral, createQueue, connectToVoiceChannel } = require('../../src/music');
 
 module.exports = {
@@ -74,7 +74,7 @@ module.exports = {
             return;
 
         reply.embeds = [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
-            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/music/hourglass-sand-top.png`)];
+            .setThumbnail(await getGithubRawUrl('assets/thumbs/music/hourglass-sand-top.png'))];
         reply.ephemeral = false;
         const deferringMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 

@@ -1,5 +1,5 @@
 const { IDsData, StatsData, TimestampsData } = require("./typedefs");
-const { GITHUB_RAW_URL, DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
+const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
@@ -11,6 +11,7 @@ const collectorMessageSchema = require('../models/collectorMessage-schema');
 const iconSchema = require('../models/icon-schema');
 
 const MODULE_NAME = 'src.cache';
+const GITHUB_RAW_PATH = 'https://raw.githubusercontent.com/nicocespede/stormy-data/';
 
 let chronologies = {};
 let downloadsData = {};
@@ -43,6 +44,53 @@ let fwcData;
 /** @type {TimestampsData}*/
 const timestamps = {};
 
+/**@type {String} */
+let branchName;
+
+/**@type {String} */
+let githubRawURL;
+
+/**
+ * Gets the name of the tracked Github branch.
+ * 
+ * @returns The name of the current branch.
+ */
+const getCurrentBranchName = async () => {
+    if (!branchName) {
+        const fs = require('fs');
+        const fetch = require('node-fetch');
+
+        const gitData = fs.readFileSync(`.git/HEAD`, 'utf8');
+        const splitted = gitData.split('/');
+
+        branchName = splitted.pop().replace('\n', '');
+        githubRawURL = GITHUB_RAW_PATH + branchName;
+
+        const res = await fetch(`${githubRawURL}/branchChecker.txt`);
+        const content = await res.text();
+
+        if (content.startsWith('404')) {
+            branchName = 'main';
+            githubRawURL = GITHUB_RAW_PATH + branchName;
+        }
+    }
+
+    return branchName;
+};
+
+/**
+ * Gets the full URL to a Github raw element.
+ * 
+ * @param {String} string The string to append at the end of the raw URL.
+ * @returns The complete Github URL.
+ */
+const getGithubRawUrl = async string => {
+    if (!branchName)
+        await getCurrentBranchName();
+
+    return `${githubRawURL}/${string}`;
+};
+
 const getChronology = id => chronologies[id];
 
 const updateChronology = async id => {
@@ -51,7 +99,7 @@ const updateChronology = async id => {
         if (LOCAL_ENV)
             data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
         else {
-            const res = await fetch(`${GITHUB_RAW_URL}/chronologies/${id}.json`);
+            const res = await fetch(await getGithubRawUrl(`chronologies/${id}.json`));
             data = await res.text();
         }
         chronologies[id] = JSON.parse(data);
@@ -86,7 +134,7 @@ const updateIds = async () => {
         if (LOCAL_ENV)
             data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
         else {
-            const res = await fetch(`${GITHUB_RAW_URL}/${fileName}`);
+            const res = await fetch(await getGithubRawUrl(fileName));
             data = await res.text();
         }
         ids = JSON.parse(data);
@@ -123,6 +171,10 @@ const updateStats = async () => {
 
 module.exports = {
     timeouts: {},
+
+    getCurrentBranchName,
+
+    getGithubRawUrl,
 
     getChronology,
     updateChronology,
@@ -178,7 +230,7 @@ module.exports = {
             if (LOCAL_ENV)
                 data = fs.readFileSync(`../stormy-data/downloads/${id}.json`, 'utf8');
             else {
-                const res = await fetch(`${GITHUB_RAW_URL}/downloads/${id}.json`);
+                const res = await fetch(await getGithubRawUrl(`downloads/${id}.json`));
                 data = await res.text();
             }
             downloadsData[id] = JSON.parse(data);
@@ -196,7 +248,7 @@ module.exports = {
             if (LOCAL_ENV)
                 data = fs.readFileSync('../stormy-data/downloads/games.json', 'utf8');
             else {
-                const res = await fetch(`${GITHUB_RAW_URL}/downloads/games.json`);
+                const res = await fetch(await getGithubRawUrl(`downloads/games.json`));
                 data = await res.text();
             }
             consoleLog('> games.json cargado', CONSOLE_GREEN);
@@ -395,7 +447,7 @@ module.exports = {
 
     getTracksNameExtras: () => tracksNameExtras,
     updateTracksNameExtras: async () => {
-        await fetch(`${GITHUB_RAW_URL}/tracksNameExtras.json`)
+        await fetch(await getGithubRawUrl(`tracksNameExtras.json`))
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
                 consoleLog('> tracksNameExtras.json cargado', CONSOLE_GREEN);
@@ -406,7 +458,7 @@ module.exports = {
     //TEMP SOLUTION
     getBlacklistedSongs: () => blacklistedSongs,
     updateBlacklistedSongs: async () => {
-        await fetch(`${GITHUB_RAW_URL}/blacklistedTracks.json`)
+        await fetch(await getGithubRawUrl(`blacklistedTracks.json`))
             .then(res => res.text()).then(data => {
                 blacklistedSongs = JSON.parse(data);
                 consoleLog('> blacklistedTracks.json cargado', CONSOLE_GREEN);
@@ -478,7 +530,7 @@ module.exports = {
             if (LOCAL_ENV)
                 data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
             else {
-                const res = await fetch(`${GITHUB_RAW_URL}/characters.json`);
+                const res = await fetch(await getGithubRawUrl(`characters.json`));
                 data = await res.text();
             }
             characters = JSON.parse(data);
@@ -510,7 +562,7 @@ module.exports = {
             if (LOCAL_ENV)
                 data = fs.readFileSync(`../stormy-data/fwc-2022.json`, 'utf8');
             else {
-                const res = await fetch(`${GITHUB_RAW_URL}/fwc-2022.json`);
+                const res = await fetch(await getGithubRawUrl(`fwc-2022.json`));
                 data = await res.text();
             }
             fwcData = JSON.parse(data);

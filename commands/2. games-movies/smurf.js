@@ -1,8 +1,8 @@
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const { getSmurfs, updateSmurfs, getIds } = require('../../src/cache');
-const { PREFIX, GITHUB_RAW_URL, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
+const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
 const { consoleLog, convertTZ } = require('../../src/util');
 
@@ -114,7 +114,7 @@ const getEmbed = async (color, guild, userId) => {
         .setDescription(description)
         .addFields([accountsField, commandsField, ranksField])
         .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}` })
-        .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/games/valorant.png`)
+        .setThumbnail(await getGithubRawUrl(`assets/thumbs/games/valorant.png`))
         .setTitle(`**Cuentas smurf**`);
 };
 
@@ -183,7 +183,7 @@ module.exports = {
                             .setAuthor({ name: user.username, iconURL: user.avatarURL() })
                             .setDescription(`Cuenta: **${EmbedBuilder.from(message.embeds[0]).data.title}**`)
                             .setColor(color)
-                            .setThumbnail(`${GITHUB_RAW_URL}/assets/thumbs/flag.png`)]
+                            .setThumbnail(await getGithubRawUrl(`assets/thumbs/flag.png`))]
                     });
                     await interaction.update({ components: [getRow('success')] });
                 } catch (e) {
@@ -267,9 +267,9 @@ module.exports = {
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(account.name)
                         .setColor(getRankColor(null))];
-                    reply.files = [new AttachmentBuilder(`${GITHUB_RAW_URL}/assets/thumbs/games/unranked.png`, { name: 'rank.png' })];
+                    reply.files = [new AttachmentBuilder(await getGithubRawUrl(`assets/thumbs/games/unranked.png`), { name: 'rank.png' })];
                 } else {
-                    const thumb = !mmr.data.images ? `${GITHUB_RAW_URL}/assets/thumbs/games/unranked.png` : mmr.data.images.large;
+                    const thumb = !mmr.data.images ? await getGithubRawUrl(`assets/thumbs/games/unranked.png`) : mmr.data.images.large;
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
                         .setColor(getRankColor(mmr.data.currenttierpatched))];
