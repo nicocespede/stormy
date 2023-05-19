@@ -3,7 +3,7 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData, getCurrentBranchName, getGithubRawUrl } = require('./src/cache');
+const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName } = require('./src/cache');
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, logToFile, logToFileListenerTriggered } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
@@ -152,9 +152,10 @@ client.on('ready', async () => {
 
     playInterruptedQueue(client);
 
-    const branch = await getCurrentBranchName();
-    consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama: ${branch}`, CONSOLE_GREEN);
-    logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | BRANCH: ${branch}`);
+    const codeBranch = getCurrentCodeBranchName();
+    const contentBranch = await getCurrentContentBranchName();
+    consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama de código: ${codeBranch} | Rama de contenido: ${contentBranch}`, CONSOLE_GREEN);
+    logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | CODE BRANCH: ${codeBranch} | CONTENT BRANCH: ${contentBranch}`);
 });
 
 client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));

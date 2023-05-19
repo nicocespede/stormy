@@ -45,37 +45,54 @@ let fwcData;
 const timestamps = {};
 
 /**@type {String} */
-let branchName;
+let codeBranchName;
+
+/**@type {String} */
+let contentBranchName;
 
 /**@type {String} */
 let githubRawURL;
 
 /**
- * Gets the name of the tracked Github branch.
+ * Gets the name of the tracked Github code branch.
  * 
- * @returns The name of the current branch.
+ * @returns The name of the current code branch.
  */
-const getCurrentBranchName = async () => {
-    if (!branchName) {
+const getCurrentCodeBranchName = () => {
+    if (!codeBranchName) {
         const fs = require('fs');
-        const fetch = require('node-fetch');
 
         const gitData = fs.readFileSync(`.git/HEAD`, 'utf8');
         const splitted = gitData.split('/');
 
-        branchName = splitted.pop().replace('\n', '');
-        githubRawURL = GITHUB_RAW_PATH + branchName;
+        codeBranchName = splitted.pop().replace('\n', '');
+    }
+
+    return codeBranchName;
+};
+
+/**
+ * Gets the name of the tracked Github content branch.
+ * 
+ * @returns The name of the current content branch.
+ */
+const getCurrentContentBranchName = async () => {
+    if (!contentBranchName) {
+        const fetch = require('node-fetch');
+
+        contentBranchName = getCurrentCodeBranchName();
+        githubRawURL = GITHUB_RAW_PATH + contentBranchName;
 
         const res = await fetch(`${githubRawURL}/branchChecker.txt`);
         const content = await res.text();
 
         if (content.startsWith('404')) {
-            branchName = 'main';
-            githubRawURL = GITHUB_RAW_PATH + branchName;
+            contentBranchName = 'main';
+            githubRawURL = GITHUB_RAW_PATH + contentBranchName;
         }
     }
 
-    return branchName;
+    return contentBranchName;
 };
 
 /**
@@ -85,8 +102,8 @@ const getCurrentBranchName = async () => {
  * @returns The complete Github URL.
  */
 const getGithubRawUrl = async string => {
-    if (!branchName)
-        await getCurrentBranchName();
+    if (!contentBranchName)
+        githubRawURL = await getCurrentContentBranchName();
 
     return `${githubRawURL}/${string}`;
 };
@@ -172,7 +189,9 @@ const updateStats = async () => {
 module.exports = {
     timeouts: {},
 
-    getCurrentBranchName,
+    getCurrentCodeBranchName,
+
+    getCurrentContentBranchName,
 
     getGithubRawUrl,
 
