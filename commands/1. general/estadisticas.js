@@ -1,7 +1,7 @@
 const { CommandArgs } = require('../../src/typedefs');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
-const { getStats, updateStats, getTimestamps } = require('../../src/cache');
+const { getStats, getTimestamps } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
 const { consoleLog, logToFile, logToFileCommandUsage } = require('../../src/util');
 const { GITHUB_RAW_URL, CONSOLE_YELLOW } = require('../../src/constants');
@@ -50,7 +50,7 @@ module.exports = {
             await pushDifferences(true);
         }
 
-        const stats = getStats() || await updateStats();
+        const stats = await getStats();
         let description = `Hola <@${user.id}>, el tiempo de conexión en chats de voz de los usuarios es:\n\n`;
         let fields = [];
         let needsFooter = false;

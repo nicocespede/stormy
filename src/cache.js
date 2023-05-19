@@ -40,10 +40,6 @@ let songsInQueue = {};
 let musicPlayerData = {};
 let fwcData;
 
-/** @type {IDsData}*/
-let ids;
-/** @type {StatsData}*/
-let stats;
 /** @type {TimestampsData}*/
 const timestamps = {};
 
@@ -75,6 +71,9 @@ const sortBirthdays = array => {
     return newArray;
 };
 
+/** @type {IDsData}*/
+let ids;
+
 /**
  * Retrieves the IDs data from the ids.json file.
  * 
@@ -96,6 +95,30 @@ const updateIds = async () => {
         consoleLog(`> Error al cargar ${fileName}\n${err.stack}`, CONSOLE_RED);
     }
     return ids;
+};
+
+/** @type {StatsData}*/
+let stats;
+
+/**
+ * Retrieves the stats data from the database.
+ * 
+ * @returns All cached stats data.
+ */
+const updateStats = async () => {
+    const statSchema = require('../models/stat-schema');
+    const results = await statSchema.find({}).sort({ days: 'desc', hours: 'desc', minutes: 'desc', seconds: 'desc' });
+    stats = {};
+    results.forEach(element => {
+        stats[element._id] = {
+            days: element.days,
+            hours: element.hours,
+            minutes: element.minutes,
+            seconds: element.seconds
+        };
+    });
+    consoleLog('> Caché de estadísticas actualizado', CONSOLE_GREEN);
+    return stats;
 };
 
 module.exports = {
@@ -294,28 +317,9 @@ module.exports = {
      * 
      * @returns All cached stats data.
      */
-    getStats: () => stats,
+    getStats: async () => stats || await updateStats(),
 
-    /**
-     * Retrieves the stats data from the database.
-     * 
-     * @returns All cached stats data.
-     */
-    updateStats: async () => {
-        const statSchema = require('../models/stat-schema');
-        const results = await statSchema.find({}).sort({ days: 'desc', hours: 'desc', minutes: 'desc', seconds: 'desc' });
-        stats = {};
-        results.forEach(element => {
-            stats[element._id] = {
-                days: element.days,
-                hours: element.hours,
-                minutes: element.minutes,
-                seconds: element.seconds
-            };
-        });
-        consoleLog('> Caché de estadísticas actualizado', CONSOLE_GREEN);
-        return stats;
-    },
+    updateStats,
 
     /**
      * Gets the timestamps stored in cache.

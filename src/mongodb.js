@@ -10,6 +10,7 @@ const smurfSchema = require('../models/smurf-schema');
 const statSchema = require('../models/stat-schema');
 const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
 const { consoleLog, logToFile } = require('./util');
+const { updateStats } = require('./cache');
 
 const MODULE_NAME = 'src.mongodb';
 
@@ -139,11 +140,13 @@ module.exports = {
      * 
      * @param {String} id The ID of the user.
      * @param {String} username The username of the user.
+     * @returns The updated cached stats.
      */
     addStat: async (id, username) => {
         await new statSchema({ _id: id, days: 0, hours: 0, minutes: 0, seconds: 0 }).save();
         consoleLog('> Estadística agregada a la base de datos', CONSOLE_GREEN);
         logToFile(`${MODULE_NAME}.addStat`, `Adding new stats record for user ${username}`);
+        return await updateStats();
     },
 
     /**
@@ -161,6 +164,7 @@ module.exports = {
 
         consoleLog(`> Estadística ${username ? `de ${username} ` : ''}actualizada en la base de datos`, CONSOLE_GREEN);
         logToFile(`${MODULE_NAME}.updateStat`, `Updating stats for user ${username}`);
+        await updateStats();
     },
 
     updateManyStats: async updates => {
@@ -178,6 +182,8 @@ module.exports = {
             consoleLog(`> ${updated} estadística${updated > 1 ? 's' : ''} actualizada${updated > 1 ? 's' : ''} en la base de datos`, CONSOLE_GREEN);
             logToFile(`${MODULE_NAME}.updateManyStats`, `Updating stats for ${updated} user${updated > 1 ? 's' : ''}`);
         }
+
+        await updateStats();
     },
 
     addThermalPasteDate: async (id, date) => {

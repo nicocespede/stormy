@@ -2,7 +2,7 @@ const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
-const { getStats, updateStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
+const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp } = require('./cache');
 const { relativeSpecialDays, GITHUB_RAW_URL, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
@@ -138,13 +138,10 @@ module.exports = {
         if (timestamp) {
             removeTimestamp(id);
 
-            let stats = getStats() || await updateStats();
+            let stats = await getStats();
 
-            if (!Object.keys(stats).includes(id)) {
-                await addStat(id, username);
-                await new Promise(res => setTimeout(res, 1000 * 2));
-                stats = await updateStats();
-            }
+            if (!Object.keys(stats).includes(id))
+                stats = await addStat(id, username);
 
             const stat = stats[id];
             const now = new Date();
@@ -154,8 +151,6 @@ module.exports = {
                 const { days, hours, minutes, seconds } = secondsToFull(totalTime);
                 await updateStat(id, days, hours, minutes, seconds, username);
             }
-
-            await updateStats();
         }
     },
 
@@ -170,7 +165,7 @@ module.exports = {
 
         const now = new Date();
         const updates = [];
-        const stats = getStats() || await updateStats();
+        const stats = await getStats();
         const timestamps = getTimestamps();
 
         if (!ids)
@@ -199,10 +194,8 @@ module.exports = {
             }
         }
 
-        if (updates.length > 0) {
+        if (updates.length > 0)
             await updateManyStats(updates);
-            await updateStats();
-        }
     },
 
     fullToSeconds,
