@@ -1,4 +1,5 @@
 const { EmbedBuilder, AttachmentBuilder, ApplicationCommandOptionType } = require('discord.js');
+const { ICallbackObject } = require('wokcommands');
 const CoinGecko = require('coingecko-api');
 const CoinGeckoClient = new CoinGecko();
 const axios = require('axios');
@@ -27,7 +28,7 @@ module.exports = {
             name: 'cantidad',
             description: 'La cantidad que se quiere convertir a pesos argentinos.',
             required: true,
-            type: ApplicationCommandOptionType.Number
+            type: ApplicationCommandOptionType.String
         }],
 
     minArgs: 2,
@@ -35,10 +36,11 @@ module.exports = {
     expectedArgs: '<moneda> <cantidad>',
     slash: 'both',
 
+    /**@param {ICallbackObject} */
     callback: async ({ args, user, message, interaction, instance, guild }) => {
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const argsCurrency = message ? args[0] : interaction.options.getString('moneda');
-        const quantity = message ? parseFloat(args[1]) : interaction.options.getNumber('cantidad');
+        const quantity = parseFloat((message ? args[1] : interaction.options.getString('cantidad')).replace(',', '.'));
         const reply = {};
         if (!availableCurrencies.includes(argsCurrency)) {
             const ids = await getIds();
@@ -75,8 +77,6 @@ module.exports = {
             if (error)
                 reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
             else {
-                const canvas = Canvas.createCanvas(500, 250);
-                const context = canvas.getContext('2d');
                 const swapImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/sorting-arrows-horizontal.png`));
                 const pesoImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/peso.png`));
 
@@ -99,9 +99,12 @@ module.exports = {
                 }
                 const coinImage = await Canvas.loadImage(imageURL);
 
-                context.drawImage(swapImage, (canvas.width / 2) - 50, (canvas.height / 2) - 50, 100, 100);
-                context.drawImage(pesoImage, canvas.width - 175, (canvas.height / 2) - 75, 150, 150);
-                context.drawImage(coinImage, 25, (canvas.height / 2) - 75, 150, 150);
+                const canvas = Canvas.createCanvas(500, 250);
+                const context = canvas.getContext('2d');
+                const halfHeight = canvas.height / 2;
+                context.drawImage(swapImage, (canvas.width / 2) - 50, halfHeight - 50, 100, 100);
+                context.drawImage(pesoImage, canvas.width - 175, halfHeight - 75, 150, 150);
+                context.drawImage(coinImage, 25, halfHeight - 75, 150, 150);
 
                 for (const variant in variants)
                     if (Object.hasOwnProperty.call(variants, variant)) {
@@ -114,7 +117,7 @@ module.exports = {
 
                 reply.embeds = [new EmbedBuilder()
                     .setTitle(`Conversión de ${currency} a Pesos Argentinos`)
-                    .setDescription(`Hola <@${user.id}>, la conversión de **${quantity} ${currency}** a Pesos Argentinos es:`)
+                    .setDescription(`Hola <@${user.id}>, la conversión de **${quantity.toLocaleString(ARGENTINA_LOCALE_STRING)} ${currency}** a Pesos Argentinos es:`)
                     .setFields([variantsField, valuesField, pricesField])
                     .setColor(instance.color)
                     .setImage('attachment://image.png')

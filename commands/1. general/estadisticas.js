@@ -1,4 +1,4 @@
-const { CommandArgs } = require('../../src/typedefs');
+const { ICallbackObject } = require('wokcommands');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, getTimestamps, getGithubRawUrl } = require('../../src/cache');
@@ -36,7 +36,7 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    /** @param {CommandArgs}*/
+    /** @param {ICallbackObject}*/
     callback: async ({ guild, message, interaction, user, instance }) => {
         logToFileCommandUsage(COMMAND_NAME, null, interaction, message, user);
 

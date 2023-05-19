@@ -1,4 +1,4 @@
-const { CommandArgs } = require("../../src/typedefs");
+const { ICallbackObject } = require("wokcommands");
 const { getStats } = require("../../src/cache");
 const { fullToSeconds, secondsToFull } = require("../../src/common");
 const { updateStat } = require("../../src/mongodb");
@@ -14,7 +14,7 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    /** @param {CommandArgs} */
+    /** @param {ICallbackObject} */
     callback: async ({ args, guild, interaction, message, text, user }) => {
         logToFileCommandUsage('restar-stats', text, interaction, message, user);
 

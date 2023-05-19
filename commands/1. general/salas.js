@@ -1,4 +1,4 @@
-const { CommandArgs } = require("../../src/typedefs");
+const { ICallbackObject } = require("wokcommands");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { logToFileCommandUsage } = require("../../src/util");
 
@@ -9,7 +9,7 @@ module.exports = {
     maxArgs: 0,
     slash: 'both',
 
-    /** @param {CommandArgs}*/
+    /** @param {ICallbackObject}*/
     callback: async ({ interaction, message, user }) => {
         logToFileCommandUsage('salas', null, interaction, message, user);
 

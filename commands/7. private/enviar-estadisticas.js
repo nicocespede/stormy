@@ -1,4 +1,4 @@
-const { CommandArgs } = require("../../src/typedefs");
+const { ICallbackObject } = require("wokcommands");
 const { getTimestamps } = require("../../src/cache");
 const { pushDifferences } = require("../../src/common");
 const { logToFile, logToFileCommandUsage } = require("../../src/util");
@@ -15,7 +15,7 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    /** @param {CommandArgs}*/
+    /** @param {ICallbackObject}*/
     callback: async ({ interaction, message, user }) => {
         logToFileCommandUsage(COMMAND_NAME, null, interaction, message, user);
 
