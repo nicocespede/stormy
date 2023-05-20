@@ -1,6 +1,6 @@
-const { IDsData, StatsData, TimestampsData } = require("./typedefs");
+const { RawCurrenciesData, IDsData, StatsData, TimestampsData } = require("./typedefs");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
-const { convertTime, consoleLog, logToFile, logToFileError } = require('./util');
+const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -47,12 +47,6 @@ const timestamps = {};
 /**@type {String} */
 let codeBranchName;
 
-/**@type {String} */
-let contentBranchName;
-
-/**@type {String} */
-let githubRawURL;
-
 /**
  * Gets the name of the tracked Github code branch.
  * 
@@ -70,6 +64,12 @@ const getCurrentCodeBranchName = () => {
 
     return codeBranchName;
 };
+
+/**@type {String} */
+let contentBranchName;
+
+/**@type {String} */
+let githubRawURL;
 
 /**
  * Gets the name of the tracked Github content branch.
@@ -111,19 +111,11 @@ const getGithubRawUrl = async string => {
 const getChronology = id => chronologies[id];
 
 const updateChronology = async id => {
-    try {
-        let data;
-        if (LOCAL_ENV)
-            data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
-        else {
-            const res = await fetch(await getGithubRawUrl(`chronologies/${id}.json`));
-            data = await res.text();
-        }
-        chronologies[id] = JSON.parse(data);
-        consoleLog(`> chronologies/${id}.json cargado`, CONSOLE_GREEN);
-    } catch (err) {
-        consoleLog(`> Error al cargar chronologies/${id}.json\n${err.stack}`, CONSOLE_RED);
-    }
+    const data = await retrieveDataFromFile(`chronologies/${id}.json`);
+
+    if (data)
+        chronologies[id] = data;
+
     return chronologies[id];
 };
 
@@ -145,20 +137,11 @@ let ids;
  * @returns All cached IDs data.
  */
 const updateIds = async () => {
-    const fileName = !DEV_ENV ? 'ids.json' : 'testingIds.json';
-    try {
-        let data;
-        if (LOCAL_ENV)
-            data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
-        else {
-            const res = await fetch(await getGithubRawUrl(fileName));
-            data = await res.text();
-        }
-        ids = JSON.parse(data);
-        consoleLog(`> ${fileName} cargado`, CONSOLE_GREEN);
-    } catch (err) {
-        consoleLog(`> Error al cargar ${fileName}\n${err.stack}`, CONSOLE_RED);
-    }
+    const data = await retrieveDataFromFile(!DEV_ENV ? 'ids.json' : 'testingIds.json');
+
+    if (data)
+        ids = data;
+
     return ids;
 };
 
@@ -186,8 +169,56 @@ const updateStats = async () => {
     return stats;
 };
 
+/**@type {RawCurrenciesData}*/
+let currencies;
+
+/**
+ * Retrieves the currencies data from the currencies.json file.
+ * 
+ * @returns All cached currencies data.
+ */
+const updateCurrencies = async () => {
+    const data = await retrieveDataFromFile('currencies.json');
+
+    if (data)
+        currencies = data;
+
+    return currencies;
+};
+
+/**
+ * Retrieves the data from a file.
+ * 
+ * @param {String} path The path to the file to be read.
+ * @returns The parsed data.
+ */
+const retrieveDataFromFile = async path => {
+    let data;
+    try {
+        if (LOCAL_ENV)
+            data = fs.readFileSync(`../stormy-data/${path}`, 'utf8');
+        else {
+            const res = await fetch(await getGithubRawUrl(path));
+            data = await res.text();
+        }
+
+        consoleLog(`> ${path} cargado`, CONSOLE_GREEN);
+        return JSON.parse(data);
+    } catch (err) {
+        consoleLogError(`> Error al cargar ${[path]}`);
+        logToFileError(MODULE_NAME + '.retrieveDataFromFile', err);
+        return null;
+    }
+};
+
 module.exports = {
     timeouts: {},
+
+    /** Loads the cache needed since the start. */
+    loadMandatoryCache: async () => {
+        logToFile(MODULE_NAME + '.loadMandatoryCache', 'Loading mandatory cache')
+        await updateCurrencies();
+    },
 
     getCurrentCodeBranchName,
 
@@ -244,49 +275,32 @@ module.exports = {
     getDownloadsData: id => downloadsData[id],
 
     updateDownloadsData: async id => {
-        try {
-            let data;
-            if (LOCAL_ENV)
-                data = fs.readFileSync(`../stormy-data/downloads/${id}.json`, 'utf8');
-            else {
-                const res = await fetch(await getGithubRawUrl(`downloads/${id}.json`));
-                data = await res.text();
-            }
-            downloadsData[id] = JSON.parse(data);
-            consoleLog(`> downloads/${id}.json cargado`, CONSOLE_GREEN);
-        } catch (err) {
-            consoleLog(`> Error al cargar downloads/${id}.json\n${err.stack}`, CONSOLE_RED);
-        }
+        const data = await retrieveDataFromFile(`downloads/${id}.json`);
+
+        if (data)
+            downloadsData[id] = data;
+
         return downloadsData[id];
     },
 
     getGames: () => games,
     updateGames: async () => {
-        try {
-            let data;
-            if (LOCAL_ENV)
-                data = fs.readFileSync('../stormy-data/downloads/games.json', 'utf8');
-            else {
-                const res = await fetch(await getGithubRawUrl(`downloads/games.json`));
-                data = await res.text();
-            }
-            consoleLog('> games.json cargado', CONSOLE_GREEN);
-            games = [];
-            const parsed = JSON.parse(data);
-            for (const key in parsed) if (Object.hasOwnProperty.call(parsed, key))
-                for (const game of parsed[key]) {
+        games = [];
+        const data = await retrieveDataFromFile(`downloads/games.json`);
+
+        if (data)
+            for (const key in data) if (Object.hasOwnProperty.call(data, key))
+                for (const game of data[key]) {
                     if (key === 'steam') {
-                        const data = await steam.getGameDetails(game.id).catch(console.error);
-                        game.name = data.name;
-                        game.year = data.release_date.date.split(',').pop().trim();
-                        game.imageURL = data.header_image;
+                        const gameData = await steam.getGameDetails(game.id).catch(console.error);
+                        game.name = gameData.name;
+                        game.year = gameData.release_date.date.split(',').pop().trim();
+                        game.imageURL = gameData.header_image;
                     }
                     game.platform = key;
                     games.push(game);
                 }
-        } catch (err) {
-            consoleLog(`> Error al cargar games.json\n${err.stack}`, CONSOLE_RED);
-        }
+
         return games.sort((a, b) => a.name.localeCompare(b.name));
     },
 
@@ -544,19 +558,11 @@ module.exports = {
 
     getCharacters: () => characters,
     updateCharacters: async () => {
-        try {
-            let data;
-            if (LOCAL_ENV)
-                data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
-            else {
-                const res = await fetch(await getGithubRawUrl(`characters.json`));
-                data = await res.text();
-            }
-            characters = JSON.parse(data);
-            consoleLog('> characters.json cargado', CONSOLE_GREEN);
-        } catch (err) {
-            consoleLog(`> Error al cargar characters.json\n${err.stack}`, CONSOLE_RED);
-        }
+        const data = await retrieveDataFromFile(`characters.json`);
+
+        if (data)
+            characters = data;
+
         return characters;
     },
 
@@ -576,19 +582,18 @@ module.exports = {
     getFWCData: () => fwcData,
 
     updateFWCData: async () => {
-        try {
-            let data;
-            if (LOCAL_ENV)
-                data = fs.readFileSync(`../stormy-data/fwc-2022.json`, 'utf8');
-            else {
-                const res = await fetch(await getGithubRawUrl(`fwc-2022.json`));
-                data = await res.text();
-            }
-            fwcData = JSON.parse(data);
-            consoleLog(`> fwc-2022.json cargado`, CONSOLE_GREEN);
-        } catch (err) {
-            consoleLog(`> Error al cargar fwc-2022.json\n${err.stack}`, CONSOLE_RED);
-        }
+        const data = await retrieveDataFromFile(`fwc-2022.json`);
+
+        if (data)
+            fwcData = data;
+
         return fwcData;
-    }
+    },
+
+    /**
+     * Gets the currencies data stored in cache.
+     * 
+     * @returns All cached currencies data.
+     */
+    getCurrencies: () => currencies
 };

@@ -1,5 +1,5 @@
 const { User, Message, CommandInteraction } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -113,6 +113,13 @@ module.exports = {
 
     consoleLog,
 
+    /**
+     * Logs an error message to the console.
+     * 
+     * @param {String} message The message to be logged.
+     */
+    consoleLogError: message => consoleLog(message, CONSOLE_RED),
+
     logToFile,
 
     /**
@@ -184,5 +191,15 @@ module.exports = {
                 const finalHours = parsedHours + 12;
                 return `${finalHours === 24 ? '12' : finalHours < 10 ? `0${finalHours}` : finalHours}:${split[1]}`;
         }
-    }
+    },
+
+    /**
+     * Formats a number to currency format.
+     * 
+     * @param {Number} value The value to be formatted.
+     * @param {Number} maximumFractionDigits The maximum amount of decimals.
+     * @param {String} currency The currency code.
+     * @returns The formatted number.
+     */
+    formatNumber: (value, maximumFractionDigits, currency) => value.toLocaleString(ARGENTINA_LOCALE_STRING, { currency, style: 'currency', maximumFractionDigits })
 };

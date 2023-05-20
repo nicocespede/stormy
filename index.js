@@ -3,7 +3,7 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName } = require('./src/cache');
+const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, logToFile, logToFileListenerTriggered } = require('./src/util');
 const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
@@ -29,6 +29,8 @@ const client = new Client({
 client.on('ready', async () => {
     const moduleName = `${MODULE_NAME}.readyListener`;
     logToFile(null, `-`.repeat(40) + '[ NEW START ]' + `-`.repeat(40));
+
+    await loadMandatoryCache();
 
     client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
     logToFile(moduleName, `Setting bot presence succesfully`);
