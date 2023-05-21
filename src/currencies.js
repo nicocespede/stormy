@@ -9,9 +9,37 @@ const { consoleLogError, logToFileError } = require('./util');
 const MODULE_NAME = 'src.currencies';
 const DOLAR_HOY_BASE_URL = 'https://dolarhoy.com';
 
+/**
+ * Gets the ask and bid prices of a currency from Dolar Hoy.
+ * 
+ * @param {String} url The URL to retrieve the data from.
+ * @returns The ask and bid prices of a currency.
+ */
+const getAskAndBid = async url => {
+    const ret = {};
+    try {
+        const { data } = await axios.get(DOLAR_HOY_BASE_URL + url);
+        const $ = cheerio.load(data);
+
+        const values = $('.tile.is-parent.is-8');
+        for (const child of values.children())
+            if ($(child).children('.topic').text() === 'Compra')
+                ret.bid = parseFloat($(child).children('.value').text().substring(1));
+            else
+                ret.ask = parseFloat($(child).children('.value').text().substring(1));
+
+        return ret;
+    } catch (e) {
+        consoleLogError('> Error al obtener cotizaciones de ' + DOLAR_HOY_BASE_URL + url);
+        logToFileError(MODULE_NAME + '.getAskAndBid', e);
+        return null;
+    }
+};
+
 module.exports = {
 
     ARS_CODE: 'ARS',
+    ARS_NAME: 'Peso argentino',
     USD_CODE: 'USD',
 
     /**
@@ -56,26 +84,34 @@ module.exports = {
             solidario: { title: 'Dólar Solidario', url: '/cotizaciondolarsolidario' }
         };
 
-        try {
-            for (const key in variants) if (Object.hasOwnProperty.call(variants, key)) {
-                const variant = variants[key];
+        for (const key in variants) if (Object.hasOwnProperty.call(variants, key)) {
+            const variant = variants[key];
 
-                const { data } = await axios.get(DOLAR_HOY_BASE_URL + variant.url);
-                const $ = cheerio.load(data);
+            const askAndBid = await getAskAndBid(variant.url);
 
-                const values = $('.tile.is-parent.is-8');
-                for (const child of values.children())
-                    if ($(child).children('.topic').text() === 'Compra')
-                        variant.bid = parseFloat($(child).children('.value').text().substring(1));
-                    else
-                        variant.ask = parseFloat($(child).children('.value').text().substring(1));
-            }
+            if (!askAndBid)
+                return null;
 
-            return variants;
-        } catch (e) {
-            consoleLogError('> Error al obtener cotizaciones del dólar');
-            logToFileError(MODULE_NAME + '.getUSDollarPrices', e);
-            return null;
+            const { ask, bid } = askAndBid;
+
+            variant.ask = ask;
+            variant.bid = bid;
         }
+
+        return variants;
+    },
+
+    /**
+     * Gets the prices of the Euro.
+     * 
+     * @returns The prices object.
+     */
+    getEuroPrices: async () => {
+        const askAndBid = await getAskAndBid('/cotizacion-euro');
+
+        if (!askAndBid)
+            return null;
+
+        return askAndBid;
     }
 }

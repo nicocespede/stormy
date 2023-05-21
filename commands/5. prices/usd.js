@@ -2,7 +2,7 @@ const { ICallbackObject } = require('wokcommands');
 const { EmbedBuilder } = require('discord.js');
 const { ARGENTINA_TZ_STRING, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { getCurrencies } = require('../../src/cache');
-const { getCurrencyData, USD_CODE, ARS_CODE, getUSDollarPrices } = require('../../src/currencies');
+const { getCurrencyData, USD_CODE, ARS_CODE, getUSDollarPrices, getEuroPrices } = require('../../src/currencies');
 const { logToFileCommandUsage, formatNumber } = require('../../src/util');
 
 const availableCurrencies = Object.keys(getCurrencies());
@@ -29,34 +29,62 @@ module.exports = {
         const embed = new EmbedBuilder();
 
         let description = `Hola <@${user.id}>, la cotización del **${name}** es`;
-        if (cmd === 'usd') {
+
+        const physicalCurrencies = ['eur', 'usd'];
+
+        // crypto
+        if (!physicalCurrencies.includes(cmd)) {
+            const formattedPrice = formatNumber(price, 20, USD_CODE);
+            const formattedDate = lastUpdated.toLocaleString(ARGENTINA_LOCALE_STRING, { timeZone: ARGENTINA_TZ_STRING });
+            description += ` **${formattedPrice}**.\n\n*Actualizado por última vez el ${formattedDate}.*`;
+        }
+
+        //physical
+        else {
             description += `:`;
+            const fields = [];
 
-            const dollarData = await getUSDollarPrices();
-
-            if (!dollarData) {
-                reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
-                deferringMessage.edit(reply);
-                return;
-            }
-
-            const variantsField = { name: 'Variante', value: '', inline: true };
             const bidField = { name: 'COMPRA', value: ``, inline: true };
             const askField = { name: 'VENTA', value: ``, inline: true };
 
-            for (const key in dollarData) if (Object.hasOwnProperty.call(dollarData, key)) {
-                const { ask, bid, title } = dollarData[key];
-                variantsField.value += title + '\n\n';
+            if (cmd === 'usd') {
+                const dollarData = await getUSDollarPrices();
+
+                if (!dollarData) {
+                    reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+                    deferringMessage.edit(reply);
+                    return;
+                }
+
+                const variantsField = { name: 'Variante', value: '', inline: true };
+
+                for (const key in dollarData) if (Object.hasOwnProperty.call(dollarData, key)) {
+                    const { ask, bid, title } = dollarData[key];
+                    variantsField.value += title + '\n\n';
+                    bidField.value += bid ? `**${formatNumber(bid, 2, ARS_CODE)}**\n\n` : '-\n\n';
+                    askField.value += `**${formatNumber(ask, 2, ARS_CODE)}**\n\n`;
+                }
+
+                fields.push(variantsField);
+            } else if (cmd === 'eur') {
+                const euroData = await getEuroPrices();
+
+                if (!euroData) {
+                    reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+                    deferringMessage.edit(reply);
+                    return;
+                }
+
+                const { ask, bid } = euroData;
                 bidField.value += bid ? `**${formatNumber(bid, 2, ARS_CODE)}**\n\n` : '-\n\n';
                 askField.value += `**${formatNumber(ask, 2, ARS_CODE)}**\n\n`;
             }
 
-            embed.addFields([variantsField, bidField, askField])
+            fields.push(bidField);
+            fields.push(askField);
+
+            embed.addFields(fields)
                 .setFooter({ text: 'Información obtenida de DolarHoy.' })
-        } else {
-            const formattedPrice = formatNumber(price, 20, USD_CODE);
-            const formattedDate = lastUpdated.toLocaleString(ARGENTINA_LOCALE_STRING, { timeZone: ARGENTINA_TZ_STRING });
-            description += ` **${formattedPrice}**.\n\n*Actualizado por última vez el ${formattedDate}.*`;
         }
 
         reply.content = null;

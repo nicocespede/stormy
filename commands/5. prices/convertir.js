@@ -3,26 +3,41 @@ const { ICallbackObject } = require('wokcommands');
 const Canvas = require('canvas');
 const { ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { getIds, getGithubRawUrl, getCurrencies } = require('../../src/cache');
-const { getCurrencyData, getUSDollarPrices, USD_CODE, ARS_CODE } = require('../../src/currencies');
+const { getCurrencyData, getUSDollarPrices, USD_CODE, ARS_CODE, ARS_NAME, getEuroPrices } = require('../../src/currencies');
 const { formatNumber, logToFileCommandUsage } = require('../../src/util');
 
 const currencies = getCurrencies();
-const availableCurrencies = Object.keys(currencies);
+const availableCurrencies = Object.keys(currencies).sort((a, b) => a.localeCompare(b));
+
+const getImage = async imageURL => {
+    const swapImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/sorting-arrows-horizontal.png`));
+    const pesoImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/peso.png`));
+    const coinImage = await Canvas.loadImage(imageURL);
+
+    const canvas = Canvas.createCanvas(500, 250);
+    const context = canvas.getContext('2d');
+    const halfHeight = canvas.height / 2;
+    context.drawImage(swapImage, (canvas.width / 2) - 50, halfHeight - 50, 100, 100);
+    context.drawImage(pesoImage, canvas.width - 175, halfHeight - 75, 150, 150);
+    context.drawImage(coinImage, 25, halfHeight - 75, 150, 150);
+
+    return canvas.toBuffer('image/png');
+};
 
 module.exports = {
     category: 'Cotizaciones',
-    description: 'Responde con la conversión de la moneda correspondiente a pesos argentinos.',
+    description: `Responde con la conversión de la moneda correspondiente a ${ARS_NAME}.`,
 
     options: [
         {
             name: 'moneda',
-            description: 'La moneda desde la que se quiere convertir a pesos argentinos.',
+            description: `La moneda desde la que se quiere convertir a ${ARS_NAME}.`,
             required: true,
             type: ApplicationCommandOptionType.String,
             choices: availableCurrencies.map(currency => ({ name: currency.toUpperCase(), value: currency }))
         }, {
             name: 'cantidad',
-            description: 'La cantidad que se quiere convertir a pesos argentinos.',
+            description: `La cantidad que se quiere convertir a ${ARS_NAME}.`,
             required: true,
             type: ApplicationCommandOptionType.String
         }],
@@ -57,50 +72,67 @@ module.exports = {
             return;
         }
 
-        const dollarData = await getUSDollarPrices();
-
-        if (!dollarData) {
-            reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
-            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
-        }
-
-        const variantsField = { name: 'Variante', value: '', inline: true };
-        const valuesField = { name: 'Conversión', value: ``, inline: true };
-        const pricesField = { name: 'Valores tomados en cuenta:', value: `` };
-
         const { imageURL, name, price } = await getCurrencyData(argsCurrency);
-        if (price)
-            pricesField.value += `• ${name}: **${formatNumber(price, 4, USD_CODE)}**\n\n`;
 
-        for (const key in dollarData) if (Object.hasOwnProperty.call(dollarData, key)) {
-            const { ask, title } = dollarData[key];
-            const finalPrice = price ? price * ask * quantity : ask * quantity;
-            variantsField.value += title + '\n\n';
-            valuesField.value += `**${formatNumber(finalPrice, 2, ARS_CODE)}**\n\n`;
-            pricesField.value += `• ${title} (venta): **${formatNumber(ask, 2, ARS_CODE)}**\n\n`;
+        const embed = new EmbedBuilder();
+        let description = `Hola <@${user.id}>, la conversión de **${quantity.toLocaleString(ARGENTINA_LOCALE_STRING)} ${name}** a ${ARS_NAME} es`;
+        const pricesField = { name: 'Valores tomados en cuenta:', value: `` };
+        let footer = {};
+
+        if (argsCurrency === 'eur') {
+            const euroData = await getEuroPrices();
+
+            if (!euroData) {
+                reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+                message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+                return;
+            }
+
+            const { ask } = euroData;
+
+            description += ` **${formatNumber(ask * quantity, 2, ARS_CODE)}**.`;
+
+            pricesField.value += `• ${name} (venta): **${formatNumber(ask, 2, ARS_CODE)}**\n\n`;
+            embed.setFields([pricesField]);
+
+            footer.text = 'Cotización del euro obtenida de DolarHoy.';
+        } else {
+            const dollarData = await getUSDollarPrices();
+
+            if (!dollarData) {
+                reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+                message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+                return;
+            }
+
+            description += ':';
+
+            const variantsField = { name: 'Variante', value: '', inline: true };
+            const valuesField = { name: 'Conversión', value: ``, inline: true };
+
+            if (price)
+                pricesField.value += `• ${name}: **${formatNumber(price, 4, USD_CODE)}**\n\n`;
+
+            for (const key in dollarData) if (Object.hasOwnProperty.call(dollarData, key)) {
+                const { ask, title } = dollarData[key];
+                const finalPrice = price ? price * ask * quantity : ask * quantity;
+                variantsField.value += title + '\n\n';
+                valuesField.value += `**${formatNumber(finalPrice, 2, ARS_CODE)}**\n\n`;
+                pricesField.value += `• ${title} (venta): **${formatNumber(ask, 2, ARS_CODE)}**\n\n`;
+            }
+
+            embed.setFields([variantsField, valuesField, pricesField]);
+
+            footer.text = 'Cotización del dólar obtenida de DolarHoy.';
         }
 
-        const swapImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/sorting-arrows-horizontal.png`));
-        const pesoImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/peso.png`));
-        const coinImage = await Canvas.loadImage(imageURL);
-
-        const canvas = Canvas.createCanvas(500, 250);
-        const context = canvas.getContext('2d');
-        const halfHeight = canvas.height / 2;
-        context.drawImage(swapImage, (canvas.width / 2) - 50, halfHeight - 50, 100, 100);
-        context.drawImage(pesoImage, canvas.width - 175, halfHeight - 75, 150, 150);
-        context.drawImage(coinImage, 25, halfHeight - 75, 150, 150);
-
-        reply.embeds = [new EmbedBuilder()
-            .setTitle(`Conversión de ${name} a Pesos Argentinos`)
-            .setDescription(`Hola <@${user.id}>, la conversión de **${quantity.toLocaleString(ARGENTINA_LOCALE_STRING)} ${name}** a Pesos Argentinos es:`)
-            .setFields([variantsField, valuesField, pricesField])
+        reply.embeds = [embed.setTitle(`Conversión de ${name} a ${ARS_NAME}`)
+            .setDescription(description)
             .setColor(instance.color)
             .setImage('attachment://image.png')
             .setThumbnail(await getGithubRawUrl(`assets/thumbs/exchange.png`))
-            .setFooter({ text: 'Cotización del dólar obtenida de DolarHoy.' })];
-        reply.files = [new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'image.png' })];
+            .setFooter(footer)];
+        reply.files = [new AttachmentBuilder(await getImage(imageURL), { name: 'image.png' })];
         reply.content = null;
 
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
