@@ -61,7 +61,7 @@ module.exports = {
         type: ApplicationCommandOptionType.Subcommand,
         options: [{
             name: 'comando',
-            description: 'El comando de la cuenta que se quiere borrar.',
+            description: 'El comando de la cuenta que se quiere editar.',
             required: true,
             type: ApplicationCommandOptionType.String
         },

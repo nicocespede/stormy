@@ -1,10 +1,11 @@
+const { ICallbackObject } = require('wokcommands');
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
-const { consoleLog, convertTZ } = require('../../src/util');
+const { consoleLog, convertTZ, logToFileCommandUsage } = require('../../src/util');
 
 const translateRank = rank => {
     if (!rank)
@@ -203,7 +204,10 @@ module.exports = {
         });
     },
 
-    callback: async ({ guild, member, user, message, interaction, client, args, channel, instance }) => {
+    /** @param {ICallbackObject} */
+    callback: async ({ args, channel, client, guild, instance, interaction, member, message, text, user }) => {
+        logToFileCommandUsage('smurf', text, interaction, user);
+
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
         const ids = await getIds();
