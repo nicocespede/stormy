@@ -24,7 +24,7 @@
  * @typedef {{[key: String]: String}} UsersIDsCategory
  * @typedef {{channels: ChannelsIDsCategory, emojis: EmojisIDsCategory, guilds: GuildsIDsCategory, roles: RolesIDsCategory, users: UsersIDsCategory}} IDsData
  * 
- * @typedef {{color?: Number[], imageURL: String, name: String, price?: Number}} Currency
+ * @typedef {{color?: Number[], imageURL: String, lastUpdated?: Date, name: String, price?: Number}} Currency
  * @typedef {{color?: Number[], id?: String, image?: {large: String} localization?: {es: String}}} RawCurrency
  * @typedef {{[key: String]: RawCurrency}} RawCurrenciesData
  * 

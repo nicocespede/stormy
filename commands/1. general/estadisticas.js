@@ -37,8 +37,8 @@ module.exports = {
     guildOnly: true,
 
     /** @param {ICallbackObject}*/
-    callback: async ({ guild, message, interaction, user, instance }) => {
-        logToFileCommandUsage(COMMAND_NAME, null, interaction, message, user);
+    callback: async ({ guild, instance, interaction, message, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, null, interaction, user);
 
         const deferringMessage = message ? await message.reply({ content: 'Obteniendo estadísticas, por favor aguardá unos segundos...' })
             : await interaction.deferReply({ ephemeral: true });

@@ -16,8 +16,8 @@ module.exports = {
     ownerOnly: true,
 
     /** @param {ICallbackObject}*/
-    callback: async ({ interaction, message, user }) => {
-        logToFileCommandUsage(COMMAND_NAME, null, interaction, message, user);
+    callback: async ({ user }) => {
+        logToFileCommandUsage(COMMAND_NAME, null, null, user);
 
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {

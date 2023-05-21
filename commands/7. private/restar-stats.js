@@ -15,8 +15,8 @@ module.exports = {
     ownerOnly: true,
 
     /** @param {ICallbackObject} */
-    callback: async ({ args, guild, interaction, message, text, user }) => {
-        logToFileCommandUsage('restar-stats', text, interaction, message, user);
+    callback: async ({ args, guild, text, user }) => {
+        logToFileCommandUsage('restar-stats', text, null, user);
 
         const stats = await getStats();
         const id = args[0];

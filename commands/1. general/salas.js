@@ -11,7 +11,7 @@ module.exports = {
 
     /** @param {ICallbackObject}*/
     callback: async ({ interaction, message, user }) => {
-        logToFileCommandUsage('salas', null, interaction, message, user);
+        logToFileCommandUsage('salas', null, interaction, user);
 
         const row = new ActionRowBuilder()
             .addComponents(new ButtonBuilder()

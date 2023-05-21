@@ -4,7 +4,7 @@ const Canvas = require('canvas');
 const { ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { getIds, getGithubRawUrl, getCurrencies } = require('../../src/cache');
 const { getCurrencyData, getUSDollarPrices, USD_CODE, ARS_CODE } = require('../../src/currencies');
-const { formatNumber } = require('../../src/util');
+const { formatNumber, logToFileCommandUsage } = require('../../src/util');
 
 const currencies = getCurrencies();
 const availableCurrencies = Object.keys(currencies);
@@ -33,7 +33,9 @@ module.exports = {
     slash: 'both',
 
     /**@param {ICallbackObject} */
-    callback: async ({ args, user, message, interaction, instance, guild }) => {
+    callback: async ({ args, guild, instance, interaction, message, text, user }) => {
+        logToFileCommandUsage('convertir', text, interaction, user);
+
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const argsCurrency = message ? args[0] : interaction.options.getString('moneda');
         const quantity = parseFloat((message ? args[1] : interaction.options.getString('cantidad')).replace(',', '.'));

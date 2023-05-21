@@ -33,6 +33,7 @@ module.exports = {
             ret.imageURL = data.image.large;
             const { market_data } = data;
             ret.price = market_data.current_price.usd;
+            ret.lastUpdated = new Date(market_data.last_updated);
         } else {
             const { image, localization } = currencies[currencyId];
             ret.name = localization.es;
