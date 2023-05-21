@@ -9,6 +9,12 @@ const { formatNumber, logToFileCommandUsage } = require('../../src/util');
 const currencies = getCurrencies();
 const availableCurrencies = Object.keys(currencies).sort((a, b) => a.localeCompare(b));
 
+/**
+ * Creates an image that represents the swap of a currency to Peso argentino.
+ * 
+ * @param {String} imageURL The URL to the image of the currency logo.
+ * @returns The buffer of the finished image.
+ */
 const getImage = async imageURL => {
     const swapImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/sorting-arrows-horizontal.png`));
     const pesoImage = await Canvas.loadImage(await getGithubRawUrl(`assets/currencies/peso.png`));
