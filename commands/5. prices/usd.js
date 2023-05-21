@@ -80,10 +80,7 @@ module.exports = {
                 askField.value += `**${formatNumber(ask, 2, ARS_CODE)}**\n\n`;
             }
 
-            fields.push(bidField);
-            fields.push(askField);
-
-            embed.addFields(fields)
+            embed.addFields(fields.concat([bidField, askField]))
                 .setFooter({ text: 'Información obtenida de DolarHoy.' })
         }
 
