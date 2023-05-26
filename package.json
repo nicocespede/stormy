@@ -13,6 +13,7 @@
   "dependencies": {
     "@discord-player/extractor": "^4.1.2",
     "@discordjs/opus": "^0.9.0",
+    "@distube/ytdl-core": "^4.11.10",
     "axios": "^0.26.1",
     "canvas": "^2.9.1",
     "chalk": "^4.1.2",
@@ -30,8 +31,7 @@
     "translate": "^1.4.1",
     "unofficial-valorant-api": "^2.3.0-stable.0",
     "wokcommands": "^1.5.3",
-    "xml-js": "^1.6.11",
-    "ytdl-core": "^4.11.4"
+    "xml-js": "^1.6.11"
   },
   "overrides": {
     "wokcommands": {

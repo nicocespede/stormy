@@ -1,6 +1,6 @@
 const { Queue } = require("@discord-player/utils");
-const { QueryType, useMasterPlayer, Track } = require("discord-player");
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require("discord.js");
+const { QueryType, useMasterPlayer, Track, Player } = require("discord-player");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, BaseMessageOptions, Message, CommandInteraction, TextChannel, Guild } = require("discord.js");
 const Genius = require("genius-lyrics");
 const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue, getGithubRawUrl } = require("./cache");
@@ -559,6 +559,14 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
     setMusicPlayerData('player', musicPlayerMessage, collector);
 };
 
+/**
+ * Handles an error in the music channel sending a message to it.
+ * 
+ * @param {Message} [message] The message to be replied.
+ * @param {CommandInteraction} [interaction] The interaction to be replied.
+ * @param {BaseMessageOptions} reply The pre-built reply object.
+ * @param {TextChannel} channel The channel to send the reply to.
+ */
 const handleErrorInMusicChannel = async (message, interaction, reply, channel) => {
     if (message) {
         const temp = await message.reply(reply);
@@ -574,11 +582,29 @@ const handleErrorInMusicChannel = async (message, interaction, reply, channel) =
         await interaction.editReply(reply);
 };
 
+/**
+ * Handles an error sending a message to a channel.
+ * 
+ * @param {BaseMessageOptions} reply The pre-built reply object.
+ * @param {EmbedBuilder} embed The pre-built embed.
+ * @param {String} description The description for the embed.
+ * @param {Message} [message] The message to be replied.
+ * @param {CommandInteraction} [interaction] The interaction to be replied.
+ * @param {TextChannel} channel The channel to send the reply to.
+ */
 const handleError = async (reply, embed, description, message, interaction, channel) => {
     reply.embeds = [embed.setDescription(description).setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
     handleErrorInMusicChannel(message, interaction, reply, channel);
 };
 
+/**
+ * Creates a new music queue.
+ * 
+ * @param {Player} player The Discord Player instance.
+ * @param {Guild} guild The guild where the Player was instanciated.
+ * @param {TextChannel} metadata The text channel where the Player was invoked.
+ * @returns A new music queue.
+ */
 const createQueue = (player, guild, metadata) => {
     const queue = player.nodes.create(guild, {
         metadata,

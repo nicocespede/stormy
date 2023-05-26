@@ -1,4 +1,4 @@
-const { RawCurrenciesData, IDsData, StatsData, TimestampsData } = require("./typedefs");
+const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData } = require("./typedefs");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
@@ -32,8 +32,6 @@ var bansResponsibles = {};
 var crosshairs;
 var smurfs;
 var tracksNameExtras;
-//TEMP SOLUTION
-var blacklistedSongs;//
 var kruMatches;
 let reminders;
 let characters;
@@ -185,6 +183,24 @@ const updateCurrencies = async () => {
 
     return currencies;
 };
+
+//TEMP SOLUTION
+/** @type {BlacklistedSongsData}*/
+let blacklistedSongs;
+
+/**
+ * Retrieves the blacklisted songs data from the blacklistedTracks.json file.
+ * 
+ * @returns All cached blacklisted songs data.
+ */
+const updateBlacklistedSongs = async () => {
+    const data = await retrieveDataFromFile(`blacklistedTracks.json`);
+
+    if (data)
+        blacklistedSongs = data;
+
+    return blacklistedSongs;
+}//
 
 /**
  * Retrieves the data from a file.
@@ -489,15 +505,14 @@ module.exports = {
     },
 
     //TEMP SOLUTION
-    getBlacklistedSongs: () => blacklistedSongs,
-    updateBlacklistedSongs: async () => {
-        await fetch(await getGithubRawUrl(`blacklistedTracks.json`))
-            .then(res => res.text()).then(data => {
-                blacklistedSongs = JSON.parse(data);
-                consoleLog('> blacklistedTracks.json cargado', CONSOLE_GREEN);
-            }).catch(err => consoleLog(`> Error al cargar blacklistedTracks.json\n${err.stack}`, CONSOLE_RED));
-        return blacklistedSongs;
-    },//
+    /**
+     * Gets the blacklisted songs data stored in cache.
+     * 
+     * @returns All cached blacklisted songs data.
+     */
+    getBlacklistedSongs: async () => blacklistedSongs || await updateBlacklistedSongs(),
+    updateBlacklistedSongs,
+    //
 
     /**
      * Gets the IDs data stored in cache.

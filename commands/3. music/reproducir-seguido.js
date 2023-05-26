@@ -1,11 +1,15 @@
+const { ICallbackObject } = require("wokcommands");
 const { QueryType, useMasterPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl, removeSongInQueue,
     //TEMP SOLUTION
-    getBlacklistedSongs, updateBlacklistedSongs//
+    getBlacklistedSongs//
 } = require('../../src/cache');
 const { MusicActions } = require('../../src/constants');
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral, handleError, createQueue, connectToVoiceChannel } = require("../../src/music");
+const { consoleLogError, logToFileError, logToFileCommandUsage } = require('../../src/util');
+
+const MODULE_NAME = 'commands.music.reproducir-seguido';
 
 module.exports = {
     category: 'Música',
@@ -25,7 +29,10 @@ module.exports = {
     expectedArgs: '<URL ó canción>',
     guildOnly: true,
 
+    /** @param {ICallbackObject}*/
     callback: async ({ guild, member, user, message, channel, interaction, text, instance }) => {
+        logToFileCommandUsage(MODULE_NAME, text, interaction, user);
+
         const embed = new EmbedBuilder().setColor(instance.color);
         var song = message ? text : interaction.options.getString('canción');
         const reply = { ephemeral: true };
@@ -53,7 +60,7 @@ module.exports = {
             song = playlists[song.toLowerCase()].url;
 
         //TEMP SOLUTION
-        const blacklistedSongs = getBlacklistedSongs() || await updateBlacklistedSongs();
+        const blacklistedSongs = await getBlacklistedSongs();
         if (Object.keys(blacklistedSongs).includes(song)) {
             song = blacklistedSongs[song];
         }//
@@ -85,7 +92,18 @@ module.exports = {
             res.playlist ? queue.addTrack(res.tracks) : queue.addTrack(res.tracks[0]);
 
             if (!queue.node.isPlaying())
-                await queue.node.play();
+                try {
+                    await queue.node.play();
+                } catch (e) {
+                    updateLastAction(MusicActions.ERROR);
+                    if (message)
+                        deferringMessage.delete();
+                    removeSongInQueue(res.tracks[0].url);
+                    queue.delete();
+                    consoleLogError(`> Error al iniciar reproducción de música, URL: [${res.tracks[0].url}]`)
+                    logToFileError(MODULE_NAME, e);
+                    handleError(reply, embed, '❌ Error al iniciar reproductor de música.\n\n_Intenta usar la URL directa de la canción, o una URL diferente._', message, interaction, channel);
+                }
             return;
         }
 
@@ -133,7 +151,6 @@ module.exports = {
 
         addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
         setMusicPlayerMessage(queue, res.tracks[0], `☑️ ${message ? deferringMessage.mentions.repliedUser.tag : interaction.user.tag} agregó a la cola como siguiente${action}`);
-        return;
     }
 
 }

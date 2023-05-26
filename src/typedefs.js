@@ -30,6 +30,8 @@
  * 
  * @typedef {{ask: Number, bid?: Number, title: String, url: String}} USDollarVariant
  * @typedef {{[key: String]: USDollarVariant}} USDollarData
+ * 
+ * @typedef {{[key: String]: String}} BlacklistedSongsData
  */
 
 exports.unused = {};
