@@ -1,4 +1,4 @@
-const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData } = require("./typedefs");
+const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData } = require("./typedefs");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
@@ -29,7 +29,6 @@ let lastAction;
 let playlists;
 var thermalPasteDates;
 var bansResponsibles = {};
-var crosshairs;
 var smurfs;
 var tracksNameExtras;
 var kruMatches;
@@ -201,6 +200,28 @@ const updateBlacklistedSongs = async () => {
 
     return blacklistedSongs;
 }//
+
+/**@type {CrosshairsData}*/
+let crosshairs;
+
+/**
+ * Retrieves the crosshairs data from the database.
+ * 
+ * @returns All cached crosshairs data.
+ */
+const updateCrosshairs = async () => {
+    const crosshairSchema = require('../models/crosshair-schema');
+    const results = await crosshairSchema.find({}).sort({ id: 'asc' });
+    crosshairs = {};
+    results.forEach(ch => crosshairs[`${ch.id}`] = {
+        name: ch.name,
+        code: ch.code,
+        owner: ch.ownerId
+    });
+
+    consoleLog('> Caché de miras actualizado', CONSOLE_GREEN);
+    return crosshairs;
+}
 
 /**
  * Retrieves the data from a file.
@@ -464,19 +485,13 @@ module.exports = {
     addBanResponsible: (id, responsible) => (bansResponsibles[id] = responsible),
     removeBanResponsible: id => (delete bansResponsibles[id]),
 
-    getCrosshairs: () => crosshairs,
-    updateCrosshairs: async () => {
-        const crosshairSchema = require('../models/crosshair-schema');
-        const results = await crosshairSchema.find({}).sort({ id: 'asc' });
-        crosshairs = {};
-        results.forEach(ch => crosshairs[`${ch.id}`] = {
-            name: ch.name,
-            code: ch.code,
-            owner: ch.ownerId
-        });
-        consoleLog('> Caché de miras actualizado', CONSOLE_GREEN);
-        return crosshairs;
-    },
+    /**
+     * Gets the crosshairs data stored in cache.
+     * 
+     * @returns All cached crosshairs data.
+     */
+    getCrosshairs: async () => crosshairs || await updateCrosshairs(),
+    updateCrosshairs,
 
     getSmurfs: () => smurfs,
     updateSmurfs: async () => {

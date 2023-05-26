@@ -32,6 +32,9 @@
  * @typedef {{[key: String]: USDollarVariant}} USDollarData
  * 
  * @typedef {{[key: String]: String}} BlacklistedSongsData
+ * 
+ * @typedef {{code: String, name: String, owner: String}} Crosshair
+ * @typedef {{[key: String]: Crosshair}} CrosshairsData
  */
 
 exports.unused = {};

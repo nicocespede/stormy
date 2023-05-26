@@ -10,7 +10,7 @@ const smurfSchema = require('../models/smurf-schema');
 const statSchema = require('../models/stat-schema');
 const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
 const { consoleLog, logToFile } = require('./util');
-const { updateStats } = require('./cache');
+const { updateStats, updateCrosshairs } = require('./cache');
 
 const MODULE_NAME = 'src.mongodb';
 
@@ -53,13 +53,34 @@ module.exports = {
         consoleLog('> Cumpleaños eliminado de la base de datos', CONSOLE_YELLOW);
     },
 
+    /**
+     * Adds a new crosshair document to the database.
+     * 
+     * @param {String} name The name of the crosshair.
+     * @param {String} code The code of the crosshair.
+     * @param {String} owner The ID of the owner.
+     */
     addCrosshair: async (name, code, owner) => {
-        await new crosshairSchema({ name: name, code: code, ownerId: owner }).save();
-        consoleLog('> Mira agregada a la base de datos', CONSOLE_GREEN);
+        const result = await crosshairSchema.findOne().sort({ id: -1 }).select('id');
+        const newId = !result ? 1 : result.id + 1;
+        await new crosshairSchema({ id: newId, name, code, ownerId: owner }).save();
+        await updateCrosshairs();
+
+        consoleLog(`> Mira '${name}' agregada a la base de datos`, CONSOLE_GREEN);
+        logToFile(`${MODULE_NAME}.addCrosshair`, `Adding crosshair '${name}' to the database`)
     },
+
+    /**
+     * Deletes a crosshair from the database.
+     * 
+     * @param {Number} id The ID of the crosshair.
+     */
     deleteCrosshair: async id => {
-        await crosshairSchema.deleteOne({ id: id });
+        await crosshairSchema.deleteOne({ id });
+        await updateCrosshairs();
+
         consoleLog('> Mira eliminada de la base de datos', CONSOLE_YELLOW);
+        logToFile(`${MODULE_NAME}.deleteCrosshair`, `Deleting crosshair from the database`);
     },
 
     updateFilters: async (id, filters) => {
@@ -145,7 +166,7 @@ module.exports = {
     addStat: async (id, username) => {
         await new statSchema({ _id: id, days: 0, hours: 0, minutes: 0, seconds: 0 }).save();
         consoleLog('> Estadística agregada a la base de datos', CONSOLE_GREEN);
-        logToFile(`${MODULE_NAME}.addStat`, `Adding new stats record for user ${username}`);
+        logToFile(`${MODULE_NAME}.addStat`, `Adding new stats record for user ${username} to the database`);
         return await updateStats();
     },
 
@@ -163,7 +184,7 @@ module.exports = {
         await statSchema.updateOne({ _id: id }, { days: days, hours: hours, minutes: minutes, seconds: seconds });
 
         consoleLog(`> Estadística ${username ? `de ${username} ` : ''}actualizada en la base de datos`, CONSOLE_GREEN);
-        logToFile(`${MODULE_NAME}.updateStat`, `Updating stats for user ${username}`);
+        logToFile(`${MODULE_NAME}.updateStat`, `Updating stats for user ${username} in database`);
         await updateStats();
     },
 
@@ -174,13 +195,13 @@ module.exports = {
         const inserted = result.upsertedCount;
         if (inserted > 0) {
             consoleLog(`> ${inserted} estadística${inserted > 1 ? 's' : ''} agregada${inserted > 1 ? 's' : ''} a la base de datos`, CONSOLE_GREEN);
-            logToFile(`${MODULE_NAME}.updateManyStats`, `Adding new stats record for ${inserted} user${inserted > 1 ? 's' : ''}`);
+            logToFile(`${MODULE_NAME}.updateManyStats`, `Adding new stats record for ${inserted} user${inserted > 1 ? 's' : ''} to database`);
         }
 
         const updated = result.modifiedCount;
         if (updated > 0) {
             consoleLog(`> ${updated} estadística${updated > 1 ? 's' : ''} actualizada${updated > 1 ? 's' : ''} en la base de datos`, CONSOLE_GREEN);
-            logToFile(`${MODULE_NAME}.updateManyStats`, `Updating stats for ${updated} user${updated > 1 ? 's' : ''}`);
+            logToFile(`${MODULE_NAME}.updateManyStats`, `Updating stats for ${updated} user${updated > 1 ? 's' : ''} in database`);
         }
 
         await updateStats();
