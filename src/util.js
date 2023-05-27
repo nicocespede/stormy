@@ -1,5 +1,5 @@
-const { User, Message, CommandInteraction } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING } = require('./constants');
+const { User, CommandInteraction } = require('discord.js');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -91,6 +91,19 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
     });
 }
 
+/**
+     * Logs to a file the usage of a command.
+     * 
+     * @param {String} commandName The name of the command used.
+     * @param {String} [args] The args of the command used.
+     * @param {CommandInteraction} interaction The interaction of the command.
+     * @param {User} user The user who used the command.
+     */
+const logToFileCommandUsage = (commandName, args, interaction, user) => {
+    const prefix = interaction ? '/' : PREFIX;
+    logToFile(`${commandName}.callback`, `${user.tag} used ${prefix}${commandName}${args ? ` [${args}]` : ''}`);
+}
+
 module.exports = {
     convertTZ,
 
@@ -122,20 +135,18 @@ module.exports = {
 
     logToFile,
 
+    logToFileCommandUsage,
+
     /**
      * Logs to a file the usage of a command.
      * 
      * @param {String} commandName The name of the command used.
      * @param {String} [args] The args of the command used.
+     * @param {String} subCommandName The name of the subcommand used.
      * @param {CommandInteraction} interaction The interaction of the command.
      * @param {User} user The user who used the command.
      */
-    logToFileCommandUsage: (commandName, args, interaction, user) => {
-        const prefix = interaction ? '/' : PREFIX;
-        if (args)
-            args = ` [${args}]`;
-        logToFile(`${commandName}.callback`, `${user.tag} used ${prefix}${commandName}${args || ''}`);
-    },
+    logToFileSubCommandUsage: (commandName, args, subCommandName, interaction, user) => logToFileCommandUsage(commandName, args === 'undefined' ? subCommandName : args, interaction, user),
 
     /**
      * Logs to a file when a function is called.
@@ -168,7 +179,7 @@ module.exports = {
         for (let i = 0; i < split.length; i++) {
             const line = split[i];
             const aux = chunk + line + '\n';
-            if (aux.length > 4096) {
+            if (aux.length > EMBED_DESCRIPTION_MAX_LENGTH) {
                 ret.push(chunk);
                 chunk = '';
             }

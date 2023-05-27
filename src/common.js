@@ -5,7 +5,7 @@ const Canvas = require('canvas');
 const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
     getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
-const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
+const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, EMBED_FIELD_VALUE_MAX_LENGTH } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
@@ -602,7 +602,7 @@ module.exports = {
                 const newName = `**${i + 1}.** ${name}`;
                 const aux = moviesField.value + `${newName}\n\n`;
 
-                if (aux.length <= 1024) {
+                if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                     moviesField.value += `${newName}\n\n`;
                     typesField.value += `*${type}*\n\n`;
                     if (ctx.measureText(newName).width >= 292)

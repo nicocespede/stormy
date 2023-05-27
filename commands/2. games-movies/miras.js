@@ -5,7 +5,7 @@ const ValorantAPI = new HenrikDevValorantAPI();
 const { getCrosshairs, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
-const { logToFileCommandUsage, consoleLogError, logToFileError } = require("../../src/util");
+const { logToFileSubCommandUsage, consoleLogError, logToFileError } = require("../../src/util");
 
 const COMMAND_NAME = 'miras';
 const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
@@ -61,9 +61,9 @@ module.exports = {
     slash: 'both',
 
     callback: async ({ args, guild, instance, interaction, message, user, text }) => {
-        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
-
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
+        logToFileSubCommandUsage(COMMAND_NAME, text, subCommand, interaction, user);
+
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
         const reply = { ephemeral: false };

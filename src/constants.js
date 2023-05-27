@@ -14,6 +14,9 @@ module.exports = {
 
     color: [4, 134, 164],
 
+    EMBED_DESCRIPTION_MAX_LENGTH: 4096,
+    EMBED_FIELD_VALUE_MAX_LENGTH: 1024,
+
     CONSOLE_BLUE: 'BLUE',
     CONSOLE_GREEN: 'GREEN',
     CONSOLE_RED: 'RED',

@@ -238,19 +238,30 @@ const updateKruMatches = async type => {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
         const a = $('.wf-card.fc-flex.m-item');
+
         const matches = [];
         a.each((_, el) => {
             const split = $(el).children('.m-item-date').text().trim().split(`\t`);
             const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
             date.setHours(date.getHours() - 2);
-            let remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text().replace('w', 's').replace('mo', 'me');
-            if (!remaining || remaining === '')
-                remaining = 'En vivo';
+
             const match = {
                 date,
-                remaining,
                 url: urlBase + el.attribs['href']
             };
+
+            let result = $(el).children('.m-item-result.fc-flex');
+
+            if (type === 'upcoming') {
+                result = result.children(':first').text().replace('w', 's').replace('mo', 'me');
+
+                if (!result || result === '')
+                    result = 'En vivo';
+
+                match.remaining = result;
+            } else
+                match.score = result.find('span').map((_, element) => $(element).text()).get().join('-');
+
             const teams = $(el).children('.m-item-team.text-of');
             teams.each((i, team) => {
                 const names = $(team).children().get();
@@ -258,15 +269,18 @@ const updateKruMatches = async type => {
                 match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
                 match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
             });
+
             matches.push(match);
         });
+
         kruMatches[type] = matches;
     } catch (e) {
         if (!kruMatches[type])
             kruMatches[type] = [];
-        consoleLogError(`> Error al obtener información de partidos programados de KRÜ`);
+        consoleLogError(`> Error al obtener información de ${type === 'upcoming' ? `próximos partidos` : `partidos completados`} de KRÜ`);
         logToFileError(`${MODULE_NAME}.updateKruMatches`, e);
     }
+
     return kruMatches[type];
 }
 

@@ -1,6 +1,6 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getPlaylists, updatePlaylists, getIds, getGithubRawUrl } = require('../../src/cache');
-const { PREFIX } = require('../../src/constants');
+const { PREFIX, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
 const { handleErrorEphemeral } = require('../../src/music');
 
@@ -84,7 +84,7 @@ module.exports = {
                     i++;
                     const { url } = playlist;
                     const aux = ownedField.value + `**${i}.** [${name}](${url})\n\n`;
-                    if (aux.length <= 1024) {
+                    if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                         ownedField.value += `**${i}.** [${name}](${url})\n\n`;
                         continue;
                     }
@@ -107,7 +107,7 @@ module.exports = {
                     const { url, ownerId } = playlist;
                     const member = members.get(ownerId);
                     const aux = othersField.value + `**${i}.** [${name}](${url})\n\n`;
-                    if (aux.length <= 1024) {
+                    if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                         othersField.value += `**${i}.** [${name}](${url})\n\n`;
                         ownersField.value += `${member ? member.user.tag : 'Desconocido'}\n\n`;
                         continue;

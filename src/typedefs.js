@@ -36,7 +36,7 @@
  * @typedef {{code: String, name: String, owner: String}} Crosshair
  * @typedef {{[key: String]: Crosshair}} CrosshairsData
  * 
- * @typedef {{date: Date, remaining: String, team1Name: String, team1Tag: String, team2Name: String, team2Tag: String, url: String}} ValorantMatch
+ * @typedef {{date: Date, remaining?: String, score?: String, team1Name: String, team1Tag: String, team2Name: String, team2Tag: String, url: String}} ValorantMatch
  * @typedef {{completed: ValorantMatch[], upcoming: ValorantMatch[]}} ValorantMatchesData
  */
 

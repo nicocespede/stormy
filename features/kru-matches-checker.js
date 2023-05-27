@@ -1,6 +1,8 @@
 const { getKruMatches, updateKruMatches, getIds, timeouts } = require('../src/cache');
-const { ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../src/constants');
-const { convertTZ, consoleLog } = require('../src/util');
+const { ARGENTINA_LOCALE_STRING } = require('../src/constants');
+const { convertTZ, consoleLogError, logToFileError } = require('../src/util');
+
+const MODULE_NAME = 'features.kru-matches-checker';
 
 module.exports = async client => {
     const check = async () => {
@@ -17,16 +19,19 @@ module.exports = async client => {
                 const rivalTeam = team1Name.includes('KRÜ') ? team2Name : team1Name;
                 const difference = date - today;
 
-                if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} hs**.`)
-                        .catch(_ => consoleLog("> Error al enviar alerta de partido de KRÜ", CONSOLE_RED));
-                }
+                try {
+                    if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
+                        const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
+                        channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} hs**.`);
+                    }
 
-                if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9)) {
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
-                        .catch(_ => consoleLog("> Error al enviar alerta de partido de KRÜ", CONSOLE_RED));
+                    if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9)) {
+                        const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
+                        channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`);
+                    }
+                } catch (error) {
+                    consoleLogError("> Error al enviar alerta de partido de KRÜ");
+                    logToFileError(MODULE_NAME + '.check', error);
                 }
             }
         }
@@ -36,9 +41,10 @@ module.exports = async client => {
 
     let exec = false;
     const update = async () => {
-        if (exec)
+        if (exec) {
+            await updateKruMatches('completed');
             await updateKruMatches('upcoming');
-        else
+        } else
             exec = true;
 
         timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 15);

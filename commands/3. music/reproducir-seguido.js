@@ -9,7 +9,8 @@ const { MusicActions } = require('../../src/constants');
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral, handleError, createQueue, connectToVoiceChannel } = require("../../src/music");
 const { consoleLogError, logToFileError, logToFileCommandUsage } = require('../../src/util');
 
-const MODULE_NAME = 'commands.music.reproducir-seguido';
+const COMMAND_NAME = 'reproducir-seguido';
+const MODULE_NAME = 'commands.music.' + COMMAND_NAME;
 
 /**@type {ICommand}*/
 module.exports = {
@@ -31,7 +32,7 @@ module.exports = {
     guildOnly: true,
 
     callback: async ({ guild, member, user, message, channel, interaction, text, instance }) => {
-        logToFileCommandUsage(MODULE_NAME, text, interaction, user);
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
 
         const embed = new EmbedBuilder().setColor(instance.color);
         var song = message ? text : interaction.options.getString('canción');

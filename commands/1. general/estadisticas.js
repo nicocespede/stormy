@@ -4,7 +4,7 @@ const { createCanvas } = require('canvas');
 const { getStats, getTimestamps, getGithubRawUrl } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
 const { consoleLog, logToFile, logToFileCommandUsage } = require('../../src/util');
-const { CONSOLE_YELLOW } = require('../../src/constants');
+const { CONSOLE_YELLOW, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
     short: ['día', 'hora', 'min.', 'seg.']
@@ -78,7 +78,7 @@ module.exports = {
                 let aux2 = timeField.value + `${timeToString('full', seconds, minutes, hours, days)}\n\n`;
                 if (ctx.measureText(aux2).width >= 182)
                     aux2 = timeField.value + `${timeToString('short', seconds, minutes, hours, days)}\n\n`;
-                if (aux1.length <= 1024 && aux2.length <= 1024) {
+                if (aux1.length <= EMBED_FIELD_VALUE_MAX_LENGTH && aux2.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                     usersField.value = aux1;
                     timeField.value = aux2;
                 } else {
