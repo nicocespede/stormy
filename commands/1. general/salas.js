@@ -1,7 +1,8 @@
-const { ICallbackObject } = require("wokcommands");
+const { ICommand } = require("wokcommands");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { logToFileCommandUsage } = require("../../src/util");
 
+/** @type {ICommand}*/
 module.exports = {
     category: 'General',
     description: 'Responde con los links de las salas para ver videos sincronizados.',
@@ -9,7 +10,6 @@ module.exports = {
     maxArgs: 0,
     slash: 'both',
 
-    /** @param {ICallbackObject}*/
     callback: async ({ interaction, message, user }) => {
         logToFileCommandUsage('salas', null, interaction, user);
 

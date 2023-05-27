@@ -1,8 +1,10 @@
+const { ICommand } = require('wokcommands');
 const { EmbedBuilder } = require('discord.js');
 const { updateKruMatches, getGithubRawUrl } = require('../../src/cache');
 const { ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { convertTZ } = require('../../src/util');
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Ver los próximos partidos agendados de KRÜ.',

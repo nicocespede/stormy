@@ -1,4 +1,4 @@
-const { ICallbackObject } = require('wokcommands');
+const { ICommand } = require('wokcommands');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, getTimestamps, getGithubRawUrl } = require('../../src/cache');
@@ -27,6 +27,7 @@ const timeToString = (version, seconds, minutes, hours, days) => {
     return ret;
 }
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'General',
     description: 'Responde con las estadísticas de los usuarios del servidor.',
@@ -36,7 +37,6 @@ module.exports = {
     slash: 'both',
     guildOnly: true,
 
-    /** @param {ICallbackObject}*/
     callback: async ({ guild, instance, interaction, message, user }) => {
         logToFileCommandUsage(COMMAND_NAME, null, interaction, user);
 

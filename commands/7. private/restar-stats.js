@@ -1,9 +1,10 @@
-const { ICallbackObject } = require("wokcommands");
+const { ICommand } = require("wokcommands");
 const { getStats } = require("../../src/cache");
 const { fullToSeconds, secondsToFull } = require("../../src/common");
 const { updateStat } = require("../../src/mongodb");
 const { logToFileCommandUsage } = require("../../src/util");
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Resta el tiempo indicado a las estadísticas del ID indicado.',
@@ -14,7 +15,6 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    /** @param {ICallbackObject} */
     callback: async ({ args, guild, text, user }) => {
         logToFileCommandUsage('restar-stats', text, null, user);
 

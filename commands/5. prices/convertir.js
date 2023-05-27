@@ -1,5 +1,5 @@
 const { EmbedBuilder, AttachmentBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { ICallbackObject } = require('wokcommands');
+const { ICommand } = require('wokcommands');
 const Canvas = require('canvas');
 const { ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { getIds, getGithubRawUrl, getCurrencies } = require('../../src/cache');
@@ -30,6 +30,7 @@ const getImage = async imageURL => {
     return canvas.toBuffer('image/png');
 };
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Cotizaciones',
     description: `Responde con la conversión de la moneda correspondiente a ${ARS_NAME}.`,
@@ -53,7 +54,6 @@ module.exports = {
     expectedArgs: '<moneda> <cantidad>',
     slash: 'both',
 
-    /**@param {ICallbackObject} */
     callback: async ({ args, guild, instance, interaction, message, text, user }) => {
         logToFileCommandUsage('convertir', text, interaction, user);
 

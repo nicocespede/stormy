@@ -1,4 +1,4 @@
-const { ICallbackObject } = require("wokcommands");
+const { ICommand } = require("wokcommands");
 const { getTimestamps } = require("../../src/cache");
 const { pushDifferences } = require("../../src/common");
 const { logToFile, logToFileCommandUsage } = require("../../src/util");
@@ -6,6 +6,7 @@ const { logToFile, logToFileCommandUsage } = require("../../src/util");
 const COMMAND_NAME = 'enviar-estadisticas';
 const MODULE_NAME = `commands.private.${COMMAND_NAME}`;
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Envía a la base de datos las estadísticas recolectadas.',
@@ -15,7 +16,6 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    /** @param {ICallbackObject}*/
     callback: async ({ user }) => {
         logToFileCommandUsage(COMMAND_NAME, null, null, user);
 

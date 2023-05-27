@@ -1,4 +1,4 @@
-const { ICallbackObject } = require('wokcommands');
+const { ICommand } = require('wokcommands');
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
@@ -153,6 +153,7 @@ const getRow = type => {
         .setDisabled(disabled));
 };
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Envía un MD con la información de las cuentas smurf de Valorant (sólo para usuarios autorizados).',
@@ -204,7 +205,6 @@ module.exports = {
         });
     },
 
-    /** @param {ICallbackObject} */
     callback: async ({ args, channel, client, guild, instance, interaction, member, message, text, user }) => {
         logToFileCommandUsage('smurf', text, interaction, user);
 

@@ -1,4 +1,4 @@
-const { ICallbackObject } = require('wokcommands');
+const { ICommand } = require('wokcommands');
 const { EmbedBuilder } = require('discord.js');
 const { ARGENTINA_TZ_STRING, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { getCurrencies } = require('../../src/cache');
@@ -8,6 +8,7 @@ const { logToFileCommandUsage, formatNumber } = require('../../src/util');
 const availableCurrencies = Object.keys(getCurrencies());
 availableCurrencies.splice(availableCurrencies.indexOf('usd'), 1);
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Cotizaciones',
     description: 'Responde con la cotización del dólar o la de otra moneda que aparezca en los alias.',
@@ -16,7 +17,6 @@ module.exports = {
     maxArgs: 0,
     slash: false,
 
-    /**@param {ICallbackObject} */
     callback: async ({ instance, message, user }) => {
         const cmd = message.content.toLowerCase().split(' ')[0].substring(1);
 

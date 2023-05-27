@@ -1,4 +1,4 @@
-const { ICallbackObject } = require("wokcommands");
+const { ICommand } = require("wokcommands");
 const { QueryType, useMasterPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl, removeSongInQueue,
@@ -11,6 +11,7 @@ const { consoleLogError, logToFileError, logToFileCommandUsage } = require('../.
 
 const MODULE_NAME = 'commands.music.reproducir-seguido';
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Música',
     description: 'Agrega una canción como siguiente a la cola.',
@@ -29,7 +30,6 @@ module.exports = {
     expectedArgs: '<URL ó canción>',
     guildOnly: true,
 
-    /** @param {ICallbackObject}*/
     callback: async ({ guild, member, user, message, channel, interaction, text, instance }) => {
         logToFileCommandUsage(MODULE_NAME, text, interaction, user);
 

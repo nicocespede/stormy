@@ -1,4 +1,4 @@
-const { ICallbackObject } = require("wokcommands");
+const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
@@ -10,6 +10,7 @@ const { logToFileCommandUsage, consoleLogError, logToFileError } = require("../.
 const COMMAND_NAME = 'miras';
 const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Guarda miras de Valorant.',
@@ -59,7 +60,6 @@ module.exports = {
     expectedArgs: '<subcomando>',
     slash: 'both',
 
-    /**@param {ICallbackObject}*/
     callback: async ({ args, guild, instance, interaction, message, user, text }) => {
         logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
 
