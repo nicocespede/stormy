@@ -41,10 +41,9 @@ module.exports = async client => {
 
     let exec = false;
     const update = async () => {
-        if (exec) {
-            await updateKruMatches('completed');
+        if (exec)
             await updateKruMatches('upcoming');
-        } else
+        else
             exec = true;
 
         timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 15);
