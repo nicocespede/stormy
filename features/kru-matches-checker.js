@@ -4,7 +4,7 @@ const { convertTZ, consoleLog } = require('../src/util');
 
 module.exports = async client => {
     const check = async () => {
-        const matches = getKruMatches() || await updateKruMatches();
+        const matches = await getKruMatches('upcoming');
 
         if (matches.length > 0) {
             const today = new Date();
@@ -37,7 +37,7 @@ module.exports = async client => {
     let exec = false;
     const update = async () => {
         if (exec)
-            await updateKruMatches();
+            await updateKruMatches('upcoming');
         else
             exec = true;
 

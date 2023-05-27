@@ -21,14 +21,13 @@ module.exports = {
         const datesField = { name: 'Fecha', value: '', inline: true };
         const urlsField = { name: 'Detalles', value: '', inline: true };
 
-        const matches = await updateKruMatches();
-        for (const m in matches) if (Object.hasOwnProperty.call(matches, m)) {
-            const { date, remaining, team1Tag, team2Tag, url } = matches[m];
+        const matches = await updateKruMatches('upcoming');
+        for (const { date, remaining, team1Tag, team2Tag, url } of matches) {
             duelsField.value += `**${team1Tag}** vs **${team2Tag}**\n\n`;
             const convertedDate = convertTZ(date);
             const dateInt = convertedDate.getDate();
             const month = convertedDate.getMonth() + 1;
-            datesField.value += `${dateInt < 10 ? `0${dateInt}` : dateInt}/${month < 10 ? `0${month}` : month} ${convertedDate.toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} **(${remaining})**\n\n`;
+            datesField.value += `${`${dateInt}`.padStart(2, '0')}/${`${month}`.padStart(2, '0')} ${convertedDate.toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} **(${remaining})**\n\n`;
             urlsField.value += `**[🔗](${url})**\n\n`;
         }
 

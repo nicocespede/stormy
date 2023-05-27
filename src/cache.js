@@ -1,4 +1,4 @@
-const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData } = require("./typedefs");
+const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData } = require("./typedefs");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
@@ -31,7 +31,6 @@ var thermalPasteDates;
 var bansResponsibles = {};
 var smurfs;
 var tracksNameExtras;
-var kruMatches;
 let reminders;
 let characters;
 let songsInQueue = {};
@@ -221,6 +220,54 @@ const updateCrosshairs = async () => {
 
     consoleLog('> Caché de miras actualizado', CONSOLE_GREEN);
     return crosshairs;
+}
+
+/**@type {ValorantMatchesData}*/
+const kruMatches = {};
+
+/**
+ * Scraps the Kru completed/upcoming matches data from vlr.gg.
+ * 
+ * @param {"completed" | "upcoming"} type The matches type wanted.
+ * @returns All cached Kru completed/upcoming matches data.
+ */
+const updateKruMatches = async type => {
+    const urlBase = 'https://www.vlr.gg';
+    const url = urlBase + '/team/matches/2355/kr-esports/?group=' + type;
+    try {
+        const { data } = await axios.get(url);
+        const $ = cheerio.load(data);
+        const a = $('.wf-card.fc-flex.m-item');
+        const matches = [];
+        a.each((_, el) => {
+            const split = $(el).children('.m-item-date').text().trim().split(`\t`);
+            const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
+            date.setHours(date.getHours() - 2);
+            let remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text().replace('w', 's').replace('mo', 'me');
+            if (!remaining || remaining === '')
+                remaining = 'En vivo';
+            const match = {
+                date,
+                remaining,
+                url: urlBase + el.attribs['href']
+            };
+            const teams = $(el).children('.m-item-team.text-of');
+            teams.each((i, team) => {
+                const names = $(team).children().get();
+                const name = $(names[0]).text().trim();
+                match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
+                match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
+            });
+            matches.push(match);
+        });
+        kruMatches[type] = matches;
+    } catch (e) {
+        if (!kruMatches[type])
+            kruMatches[type] = [];
+        consoleLogError(`> Error al obtener información de partidos programados de KRÜ`);
+        logToFileError(`${MODULE_NAME}.updateKruMatches`, e);
+    }
+    return kruMatches[type];
 }
 
 /**
@@ -440,7 +487,6 @@ module.exports = {
      * @returns All cached stats data.
      */
     getStats: async () => stats || await updateStats(),
-
     updateStats,
 
     /**
@@ -535,48 +581,16 @@ module.exports = {
      * @returns All cached IDs data.
      */
     getIds: async () => ids || await updateIds(),
-
     updateIds,
 
-    getKruMatches: () => kruMatches,
-    updateKruMatches: async () => {
-        const urlBase = 'https://www.vlr.gg';
-        const url = urlBase + '/team/matches/2355/kr-esports/?group=upcoming';
-        try {
-            const { data } = await axios.get(url);
-            const $ = cheerio.load(data);
-            const a = $('.wf-card.fc-flex.m-item');
-            const matches = [];
-            a.each((_, el) => {
-                const split = $(el).children('.m-item-date').text().trim().split(`\t`);
-                const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
-                date.setHours(date.getHours() - 2);
-                let remaining = $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text().replace('w', 's').replace('mo', 'me');
-                if (!remaining || remaining === '')
-                    remaining = 'En vivo';
-                const match = {
-                    date,
-                    remaining,
-                    url: urlBase + el.attribs['href']
-                };
-                const teams = $(el).children('.m-item-team.text-of');
-                teams.each((i, team) => {
-                    const names = $(team).children().get();
-                    const name = $(names[0]).text().trim();
-                    match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
-                    match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
-                });
-                matches.push(match);
-            });
-            kruMatches = matches;
-        } catch (e) {
-            if (!kruMatches)
-                kruMatches = [];
-            consoleLog(`> Error al obtener información de partidos programados de KRÜ`, CONSOLE_RED);
-            logToFileError(`${MODULE_NAME}.updateKruMatches`, e);
-        }
-        return kruMatches;
-    },
+    /**
+     * Gets the Kru completed/upcoming matches data stored in cache.
+     * 
+     * @param {"completed" | "upcoming"} type The type of matches wanted.
+     * @returns All cached Kru completed/upcoming matches data.
+     */
+    getKruMatches: async type => kruMatches[type] || await updateKruMatches(type),
+    updateKruMatches,
 
     getReminders: () => reminders,
     updateReminders: async () => {
