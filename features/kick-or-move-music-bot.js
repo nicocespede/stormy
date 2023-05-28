@@ -27,7 +27,7 @@ module.exports = client => {
         }
         // clear the queue if was kicked
         const { action: lastAction } = getLastAction();
-        if (lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
+        if (lastAction && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
             && lastAction !== MusicActions.ENDING && lastAction !== MusicActions.RESTARTING && lastAction !== MusicActions.ERROR)
             setKicked();
         return;

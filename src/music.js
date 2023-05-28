@@ -144,14 +144,18 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 embed.setTitle('❓ Ayuda: Reproductor de música');
                 embed.setThumbnail(await getGithubRawUrl(`assets/thumbs/help.png`));
                 const controlsInfo = [
-                    '**[ ❌ ]** Limpiar cola de reproducción',
-                    '**[ 🎤 ]** Mostrar/ocultar letra de la canción actual',
-                    '**[ 📄 ]** Mostrar/ocultar cola de reproducción',
-                    '**[ ⏮ ]** Canción anterior',
-                    '**[ ▶ ]** / **[ ⏸ ]** Reanudar/Pausar reproducción',
-                    '**[ ⏭ ]** Canción siguiente',
-                    '**[ ⏹ ]** Parar reproducción',
-                    '**[ 🔀 ]** Mezclar cola de reproducción'
+                    '**`[ ❌ ]`** Limpiar cola de reproducción',
+                    '**`[ 🎤 ]`** Mostrar/Ocultar letra de la canción actual',
+                    '**`[ 📄 ]`** Mostrar/Ocultar cola de reproducción',
+                    '**`[ ⏮ ]`** Canción anterior',
+                    '**`[ ▶ ]`** / **`[ ⏸ ]`** Reanudar/Pausar reproducción',
+                    '**`[ ⏭ ]`** Canción siguiente',
+                    '**`[ ⏹ ]`** Parar reproducción',
+                    '**`[ 🔀 ]`** Mezclar cola de reproducción',
+                    '**`/reproducir-seguido`** Agregar canción/es al principio de la cola',
+                    '**`/saltar-a`** Saltar varias canciones',
+                    '**`/mover`** Mover una canción a otra posición de la cola',
+                    '**`/quitar`** Quitar una o más canciones de la cola'
                 ];
                 embed.setDescription(`**Controles:**\n\n${controlsInfo.join('\n\n')}`);
                 return embed;

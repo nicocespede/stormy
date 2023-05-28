@@ -1,9 +1,12 @@
+const { ICommand } = require("wokcommands");
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { getIds, updateLastAction, getGithubRawUrl } = require("../../src/cache");
 const { MusicActions } = require("../../src/constants");
 const { handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
+const { logToFileCommandUsage } = require("../../src/util");
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Música',
     description: 'Saltear hasta una canción determinada de la cola de reproducción.',
@@ -24,7 +27,9 @@ module.exports = {
     expectedArgs: '<número>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, args, interaction, instance }) => {
+    callback: async ({ args, channel, guild, instance, interaction, member, message, text, user }) => {
+        logToFileCommandUsage('saltar-a', text, interaction, user);
+
         const embed = new EmbedBuilder().setColor(instance.color);
         const number = message ? args[0] : interaction.options.getInteger('número');
         const reply = { ephemeral: true, fetchReply: true };
@@ -60,7 +65,12 @@ module.exports = {
             return;
         }
 
+        const skipped = [];
+        for (let i = 0; i < index; i++)
+            skipped.push(queue.tracks.at(i));
+
         queue.node.skipTo(index);
+
         reply.embeds = [embed.setDescription(`⏭️ **${index + 1} canciones** salteadas.`)
             .setThumbnail(await getGithubRawUrl('assets/thumbs/music/go-to-end.png'))];
         reply.ephemeral = false;
@@ -71,5 +81,7 @@ module.exports = {
             if (message) message.delete();
             replyMessage.delete();
         }, 1000 * 30);
+
+        queue.history.push(skipped.reverse());
     }
 }
