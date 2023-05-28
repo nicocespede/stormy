@@ -1,4 +1,4 @@
-const { Client, VoiceState } = require("discord.js");
+const { Client } = require("discord.js");
 const { addTimestamp, getTimestamps, getIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
@@ -13,40 +13,16 @@ module.exports = client => {
         const moduleName = `${MODULE_NAME}.voiceStateUpdateListener`;
 
         const ids = await getIds();
-
-        /**
-         * Determines if the voice state belongs to the default guild, or not.
-         * 
-         * @param {VoiceState} state The voice state.
-         * @returns True if the voice state belongs to the default guild, or false if not.
-         */
-        const isDefaultGuild = state => state.guild.id === ids.guilds.default;
-
-        if (isDefaultGuild(oldState) || isDefaultGuild(newState)) {
+        if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
 
             const timestamps = getTimestamps();
-            const isBot = oldState.member.user.bot && newState.member.user.bot;
-            const isSameChannel = oldState.channelId && newState.channelId && oldState.channelId === newState.channelId;
-
-            /**
-             * Determines if the voice state is related to the AFK voice channel, or not.
-             * 
-             * @param {VoiceState} state The voice state.
-             * @returns True if the voice state is related to the AFK voice channel, or false if not.
-            */
-            const isAfkChannel = state => state.channelId && state.channel && state.channelId === ids.channels.afk;
 
             // check for streaming or deafen/undeafen updates
-            if (!isBot && isSameChannel && !isAfkChannel(oldState)) {
-
-                const isServerDeaf = oldState.serverDeaf !== null && newState.serverDeaf !== null && oldState.serverDeaf !== newState.serverDeaf;
-                const isSelfDeaf = oldState.selfDeaf !== null && newState.selfDeaf !== null && oldState.selfDeaf !== newState.selfDeaf;
-                const isDeaf = isServerDeaf || isSelfDeaf;
-                const isStreaming = oldState.streaming !== null && newState.streaming !== null && oldState.streaming !== newState.streaming;
-
+            if (!oldState.member.user.bot && oldState.channelId === newState.channelId && oldState.channelId != ids.channels.afk) {
                 // start counter if user undeafens or starts streaming while being deafened,
                 // and stop counter if user deafens and is not streaming
-                if (isDeaf || isStreaming) {
+                if ((oldState.serverDeaf != newState.serverDeaf) || (oldState.selfDeaf != newState.selfDeaf)
+                    || (oldState.streaming != newState.streaming)) {
 
                     const { invalid, size, valid } = await getMembersStatus(oldState.channel);
 
@@ -76,7 +52,7 @@ module.exports = client => {
             const { channel: newChannel, member: newMember } = newState;
 
             //check for new channel
-            if (newMember && !isAfkChannel(newState) && isDefaultGuild(newState)) {
+            if (newMember && newChannel && newState.channelId && newState.channelId !== ids.channels.afk && newState.guild.id === ids.guilds.default) {
 
                 const { size, valid } = await getMembersStatus(newChannel);
 
@@ -86,7 +62,7 @@ module.exports = client => {
                         if (!timestamps[id])
                             addTimestamp(id, new Date());
                     }
-                else if (size > 2 || isBot) {
+                else if (size > 2 || oldState.member.user.bot) {
                     if (!timestamps[oldState.member.id])
                         addTimestamp(oldState.member.id, new Date());
                 } else {
@@ -107,7 +83,7 @@ module.exports = client => {
             }
 
             //check for old channel
-            if (!isAfkChannel(oldState) && isDefaultGuild(oldState)) {
+            if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
 
                 const { size } = await getMembersStatus(oldState.channel);
 
