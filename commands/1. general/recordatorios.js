@@ -1,9 +1,11 @@
+const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
 const { updateReminders, getReminders, getGithubRawUrl } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
 const { CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
-const { convertTZ, consoleLog } = require('../../src/util');
+const { convertTZ, consoleLog, logToFileSubCommandUsage } = require('../../src/util');
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'General',
     description: 'Establece un aviso programado a modo de alarma.',
@@ -46,8 +48,9 @@ module.exports = {
 
     slash: true,
 
-    callback: async ({ user, interaction, instance }) => {
+    callback: async ({ instance, interaction, text, user }) => {
         const subCommand = interaction.options.getSubcommand();
+        logToFileSubCommandUsage('recordatorios', text, subCommand, interaction, user);
 
         if (subCommand === 'ver') {
             const reminders = getReminders() || await updateReminders();
@@ -129,7 +132,7 @@ module.exports = {
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
                 const hour = timeMatch[0];
-                date = new Date(`${split[2]}-${split[1]}-${split[0]}T${hour.length < 5 ? `0${hour}` : hour}Z`);
+                date = new Date(`${split[2].padStart(4, '20')}-${split[1]}-${split[0]}T${hour.padStart(5, '0')}Z`);
                 date.setHours(date.getHours() + 3);
 
                 if (date < new Date()) {
