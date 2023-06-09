@@ -3,9 +3,11 @@ const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelTy
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
-const { PREFIX, color, ARGENTINA_LOCALE_STRING, CONSOLE_RED } = require('../../src/constants');
+const { PREFIX, color, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
-const { consoleLog, convertTZ, logToFileCommandUsage } = require('../../src/util');
+const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError } = require('../../src/util');
+
+const MODULE_NAME = "games-movies.smurf";
 
 const translateRank = rank => {
     if (!rank)
@@ -101,7 +103,8 @@ const getEmbed = async (color, guild, userId) => {
             ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
         } else {
             errorsCounter++;
-            consoleLog(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
+            consoleLogError(`> Error al obtener datos de la cuenta ${name}`);
+            logToFile(MODULE_NAME + `.getEmbed`, `Error: ValorantAPIError fetching ${name}\n` + JSON.stringify(mmr.error));
             accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
             ranksField.value += `???\n\n`;
         }
@@ -189,7 +192,8 @@ module.exports = {
                     });
                     await interaction.update({ components: [getRow('success')] });
                 } catch (e) {
-                    consoleLog(`> Error sending report:\n${e.stack}`, CONSOLE_RED);
+                    consoleLogError(`> Error al enviar reporte de cuenta de Valorant`);
+                    logToFileError(MODULE_NAME + `.init`, e);
                     await interaction.update({ components: [getRow('retry')] });
                 }
             }
@@ -233,7 +237,8 @@ module.exports = {
                 await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, guild, user.id)] });
                 reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
             } catch (error) {
-                consoleLog(`> Error al enviar cuentas smurfs:\n${error.stack}`);
+                consoleLogError(`> Error al enviar cuentas smurfs`);
+                logToFileError(MODULE_NAME, error);
                 reply.content = `❌ Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
             }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -267,7 +272,8 @@ module.exports = {
                     version: 'v1'
                 }).catch(console.error);
                 if (mmr.error) {
-                    consoleLog(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, CONSOLE_RED);
+                    consoleLogError(`> Error al obtener datos de la cuenta ${account.name}`);
+                    logToFile(MODULE_NAME, `Error: ValorantAPIError fetching ${account.name}\n` + JSON.stringify(mmr.error));
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(account.name)
                         .setColor(getRankColor(null))];
