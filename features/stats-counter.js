@@ -122,7 +122,7 @@ module.exports = client => {
 
                 const { size } = await getMembersStatus(oldChannel);
 
-                if (size === 1 && Object.keys(timestamps).length === 1) {
+                if (size === 1 && Object.keys(timestamps).length > 0) {
                     logToFile(moduleName, `One member left in the voice channel ${oldChannel.name}`);
 
                     for (const [id, member] of oldChannel.members)
