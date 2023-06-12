@@ -77,7 +77,7 @@ const consoleLog = (string, color) => {
  */
 const logToFile = (moduleName, string, delimiter = '\n') => {
     const now = convertTZ(new Date());
-    const dateString = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    const dateString = `${now.getFullYear()}-${appendZeroToLength(now.getMonth() + 1, 2)}-${appendZeroToLength(now.getDate(), 2)}`;
     const path = `./logs/log_${dateString}.log`;
 
     // Define log text.
