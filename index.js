@@ -3,11 +3,11 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { timeouts, getIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
-const { pushDifferences, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
-const { consoleLog, logToFile, logToFileListenerTriggered } = require('./src/util');
-const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { PREFIX, MusicActions, categorySettings, DEV_ENV, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
+const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
+const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
+const { consoleLog, logToFile } = require('./src/util');
+const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
+const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const MODULE_NAME = 'index';
 
@@ -161,38 +161,5 @@ client.on('ready', async () => {
 });
 
 client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
-
-const shutdownEvent = !DEV_ENV ? 'SIGTERM' : 'SIGINT';
-process.on(shutdownEvent, async () => {
-    logToFileListenerTriggered(MODULE_NAME, shutdownEvent);
-
-    consoleLog('> Reinicio inminente...', CONSOLE_YELLOW);
-    // disconnects music bot
-    const ids = await getIds();
-    await emergencyShutdown(ids.guilds.default);
-
-    // send stats
-    const timestamps = getTimestamps();
-    if (Object.keys(timestamps).length > 0) {
-        consoleLog('> Enviando estadísticas a la base de datos', CONSOLE_YELLOW);
-        logToFile(`${MODULE_NAME}.${shutdownEvent}Listener`, `Pushing all stats before shutdown`);
-
-        await pushDifferences(false);
-    }
-
-    //clears timeouts
-    consoleLog(`> Terminando ${Object.keys(timeouts).length} loops`, CONSOLE_YELLOW);
-    for (const key in timeouts)
-        if (Object.hasOwnProperty.call(timeouts, key))
-            clearTimeout(timeouts[key]);
-
-    //ends discord client
-    consoleLog('> Desconectando bot', CONSOLE_YELLOW);
-    client.destroy();
-
-    //exits process
-    consoleLog('> Terminando proceso', CONSOLE_YELLOW);
-    process.exit();
-});
 
 client.login(process.env.TOKEN);
