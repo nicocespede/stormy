@@ -33,6 +33,8 @@ module.exports = client => {
         for (const key in timeouts) if (Object.hasOwnProperty.call(timeouts, key))
             clearTimeout(timeouts[key]);
 
+        await new Promise(res => setTimeout(res, 1000 * 3));
+
         //ends discord client
         consoleLog('> Desconectando bot', CONSOLE_YELLOW);
         client.destroy();
