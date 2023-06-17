@@ -2,7 +2,7 @@ const { ICommand } = require("wokcommands");
 const { getStats } = require("../../src/cache");
 const { fullToSeconds, secondsToFull } = require("../../src/common");
 const { updateStat } = require("../../src/mongodb");
-const { logToFileCommandUsage } = require("../../src/util");
+const { logToFileCommandUsage, getUserTag } = require("../../src/util");
 
 /**@type {ICommand}*/
 module.exports = {
@@ -35,7 +35,7 @@ module.exports = {
         if (!isNaN(totalTime)) {
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
             const member = await guild.members.fetch(id);
-            await updateStat(id, days, hours, minutes, seconds, member ? member.user.tag : id);
+            await updateStat(id, days, hours, minutes, seconds, member ? getUserTag(member.user) : id);
         }
 
         return '¡Tiempo restado!';

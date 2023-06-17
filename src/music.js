@@ -6,7 +6,7 @@ const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue, getGithubRawUrl } = require("./cache");
 const { MusicActions, color, CONSOLE_YELLOW, CONSOLE_RED, EMBED_DESCRIPTION_MAX_LENGTH } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile } = require("./util");
+const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile, getUserTag } = require("./util");
 
 const MODULE_NAME = 'src.music';
 
@@ -116,7 +116,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     `${progressBar}\n`,
                     `**Progreso:** ${timestamp.progress}%`,
                     `**Volumen:** ${queue.node.volume}%`,
-                    `**Agregada por:** ${requestedBy.tag}`
+                    `**Agregada por:** ${getUserTag(requestedBy)}`
                 ];
                 if (playlist)
                     splittedDescription.push(`**Lista de reproducción:** [${playlist.title}](${playlist.url})`);
@@ -373,7 +373,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     return;
                 }
                 lastEvent = 'paused';
-                action = `⏸ ${i.user.tag} pausó la reproducción.`;
+                action = `⏸ ${getUserTag(i.user)} pausó la reproducción.`;
                 break;
 
             case 'play':
@@ -382,7 +382,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     return;
                 }
                 lastEvent = 'resumed';
-                action = `▶ ${i.user.tag} reanudó la reproducción.`;
+                action = `▶ ${getUserTag(i.user)} reanudó la reproducción.`;
                 break;
 
             case 'stop':
@@ -396,13 +396,13 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                     i.reply({ embeds: [await getEmbed('noPreviousTrack')], ephemeral: true });
                     return;
                 }
-                updateLastAction(MusicActions.GOING_BACK, i.user.tag);
+                updateLastAction(MusicActions.GOING_BACK, getUserTag(i.user));
                 i.deferUpdate();
                 await queue.history.back();
                 return;
 
             case 'skip':
-                updateLastAction(MusicActions.SKIPPING, i.user.tag);
+                updateLastAction(MusicActions.SKIPPING, getUserTag(i.user));
                 queue.node.skip();
                 i.deferUpdate();
                 return;
@@ -414,7 +414,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 }
                 queue.tracks.shuffle()
                 lastEvent = 'shuffled';
-                action = `🔀 ${i.user.tag} mezcló la cola de reproducción.`;
+                action = `🔀 ${getUserTag(i.user)} mezcló la cola de reproducción.`;
                 break;
 
             case 'clear':
@@ -424,7 +424,7 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 }
                 await queue.tracks.clear();
                 lastEvent = 'cleared';
-                action = `❌ ${i.user.tag} limpió la cola de reproducción.`;
+                action = `❌ ${getUserTag(i.user)} limpió la cola de reproducción.`;
                 break;
 
             case 'lyrics':

@@ -2,6 +2,7 @@ const { ApplicationCommandOptionType } = require('discord.js');
 const { PREFIX } = require('../../src/constants');
 const { getIds } = require('../../src/cache');
 const { isOwner } = require('../../src/common');
+const { getUserTag } = require('../../src/util');
 
 module.exports = {
     category: 'General',
@@ -48,7 +49,7 @@ module.exports = {
             reply.content = `⚠ El apodo no puede contener más de 32 caracteres.`;
         else {
             await target.setNickname(newNickname).then(() => {
-                reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
+                reply.content = `Apodo de **${getUserTag(target.user)}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
                 reply.ephemeral = false;
             }).catch(() => {
                 reply.content = `❌ Lo siento, no se pudo cambiar el apodo.${target.id === ids.users.stormer ? ' Discord no me permite cambiarle el apodo al dueño del servidor. ☹' : ''}`;

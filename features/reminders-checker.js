@@ -1,5 +1,5 @@
 const { updateReminders, timeouts } = require('../src/cache');
-const { consoleLog } = require('../src/util');
+const { consoleLog, getUserTag } = require('../src/util');
 const reminderSchema = require('../models/reminder-schema');
 const { CONSOLE_GREEN, CONSOLE_RED } = require('../src/constants');
 
@@ -22,7 +22,7 @@ module.exports = client => {
             }
 
             user.send({ content: `🔔 **RECORDATORIO** ⏰\n\n${description}` })
-                .catch(_ => consoleLog(`> No se pudo enviar el recordatorio a ${user.tag} `, CONSOLE_RED));
+                .catch(_ => consoleLog(`> No se pudo enviar el recordatorio a ${getUserTag(user)} `, CONSOLE_RED));
         }
 
         const deletion = await reminderSchema.deleteMany(query);

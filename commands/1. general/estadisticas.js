@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getStats, getTimestamps, getGithubRawUrl } = require('../../src/cache');
 const { pushDifferences } = require('../../src/common');
-const { consoleLog, logToFile, logToFileCommandUsage } = require('../../src/util');
+const { consoleLog, logToFile, logToFileCommandUsage, getUserTag } = require('../../src/util');
 const { CONSOLE_YELLOW, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
 const Versions = {
     full: ['día', 'hora', 'minuto', 'segundo'],
@@ -74,7 +74,7 @@ module.exports = {
                 }
 
                 const { seconds, minutes, hours, days } = stats[key];
-                const aux1 = usersField.value + `**${member.user.bot ? '🤖' : `${counter++}.`} **${member.user.tag.replace(/_/g, '\\_')}\n\n`;
+                const aux1 = usersField.value + `**${member.user.bot ? '🤖' : `${counter++}.`} **${getUserTag(member.user).replace(/_/g, '\\_')}\n\n`;
                 let aux2 = timeField.value + `${timeToString('full', seconds, minutes, hours, days)}\n\n`;
                 if (ctx.measureText(aux2).width >= 182)
                     aux2 = timeField.value + `${timeToString('short', seconds, minutes, hours, days)}\n\n`;

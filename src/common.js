@@ -7,7 +7,7 @@ const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, 
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
 const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, EMBED_FIELD_VALUE_MAX_LENGTH } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -96,10 +96,10 @@ const addAnnouncementsRole = async (id, guild, member) => {
         const role = await guild.roles.fetch(id);
         if (!role.members.has(member.user.id)) {
             await member.roles.add(id);
-            consoleLog(`> Rol '${role.name}' agregado a ${member.user.tag}`, CONSOLE_GREEN);
+            consoleLog(`> Rol '${role.name}' agregado a ${getUserTag(member.user)}`, CONSOLE_GREEN);
         }
     } catch (error) {
-        consoleLog(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`> No se pudo agregar el rol '${role.name}' a ${getUserTag(member.user)}:\n${error.stack}`, CONSOLE_RED);
     }
 };
 

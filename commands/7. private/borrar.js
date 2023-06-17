@@ -1,5 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const { getIds } = require("../../src/cache");
+const { getUserTag } = require("../../src/util");
 
 module.exports = {
     category: 'Privados',
@@ -29,6 +30,6 @@ module.exports = {
                 deleted++;
                 await new Promise(res => setTimeout(res, 1000 * 2));
             }
-        interaction.editReply({ content: deleted > 0 ? `Se borraron **${deleted} mensajes privados** con **${user.tag}**.` : 'Este usuario no tiene ningún mensaje directo.' });
+        interaction.editReply({ content: deleted > 0 ? `Se borraron **${deleted} mensajes privados** con **${getUserTag(user)}**.` : 'Este usuario no tiene ningún mensaje directo.' });
     }
 }

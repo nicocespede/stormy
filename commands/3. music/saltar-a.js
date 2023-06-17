@@ -4,7 +4,7 @@ const { getIds, updateLastAction, getGithubRawUrl } = require("../../src/cache")
 const { MusicActions } = require("../../src/constants");
 const { handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
-const { logToFileCommandUsage } = require("../../src/util");
+const { logToFileCommandUsage, getUserTag } = require("../../src/util");
 
 /**@type {ICommand}*/
 module.exports = {
@@ -75,7 +75,7 @@ module.exports = {
             .setThumbnail(await getGithubRawUrl('assets/thumbs/music/go-to-end.png'))];
         reply.ephemeral = false;
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
-        updateLastAction(MusicActions.SKIPPING_MANY, user.tag);
+        updateLastAction(MusicActions.SKIPPING_MANY, getUserTag(user));
 
         setTimeout(async () => {
             if (message) message.delete();

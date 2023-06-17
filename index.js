@@ -5,7 +5,7 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
-const { consoleLog, logToFile } = require('./src/util');
+const { consoleLog, logToFile, getUserTag } = require('./src/util');
 const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
@@ -96,7 +96,8 @@ client.on('ready', async () => {
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
 
-            const action = `☑️ ${message ? message.mentions.repliedUser.tag : interaction.user.tag} agregó [${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) a la cola.`;
+            const tag = getUserTag(message ? message.mentions.repliedUser : interaction.user);
+            const action = `☑️ ${tag} agregó [${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) a la cola.`;
             setMusicPlayerMessage(queue, track, action);
 
         }
@@ -113,7 +114,8 @@ client.on('ready', async () => {
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
 
-            const action = `☑️ ${message ? message.mentions.repliedUser.tag : interaction.user.tag} agregó a la cola **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''}.`;
+            const tag = getUserTag(message ? message.mentions.repliedUser : interaction.user);
+            const action = `☑️ ${tag} agregó a la cola **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''}.`;
             setMusicPlayerMessage(queue, tracks[0], action);
         }
     }).on('emptyChannel', _ => {
@@ -156,7 +158,7 @@ client.on('ready', async () => {
 
     const codeBranch = getCurrentCodeBranchName();
     const contentBranch = await getCurrentContentBranchName();
-    consoleLog(`> Loggeado como ${client.user.tag} - Entorno: ${ENVIRONMENT} | Rama de código: ${codeBranch} | Rama de contenido: ${contentBranch}`, CONSOLE_GREEN);
+    consoleLog(`> Loggeado como ${getUserTag(client.user)} - Entorno: ${ENVIRONMENT} | Rama de código: ${codeBranch} | Rama de contenido: ${contentBranch}`, CONSOLE_GREEN);
     logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | CODE BRANCH: ${codeBranch} | CONTENT BRANCH: ${contentBranch}`);
 });
 

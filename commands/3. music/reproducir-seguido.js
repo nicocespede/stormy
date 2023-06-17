@@ -7,7 +7,7 @@ const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue,
 } = require('../../src/cache');
 const { MusicActions } = require('../../src/constants');
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral, handleError, createQueue, connectToVoiceChannel } = require("../../src/music");
-const { consoleLogError, logToFileError, logToFileCommandUsage } = require('../../src/util');
+const { consoleLogError, logToFileError, logToFileCommandUsage, getUserTag } = require('../../src/util');
 
 const COMMAND_NAME = 'reproducir-seguido';
 const MODULE_NAME = 'commands.music.' + COMMAND_NAME;
@@ -151,7 +151,8 @@ module.exports = {
         message ? await deferringMessage.edit(edit) : await interaction.editReply(edit);
 
         addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
-        setMusicPlayerMessage(queue, res.tracks[0], `☑️ ${message ? deferringMessage.mentions.repliedUser.tag : interaction.user.tag} agregó a la cola como siguiente${action}`);
+        const tag = getUserTag(message ? deferringMessage.mentions.repliedUser : interaction.user);
+        setMusicPlayerMessage(queue, res.tracks[0], `☑️ ${tag} agregó a la cola como siguiente${action}`);
     }
 
 }

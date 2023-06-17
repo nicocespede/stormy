@@ -2,6 +2,7 @@ const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonSty
 const { addBanResponsible, getIds } = require('../../src/cache');
 const { PREFIX } = require('../../src/constants');
 const { isOwner } = require('../../src/common');
+const { getUserTag } = require('../../src/util');
 
 module.exports = {
     category: 'Moderación',
@@ -65,7 +66,7 @@ module.exports = {
             const messageOrInteraction = message ? message : interaction;
             const replyMessage = await messageOrInteraction.reply({
                 components: [row],
-                content: `⚠ ¿Estás seguro de querer banear a **${target.user.tag}**?`,
+                content: `⚠ ¿Estás seguro de querer banear a **${getUserTag(target.user)}**?`,
                 ephemeral: true
             });
 

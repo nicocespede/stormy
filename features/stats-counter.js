@@ -2,7 +2,7 @@ const { Client, VoiceState } = require("discord.js");
 const { addTimestamp, getTimestamps, getIds, timeouts } = require("../src/cache");
 const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
 const { CONSOLE_BLUE } = require("../src/constants");
-const { consoleLog, logToFile, logToFileFunctionTriggered, logToFileListenerTriggered } = require("../src/util");
+const { consoleLog, logToFile, logToFileFunctionTriggered, logToFileListenerTriggered, getUserTag } = require("../src/util");
 
 const MODULE_NAME = 'features.stats-counter';
 
@@ -65,7 +65,7 @@ module.exports = client => {
                 // start counter if user undeafens or starts streaming while being deafened,
                 // and stop counter if user deafens and is not streaming
                 if (isDeaf || isStreaming) {
-                    logToFile(moduleName, `${oldMember.user.tag} has been muted/deafened in the voice channel ${oldChannel.name}`);
+                    logToFile(moduleName, `${getUserTag(oldMember.user)} has been muted/deafened in the voice channel ${oldChannel.name}`);
 
                     const { invalid, size, valid } = await getMembersStatus(oldChannel);
 
@@ -81,7 +81,7 @@ module.exports = client => {
                         for (const [id, member] of oldChannel.members) {
                             const { user } = member;
                             if (!user.bot)
-                                await pushDifference(id, user.tag);
+                                await pushDifference(id, getUserTag(user));
                         }
                 }
                 return;
@@ -127,7 +127,7 @@ module.exports = client => {
 
                     for (const [id, member] of oldChannel.members)
                         if (!member.user.bot)
-                            await pushDifference(id, member.user.tag);
+                            await pushDifference(id, getUserTag(member.user));
                 }
             }
             return;

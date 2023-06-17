@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const { updateBanned, updateSombraBans, getBansResponsibles, removeBanResponsible, getIds } = require("../src/cache");
 const { getBannedMemberEmbedInfo } = require("../src/characters");
 const { countMembers } = require("../src/common");
+const { getUserTag } = require("../src/util");
 const { addBan, addSombraBan } = require("../src/mongodb");
 
 module.exports = client => {
@@ -12,8 +13,8 @@ module.exports = client => {
         if (bansResponsibles[ban.user.id])
             removeBanResponsible(ban.user.id);
         const reason = !ban.reason || ban.reason.trim().length === 0 ? null : ban.reason;
-        const embedInfo = await getBannedMemberEmbedInfo(ban.user.tag, reason);
-        await addBan(ban.user.id, ban.user.tag, responsible, embedInfo.character, reason).catch(console.error);
+        const embedInfo = await getBannedMemberEmbedInfo(getUserTag(ban.user), reason);
+        await addBan(ban.user.id, getUserTag(ban.user), responsible, embedInfo.character, reason).catch(console.error);
         await updateBanned();
         const ids = await getIds();
         const channel = await client.channels.fetch(ids.channels.welcome).catch(console.error);

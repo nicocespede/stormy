@@ -2,7 +2,7 @@ const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuil
 const { getIds, getBillboardMessageInfo, updateBillboardMessageInfo, getGithubRawUrl } = require('../../src/cache');
 const { updateBillboardMessage } = require('../../src/mongodb');
 const { CONSOLE_GREEN, CONSOLE_YELLOW } = require('../../src/constants');
-const { consoleLog } = require('../../src/util');
+const { consoleLog, getUserTag } = require('../../src/util');
 const { isOwner } = require('../../src/common');
 
 const prefix = 'billboard-';
@@ -17,7 +17,7 @@ const getNewEmbed = async (interaction) => {
         embed.setFields([]);
     else {
         const field = { name: '👥 Espectadores:', value: `` };
-        role.members.forEach(member => field.value += `• ${member.user.tag}\n`);
+        role.members.forEach(member => field.value += `• ${getUserTag(member.user)}\n`);
         embed.setFields([field]);
     }
     return embed;
@@ -72,10 +72,10 @@ module.exports = {
 
             if (buttonId === 'out' && member.roles.cache.has(roleId)) {
                 await member.roles.remove(roleId);
-                consoleLog(`> Rol 'función' quitado a ${member.user.tag}`, CONSOLE_YELLOW);
+                consoleLog(`> Rol 'función' quitado a ${getUserTag(member.user)}`, CONSOLE_YELLOW);
             } else if (buttonId === 'in' && !member.roles.cache.has(roleId)) {
                 await member.roles.add(roleId);
-                consoleLog(`> Rol 'función' asignado a ${member.user.tag}`, CONSOLE_GREEN);
+                consoleLog(`> Rol 'función' asignado a ${getUserTag(member.user)}`, CONSOLE_GREEN);
             } else {
                 interaction.deferUpdate();
                 return;
@@ -153,7 +153,7 @@ module.exports = {
             const role = await guild.roles.fetch(ids.roles.funcion).catch(console.error);
             role.members.forEach(async member => {
                 await member.roles.remove(role).catch(console.error);
-                consoleLog(`> Rol 'función' quitado a ${member.user.tag}`, CONSOLE_YELLOW);
+                consoleLog(`> Rol 'función' quitado a ${getUserTag(member.user)}`, CONSOLE_YELLOW);
             });
             await updateBillboardMessage(false, messageId).catch(console.error);
             await updateBillboardMessageInfo();

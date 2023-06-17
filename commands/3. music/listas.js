@@ -1,6 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { getPlaylists, updatePlaylists, getIds, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
+const { getUserTag } = require('../../src/util');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
 const { handleErrorEphemeral } = require('../../src/music');
 
@@ -109,7 +110,7 @@ module.exports = {
                     const aux = othersField.value + `**${i}.** [${name}](${url})\n\n`;
                     if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                         othersField.value += `**${i}.** [${name}](${url})\n\n`;
-                        ownersField.value += `${member ? member.user.tag : 'Desconocido'}\n\n`;
+                        ownersField.value += `${member ? getUserTag(member.user) : 'Desconocido'}\n\n`;
                         continue;
                     }
 
@@ -117,7 +118,7 @@ module.exports = {
                     fields.push(ownersField);
                     fields.push({ name: `\u200b`, value: '\u200b', inline: true });
                     othersField = { name: '\u200b', value: `**${i}.** [${name}](${url})\n\n`, inline: true };
-                    ownersField = { name: '\u200b', value: `${member ? member.user.tag : 'Desconocido'}\n\n`, inline: true };
+                    ownersField = { name: '\u200b', value: `${member ? getUserTag(member.user) : 'Desconocido'}\n\n`, inline: true };
 
                 }
                 fields.push(othersField);

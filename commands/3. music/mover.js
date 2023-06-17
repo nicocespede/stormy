@@ -1,6 +1,7 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
 const { updateLastAction, getIds, getGithubRawUrl } = require("../../src/cache");
 const { MusicActions } = require("../../src/constants");
+const { getUserTag } = require("../../src/util");
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
 const { useMasterPlayer } = require("discord-player");
 
@@ -98,7 +99,7 @@ module.exports = {
         reply.ephemeral = false;
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
         updateLastAction(MusicActions.MOVING_SONG);
-        setMusicPlayerMessage(queue, queue.currentTrack, `🔁 ${user.tag} movió una canción de la cola.`);
+        setMusicPlayerMessage(queue, queue.currentTrack, `🔁 ${getUserTag(user)} movió una canción de la cola.`);
 
         setTimeout(async () => {
             if (message) message.delete();

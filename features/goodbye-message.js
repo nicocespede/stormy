@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const { getBanned, updateBanned, getIds } = require("../src/cache");
 const { getMemberLeaveEmbedInfo } = require("../src/characters");
 const { countMembers } = require("../src/common");
+const { getUserTag } = require("../src/util");
 
 module.exports = client => {
     client.on('guildMemberRemove', async member => {
@@ -10,7 +11,7 @@ module.exports = client => {
         if (bans.size === Object.keys(banned).length) {
             const ids = await getIds();
             const channel = await client.channels.fetch(ids.channels.welcome).catch(console.error);
-            const embedInfo = await getMemberLeaveEmbedInfo(member.user.tag);
+            const embedInfo = await getMemberLeaveEmbedInfo(getUserTag(member.user));
             channel.send({
                 embeds: [new EmbedBuilder()
                     .setTitle(embedInfo.title)

@@ -101,7 +101,20 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
      */
 const logToFileCommandUsage = (commandName, args, interaction, user) => {
     const prefix = interaction ? '/' : PREFIX;
-    logToFile(`${commandName}.callback`, `${user.tag} used ${prefix}${commandName}${args ? ` [${args}]` : ''}`);
+    logToFile(`${commandName}.callback`, `${getUserTag(user)} used ${prefix}${commandName}${args ? ` [${args}]` : ''}`);
+}
+
+/**
+ * Gets the tag of a user.
+ * 
+ * @param {User} user The user to get the tag from.
+ * @returns The tag of a user.
+ */
+const getUserTag = user => {
+    if (user.discriminator === '0')
+        return user.username;
+
+    return user.tag;
 }
 
 module.exports = {
@@ -211,5 +224,7 @@ module.exports = {
      * @param {String} currency The currency code.
      * @returns The formatted number.
      */
-    formatNumber: (value, maximumFractionDigits, currency) => value.toLocaleString(ARGENTINA_LOCALE_STRING, { currency, style: 'currency', maximumFractionDigits })
+    formatNumber: (value, maximumFractionDigits, currency) => value.toLocaleString(ARGENTINA_LOCALE_STRING, { currency, style: 'currency', maximumFractionDigits }),
+
+    getUserTag
 };

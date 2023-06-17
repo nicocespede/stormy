@@ -2,7 +2,7 @@ const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionT
 const { getBirthdays, updateBirthdays, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { consoleLog } = require('../../src/util');
+const { consoleLog, getUserTag } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     const ret = {
@@ -166,7 +166,7 @@ module.exports = {
             const messageOrInteraction = message ? message : interaction;
             const reply = await messageOrInteraction.reply({
                 components: [row],
-                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?\n\u200b`,
+                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${getUserTag(target.user)}** en la fecha **${date}**?\n\u200b`,
                 ephemeral: true
             });
 
@@ -188,7 +188,7 @@ module.exports = {
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
                     edit.content = '✅ La acción fue completada.';
-                    channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
+                    channel.send({ content: `✅ Se agregó el cumpleaños de **${getUserTag(target.user)}** en la fecha ${date}.` });
                     await updateBirthdays();
                 }
                 message ? await reply.edit(edit) : await interaction.editReply(edit);
@@ -226,7 +226,7 @@ module.exports = {
                 const messageOrInteraction = message ? message : interaction;
                 const reply = await messageOrInteraction.reply({
                     components: [row],
-                    content: `⚠ ¿Estás seguro de querer borrar el cumpleaños de **${target.user.tag}**?`,
+                    content: `⚠ ¿Estás seguro de querer borrar el cumpleaños de **${getUserTag(target.user)}**?`,
                     ephemeral: true
                 });
 
