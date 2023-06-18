@@ -92,7 +92,7 @@ module.exports = client => {
             //check for new channel
             if (isDefaultGuild(newState) && hasChannel(newState) && !isAfkChannel(newState) && newMember) {
                 const { id, user } = newMember;
-                const { tag } = user;
+                const tag = getUserTag(user);
 
                 logToFile(moduleName, `${tag} joined the voice channel ${newChannel.name}`);
 
@@ -111,7 +111,7 @@ module.exports = client => {
                     await pushDifference(id, tag);
             } else if (oldMember) {
                 const { id, user } = oldMember;
-                const { tag } = user;
+                const tag = getUserTag(user);
                 logToFile(moduleName, `${tag} left the voice channel ${oldChannel.name}`);
 
                 await pushDifference(id, tag);
