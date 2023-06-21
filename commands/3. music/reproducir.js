@@ -1,13 +1,18 @@
-const { QueryType } = require('discord-player');
+const { ICommand } = require("wokcommands");
+const { QueryType, useMasterPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { updateLastAction, getPlaylists, updatePlaylists, getIds, updateIds, addSongInQueue,
+const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl, removeSongInQueue,
     //TEMP SOLUTION
-    getBlacklistedSongs, updateBlacklistedSongs,//
-    getMusicPlayerData
+    getBlacklistedSongs//
 } = require('../../src/cache');
-const { MusicActions, githubRawURL } = require('../../src/constants');
-const { handleErrorInMusicChannel } = require('../../src/music');
+const { MusicActions } = require('../../src/constants');
+const { handleError, handleErrorEphemeral, createQueue, connectToVoiceChannel } = require('../../src/music');
+const { logToFileError, logToFileCommandUsage, consoleLogError } = require('../../src/util');
 
+const COMMAND_NAME = 'reproducir';
+const MODULE_NAME = 'commands.music.' + COMMAND_NAME;
+
+/**@type {ICommand}*/
 module.exports = {
     category: 'Música',
     description: 'Reproduce una canción o la agrega a la cola si ya se está reproduciendo.',
@@ -26,82 +31,60 @@ module.exports = {
     expectedArgs: '[URL ó canción]',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, client, interaction, text, instance }) => {
+    callback: async ({ guild, member, user, message, channel, interaction, text, instance }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         const embed = new EmbedBuilder().setColor(instance.color);
         let song = message ? text : interaction.options.getString('canción');
-        const reply = { custom: true, ephemeral: true };
+        const reply = { ephemeral: true };
 
-        if (interaction) await interaction.deferReply();
-
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            return reply;
+            handleErrorEphemeral(reply, embed, `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
+            return;
         }
 
         if (!member.voice.channel) {
-            reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en un canal de voz para usar este comando!`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            handleErrorEphemeral(reply, embed, `🛑 ¡Debes estar en un canal de voz para usar este comando!`, message, interaction, channel);
             return;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
-            reply.embeds = [embed.setDescription(`🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            handleErrorEphemeral(reply, embed, `🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!`, message, interaction, channel);
             return;
         }
 
+        if (interaction) await interaction.deferReply();
 
         const playlists = getPlaylists() || await updatePlaylists();
         if (Object.keys(playlists).includes(song.toLowerCase()))
             song = playlists[song.toLowerCase()].url;
 
         //TEMP SOLUTION
-        const blacklistedSongs = getBlacklistedSongs() || await updateBlacklistedSongs();
+        const blacklistedSongs = await getBlacklistedSongs();
         if (Object.keys(blacklistedSongs).includes(song))
             song = blacklistedSongs[song];//
 
-        const res = await client.player.search(song, {
+        const player = useMasterPlayer();
+        const res = await player.search(song, {
             requestedBy: member,
             searchEngine: QueryType.AUTO
         });
 
         if (!res || !res.tracks.length) {
-            reply.embeds = [embed.setDescription(`🛑 ¡${user}, no se encontraron resultados! `)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            await handleError(reply, embed, `🛑 ¡${user}, no se encontraron resultados! `, message, interaction, channel);
             return;
         }
 
-        const queue = await client.player.createQueue(guild, {
-            metadata: channel
-        });
+        const queue = createQueue(player, guild, channel);
 
-        try {
-            if (!queue.connection) await queue.connect(member.voice.channel)
-        } catch {
-            await client.player.deleteQueue(guild.id);
-            reply.embeds = [embed.setDescription(`🛑 ${user}, no me puedo unir al canal de voz.`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            message ? await message.reply(reply) : await interaction.editReply(reply);
+        if (!(await connectToVoiceChannel(queue, member, player, reply, embed, message, interaction)))
             return;
-        }
 
         reply.embeds = [embed.setDescription(`⌛ Cargando ${res.playlist ? 'lista de reproducción' : 'canción'}...`)
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/hourglass-sand-top.png`)];
+            .setThumbnail(await getGithubRawUrl('assets/thumbs/music/hourglass-sand-top.png'))];
         reply.ephemeral = false;
         const deferringMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
-
-        const voiceChannel = member.voice.channel;
-        const { joinVoiceChannel } = require('@discordjs/voice');
-        joinVoiceChannel({
-            channelId: voiceChannel.id,
-            guildId: voiceChannel.guild.id,
-            adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-            selfDeaf: true
-        });
 
         updateLastAction(MusicActions.ADDING);
 
@@ -109,7 +92,7 @@ module.exports = {
         for (let i = 0; i < res.tracks.length; i++) {
             const { url } = res.tracks[i];
             if (Object.keys(blacklistedSongs).includes(url)) {
-                const auxRes = await client.player.search(blacklistedSongs[url], {
+                const auxRes = await player.search(blacklistedSongs[url], {
                     requestedBy: member,
                     searchEngine: QueryType.AUTO
                 });
@@ -119,10 +102,20 @@ module.exports = {
 
         addSongInQueue(res.tracks[0].url, message ? 'message' : 'interaction', message ? deferringMessage : interaction);
 
-        res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
+        res.playlist ? queue.addTrack(res.tracks) : queue.addTrack(res.tracks[0]);
 
-        if (!queue.playing) await queue.play();
-
-        return;
+        if (!queue.node.isPlaying())
+            try {
+                await queue.node.play();
+            } catch (e) {
+                updateLastAction(MusicActions.ERROR);
+                if (message)
+                    deferringMessage.delete();
+                removeSongInQueue(res.tracks[0].url);
+                queue.delete();
+                consoleLogError(`> Error al iniciar reproducción de música, URL: [${res.tracks[0].url}]`);
+                logToFileError(MODULE_NAME, e);
+                handleError(reply, embed, '❌ Error al iniciar reproductor de música.\n\n_Intenta usar la URL directa de la canción, o una URL diferente._', message, interaction, channel);
+            }
     }
 }

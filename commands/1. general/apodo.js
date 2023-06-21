@@ -1,7 +1,8 @@
 const { ApplicationCommandOptionType } = require('discord.js');
-const { prefix } = require('../../src/constants');
-const { getIds, updateIds } = require('../../src/cache');
-const { isOwner } = require('../../src/general');
+const { PREFIX } = require('../../src/constants');
+const { getIds } = require('../../src/cache');
+const { isOwner } = require('../../src/common');
+const { getUserTag } = require('../../src/util');
 
 module.exports = {
     category: 'General',
@@ -29,7 +30,7 @@ module.exports = {
     callback: async ({ guild, user, message, args, interaction, instance }) => {
         const target = message ? message.mentions.members.first() : interaction.options.getMember('amigo');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const role = await guild.roles.fetch(ids.roles.mod).catch(console.error);
         const isAuthorized = await isOwner(user.id) || role.members.has(user.id);
         const newNickname = args.slice(1).join(' ');
@@ -38,7 +39,7 @@ module.exports = {
         else if (!target)
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención y (opcionalmente) el nuevo apodo luego del comando.",
-                PREFIX: prefix,
+                PREFIX: PREFIX,
                 COMMAND: "apodo",
                 ARGUMENTS: "`<@amigo>` `[apodo]`"
             });
@@ -48,7 +49,7 @@ module.exports = {
             reply.content = `⚠ El apodo no puede contener más de 32 caracteres.`;
         else {
             await target.setNickname(newNickname).then(() => {
-                reply.content = `Apodo de **${target.user.tag}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
+                reply.content = `Apodo de **${getUserTag(target.user)}** ${newNickname.length > 0 ? 'cambiado' : 'reseteado'} correctamente.`;
                 reply.ephemeral = false;
             }).catch(() => {
                 reply.content = `❌ Lo siento, no se pudo cambiar el apodo.${target.id === ids.users.stormer ? ' Discord no me permite cambiarle el apodo al dueño del servidor. ☹' : ''}`;

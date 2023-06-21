@@ -1,5 +1,6 @@
 const { ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateIds } = require("../../src/cache");
+const { getIds } = require("../../src/cache");
+const { getUserTag } = require("../../src/util");
 
 module.exports = {
     category: 'Privados',
@@ -22,13 +23,13 @@ module.exports = {
         const user = await client.users.fetch(targetId).catch(console.error);
         const dmChannel = await user.createDM().catch(console.error);
         const messages = await dmChannel.messages.fetch().catch(console.error);
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         for (const [_, m] of messages)
             if (m.author.id === ids.users.bot) {
                 await m.delete().catch(console.error);
                 deleted++;
                 await new Promise(res => setTimeout(res, 1000 * 2));
             }
-        interaction.editReply({ content: deleted > 0 ? `Se borraron **${deleted} mensajes privados** con **${user.tag}**.` : 'Este usuario no tiene ningún mensaje directo.' });
+        interaction.editReply({ content: deleted > 0 ? `Se borraron **${deleted} mensajes privados** con **${getUserTag(user)}**.` : 'Este usuario no tiene ningún mensaje directo.' });
     }
 }

@@ -1,10 +1,13 @@
-const { CommandArgs, Collector } = require("../../src/typedefs");
-const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild, Client } = require("discord.js");
-const { getIds, updateIds, getFWCData, updateFWCData, getCollectors, updateCollectors } = require('../../src/cache');
-const { addAnnouncementsRole } = require("../../src/general");
-const { githubRawURL } = require("../../src/constants");
+const { ICommand } = require("wokcommands");
+const { Collector } = require("../../src/typedefs");
+const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild } = require("discord.js");
+const { getIds, getFWCData, updateFWCData, getCollectors, updateCollectors, getGithubRawUrl } = require('../../src/cache');
+const { addAnnouncementsRole } = require("../../src/common");
 const { addCollector, updateCollector } = require("../../src/mongodb");
-const { convertTZ, log } = require("../../src/util");
+const { convertTZ, consoleLogError, getUserTag, logToFileError } = require("../../src/util");
+
+const COMMAND_NAME = 'mundial';
+const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
 
 const PACKAGE_CONTENT = 5;
 const TIMEOUT_HOURS = 12;
@@ -13,8 +16,8 @@ const PREMIUM_PACKAGE_MINIMUM_RATING = 90;
 
 const FWC_COLOR = [154, 16, 50];
 const FWC_GOLD_COLOR = [205, 172, 93];
-const FWC_THUMB = `${githubRawURL}/assets/thumbs/fwc/fwc-2022.png`;
-const FWC_GOLD_THUMB = `${githubRawURL}/assets/thumbs/fwc/fwc-2022-gold.png`;
+const FWC_THUMB_PATH = `assets/thumbs/fwc/fwc-2022.png`;
+const FWC_GOLD_THUMB_PATH = `assets/thumbs/fwc/fwc-2022-gold.png`;
 
 const MATCHES_BUTTONS_PREFIX = 'fwc-matches-';
 const SELECT_MENUS_PREFIX = 'fwc-teams-';
@@ -131,12 +134,12 @@ const achievementsData = {
         name: "Se intentó pero no se pudo",
         replacement: async () => { return await getTeamName("FRA") }
     },
-    /*"3rd-place": {
+    "3rd-place": {
         check: async owned => { return await hasAllPlayersFromTeam(owned, "CRO") },
         description: `Consigue todos los jugadores de la **selección dueña del tercer lugar**: {REPLACEMENT}.`,
         name: "Peor es nada",
-        replacement: async () => {return await getTeamName("CRO")}
-    },*/
+        replacement: async () => { return await getTeamName("CRO") }
+    },
     "award-best-goal": {
         check: async owned => { return hasPlayer("BRA-9", owned) },
         description: `Consigue al jugador ganador del **Gol del Torneo**: {REPLACEMENT}.`,
@@ -208,12 +211,12 @@ const achievementsData = {
         description: "Consigue todos los **mediocampistas**.",
         name: "Mediocampo dominado"
     },
-    /*
     oldest: {
-        check: async owned => { return hasPlayer("???-??", owned) },
-        description: "Consigue al jugador **más viejo del torneo**: ? **???**.",
-        name: "El más experimentado"
-    },*/
+        check: async owned => { return hasPlayer("MEX-1", owned) },
+        description: "Consigue al jugador **más viejo del torneo**: {REPLACEMENT}.",
+        name: "El más experimentado",
+        replacement: async () => { return await getPlayerName("MEX-1") }
+    },
     platinum: {
         check: async achievements => { return achievements.length === (Object.keys(achievementsData).length - 1) },
         description: "Consigue **todos los logros**.",
@@ -248,13 +251,13 @@ const achievementsData = {
         check: async trades => { return trades.length >= 100 },
         description: "Realiza **100 intercambios**.",
         name: "Comerciante experto"
-    }
-    /*,
+    },
     youngest: {
-        check: async owned => { return hasPlayer("???-??", owned) },
-        description: "Consigue al jugador **más joven del torneo**: ? **???**.",
-        name: "Cuidado con el niño"
-    }*/
+        check: async owned => { return hasPlayer("GER-26", owned) },
+        description: "Consigue al jugador **más joven del torneo**: {REPLACEMENT}.",
+        name: "Cuidado con el niño",
+        replacement: async () => { return await getPlayerName("GER-26") }
+    }
 };
 
 /**
@@ -451,7 +454,7 @@ const getAchievementsEmbeds = async achievements => {
             actualArray = [];
         }
 
-        const embed = !achievements.includes(id) ? getMysteriousAchievementEmbed() : await getAchievementEmbed(id);
+        const embed = !achievements.includes(id) ? await getMysteriousAchievementEmbed() : await getAchievementEmbed(id);
         actualArray.push(embed);
     }
     ret.push(actualArray);
@@ -463,11 +466,11 @@ const getAchievementsEmbeds = async achievements => {
  * 
  * @returns An embed of a not owned achievement.
  */
-const getMysteriousAchievementEmbed = () => {
+const getMysteriousAchievementEmbed = async () => {
     return new EmbedBuilder()
         .setColor([154, 16, 50])
         .setDescription('???'.repeat(15))
-        .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-mystery.png`)
+        .setThumbnail(await getGithubRawUrl(`assets/thumbs/fwc/ach-mystery.png`))
         .setTitle('???');
 };
 
@@ -486,7 +489,7 @@ const getAchievementEmbed = async achievementId => {
     return new EmbedBuilder()
         .setColor([154, 16, 50])
         .setDescription(description)
-        .setThumbnail(`${githubRawURL}/assets/thumbs/fwc/ach-${achievementId}.png`)
+        .setThumbnail(await getGithubRawUrl(`assets/thumbs/fwc/ach-${achievementId}.png`))
         .setTitle(achievement.name);
 };
 
@@ -589,7 +592,7 @@ const getProfileEmbed = async user => {
         .setTitle(`Perfil de coleccionista: ${user.username}`)
         .setFields(fields)
         .setColor(FWC_COLOR)
-        .setThumbnail(FWC_THUMB);
+        .setThumbnail(await getGithubRawUrl(FWC_THUMB_PATH));
 
     return embed;
 };
@@ -605,7 +608,7 @@ const getStatsEmbed = async guild => {
         .setTitle('Estadísticas de coleccionistas')
         .setDescription(`**Referencias:**\n\n🃏 Obtenidas | 🔁 Repet. | 📊 Media prom. | ⚽ Goles | 🏆 Logros`)
         .setColor(FWC_COLOR)
-        .setThumbnail(FWC_THUMB);
+        .setThumbnail(await getGithubRawUrl(FWC_THUMB_PATH));
     const fields = [];
     let namesField = { name: 'Coleccionista', value: '', inline: true };
     let statsField = { name: '\u200b', value: '', inline: true };
@@ -915,8 +918,8 @@ const getMysteriousPlayerEmbed = async playerId => {
     return new EmbedBuilder()
         .setTitle(`${flag} \u200b ${playerId.split('-')[1]} | ${questionMarks}`)
         .setFields(fields)
-        .setImage(`${githubRawURL}/assets/fwc/misterious-player.png`)
-        .setThumbnail(`${githubRawURL}/assets/fwc/misterious-team.png`)
+        .setImage(await getGithubRawUrl(`assets/fwc/misterious-player.png`))
+        .setThumbnail(await getGithubRawUrl(`assets/fwc/misterious-team.png`))
         .setColor(color);
 };
 
@@ -1014,6 +1017,7 @@ const getBackButton = id => {
             .setStyle(ButtonStyle.Danger));
 };
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Contiene los comandos relacionados a la Copa del Mundo Catar 2022.',
@@ -1056,7 +1060,6 @@ module.exports = {
     slash: true,
     guildOnly: true,
 
-    /** @param {Client} client */
     init: client => {
         client.on('interactionCreate', async interaction => {
             // select menus
@@ -1160,17 +1163,16 @@ module.exports = {
             interaction.update({
                 components: [getBackButton(stageId)],
                 content: null,
-                files: [`${githubRawURL}/assets/fwc/matches/${stageId}-${matchId}.png`]
+                files: [await getGithubRawUrl(`assets/fwc/${stageId}-${matchId}.png`)]
             });
         });
     },
 
     //callback: async ({ instance, message, args,  }) => {
-    /** @param {CommandArgs} */
     callback: async ({ channel, guild, interaction, member, user }) => {
         const subCommand = interaction.options.getSubcommand();
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (channel.id !== ids.channels.fwc)
             return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 
@@ -1199,13 +1201,15 @@ module.exports = {
                     try {
                         await interaction.editReply({ embeds: [await getProfileEmbed(targetUser)] });
                     } catch (error) {
-                        log(error, 'red');
+                        consoleLogError(`> Error al enviar mensaje de perfil del coleccionista ${getUserTag(target)}`);
+                        logToFileError(MODULE_NAME, error);
                         await interaction.editReply({ content: '❌ Lo siento, ocurrió un error al generar el mensaje.' });
                     }
 
                     break;
 
                 case 'abrir-paquete':
+                    const FWC_THUMB = await getGithubRawUrl(FWC_THUMB_PATH);
                     await interaction.deferReply();
 
                     const now = new Date();
@@ -1230,7 +1234,7 @@ module.exports = {
                         embeds: [new EmbedBuilder()
                             .setDescription(description)
                             .setColor(!isPremium ? FWC_COLOR : FWC_GOLD_COLOR)
-                            .setThumbnail(!isPremium ? FWC_THUMB : FWC_GOLD_THUMB)]
+                            .setThumbnail(!isPremium ? FWC_THUMB : await getGithubRawUrl(FWC_GOLD_THUMB_PATH))]
                     });
 
                     const playersIds = await getRandomPlayersIds(PACKAGE_CONTENT, isPremium);

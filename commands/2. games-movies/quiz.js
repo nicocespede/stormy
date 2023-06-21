@@ -1,5 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, AttachmentBuilder, ApplicationCommandOptionType, ButtonStyle, ChannelType } = require("discord.js");
 const { quiz } = require('../../src/constants');
+const { getUserTag } = require('../../src/util');
 
 function until(conditionFunction) {
     const poll = resolve => {
@@ -20,7 +21,7 @@ const getWinner = async (guild, points) => {
     const max = getMaxPoints(points);
     const id = Object.entries(points).filter(([_, p]) => p === max).pop()[0];
     const member = await guild.members.fetch(id).catch(console.error);
-    return member.user.tag;
+    return getUserTag(member.user);
 };
 
 module.exports = {
@@ -72,7 +73,7 @@ module.exports = {
 
             var msg = {
                 components: [row],
-                content: `• Todos los que quieran participar en el quiz deben clickear en el botón **"✋🏼 Participo"**.\n • Una vez que estén todos los participantes listos, pulsar **"✔️ Comenzar"**.\n • Si el quiz no comienza en 2 minutos, se cancelará.\n• Cada pregunta tiene ${maxTime} segundos máximo para ser respondida.\n• Cada pregunta acertada suma 5 puntos.\n\n**Participantes:**\n- 👑 ${user.tag}`
+                content: `• Todos los que quieran participar en el quiz deben clickear en el botón **"✋🏼 Participo"**.\n • Una vez que estén todos los participantes listos, pulsar **"✔️ Comenzar"**.\n • Si el quiz no comienza en 2 minutos, se cancelará.\n• Cada pregunta tiene ${maxTime} segundos máximo para ser respondida.\n• Cada pregunta acertada suma 5 puntos.\n\n**Participantes:**\n- 👑 ${getUserTag(user)}`
             };
 
             if (interaction)
@@ -86,7 +87,7 @@ module.exports = {
                 if (i.customId === 'join') {
                     if (!participants.includes(i.user.id)) {
                         participants.push(i.user.id);
-                        reply = await reply.edit({ components: [row], content: reply.content + `\n- ${i.user.tag}` });
+                        reply = await reply.edit({ components: [row], content: reply.content + `\n- ${getUserTag(i.user)}` });
                         newChannel.permissionOverwrites.edit(i.user.id, { VIEW_CHANNEL: true, SEND_MESSAGES: true });
                     }
                 } else if (i.customId === 'ready')
@@ -213,7 +214,7 @@ module.exports = {
                     for (const id in score) if (Object.hasOwnProperty.call(score, id)) {
                         const points = score[id];
                         const member = members.get(id);
-                        msg += `- ${member ? member.user.tag : `Miembro desconocido`}: ${points} puntos\n`;
+                        msg += `- ${member ? getUserTag(member.user) : `Miembro desconocido`}: ${points} puntos\n`;
                     }
                     await reply.edit({ components: [], content: msg });
                     await new Promise(res => setTimeout(res, 1000 * 6));

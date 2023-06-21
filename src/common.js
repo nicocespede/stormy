@@ -1,15 +1,15 @@
-const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
+const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, VoiceBasedChannel } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
-const { getStats, updateStats, getTimestamps, getIds, updateIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon,
-    getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology,
-    getDownloadsData, updateDownloadsData, getMode, updateMode } = require('./cache');
-const { relativeSpecialDays, githubRawURL, prefix, Mode, EMBED_DESCRIPTION_MAX_LENGTH } = require('./constants');
-const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices } = require('./mongodb');
-const { convertTZ, log, splitLines } = require('./util');
+const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology, getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
+const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, EMBED_FIELD_VALUE_MAX_LENGTH, EMBED_DESCRIPTION_MAX_LENGTH } = require('./constants');
+const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
+const { convertTZ, consoleLog, splitLines, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
+
+const MODULE_NAME = 'src.common';
 
 const getImageType = async () => {
     const mode = getMode() || await updateMode();
@@ -51,22 +51,31 @@ const secondsToFull = (seconds) => {
     return { days, hours, minutes, seconds };
 };
 
+/**
+ * Gets the information regarding voice status of the members connected to a voice channel.
+ * 
+ * @param {VoiceBasedChannel} channel The voice channel.
+ * @returns The number of members in the channel, a list of the members who are farming stats and a list of the members who are not.
+ */
 const getMembersStatus = async channel => {
-    let membersSize = channel.members.size;
     const valid = [];
     const invalid = [];
-    channel.members.each(member => {
-        if (member.user.bot) {
-            membersSize--;
+
+    const { members } = channel;
+    let { size } = members;
+
+    for (const [_, member] of members) {
+        const { user, voice } = member;
+        if (user.bot) {
+            size--;
             valid.push(member);
-        } else if (member.voice.deaf && !member.voice.streaming) {
-            membersSize--;
+        } else if (voice.deaf && !voice.streaming) {
+            size--;
             invalid.push(member);
-        }
-        else
+        } else
             valid.push(member);
-    });
-    return { size: membersSize, valid: valid, invalid: invalid };
+    }
+    return { size, valid, invalid };
 };
 
 const lastUpdateToString = (lastUpdate, upperCase) => {
@@ -85,10 +94,10 @@ const addAnnouncementsRole = async (roleId, guild, member) => {
         const role = await guild.roles.fetch(roleId);
         if (!role.members.has(member.user.id)) {
             await member.roles.add(roleId);
-            log(`> Rol '${role.name}' agregado a ${member.user.tag}`, 'green');
+            consoleLog(`> Rol '${role.name}' agregado a ${getUserTag(member.user)}`, CONSOLE_GREEN);
         }
     } catch (error) {
-        log(`> No se pudo agregar el rol '${role.name}' a ${member.user.tag}:\n${error.stack}`, 'red');
+        consoleLog(`> No se pudo agregar el rol '${role.name}' a ${getUserTag(member.user)}:\n${error.stack}`, CONSOLE_RED);
     }
 };
 
@@ -112,22 +121,79 @@ module.exports = {
         }
     },
 
+    /**
+     * Calculates and pushes the time difference for the stats of a member.
+     * 
+     * @param {String} id The ID of the member.
+     * @param {String} username The username of the member.
+     */
     pushDifference: async (id, username) => {
-        let stats = getStats() || await updateStats();
-        if (!Object.keys(stats).includes(id)) {
-            await addStat(id);
-            await new Promise(res => setTimeout(res, 1000 * 2));
-            stats = await updateStats();
-        }
+        logToFileFunctionTriggered(MODULE_NAME, 'pushDifference');
+
         const timestamps = getTimestamps();
-        const stat = stats[id];
-        const now = new Date();
-        const totalTime = (Math.abs(now - timestamps[id]) / 1000) + (fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds));
-        if (!isNaN(totalTime)) {
-            const { days, hours, minutes, seconds } = secondsToFull(totalTime);
-            await updateStat(id, days, hours, minutes, seconds, username);
+        const timestamp = timestamps[id];
+
+        if (timestamp) {
+            removeTimestamp(id);
+
+            let stats = await getStats();
+
+            if (!Object.keys(stats).includes(id))
+                stats = await addStat(id, username);
+
+            const stat = stats[id];
+            const now = new Date();
+            const totalTime = (Math.abs(now - timestamp) / 1000) + fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+
+            if (!isNaN(totalTime)) {
+                const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                await updateStat(id, days, hours, minutes, seconds, username);
+            }
         }
-        await updateStats();
+    },
+
+    /**
+     * Calculates and pushes the time difference for the stats of many/all members.
+     * 
+     * @param {Boolean} restart If re-adding the timestamps is needed or not.
+     * @param {String} [ids] The IDs of the members.
+     */
+    pushDifferences: async (restart, ids) => {
+        logToFileFunctionTriggered(MODULE_NAME, 'pushDifferences');
+
+        const now = new Date();
+        const updates = [];
+        const stats = await getStats();
+        const timestamps = getTimestamps();
+
+        if (!ids)
+            ids = Object.keys(timestamps);
+
+        for (const id of ids) {
+            const timestamp = timestamps[id];
+
+            if (timestamp) {
+                const stat = stats[id];
+
+                let totalTime = Math.abs(now - timestamp) / 1000;
+
+                if (restart)
+                    addTimestamp(id, new Date());
+                else
+                    removeTimestamp(id);
+
+                if (stat)
+                    totalTime += fullToSeconds(stat.days, stat.hours, stat.minutes, stat.seconds);
+
+                if (!isNaN(totalTime)) {
+                    const { days, hours, minutes, seconds } = secondsToFull(totalTime);
+                    updates.push({ filter: { _id: id }, update: { days, hours, minutes, seconds } });
+                }
+            }
+        }
+
+        if (updates.length > 0)
+            await updateManyStats(updates);
     },
 
     fullToSeconds,
@@ -136,45 +202,90 @@ module.exports = {
 
     getMembersStatus,
 
+    /**
+     * Checks that the bans stored in database are correlated with the bans of the default guild.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
     checkBansCorrelativity: async client => {
-        const ids = getIds() || await updateIds();
-        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const bans = await guild.bans.fetch().catch(console.error);
-        const banned = getBanned() || await updateBanned();
-        let needUpdate = false;
-        for (const key in banned)
-            if (!bans.has(key)) {
-                needUpdate = true;
-                log(`> El ban de ${banned[key].user} no corresponde a este servidor`, 'yellow');
-                await deleteBan(key);
-            }
-        if (needUpdate)
-            await updateBanned();
-    },
+        logToFileFunctionTriggered(MODULE_NAME, 'checkBansCorrelativity');
 
-    startStatsCounters: async client => {
-        const ids = getIds() || await updateIds();
-        client.guilds.fetch(ids.guilds.default).then(guild => {
-            guild.channels.cache.each(async channel => {
-                if (channel.type === ChannelType.GuildVoice && channel.id != ids.channels.afk) {
-                    const membersInChannel = await getMembersStatus(channel);
-                    if (membersInChannel.size >= 2)
-                        membersInChannel.valid.forEach(member => addTimestamp(member.id, new Date()));
+        try {
+            const ids = await getIds();
+            const guild = await client.guilds.fetch(ids.guilds.default);
+            const bans = await guild.bans.fetch();
+            const banned = getBanned() || await updateBanned();
+            let needUpdate = false;
+            for (const key in banned)
+                if (!bans.has(key)) {
+                    needUpdate = true;
+                    consoleLog(`> El ban de ${banned[key].user} no corresponde a este servidor`, CONSOLE_YELLOW);
+                    await deleteBan(key);
                 }
-            });
-        }).catch(console.error);
+            if (needUpdate)
+                await updateBanned();
+
+            logToFile(`${MODULE_NAME}.checkBansCorrelativity`, `Bans correlativity succesfully checked`);
+        } catch (error) {
+            consoleLog(`> Error al chequear correlatividad de baneos`, CONSOLE_RED);
+            logToFileError(`${MODULE_NAME}.checkBansCorrelativity`, error);
+        }
     },
 
+    /**
+     * Starts the stats counters for the members connected to voice channels.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
+    startStatsCounters: async client => {
+        logToFileFunctionTriggered(MODULE_NAME, 'startStatsCounters');
+
+        try {
+            const ids = await getIds();
+            const guild = await client.guilds.fetch(ids.guilds.default);
+            let counter = 0;
+            for (const [id, channel] of guild.channels.cache)
+                if (channel.type === ChannelType.GuildVoice && id !== ids.channels.afk) {
+                    const { size, valid } = await getMembersStatus(channel);
+                    if (size >= 2)
+                        for (const member of valid) {
+                            counter++;
+                            addTimestamp(member.id, new Date());
+                        }
+                }
+
+            logToFile(`${MODULE_NAME}.startStatsCounters`, `${counter} stats counters started`);
+        } catch (error) {
+            consoleLog(`> Error al iniciar contadores de estadísticas`, CONSOLE_RED);
+            logToFileError(`${MODULE_NAME}.startStatsCounters`, error);
+        }
+    },
+
+    /**
+     * Counts the members in the default guild and updates the members counter.
+     * 
+     * @param {Client} client The Discord client instance.
+     */
     countMembers: async client => {
-        const ids = getIds() || await updateIds();
-        const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const members = await guild.members.fetch();
-        const membersCounter = members.filter(m => !m.user.bot).size;
-        const totalMembersName = `👥 Totales: ${membersCounter}`;
-        const channel = await guild.channels.fetch(ids.channels.members).catch(console.error);
-        if (channel.name !== totalMembersName) {
-            await channel.setName(totalMembersName).catch(console.error);
-            log('> Contador de miembros actualizado', 'blue');
+        logToFileFunctionTriggered(MODULE_NAME, 'countMembers');
+
+        try {
+            const ids = await getIds();
+            const guild = await client.guilds.fetch(ids.guilds.default);
+            const members = await guild.members.fetch();
+            const membersCounter = members.filter(m => !m.user.bot).size;
+            const totalMembersName = `👥 Totales: ${membersCounter}`;
+            const channel = await guild.channels.fetch(ids.channels.members);
+            if (channel.name !== totalMembersName) {
+                await channel.setName(totalMembersName);
+                consoleLog('> Contador de miembros actualizado', CONSOLE_BLUE);
+
+                logToFile(`${MODULE_NAME}.countMembers`, `Guild members counter updated`);
+            } else
+                logToFile(`${MODULE_NAME}.countMembers`, `No changes in guild members counter`);
+        } catch (error) {
+            consoleLog(`> Error al actualizar contador de miembros`, CONSOLE_RED);
+            logToFileError(`${MODULE_NAME}.countMembers`, error);
         }
     },
 
@@ -182,7 +293,7 @@ module.exports = {
         const actualIcon = getIcon() || await updateIcon();
         const newIcon = `kgprime${await getImageType()}`;
         if (actualIcon !== newIcon) {
-            await guild.setIcon(`${githubRawURL}/assets/icons/${newIcon}.png`).catch(console.error);
+            await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
             await updateIcon();
         }
@@ -207,11 +318,11 @@ module.exports = {
                 newGuildName += date >= 26 ? ' 🥂' : ' 🎅🏻';
                 break;
         }
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
         if (guild.name !== newGuildName) {
             await guild.setName(newGuildName).catch(console.error);
-            log('> Nombre de servidor actualizado', 'green');
+            consoleLog('> Nombre de servidor actualizado', CONSOLE_GREEN);
         }
     },
 
@@ -251,7 +362,7 @@ module.exports = {
         const breakpoints = chronology.filter(({ choices }) => choices).map(({ choices }) => choices);
 
         const getNewEmoji = async () => {
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const obj = ids.emojis[collection.emoji];
             if (typeof obj === 'string')
                 return `<:${collection.emoji}:${obj}>`;
@@ -317,7 +428,7 @@ module.exports = {
             collector.on('end', async collected => {
                 if (collected.size === 0) {
                     emoji = await getNewEmoji();
-                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${prefix}db**.`;
+                    reply.content = `${emoji} ${title}\n⌛ Esta acción **expiró**, para volver a elegir ramas y filtros usá **${PREFIX}${collectionId}**.`;
                     reply.components = [];
                     message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
                     return;
@@ -374,7 +485,7 @@ module.exports = {
             emoji = await getNewEmoji();
             reply.content = `${emoji} ${title}\n⚠ Por favor **seleccioná los filtros** que querés aplicar y luego **confirmá** para aplicarlos, esta acción expirará luego de 5 minutos.\n\u200b`;
             reply.components = getFiltersRows(filters).concat([secondaryRow]);
-            reply.files = [`${githubRawURL}/assets/${collectionId}/poster.jpg`];
+            reply.files = [await getGithubRawUrl(`assets/${collectionId}/poster.jpg`)];
 
             if (!replyMessage)
                 replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
@@ -434,7 +545,7 @@ module.exports = {
 
                 if (status !== 'CONFIRMED') {
                     emoji = await getNewEmoji();
-                    const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${prefix}db**.\n\u200b` };
+                    const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${PREFIX}db**.\n\u200b` };
                     message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                     return;
                 }
@@ -489,7 +600,7 @@ module.exports = {
                 const newName = `**${i + 1}.** ${name}`;
                 const aux = moviesField.value + `${newName}\n\n`;
 
-                if (aux.length <= 1024) {
+                if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                     moviesField.value += `${newName}\n\n`;
                     typesField.value += `*${type}*\n\n`;
                     if (ctx.measureText(newName).width >= 292)
@@ -500,7 +611,7 @@ module.exports = {
                 embeds.push(new EmbedBuilder()
                     .setColor(instance.color)
                     .addFields([moviesField, typesField])
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/${collection.thumb}.png`));
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/${collection.thumb}.png`)));
 
                 moviesField = { name: 'Nombre', value: `${newName}\n\n`, inline: true };
                 typesField = { name: 'Tipo', value: `*${type}*\n\n`, inline: true };
@@ -512,7 +623,7 @@ module.exports = {
             embeds.push(new EmbedBuilder()
                 .setColor(instance.color)
                 .addFields([moviesField, typesField])
-                .setThumbnail(`${githubRawURL}/assets/thumbs/${collection.thumb}.png`));
+                .setThumbnail(await getGithubRawUrl(`assets/thumbs/${collection.thumb}.png`)));
 
             for (let i = 0; i < embeds.length; i++) {
                 const msg = embeds[i];
@@ -521,7 +632,7 @@ module.exports = {
                     msg.setDescription(instance.messageHandler.get(guild, 'MOVIES', {
                         CMD: collection.cmd || collectionId,
                         ID: member.user.id,
-                        PREFIX: prefix
+                        PREFIX: PREFIX
                     }));
             }
 
@@ -585,7 +696,7 @@ module.exports = {
             finalCollector.on('end', async _ => {
                 reply.components = [];
                 emoji = await getNewEmoji();
-                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${prefix}db**.\n\u200b`;
+                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${PREFIX}${collectionId}**.\n\u200b`;
                 message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
             });
         };
@@ -612,7 +723,7 @@ module.exports = {
             const filteredName = elementName.replace(/[:|?]/g, '').replace(/ /g, '%20');
 
             reply.content = `**${elementName} (${elementYear})**\n\n⚠ Este elemento no cuenta con contenido descargable.\n\u200b`;
-            reply.files = [`${githubRawURL}/assets/${collectionId}/${filteredName}.jpg`];
+            reply.files = [await getGithubRawUrl(`assets/${collectionId}/${filteredName}.jpg`)];
 
             message ? await message.reply(reply) : await interaction.editReply(reply);
             return;
@@ -653,7 +764,7 @@ module.exports = {
 
             reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
             reply.components = [getVersionsRow()];
-            reply.files = [`${githubRawURL}/assets/${collectionId}/${filteredName}.jpg`];
+            reply.files = [await getGithubRawUrl(`assets/${collectionId}/${filteredName}.jpg`)];
 
             const replyMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
@@ -675,7 +786,7 @@ module.exports = {
                 if (versionsMessage) versionsMessage.delete();
                 const edit = {
                     components: [],
-                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${prefix}ucm ${index + 1}**.\n\u200b`,
+                    content: `**${packageName} (${packageYear})**\n\n⌛ Esta acción expiró, para volver a ver los links de este elemento usá **${PREFIX}ucm ${index + 1}**.\n\u200b`,
                     embeds: [],
                     files: reply.files
                 };
@@ -699,7 +810,7 @@ module.exports = {
                         .setTitle(`${packageName} (${packageYear}) - ${customId} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`)
                         .setColor(color)
                         .setDescription(c)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/${collectionId}/${thumb}.png`));
+                        .setThumbnail(await getGithubRawUrl(`assets/thumbs/${collectionId}/${thumb}.png`)));
             }
 
             for (let i = 0; i < embeds.length; i++)
@@ -764,7 +875,7 @@ module.exports = {
     },
 
     isOwner: async id => {
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         return id === ids.users.stormer || id === ids.users.darkness;
     }
 }

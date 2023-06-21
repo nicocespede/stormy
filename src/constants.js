@@ -1,76 +1,26 @@
-const local = process.env.LOCAL ? true : false;
-
-const getActualBranch = () => {
-    const fs = require('fs');
-    const data = fs.readFileSync(`.git/HEAD`, 'utf8');
-    const splitted = data.split('/');
-    return splitted.pop().replace('\n', '');
-};
+const ENVIRONMENT = process.env.ENVIRONMENT;
 
 module.exports = {
-    prefix: '-',
+    PREFIX: '-',
 
-    testing: process.env.TESTING ? true : false,
+    ENVIRONMENT,
 
-    local,
+    DEV_ENV: ENVIRONMENT !== 'PRO',
 
-    githubRawURL: `https://raw.githubusercontent.com/nicocespede/stormy-data/${getActualBranch()}`,
+    LOCAL_ENV: ENVIRONMENT === 'LOCAL',
+
+    ARGENTINA_TZ_STRING: 'America/Argentina/Buenos_Aires',
+    ARGENTINA_LOCALE_STRING: 'es-AR',
 
     color: [4, 134, 164],
 
     EMBED_DESCRIPTION_MAX_LENGTH: 4096,
     EMBED_FIELD_VALUE_MAX_LENGTH: 1024,
 
-    currencies: {
-        slp: {
-            id: "smooth-love-potion",
-            color: [
-                255,
-                175,
-                188
-            ]
-        },
-        pvu: {
-            id: "plant-vs-undead-token",
-            color: [
-                159,
-                222,
-                71
-            ]
-        },
-        btc: {
-            id: "bitcoin",
-            color: [
-                247,
-                147,
-                26
-            ]
-        },
-        eth: {
-            id: "ethereum",
-            color: [
-                138,
-                146,
-                178
-            ]
-        },
-        doge: {
-            id: "dogecoin",
-            color: [
-                186,
-                159,
-                51
-            ]
-        },
-        bnb: {
-            id: "binancecoin",
-            color: [
-                243,
-                186,
-                47
-            ]
-        }
-    },
+    CONSOLE_BLUE: 'BLUE',
+    CONSOLE_GREEN: 'GREEN',
+    CONSOLE_RED: 'RED',
+    CONSOLE_YELLOW: 'YELLOW',
 
     MusicActions: {
         ADDING: 'ADDING',
@@ -78,6 +28,7 @@ module.exports = {
         BEING_KICKED: 'BEING_KICKED',
         CHANGING_CHANNEL: 'CHANGING_CHANNEL',
         ENDING: 'ENDING',
+        ERROR: 'ERROR',
         GOING_BACK: 'GOING_BACK',
         LEAVING_EMPTY_CHANNEL: 'LEAVING_EMPTY_CHANNEL',
         MOVING_SONG: 'MOVING_SONG',

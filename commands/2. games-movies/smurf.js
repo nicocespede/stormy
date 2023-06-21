@@ -1,10 +1,13 @@
+const { ICommand } = require('wokcommands');
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const { getSmurfs, updateSmurfs, updateIds, getIds } = require('../../src/cache');
-const { prefix, githubRawURL, color } = require('../../src/constants');
-const { isOwner } = require('../../src/general');
-const { log, convertTZ } = require('../../src/util');
+const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX, color, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
+const { isOwner } = require('../../src/common');
+const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError } = require('../../src/util');
+
+const MODULE_NAME = "games-movies.smurf";
 
 const translateRank = rank => {
     if (!rank)
@@ -61,7 +64,7 @@ const getRankColor = rank => {
 };
 
 const getEmbed = async (color, guild, userId) => {
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
     const isVip = await isOwner(userId) || vipRole.members.has(userId);
 
@@ -100,21 +103,22 @@ const getEmbed = async (color, guild, userId) => {
             ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
         } else {
             errorsCounter++;
-            log(`ValorantAPIError fetching ${name}:\n${JSON.stringify(mmr.error)}`, 'red');
+            consoleLogError(`> Error al obtener datos de la cuenta ${name}`);
+            logToFile(MODULE_NAME + `.getEmbed`, `Error: ValorantAPIError fetching ${name}\n` + JSON.stringify(mmr.error));
             accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
             ranksField.value += `???\n\n`;
         }
         commandsField.value += `${command}\n\n`;
     }
 
-    description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${prefix}smurf\` seguido del ID de la cuenta deseada.\n\n`;
+    description += `${errorsCounter > 0 ? `ocurrió un error y no pude obtener el rango de ${errorsCounter} cuentas.\n\nP` : 'p'}ara obtener la información de una cuenta, utilizá nuevamente el comando \`${PREFIX}smurf\` seguido del ID de la cuenta deseada.\n\n`;
 
     return new EmbedBuilder()
         .setColor(color)
         .setDescription(description)
         .addFields([accountsField, commandsField, ranksField])
-        .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}` })
-        .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)
+        .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}` })
+        .setThumbnail(await getGithubRawUrl(`assets/thumbs/games/valorant.png`))
         .setTitle(`**Cuentas smurf**`);
 };
 
@@ -152,6 +156,7 @@ const getRow = type => {
         .setDisabled(disabled));
 };
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Envía un MD con la información de las cuentas smurf de Valorant (sólo para usuarios autorizados).',
@@ -173,7 +178,7 @@ module.exports = {
             const { customId, message, user } = interaction;
             if (customId !== 'report-ban' && customId !== 'update-smurfs') return;
 
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             if (customId === 'report-ban') {
                 const stormer = await client.users.fetch(ids.users.stormer).catch(console.error);
                 try {
@@ -183,11 +188,12 @@ module.exports = {
                             .setAuthor({ name: user.username, iconURL: user.avatarURL() })
                             .setDescription(`Cuenta: **${EmbedBuilder.from(message.embeds[0]).data.title}**`)
                             .setColor(color)
-                            .setThumbnail(`${githubRawURL}/assets/thumbs/flag.png`)]
+                            .setThumbnail(await getGithubRawUrl(`assets/thumbs/flag.png`))]
                     });
                     await interaction.update({ components: [getRow('success')] });
                 } catch (e) {
-                    log(`> Error sending report:\n${e.stack}`, 'red');
+                    consoleLogError(`> Error al enviar reporte de cuenta de Valorant`);
+                    logToFileError(MODULE_NAME + `.init`, e);
                     await interaction.update({ components: [getRow('retry')] });
                 }
             }
@@ -203,10 +209,12 @@ module.exports = {
         });
     },
 
-    callback: async ({ guild, member, user, message, interaction, client, args, channel, instance }) => {
+    callback: async ({ args, channel, client, guild, instance, interaction, member, message, text, user }) => {
+        logToFileCommandUsage('smurf', text, interaction, user);
+
         const id = message ? args[0] : interaction.options.getString('id');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
 
         if (!id) {
             if (channel.type === ChannelType.DM) {
@@ -229,7 +237,8 @@ module.exports = {
                 await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, guild, user.id)] });
                 reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
             } catch (error) {
-                log(`> Error al enviar cuentas smurfs:\n${error.stack}`);
+                consoleLogError(`> Error al enviar cuentas smurfs`);
+                logToFileError(MODULE_NAME, error);
                 reply.content = `❌ Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
             }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -263,20 +272,21 @@ module.exports = {
                     version: 'v1'
                 }).catch(console.error);
                 if (mmr.error) {
-                    log(`ValorantAPIError fetching ${account.name}:\n${JSON.stringify(mmr.error)}`, 'red');
+                    consoleLogError(`> Error al obtener datos de la cuenta ${account.name}`);
+                    logToFile(MODULE_NAME, `Error: ValorantAPIError fetching ${account.name}\n` + JSON.stringify(mmr.error));
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(account.name)
                         .setColor(getRankColor(null))];
-                    reply.files = [new AttachmentBuilder(`${githubRawURL}/assets/thumbs/games/unranked.png`, { name: 'rank.png' })];
+                    reply.files = [new AttachmentBuilder(await getGithubRawUrl(`assets/thumbs/games/unranked.png`), { name: 'rank.png' })];
                 } else {
-                    const thumb = !mmr.data.images ? `${githubRawURL}/assets/thumbs/games/unranked.png` : mmr.data.images.large;
+                    const thumb = !mmr.data.images ? await getGithubRawUrl(`assets/thumbs/games/unranked.png`) : mmr.data.images.large;
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
                         .setColor(getRankColor(mmr.data.currenttierpatched))];
                     reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
                 if (account.bannedUntil)
-                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString('es-AR')}** ⚠`);
+                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ⚠`);
                 else if (user.id !== ids.users.stormer)
                     reply.components = [getRow('report')];
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },

@@ -1,6 +1,6 @@
 const { ActivityType } = require("discord.js");
-const { prefix } = require("../src/constants");
-const { log } = require("../src/util");
+const { PREFIX, CONSOLE_YELLOW } = require("../src/constants");
+const { consoleLog } = require("../src/util");
 
 module.exports = client => {
     let exec = false;
@@ -8,8 +8,8 @@ module.exports = client => {
         if (!exec)
             exec = true;
         else {
-            log('> Asignando actividad a la presencia...', 'yellow');
-            client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
+            consoleLog('> Asignando actividad a la presencia...', CONSOLE_YELLOW);
+            client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
         }
     });
 };

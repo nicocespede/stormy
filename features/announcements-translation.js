@@ -1,6 +1,6 @@
 const translate = require("translate");
-const { getIds, updateIds } = require("../src/cache");
-const { needsTranslation } = require("../src/general");
+const { getIds } = require("../src/cache");
+const { needsTranslation } = require("../src/common");
 const { splitMessage } = require("../src/util");
 
 const getNextMessage = (id, collection) => {
@@ -17,7 +17,7 @@ const getNextMessage = (id, collection) => {
 };
 
 module.exports = async client => {
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
 
     client.on('messageCreate', async message => {
         if (message.channel.id === ids.channels.anuncios && !message.author.bot)

@@ -1,7 +1,9 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
-const { getPlaylists, updatePlaylists, getIds, updateIds } = require('../../src/cache');
-const { prefix, githubRawURL } = require('../../src/constants');
+const { getPlaylists, updatePlaylists, getIds, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
+const { getUserTag } = require('../../src/util');
 const { addPlaylist, deletePlaylist } = require('../../src/mongodb');
+const { handleErrorEphemeral } = require('../../src/music');
 
 module.exports = {
     category: 'Música',
@@ -49,23 +51,22 @@ module.exports = {
 
     callback: async ({ user, channel, message, interaction, args, instance, guild }) => {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
-        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
-
         const reply = { ephemeral: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `⚠ Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            message ? deferringMessage.edit(reply) : interaction.editReply(reply);
+            handleErrorEphemeral(reply, new EmbedBuilder().setColor(instance.color), `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
             return;
         }
+
+        const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
         if (subCommand === 'ver') {
             const playlists = getPlaylists() || await updatePlaylists();
             const embed = new EmbedBuilder()
                 .setTitle(`**Listas de reproducción**`)
                 .setColor(instance.color)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/playlist.png`);
+                .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/playlist.png`));
 
             if (Object.keys(playlists).length === 0) {
                 embed.setDescription('_No hay ninguna lista de reproducción guardada aún._');
@@ -84,7 +85,7 @@ module.exports = {
                     i++;
                     const { url } = playlist;
                     const aux = ownedField.value + `**${i}.** [${name}](${url})\n\n`;
-                    if (aux.length <= 1024) {
+                    if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                         ownedField.value += `**${i}.** [${name}](${url})\n\n`;
                         continue;
                     }
@@ -107,9 +108,9 @@ module.exports = {
                     const { url, ownerId } = playlist;
                     const member = members.get(ownerId);
                     const aux = othersField.value + `**${i}.** [${name}](${url})\n\n`;
-                    if (aux.length <= 1024) {
+                    if (aux.length <= EMBED_FIELD_VALUE_MAX_LENGTH) {
                         othersField.value += `**${i}.** [${name}](${url})\n\n`;
-                        ownersField.value += `${member ? member.user.tag : 'Desconocido'}\n\n`;
+                        ownersField.value += `${member ? getUserTag(member.user) : 'Desconocido'}\n\n`;
                         continue;
                     }
 
@@ -117,7 +118,7 @@ module.exports = {
                     fields.push(ownersField);
                     fields.push({ name: `\u200b`, value: '\u200b', inline: true });
                     othersField = { name: '\u200b', value: `**${i}.** [${name}](${url})\n\n`, inline: true };
-                    ownersField = { name: '\u200b', value: `${member ? member.user.tag : 'Desconocido'}\n\n`, inline: true };
+                    ownersField = { name: '\u200b', value: `${member ? getUserTag(member.user) : 'Desconocido'}\n\n`, inline: true };
 
                 }
                 fields.push(othersField);
@@ -126,7 +127,7 @@ module.exports = {
             }
 
             embed.setFields(fields)
-                .setDescription(`Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${prefix}play\` seguido del nombre de la lista.\n\n`);
+                .setDescription(`Hola <@${user.id}>, para reproducir una lista de reproducción utiliza el comando \`${PREFIX}play\` seguido del nombre de la lista.\n\n`);
             reply.content = null;
             reply.embeds = [embed];
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
@@ -140,7 +141,7 @@ module.exports = {
             if (!argsName) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir un nombre para la lista.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "listas agregar",
                     ARGUMENTS: "`<nombre>` `<url>`"
                 });
@@ -153,7 +154,7 @@ module.exports = {
             if (!url || !url.includes('http') || !url.includes('www'))
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir una URL válida.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "listas agregar",
                     ARGUMENTS: "`<nombre>` `<url>`"
                 });
@@ -175,7 +176,7 @@ module.exports = {
             if (!argsName) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir un nombre para la lista.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "listas borrar",
                     ARGUMENTS: "`<nombre>`"
                 });

@@ -13,9 +13,8 @@ module.exports = client => {
                 await new Promise(res => setTimeout(res, 60 * 1000));
                 const channel = await client.channels.fetch(oldState.channelId).catch(console.error);
                 const deafenedMembers = [...channel.members].filter(([_, member]) => member.voice.selfDeaf || member.voice.serverDeaf);
-                if (channel.members.has(client.user.id)
-                    && (channel.members.size === 1 || deafenedMembers.length === channel.members.size))
-                    leaveEmptyChannel(client, oldState.guild);
+                if (channel.members.has(client.user.id) && (channel.members.size === 1 || deafenedMembers.length === channel.members.size))
+                    leaveEmptyChannel(oldState.guild);
             }
             return;
         }
@@ -23,13 +22,13 @@ module.exports = client => {
         if (oldState.channelId === newState.channelId) return;
         // send message if the bot is moved to another channel
         if (oldState.channelId !== newState.channelId && newState.channelId) {
-            setNewVoiceChannel(client, newState.guild, newState.channel);
+            setNewVoiceChannel(newState.guild, newState.channel);
             return;
         }
         // clear the queue if was kicked
         const { action: lastAction } = getLastAction();
-        if (lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
-            && lastAction !== MusicActions.ENDING && lastAction !== MusicActions.RESTARTING)
+        if (lastAction && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
+            && lastAction !== MusicActions.ENDING && lastAction !== MusicActions.RESTARTING && lastAction !== MusicActions.ERROR)
             setKicked();
         return;
     });

@@ -1,6 +1,5 @@
 const { ApplicationCommandOptionType } = require("discord.js");
 const { addBanResponsible } = require("../../src/cache");
-const { testing } = require("../../src/constants");
 
 module.exports = {
     category: 'Privados',

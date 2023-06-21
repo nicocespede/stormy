@@ -3,17 +3,19 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { timeouts, getIds, updateIds, getLastAction, updateLastAction, getSongsInQueue, getTimestamps, getMusicPlayerData } = require('./src/cache');
-const { pushDifference, checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/general');
-const { log } = require('./src/util');
-const { containsAuthor, emergencyShutdown, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
-const { prefix, MusicActions, categorySettings, testing, githubRawURL, color } = require('./src/constants');
+const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
+const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
+const { consoleLog, logToFile, getUserTag } = require('./src/util');
+const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
+const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
+
+const MODULE_NAME = 'index';
 
 const client = new Client({
     intents: [
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildBans,
+        GatewayIntentBits.GuildModeration,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildMessages,
@@ -25,9 +27,15 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    client.user.setPresence({ activities: [{ name: `${prefix}ayuda`, type: ActivityType.Listening }] });
+    const moduleName = `${MODULE_NAME}.readyListener`;
+    logToFile(null, `-`.repeat(40) + '[ NEW START ]' + `-`.repeat(40));
 
-    const ids = getIds() || await updateIds();
+    await loadMandatoryCache();
+
+    client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
+    logToFile(moduleName, `Setting bot presence succesfully`);
+
+    const ids = await getIds();
 
     startStatsCounters(client);
 
@@ -45,36 +53,23 @@ client.on('ready', async () => {
         testServers: [ids.guilds.testing],
         mongoUri: process.env.MONGO_URI,
         dbOptions: { keepAlive: true }
-    }).setDefaultPrefix(prefix)
+    }).setDefaultPrefix(PREFIX)
         .setCategorySettings(categorySettings)
         .setColor(color);
+    logToFile(moduleName, `WOKCommands client initialized succesfully`);
 
     await checkBansCorrelativity(client);
 
     const musicEmbed = new EmbedBuilder().setColor(color);
-    client.player = new Player(client, {
-        leaveOnEnd: false,
-        leaveOnStop: true,
-        leaveOnEmpty: true,
-        leaveOnEmptyCooldown: 60000,
+
+    const player = new Player(client, {
         ytdlOptions: {
             quality: 'highestaudio',
             highWaterMark: 1 << 25
         }
-    }).on('connectionCreate', queue => {
-        queue.connection.voiceConnection.on('stateChange', (oldState, newState) => {
-            const oldNetworking = Reflect.get(oldState, 'networking');
-            const newNetworking = Reflect.get(newState, 'networking');
+    });
 
-            const networkStateChangeHandler = (oldNetworkState, newNetworkState) => {
-                const newUdp = Reflect.get(newNetworkState, 'udp');
-                clearInterval(newUdp?.keepAliveInterval);
-            }
-
-            oldNetworking?.off('stateChange', networkStateChangeHandler);
-            newNetworking?.on('stateChange', networkStateChangeHandler);
-        });
-    }).on('trackStart', async (queue, track) => {
+    player.events.on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
             updateLastAction(MusicActions.STARTING_TRACK);
@@ -89,45 +84,47 @@ client.on('ready', async () => {
             updateLastAction(MusicActions.STARTING_TRACK);
             setMusicPlayerMessage(queue, track, action);
         }
-    }).on('trackAdd', async (queue, track) => {
+    }).on('audioTrackAdd', async (queue, track) => {
         const { action: lastAction } = getLastAction();
-        if (queue.playing && lastAction !== MusicActions.MOVING_SONG && lastAction !== MusicActions.ADDING_NEXT) {
+        if (queue.node.isPlaying() && lastAction !== MusicActions.MOVING_SONG && lastAction !== MusicActions.ADDING_NEXT) {
             const { interaction, message } = (getSongsInQueue())[track.url];
             const filteredTitle = await cleanTitle(track.title);
             const temporalReply = {
                 embeds: [musicEmbed
                     .setDescription(`☑️ Agregado a la cola:\n\n[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)]
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/music/add-song.png'))]
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
 
-            const action = `☑️ ${message ? message.mentions.repliedUser.tag : interaction.user.tag} agregó [${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) a la cola.`;
+            const tag = getUserTag(message ? message.mentions.repliedUser : interaction.user);
+            const action = `☑️ ${tag} agregó [${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) a la cola.`;
             setMusicPlayerMessage(queue, track, action);
 
         }
-    }).on('tracksAdd', async (queue, tracks) => {
+    }).on('audioTracksAdd', async (queue, tracks) => {
         const { action: lastAction } = getLastAction();
-        if (queue.playing && lastAction !== MusicActions.ADDING_NEXT) {
+        if (queue.node.isPlaying() && lastAction !== MusicActions.ADDING_NEXT) {
             const { interaction, message } = (getSongsInQueue())[tracks[0].url];
             const playlist = tracks[0].playlist;
             const temporalReply = {
                 embeds: [musicEmbed
                     .setDescription(`☑️ **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''} agregadas a la cola.`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/music/add-song.png`)
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/music/add-song.png'))
                 ]
             };
             message ? await message.edit(temporalReply) : await interaction.editReply(temporalReply);
 
-            const action = `☑️ ${message ? message.mentions.repliedUser.tag : interaction.user.tag} agregó a la cola **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''}.`;
+            const tag = getUserTag(message ? message.mentions.repliedUser : interaction.user);
+            const action = `☑️ ${tag} agregó a la cola **${tracks.length} canciones**${playlist ? ` de la lista de reproducción **[${playlist.title}](${playlist.url})**` : ''}.`;
             setMusicPlayerMessage(queue, tracks[0], action);
         }
-    }).on('channelEmpty', _ => {
+    }).on('emptyChannel', _ => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
         const { collector } = getMusicPlayerData('player');
         collector.stop();
-    }).on('queueEnd', async queue => {
+    }).on('emptyQueue', async queue => {
         const { action: lastAction } = getLastAction();
-        const queueEnded = queue.connection.channel.members.size > 1
+        const queueEnded = queue.channel.members.size > 1
             && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
@@ -135,64 +132,36 @@ client.on('ready', async () => {
             const { collector } = getMusicPlayerData('player');
             collector.stop();
         }
-    }).on('connectionError', (queue, error) => {
-        log(`Error in Player.on('connectionError'):\n${error.stack}`, 'red');
+    }).on('playerError', async (queue, error) => {
+        consoleLog(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
+                .setThumbnail(await getGithubRawUrl('assets/thumbs/broken-robot.png'))]
         });
-        if (!queue.destroyed)
-            queue.destroy();
-    }).on('error', (queue, error) => {
-        log(`Error in Player.on('error'):\n${error.stack}`, 'red');
+        if (!queue.deleted)
+            queue.delete();
+    }).on('error', async (queue, error) => {
+        consoleLog(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
                 embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/broken-robot.png`)]
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/broken-robot.png'))]
             });
-        if (!queue.destroyed)
-            queue.destroy();
-    })/*.on('debug', (queue, message) => {
-        log(message)
-    })*/;
+        if (!queue.deleted)
+            queue.delete();
+    });
+    logToFile(moduleName, `Discord-player instance initialized successfully`);
 
     playInterruptedQueue(client);
 
-    log(`¡Loggeado como ${client.user.tag}!`, 'green');
+    const codeBranch = getCurrentCodeBranchName();
+    const contentBranch = await getCurrentContentBranchName();
+    consoleLog(`> Loggeado como ${getUserTag(client.user)} - Entorno: ${ENVIRONMENT} | Rama de código: ${codeBranch} | Rama de contenido: ${contentBranch}`, CONSOLE_GREEN);
+    logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | CODE BRANCH: ${codeBranch} | CONTENT BRANCH: ${contentBranch}`);
 });
 
-client.rest.on('rateLimited', data => log(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, 'yellow'));
-
-process.on(!testing ? 'SIGTERM' : 'SIGINT', async () => {
-    log('> Reinicio inminente...', 'yellow');
-    // disconnects music bot
-    const ids = getIds() || await updateIds();
-    await emergencyShutdown(client, ids.guilds.default);
-
-    // send stats
-    const timestamps = getTimestamps();
-    if (Object.keys(timestamps).length > 0) {
-        log('> Enviando estadísticas a la base de datos', 'yellow');
-        for (const key in timestamps)
-            if (Object.hasOwnProperty.call(timestamps, key))
-                await pushDifference(key);
-    }
-
-    //clears timeouts
-    log(`> Terminando ${Object.keys(timeouts).length} loops`, 'yellow');
-    for (const key in timeouts)
-        if (Object.hasOwnProperty.call(timeouts, key))
-            clearTimeout(timeouts[key]);
-
-    //ends discord client
-    log('> Desconectando bot', 'yellow');
-    client.destroy();
-
-    //exits process
-    log('> Terminando proceso', 'yellow');
-    process.exit();
-});
+client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
 
 client.login(process.env.TOKEN);

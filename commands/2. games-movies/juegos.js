@@ -1,16 +1,13 @@
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
-const { getGames, updateGames, getIds, updateIds } = require('../../src/cache');
-const { color, prefix, githubRawURL, EMBED_DESCRIPTION_MAX_LENGTH } = require('../../src/constants');
-const { lastUpdateToString, addAnnouncementsRole } = require('../../src/general');
+const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
+const { color, PREFIX, EMBED_DESCRIPTION_MAX_LENGTH } = require('../../src/constants');
+const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
 const { splitLines } = require('../../src/util');
 
 const buttonsPrefix = 'games-';
 const maxIdlingTime = 10;
-const thumbnailsData = {
-    steam: `${githubRawURL}/assets/thumbs/games/steam.png`,
-    others: `${githubRawURL}/assets/thumbs/games/control.png`
-};
+
 const data = {
     instructions: { emoji: '📄', label: 'Instrucciones', style: ButtonStyle.Secondary },
     game: { emoji: '🎮', label: 'Juego base' },
@@ -145,6 +142,12 @@ module.exports = {
                     const prefix = customId.split('-')[0];
                     const { label } = data[prefix];
                     const title = `${name} (${year}) ${version} -${label ? ` ${label}` : ''} ${customId.replace(prefix, '').replace('-', '')} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`;
+
+                    const thumbnailsData = {
+                        steam: await getGithubRawUrl('assets/thumbs/games/steam.png'),
+                        others: await getGithubRawUrl('assets/thumbs/games/control.png')
+                    };
+
                     for (const c of chunks)
                         embeds.push(new EmbedBuilder()
                             .setTitle(title)
@@ -238,7 +241,7 @@ module.exports = {
         const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         await addAnnouncementsRole(ids.roles.anunciosJuegos, guild, member);
 
         const games = getGames() || await updateGames();
@@ -260,11 +263,11 @@ module.exports = {
             }
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Juegos crackeados**`)
-                .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: prefix }))
+                .setDescription(instance.messageHandler.getEmbed(guild, 'GAMES', 'DESCRIPTION', { ID: user.id, PREFIX: PREFIX }))
                 .setColor(instance.color)
                 .addFields([gamesField, updatesField])
                 .setFooter({ text: instance.messageHandler.getEmbed(guild, 'GAMES', 'FOOTER') })
-                .setThumbnail(`${githubRawURL}/assets/thumbs/games/games-folder.png`)];
+                .setThumbnail(await getGithubRawUrl('assets/thumbs/games/games-folder.png'))];
 
             reply.content = null;
             message ? replyMessage.edit(reply) : interaction.editReply(reply);

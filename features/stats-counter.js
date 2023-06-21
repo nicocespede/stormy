@@ -1,81 +1,134 @@
-const { addTimestamp, getTimestamps, removeTimestamp, getIds, updateIds, timeouts } = require("../src/cache");
-const { pushDifference, getMembersStatus } = require("../src/general");
-const { log } = require("../src/util");
+const { Client, VoiceState } = require("discord.js");
+const { addTimestamp, getTimestamps, getIds, timeouts } = require("../src/cache");
+const { pushDifference, getMembersStatus, pushDifferences } = require("../src/common");
+const { CONSOLE_BLUE } = require("../src/constants");
+const { consoleLog, logToFile, logToFileFunctionTriggered, logToFileListenerTriggered, getUserTag } = require("../src/util");
 
+const MODULE_NAME = 'features.stats-counter';
+
+/** @param {Client} client */
 module.exports = client => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
-        const ids = getIds() || await updateIds();
-        if (oldState.guild.id === ids.guilds.default || newState.guild.id === ids.guilds.default) {
+        logToFileListenerTriggered(MODULE_NAME, 'voiceStateUpdate');
+        const moduleName = `${MODULE_NAME}.voiceStateUpdateListener`;
+
+        const ids = await getIds();
+
+        /**
+         * Determines if the voice state belongs to the default guild, or not.
+         * 
+         * @param {VoiceState} state The voice state.
+         * @returns True if the voice state belongs to the default guild, or false if not.
+         */
+        const isDefaultGuild = state => state.guild.id === ids.guilds.default;
+
+        if (isDefaultGuild(oldState) || isDefaultGuild(newState)) {
 
             const timestamps = getTimestamps();
 
+            /**
+             * Determines if the voice state is related to a bot, or not.
+             * 
+             * @param {VoiceState} state The voice state.
+             * @returns True if the voice state is related to a bot, or false if not.
+             */
+            const isBot = state => !(!state.member) && state.member.user.bot;
+
+            /**
+             * Determines if the voice state has voice channel, or not.
+             * 
+             * @param {VoiceState} state The voice state.
+             * @returns True if the voice state has a voice channel, or false if not.
+            */
+            const hasChannel = state => !(!state.channelId || !state.channel);
+
+            /**
+             * Determines if the voice state is related to the AFK voice channel, or not.
+             * 
+             * @param {VoiceState} state The voice state.
+             * @returns True if the voice state is related to the AFK voice channel, or false if not.
+            */
+            const isAfkChannel = state => hasChannel(state) && state.channelId === ids.channels.afk && state.channel.id === ids.channels.afk;
+
+            const isSameChannel = hasChannel(oldState) && hasChannel(newState) && oldState.channelId === newState.channelId && oldState.channel.id === newState.channel.id;
+
+            const { channel: oldChannel, member: oldMember } = oldState;
+
             // check for streaming or deafen/undeafen updates
-            if (!oldState.member.user.bot && oldState.channelId === newState.channelId && oldState.channelId != ids.channels.afk) {
+            if (!isBot(oldState) && isSameChannel && !isAfkChannel(oldState)) {
+
+                const isServerDeaf = oldState.serverDeaf !== null && newState.serverDeaf !== null && oldState.serverDeaf !== newState.serverDeaf;
+                const isSelfDeaf = oldState.selfDeaf !== null && newState.selfDeaf !== null && oldState.selfDeaf !== newState.selfDeaf;
+                const isDeaf = isServerDeaf || isSelfDeaf;
+                const isStreaming = oldState.streaming !== null && newState.streaming !== null && oldState.streaming !== newState.streaming;
+
                 // start counter if user undeafens or starts streaming while being deafened,
                 // and stop counter if user deafens and is not streaming
-                if ((oldState.serverDeaf != newState.serverDeaf) || (oldState.selfDeaf != newState.selfDeaf)
-                    || (oldState.streaming != newState.streaming)) {
+                if (isDeaf || isStreaming) {
+                    logToFile(moduleName, `${getUserTag(oldMember.user)} has been muted/deafened in the voice channel ${oldChannel.name}`);
 
-                    const membersInChannel = await getMembersStatus(oldState.channel);
+                    const { invalid, size, valid } = await getMembersStatus(oldChannel);
 
-                    if (membersInChannel.size >= 2) {
-                        membersInChannel.valid.forEach(member => {
-                            if (!timestamps[member.id])
-                                addTimestamp(member.id, new Date());
-                        });
-                        membersInChannel.invalid.forEach(async member => {
-                            if (timestamps[member.id]) {
-                                await pushDifference(member.id, member.user.tag);
-                                removeTimestamp(member.id);
-                            }
-                        });
+                    if (size >= 2) {
+                        for (const member of valid) {
+                            const { id } = member;
+                            if (!timestamps[id])
+                                addTimestamp(id, new Date());
+                        }
+
+                        await pushDifferences(false, invalid.map(m => m.id));
                     } else
-                        oldState.channel.members.each(async member => {
-                            if (!member.user.bot)
-                                if (timestamps[member.id]) {
-                                    await pushDifference(member.id, member.user.tag);
-                                    removeTimestamp(member.id);
-                                }
-                        });
+                        for (const [id, member] of oldChannel.members) {
+                            const { user } = member;
+                            if (!user.bot)
+                                await pushDifference(id, getUserTag(user));
+                        }
                 }
                 return;
             }
 
+            const { channel: newChannel, member: newMember } = newState;
+
             //check for new channel
-            if (newState.channelId && newState.channelId !== ids.channels.afk && newState.guild.id === ids.guilds.default) {
-                const membersInNewChannel = await getMembersStatus(newState.channel);
-                if (membersInNewChannel.size === 2)
-                    membersInNewChannel.valid.forEach(member => {
-                        if (!timestamps[member.id])
-                            addTimestamp(member.id, new Date());
-                    });
-                else if (membersInNewChannel.size > 2 || oldState.member.user.bot) {
-                    if (!timestamps[oldState.member.id])
-                        addTimestamp(oldState.member.id, new Date());
-                } else if (timestamps[newState.member.id]) {
-                    await pushDifference(newState.member.id, newState.member.user.tag);
-                    removeTimestamp(newState.member.id);
-                }
-            } else {
-                const id = newState.member ? newState.member.id : newState.id;
-                const tag = newState.member ? newState.member.user.tag : newState.id;
-                if (timestamps[id]) {
+            if (isDefaultGuild(newState) && hasChannel(newState) && !isAfkChannel(newState) && newMember) {
+                const { id, user } = newMember;
+                const tag = getUserTag(user);
+
+                logToFile(moduleName, `${tag} joined the voice channel ${newChannel.name}`);
+
+                const { size, valid } = await getMembersStatus(newChannel);
+
+                if (size === 2)
+                    for (const member of valid) {
+                        const { id: memberId } = member;
+                        if (!timestamps[memberId])
+                            addTimestamp(memberId, new Date());
+                    }
+                else if (size > 2 || isBot(newState)) {
+                    if (!timestamps[id])
+                        addTimestamp(id, new Date());
+                } else
                     await pushDifference(id, tag);
-                    removeTimestamp(id);
-                }
+            } else if (oldMember) {
+                const { id, user } = oldMember;
+                const tag = getUserTag(user);
+                logToFile(moduleName, `${tag} left the voice channel ${oldChannel.name}`);
+
+                await pushDifference(id, tag);
             }
 
             //check for old channel
-            if (oldState.channelId && oldState.channelId !== ids.channels.afk && oldState.guild.id === ids.guilds.default) {
-                const membersInOldChannel = await getMembersStatus(oldState.channel);
-                if (membersInOldChannel.size < 2)
-                    oldState.channel.members.each(async member => {
+            if (isDefaultGuild(oldState) && hasChannel(oldState) && !isAfkChannel(oldState)) {
+
+                const { size } = await getMembersStatus(oldChannel);
+
+                if (size === 1 && Object.keys(timestamps).length > 0) {
+                    logToFile(moduleName, `One member left in the voice channel ${oldChannel.name}`);
+
+                    for (const [id, member] of oldChannel.members)
                         if (!member.user.bot)
-                            if (timestamps[member.id]) {
-                                await pushDifference(member.id, member.user.tag);
-                                removeTimestamp(member.id)
-                            }
-                    });
+                            await pushDifference(id, getUserTag(member.user));
+                }
             }
             return;
         }
@@ -83,19 +136,19 @@ module.exports = client => {
 
     let exec = false;
     const save = async () => {
+        logToFileFunctionTriggered(MODULE_NAME, 'save');
+
         if (exec) {
             const timestamps = getTimestamps();
             if (Object.keys(timestamps).length > 0) {
-                log(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, 'blue');
-                for (const id in timestamps)
-                    if (Object.hasOwnProperty.call(timestamps, id)) {
-                        await pushDifference(id);
-                        addTimestamp(id, new Date());
-                    }
+                consoleLog(`> Se cumplió el ciclo de 1 hora, enviando ${Object.keys(timestamps).length} estadísticas a la base de datos`, CONSOLE_BLUE);
+                logToFile(`${MODULE_NAME}.save`, `Pushing all stats and restarting all timestamps after 1 hour loop completed`);
+
+                await pushDifferences(true);
             }
         } else exec = true;
 
-        timeouts['stats-counter'] = setTimeout(save, 1000 * 60 * 60);
+        timeouts[MODULE_NAME] = setTimeout(save, 1000 * 60 * 60);
     };
     save();
 };

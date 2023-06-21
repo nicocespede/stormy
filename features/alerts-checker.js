@@ -1,17 +1,17 @@
 const { AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
-const { getIds, updateIds, updateBirthdays, timeouts } = require('../src/cache');
-const { applyText, isOwner } = require('../src/general');
-const { log, convertTZ } = require('../src/util');
+const { getIds, updateBirthdays, timeouts, getGithubRawUrl } = require('../src/cache');
+const { applyText, isOwner } = require('../src/common');
+const { consoleLog, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
-const { relativeSpecialDays, githubRawURL } = require('../src/constants');
+const { relativeSpecialDays, CONSOLE_YELLOW } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
 const birthdaySchema = require('../models/birthday-schema');
 
 const generateBirthdayImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage(`${githubRawURL}/assets/happy-bday.png`);
+    const background = await Canvas.loadImage(await getGithubRawUrl('assets/happy-bday.png'));
     const avatarWidth = 300;
     const avatarHeight = avatarWidth;
     const avatarX = (background.width / 2) - (avatarWidth / 2);
@@ -52,7 +52,7 @@ const generateBirthdayImage = async user => {
 };
 
 module.exports = async client => {
-    const ids = getIds() || await updateIds();
+    const ids = await getIds();
     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
     const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
 
@@ -73,7 +73,7 @@ module.exports = async client => {
                 const member = members.get(_id);
 
                 if (!member) {
-                    log(`> El usuario ${username} ya no está en el servidor.`, 'yellow');
+                    consoleLog(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
                     continue;
                 }
 
@@ -106,7 +106,7 @@ module.exports = async client => {
                 const member2 = members.get(id2);
 
                 if (!member1 || !member2) {
-                    log(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`, 'yellow');
+                    consoleLog(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`, CONSOLE_YELLOW);
                     continue;
                 }
 

@@ -1,13 +1,16 @@
-const { getKruMatches, updateKruMatches, getIds, updateIds, timeouts } = require('../src/cache');
-const { convertTZ, log } = require('../src/util');
+const { getKruMatches, updateKruMatches, getIds, timeouts } = require('../src/cache');
+const { ARGENTINA_LOCALE_STRING } = require('../src/constants');
+const { convertTZ, consoleLogError, logToFileError } = require('../src/util');
+
+const MODULE_NAME = 'features.kru-matches-checker';
 
 module.exports = async client => {
     const check = async () => {
-        const matches = getKruMatches() || await updateKruMatches();
+        const matches = await getKruMatches('upcoming');
 
         if (matches.length > 0) {
             const today = new Date();
-            const ids = getIds() || await updateIds();
+            const ids = await getIds();
             const oneDay = 1000 * 60 * 60 * 24;
             const oneMinute = 1000 * 60;
 
@@ -16,16 +19,19 @@ module.exports = async client => {
                 const rivalTeam = team1Name.includes('KRÜ') ? team2Name : team1Name;
                 const difference = date - today;
 
-                if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString('es-AR', { timeStyle: 'short' })} hs**.`)
-                        .catch(_ => log("> Error al enviar alerta de partido de KRÜ", 'red'));
-                }
+                try {
+                    if (difference <= oneDay && difference >= (oneDay - oneMinute)) {
+                        const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
+                        channel.send(`<@&${ids.roles.kru}>\n\n<:kru:${ids.emojis.kru}> Mañana juega **KRÜ Esports** vs **${rivalTeam}** a las **${convertTZ(date).toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })} hs**.`);
+                    }
 
-                if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9)) {
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`)
-                        .catch(_ => log("> Error al enviar alerta de partido de KRÜ", 'red'));
+                    if (difference <= (oneMinute * 10) && difference >= (oneMinute * 9)) {
+                        const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
+                        channel.send(`<@&${ids.roles.kru}>\n\nEn 10 minutos juega **KRÜ Esports** vs **${rivalTeam}**. ¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`);
+                    }
+                } catch (error) {
+                    consoleLogError("> Error al enviar alerta de partido de KRÜ");
+                    logToFileError(MODULE_NAME + '.check', error);
                 }
             }
         }
@@ -36,11 +42,11 @@ module.exports = async client => {
     let exec = false;
     const update = async () => {
         if (exec)
-            await updateKruMatches();
+            await updateKruMatches('upcoming');
         else
             exec = true;
 
-        timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 60);
+        timeouts['kru-matches-updater'] = setTimeout(update, 1000 * 60 * 15);
     };
 
     check();

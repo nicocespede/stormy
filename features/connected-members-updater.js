@@ -1,25 +1,37 @@
-const { getIds, updateIds, timeouts } = require('../src/cache');
-const { log } = require('../src/util');
+const { Client } = require("discord.js");
+const { getIds, timeouts } = require('../src/cache');
+const { logToFileError, consoleLogError } = require('../src/util');
 
+const MODULE_NAME = 'features.connected-members-updater';
+
+/** @param {Client} client */
 module.exports = async client => {
-    const ids = getIds() || await updateIds();
-    const guild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
+    const ids = await getIds();
 
-    const check = async () => {
-        try {
-            const members = await guild.members.fetch();
-            const membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
-            const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
-            const channel = await guild.channels.fetch(ids.channels.connectedMembers);
-            if (channel.name !== connectedMembersName)
-                await channel.setName(connectedMembersName);
-        } catch (error) {
-            log(`> Error al actualizar el contador de miembros conectados:\n${error.stack}`, 'red');
-        }
+    try {
+        const guild = await client.guilds.fetch(ids.guilds.default);
 
-        timeouts['connected-members-updater'] = setTimeout(check, 1000 * 60 * 5);
-    };
-    check();
+        const check = async () => {
+            try {
+                const members = await guild.members.fetch();
+                const membersCounter = members.filter(m => !m.user.bot && m.presence && m.presence.status !== 'offline').size;
+                const connectedMembersName = `🟢 Conectados: ${membersCounter}`;
+                const channel = await guild.channels.fetch(ids.channels.connectedMembers);
+                if (channel && channel.name !== connectedMembersName)
+                    await channel.setName(connectedMembersName);
+            } catch (error) {
+                consoleLogError(`> Error al actualizar el contador de miembros conectados`);
+                logToFileError(MODULE_NAME + '.check', error);
+            }
+
+            timeouts[MODULE_NAME] = setTimeout(check, 1000 * 60 * 5);
+        };
+
+        check();
+    } catch (error) {
+        consoleLogError('> Error al obtener servidor')
+        logToFileError(MODULE_NAME, error);
+    }
 };
 
 module.exports.config = {

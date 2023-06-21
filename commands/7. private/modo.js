@@ -1,9 +1,9 @@
 const { ApplicationCommandOptionType } = require("discord.js");
-const { updateIcon: updateIconCache, getIds, updateIds, getMode, updateMode: updateModeCache } = require("../../src/cache");
-const { githubRawURL, Mode } = require("../../src/constants");
-const { updateIcon, isOwner, updateGuildName } = require("../../src/general");
+const { updateIcon: updateIconCache, getIds, getMode, updateMode: updateModeCache, getGithubRawUrl } = require("../../src/cache");
+const { Mode, CONSOLE_GREEN } = require("../../src/constants");
+const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
-const { log } = require("../../src/util");
+const { consoleLog } = require("../../src/util");
 
 const choices = [
     { name: '🤟🏼 KRÜ', value: Mode.KRU },
@@ -33,7 +33,7 @@ module.exports = {
                 ephemeral: true
             };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const modesData = {
             afa: { guildname: 'NCKG ⭐⭐⭐', name: 'Selección', username: 'AFA StormY ⭐⭐⭐', on: '¡VAMOS CARAJO! 🇦🇷' },
             kru: { guildname: 'NCKG 🤟🏼', name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
@@ -72,12 +72,12 @@ module.exports = {
         const newIcon = `kgprime-${mode}`;
         await updateMode(mode);
         await updateModeCache();
-        await guild.setIcon(`${githubRawURL}/assets/icons/${newIcon}.png`).catch(console.error);
+        await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
         await updateIconString(newIcon).catch(console.error);
         await updateIconCache();
         await client.user.setUsername(username).catch(console.error);
         await guild.setName(guildname).catch(console.error);
-        log('> Nombre de usuario actualizado', 'green');
+        consoleLog('> Nombre de usuario actualizado', CONSOLE_GREEN);
         if (roleName) {
             const role = await guild.roles.fetch(ids.roles[roleName]).catch(console.error);
             role.members.each(async member => {

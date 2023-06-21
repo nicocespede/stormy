@@ -4,7 +4,8 @@ const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, up
     updateBlacklistedSongs//
 } = require("../../src/cache");
 const { updateMovies, updateGames } = require("../../src/mongodb");
-const { log } = require("../../src/util");
+const { consoleLog } = require("../../src/util");
+const { CONSOLE_RED } = require("../../src/constants");
 
 const choices = [
     { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },
@@ -80,8 +81,8 @@ module.exports = {
                 const oldGames = (await moviesAndGamesSchema.find({ _id: 'games' }))[0];
                 const games = await updateGamesCache();
                 for (const game of games) {
-                    const { lastUpdate, name, updateInfo, year } = game;
-                    const found = oldGames.data.filter(g => g.name === name)[0];
+                    const { id, lastUpdate, name, platform, updateInfo, year } = game;
+                    const found = oldGames.data.filter(g => g.id === `${platform}-${id}`)[0];
                     if (!found)
                         newStuff.games.push(name + ` (${year})`);
                     else if (lastUpdate !== found.lastUpdate)
@@ -92,7 +93,7 @@ module.exports = {
                 const updatedStuffKeys = Object.keys(updatedStuff).filter(k => k !== 'games');
                 if (updatedStuff.games.length > 0 || updatedStuffKeys.length > 0
                     || newStuff.games.length > 0 || newStuffKeys.length > 0) {
-                    const ids = getIds() || await updateIds();
+                    const ids = await getIds();
                     const collectionsData = {
                         'db': { emoji: 'dragon_ball', role: 'anunciosDb', title: 'Universo de Dragon Ball' },
                         'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' }
@@ -159,8 +160,8 @@ module.exports = {
 
                         const dbUpdate = [];
                         for (const element of games) {
-                            const { name, lastUpdate } = element;
-                            dbUpdate.push({ name, lastUpdate });
+                            const { id, lastUpdate, platform } = element;
+                            dbUpdate.push({ id: `${platform}-${id}`, lastUpdate });
                         }
                         await updateGames(dbUpdate);
                     }
@@ -180,7 +181,7 @@ module.exports = {
 
             await interaction.editReply({ content: '✅ Caché actualizado.' });
         } catch (e) {
-            log(`Error in actualizar-cache.js:\n${e.stack}`, 'red');
+            consoleLog(`Error in actualizar-cache.js:\n${e.stack}`, CONSOLE_RED);
             await interaction.editReply({ content: '❌ Ocurrió un error.' });
         }
         return;

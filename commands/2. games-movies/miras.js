@@ -1,11 +1,16 @@
+const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
-const { getCrosshairs, updateCrosshairs } = require('../../src/cache');
-const { prefix, githubRawURL } = require('../../src/constants');
+const { getCrosshairs, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
-const { log } = require("../../src/util");
+const { logToFileSubCommandUsage, consoleLogError, logToFileError } = require("../../src/util");
 
+const COMMAND_NAME = 'miras';
+const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
+
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Guarda miras de Valorant.',
@@ -55,34 +60,35 @@ module.exports = {
     expectedArgs: '<subcomando>',
     slash: 'both',
 
-    callback: async ({ user, message, interaction, args, instance, guild }) => {
+    callback: async ({ args, guild, instance, interaction, message, user, text }) => {
         const subCommand = message ? args.shift() : interaction.options.getSubcommand();
+        logToFileSubCommandUsage(COMMAND_NAME, text, subCommand, interaction, user);
+
         const deferringMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
 
         const reply = { ephemeral: false };
 
         if (subCommand === 'listar') {
-            const crosshairs = !getCrosshairs() ? await updateCrosshairs() : getCrosshairs();
+            const crosshairs = await getCrosshairs();
             const userCrosshairsField = { name: 'Tus miras', value: '', inline: false };
             const crosshairsField = { name: 'Otras miras', value: '', inline: false };
-            for (const ch in crosshairs)
-                if (Object.hasOwnProperty.call(crosshairs, ch)) {
-                    const crosshair = crosshairs[ch];
-                    if (crosshair.owner === user.id)
-                        userCrosshairsField.value += `**${ch}.** ${crosshair.name}\n`;
-                    else
-                        crosshairsField.value += `**${ch}.** ${crosshair.name}\n`;
-                }
+            for (const ch in crosshairs) if (Object.hasOwnProperty.call(crosshairs, ch)) {
+                const crosshair = crosshairs[ch];
+                if (crosshair.owner === user.id)
+                    userCrosshairsField.value += `**${ch}.** ${crosshair.name}\n`;
+                else
+                    crosshairsField.value += `**${ch}.** ${crosshair.name}\n`;
+            }
             if (userCrosshairsField.value === '') userCrosshairsField.value = 'No hay miras guardadas.';
             if (crosshairsField.value === '') crosshairsField.value = 'No hay miras guardadas.';
 
             if (message) reply.content = null;
             reply.embeds = [new EmbedBuilder()
                 .setTitle(`**Miras**`)
-                .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${prefix}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
+                .setDescription(`Hola <@${user.id}>, para ver una mira utiliza el comando \`${PREFIX}ver-mira\` seguido del ID de la mira.\n\nLas miras guardadas son:\n\n`)
                 .setFields([userCrosshairsField, crosshairsField])
                 .setColor(instance.color)
-                .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)];
+                .setThumbnail(await getGithubRawUrl('assets/thumbs/games/valorant.png'))];
             reply.ephemeral = true;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
@@ -93,7 +99,7 @@ module.exports = {
             if (!name || !code) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: `Debés introducir un nombre y un código para la mira.`,
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "miras agregar",
                     ARGUMENTS: "`<nombre>` `<codigo>`"
                 });
@@ -101,16 +107,16 @@ module.exports = {
                 return;
             }
 
-            await addCrosshair(name, code, user.id).then(async () => {
+            try {
+                await addCrosshair(name, code, user.id);
                 reply.content = `✅ Se agregó la mira **${name}**.`;
-            }).catch(error => {
-                log(error, 'red');
+            } catch (error) {
+                consoleLogError('> Error al agregar mira de Valorant');
+                logToFileError(MODULE_NAME, error);
                 reply.content = `❌ Lo siento, se produjo un error al agregar la mira.`;
-            });
+            }
 
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            await new Promise(res => setTimeout(res, 1000 * 2));
-            await updateCrosshairs();
             return;
         } else if (subCommand === 'borrar' || subCommand === 'eliminar') {
             const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
@@ -118,7 +124,7 @@ module.exports = {
             if (!id) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir el ID de la mira.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "miras borrar",
                     ARGUMENTS: "`<id>`"
                 });
@@ -126,29 +132,30 @@ module.exports = {
                 return;
             }
 
-            const crosshairs = !getCrosshairs() ? await updateCrosshairs() : getCrosshairs();
+            const crosshairs = await getCrosshairs();
             if (!Object.keys(crosshairs).includes(id.toString()))
                 reply.content = `⚠ La mira que intentás borrar no existe.`;
-            else if (user.id != crosshairs[id].owner)
+            else if (user.id !== crosshairs[id].owner)
                 reply.content = `⚠ Lo siento, no podés borrar una mira de otro usuario.`;
             else
-                await deleteCrosshair(id).then(async () => {
-                    await updateCrosshairs();
+                try {
+                    await deleteCrosshair(id);
                     reply.content = `✅ La mira **${crosshairs[id].name}** fue borrada de manera exitosa.`;
-                }).catch(error => {
-                    log(error, 'red');
+                } catch (error) {
+                    consoleLogError(`> Error al borrar mira '${crosshairs[id].name}' de Valorant`);
+                    logToFileError(MODULE_NAME, error);
                     reply.content = `❌ Lo siento, se produjo un error al borrar la mira.`;
-                });
+                }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
         } else if (subCommand === 'ver') {
-            const crosshairs = getCrosshairs() || await updateCrosshairs();
+            const crosshairs = await getCrosshairs();
             const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
 
             if (!id) {
                 reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                     REASON: "Debés introducir el ID de la mira.",
-                    PREFIX: prefix,
+                    PREFIX: PREFIX,
                     COMMAND: "miras ver",
                     ARGUMENTS: "`<id>`"
                 });
@@ -162,13 +169,8 @@ module.exports = {
                 return;
             } else {
                 const { code, name, owner: ownerId } = crosshairs[id];
-                let owner = '';
-                try {
-                    const member = await guild.members.fetch(ownerId);
-                    owner = ` de ${member.user.username}`
-                } catch {
-                    owner = ` de usuario desconocido`;
-                }
+                const member = await guild.members.fetch(ownerId);
+                const owner = ` de ${member ? member.user.username : `usuario desconocido`}`;
                 const crosshairData = await ValorantAPI.getCrosshair({ code: code }).catch(console.error);
 
                 if (message) reply.content = null;
@@ -177,7 +179,7 @@ module.exports = {
                     .setDescription(`Código de importación de la mira:\n\n` + code)
                     .setColor(instance.color)
                     .setImage(crosshairData.url)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/games/valorant.png`)];
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/games/valorant.png'))];
                 reply.ephemeral = true;
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             }

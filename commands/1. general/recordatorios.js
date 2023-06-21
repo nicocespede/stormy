@@ -1,9 +1,11 @@
+const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
-const { updateReminders, getReminders } = require('../../src/cache');
+const { updateReminders, getReminders, getGithubRawUrl } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
-const { githubRawURL } = require('../../src/constants');
-const { convertTZ, log } = require('../../src/util');
+const { CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
+const { convertTZ, consoleLog, logToFileSubCommandUsage } = require('../../src/util');
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'General',
     description: 'Establece un aviso programado a modo de alarma.',
@@ -46,8 +48,9 @@ module.exports = {
 
     slash: true,
 
-    callback: async ({ user, interaction, instance }) => {
+    callback: async ({ instance, interaction, text, user }) => {
         const subCommand = interaction.options.getSubcommand();
+        logToFileSubCommandUsage('recordatorios', text, subCommand, interaction, user);
 
         if (subCommand === 'ver') {
             const reminders = getReminders() || await updateReminders();
@@ -57,7 +60,7 @@ module.exports = {
                 let description = `Hola <@${user.id}>, tus recordatorios guardados son:\n\n`;
                 for (let i = 0; i < filtered.length; i++) {
                     const { date, description: desc } = filtered[i];
-                    description += `**${i + 1}.** ${desc}: **${convertTZ(date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
+                    description += `**${i + 1}.** ${desc}: **${convertTZ(date).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
                 }
 
                 interaction.reply({
@@ -65,7 +68,7 @@ module.exports = {
                         .setTitle('🔔 Tus recordatorios')
                         .setDescription(description)
                         .setColor(instance.color)
-                        .setThumbnail(`${githubRawURL}/assets/thumbs/alarm-clock.png`)],
+                        .setThumbnail(await getGithubRawUrl('assets/thumbs/alarm-clock.png'))],
                     ephemeral: true
                 });
                 return;
@@ -129,7 +132,7 @@ module.exports = {
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
                 const hour = timeMatch[0];
-                date = new Date(`${split[2]}-${split[1]}-${split[0]}T${hour.length < 5 ? `0${hour}` : hour}Z`);
+                date = new Date(`${split[2].padStart(4, '20')}-${split[1]}-${split[0]}T${hour.padStart(5, '0')}Z`);
                 date.setHours(date.getHours() + 3);
 
                 if (date < new Date()) {
@@ -139,11 +142,11 @@ module.exports = {
             }
 
             await new reminderSchema({ description: description, userId: user.id, date }).save();
-            log('> Recordatorio agregado a la base de datos', 'green');
+            consoleLog('> Recordatorio agregado a la base de datos', CONSOLE_GREEN);
             updateReminders();
 
             const convertedDate = convertTZ(date);
-            reply.content = `✅ Tu recordatorio para el **${convertedDate.toLocaleDateString('es-AR')}** a las **${convertedDate.toLocaleTimeString('es-AR', { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
+            reply.content = `✅ Tu recordatorio para el **${convertedDate.toLocaleDateString(ARGENTINA_LOCALE_STRING)}** a las **${convertedDate.toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
             return reply;
 
         } else if (subCommand === 'borrar') {
@@ -162,7 +165,7 @@ module.exports = {
             const selected = filtered[id - 1];
             const deletion = await reminderSchema.deleteOne({ _id: selected._id }).catch(console.error);
             if (deletion.deletedCount > 0) {
-                log(`> Recordatorio eliminado de la base de datos`, 'green');
+                consoleLog(`> Recordatorio eliminado de la base de datos`, CONSOLE_GREEN);
                 updateReminders();
                 return { content: `✅ Recordatorio borrado satisfactoriamente.`, custom: true, ephemeral: true };
             }

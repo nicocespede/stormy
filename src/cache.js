@@ -1,6 +1,6 @@
-const { CollectorsData, FWCData } = require("./typedefs");
-const { githubRawURL, testing, local } = require('./constants');
-const { convertTime, log } = require('./util');
+const { CollectorsData, FWCData, BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData } = require("./typedefs");
+const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
+const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -9,6 +9,9 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const collectorMessageSchema = require('../models/collectorMessage-schema');
 const iconSchema = require('../models/icon-schema');
+
+const MODULE_NAME = 'src.cache';
+const GITHUB_RAW_PATH = 'https://raw.githubusercontent.com/nicocespede/stormy-data/';
 
 let chronologies = {};
 let downloadsData = {};
@@ -24,17 +27,10 @@ let icon;
 let mode;
 let lastAction;
 let playlists;
-var stats;
-var timestamps = {};
 var thermalPasteDates;
 var bansResponsibles = {};
-var crosshairs;
 var smurfs;
 var tracksNameExtras;
-//TEMP SOLUTION
-var blacklistedSongs;//
-var ids;
-var kruMatches;
 let reminders;
 let characters;
 let songsInQueue = {};
@@ -45,22 +41,81 @@ let collectors;
 /** @type {FWCData} */
 let fwcData;
 
+/** @type {TimestampsData}*/
+const timestamps = {};
+
+/**@type {String} */
+let codeBranchName;
+
+/**
+ * Gets the name of the tracked Github code branch.
+ * 
+ * @returns The name of the current code branch.
+ */
+const getCurrentCodeBranchName = () => {
+    if (!codeBranchName) {
+        const fs = require('fs');
+
+        const gitData = fs.readFileSync(`.git/HEAD`, 'utf8');
+        const splitted = gitData.split('/');
+
+        codeBranchName = splitted.pop().replace('\n', '');
+    }
+
+    return codeBranchName;
+};
+
+/**@type {String} */
+let contentBranchName;
+
+/**@type {String} */
+let githubRawURL;
+
+/**
+ * Gets the name of the tracked Github content branch.
+ * 
+ * @returns The name of the current content branch.
+ */
+const getCurrentContentBranchName = async () => {
+    if (!contentBranchName) {
+        const fetch = require('node-fetch');
+
+        contentBranchName = getCurrentCodeBranchName();
+        githubRawURL = GITHUB_RAW_PATH + contentBranchName;
+
+        const res = await fetch(`${githubRawURL}/branchChecker.txt`);
+        const content = await res.text();
+
+        if (content.startsWith('404')) {
+            contentBranchName = 'main';
+            githubRawURL = GITHUB_RAW_PATH + contentBranchName;
+        }
+    }
+
+    return contentBranchName;
+};
+
+/**
+ * Gets the full URL to a Github raw element.
+ * 
+ * @param {String} string The string to append at the end of the raw URL.
+ * @returns The complete Github URL.
+ */
+const getGithubRawUrl = async string => {
+    if (!contentBranchName)
+        await getCurrentContentBranchName();
+
+    return `${githubRawURL}/${string}`;
+};
+
 const getChronology = id => chronologies[id];
 
 const updateChronology = async id => {
-    try {
-        let data;
-        if (local)
-            data = fs.readFileSync(`../stormy-data/chronologies/${id}.json`, 'utf8');
-        else {
-            const res = await fetch(`${githubRawURL}/chronologies/${id}.json`);
-            data = await res.text();
-        }
-        chronologies[id] = JSON.parse(data);
-        log(`> chronologies/${id}.json cargado`, 'green');
-    } catch (err) {
-        log(`> Error al cargar chronologies/${id}.json\n${err.stack}`, 'red');
-    }
+    const data = await retrieveDataFromFile(`chronologies/${id}.json`);
+
+    if (data)
+        chronologies[id] = data;
+
     return chronologies[id];
 };
 
@@ -73,8 +128,205 @@ const sortBirthdays = array => {
     return newArray;
 };
 
+/** @type {IDsData}*/
+let ids;
+
+/**
+ * Retrieves the IDs data from the ids.json file.
+ * 
+ * @returns All cached IDs data.
+ */
+const updateIds = async () => {
+    const data = await retrieveDataFromFile(!DEV_ENV ? 'ids.json' : 'testingIds.json');
+
+    if (data)
+        ids = data;
+
+    return ids;
+};
+
+/** @type {StatsData}*/
+let stats;
+
+/**
+ * Retrieves the stats data from the database.
+ * 
+ * @returns All cached stats data.
+ */
+const updateStats = async () => {
+    const statSchema = require('../models/stat-schema');
+    const results = await statSchema.find({}).sort({ days: 'desc', hours: 'desc', minutes: 'desc', seconds: 'desc' });
+    stats = {};
+    results.forEach(element => {
+        stats[element._id] = {
+            days: element.days,
+            hours: element.hours,
+            minutes: element.minutes,
+            seconds: element.seconds
+        };
+    });
+    consoleLog('> Caché de estadísticas actualizado', CONSOLE_GREEN);
+    return stats;
+};
+
+/**@type {RawCurrenciesData}*/
+let currencies;
+
+/**
+ * Retrieves the currencies data from the currencies.json file.
+ * 
+ * @returns All cached currencies data.
+ */
+const updateCurrencies = async () => {
+    const data = await retrieveDataFromFile('currencies.json');
+
+    if (data)
+        currencies = data;
+
+    return currencies;
+};
+
+//TEMP SOLUTION
+/** @type {BlacklistedSongsData}*/
+let blacklistedSongs;
+
+/**
+ * Retrieves the blacklisted songs data from the blacklistedTracks.json file.
+ * 
+ * @returns All cached blacklisted songs data.
+ */
+const updateBlacklistedSongs = async () => {
+    const data = await retrieveDataFromFile(`blacklistedTracks.json`);
+
+    if (data)
+        blacklistedSongs = data;
+
+    return blacklistedSongs;
+}//
+
+/**@type {CrosshairsData}*/
+let crosshairs;
+
+/**
+ * Retrieves the crosshairs data from the database.
+ * 
+ * @returns All cached crosshairs data.
+ */
+const updateCrosshairs = async () => {
+    const crosshairSchema = require('../models/crosshair-schema');
+    const results = await crosshairSchema.find({}).sort({ id: 'asc' });
+    crosshairs = {};
+    results.forEach(ch => crosshairs[`${ch.id}`] = {
+        name: ch.name,
+        code: ch.code,
+        owner: ch.ownerId
+    });
+
+    consoleLog('> Caché de miras actualizado', CONSOLE_GREEN);
+    return crosshairs;
+}
+
+/**@type {ValorantMatchesData}*/
+const kruMatches = {};
+
+/**
+ * Scraps the Kru completed/upcoming matches data from vlr.gg.
+ * 
+ * @param {"completed" | "upcoming"} type The matches type wanted.
+ * @returns All cached Kru completed/upcoming matches data.
+ */
+const updateKruMatches = async type => {
+    const urlBase = 'https://www.vlr.gg';
+    const url = urlBase + '/team/matches/2355/kr-esports/?group=' + type;
+    try {
+        const { data } = await axios.get(url);
+        const $ = cheerio.load(data);
+        const a = $('.wf-card.fc-flex.m-item');
+
+        const matches = [];
+        a.each((_, el) => {
+            const split = $(el).children('.m-item-date').text().trim().split(`\t`);
+            const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
+            date.setHours(date.getHours() - 2);
+
+            const match = {
+                date,
+                url: urlBase + el.attribs['href']
+            };
+
+            let result = $(el).children('.m-item-result.fc-flex');
+
+            if (type === 'upcoming') {
+                result = result.children(':first').text().replace('w', 's').replace('mo', 'me');
+
+                if (!result || result === '')
+                    result = 'En vivo';
+
+                match.remaining = result;
+            } else
+                match.score = result.find('span').map((_, element) => $(element).text()).get().join('-');
+
+            const teams = $(el).children('.m-item-team.text-of');
+            teams.each((i, team) => {
+                const names = $(team).children().get();
+                const name = $(names[0]).text().trim();
+                match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
+                match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
+            });
+
+            matches.push(match);
+        });
+
+        kruMatches[type] = matches;
+    } catch (e) {
+        if (!kruMatches[type])
+            kruMatches[type] = [];
+        consoleLogError(`> Error al obtener información de ${type === 'upcoming' ? `próximos partidos` : `partidos completados`} de KRÜ`);
+        logToFileError(`${MODULE_NAME}.updateKruMatches`, e);
+    }
+
+    return kruMatches[type];
+}
+
+/**
+ * Retrieves the data from a file.
+ * 
+ * @param {String} path The path to the file to be read.
+ * @returns The parsed data.
+ */
+const retrieveDataFromFile = async path => {
+    let data;
+    try {
+        if (LOCAL_ENV)
+            data = fs.readFileSync(`../stormy-data/${path}`, 'utf8');
+        else {
+            const res = await fetch(await getGithubRawUrl(path));
+            data = await res.text();
+        }
+
+        consoleLog(`> ${path} cargado`, CONSOLE_GREEN);
+        return JSON.parse(data);
+    } catch (err) {
+        consoleLogError(`> Error al cargar ${[path]}`);
+        logToFileError(MODULE_NAME + '.retrieveDataFromFile', err);
+        return null;
+    }
+};
+
 module.exports = {
     timeouts: {},
+
+    /** Loads the cache needed since the start. */
+    loadMandatoryCache: async () => {
+        logToFile(MODULE_NAME + '.loadMandatoryCache', 'Loading mandatory cache')
+        await updateCurrencies();
+    },
+
+    getCurrentCodeBranchName,
+
+    getCurrentContentBranchName,
+
+    getGithubRawUrl,
 
     getChronology,
     updateChronology,
@@ -87,10 +339,10 @@ module.exports = {
             filters[id] = result.choices ? { filters: result.filters, choices: result.choices } : { filters: result.filters };
         else {
             await new filtersSchema({ _id: id, filters: ['all'] }).save();
-            log(`> Filtros de '${id}' agregados a la base de datos`, 'green');
+            consoleLog(`> Filtros de '${id}' agregados a la base de datos`, CONSOLE_GREEN);
             filters[id] = { filters: ['all'] };
         }
-        log(`> Caché de filtros de '${id}' actualizado`, 'green');
+        consoleLog(`> Caché de filtros de '${id}' actualizado`, CONSOLE_GREEN);
         return filters[id];
     },
 
@@ -118,56 +370,39 @@ module.exports = {
             movies[id] = array;
         }
 
-        log(`> Caché de '${id}' actualizado`, 'green');
+        consoleLog(`> Caché de '${id}' actualizado`, CONSOLE_GREEN);
         return movies[id];
     },
 
     getDownloadsData: id => downloadsData[id],
 
     updateDownloadsData: async id => {
-        try {
-            let data;
-            if (local)
-                data = fs.readFileSync(`../stormy-data/downloads/${id}.json`, 'utf8');
-            else {
-                const res = await fetch(`${githubRawURL}/downloads/${id}.json`);
-                data = await res.text();
-            }
-            downloadsData[id] = JSON.parse(data);
-            log(`> downloads/${id}.json cargado`, 'green');
-        } catch (err) {
-            log(`> Error al cargar downloads/${id}.json\n${err.stack}`, 'red');
-        }
+        const data = await retrieveDataFromFile(`downloads/${id}.json`);
+
+        if (data)
+            downloadsData[id] = data;
+
         return downloadsData[id];
     },
 
     getGames: () => games,
     updateGames: async () => {
-        try {
-            let data;
-            if (local)
-                data = fs.readFileSync('../stormy-data/downloads/games.json', 'utf8');
-            else {
-                const res = await fetch(`${githubRawURL}/downloads/games.json`);
-                data = await res.text();
-            }
-            log('> games.json cargado', 'green');
-            games = [];
-            const parsed = JSON.parse(data);
-            for (const key in parsed) if (Object.hasOwnProperty.call(parsed, key))
-                for (const game of parsed[key]) {
+        games = [];
+        const data = await retrieveDataFromFile(`downloads/games.json`);
+
+        if (data)
+            for (const key in data) if (Object.hasOwnProperty.call(data, key))
+                for (const game of data[key]) {
                     if (key === 'steam') {
-                        const data = await steam.getGameDetails(game.id).catch(console.error);
-                        game.name = data.name;
-                        game.year = data.release_date.date.split(',').pop().trim();
-                        game.imageURL = data.header_image;
+                        const gameData = await steam.getGameDetails(game.id).catch(console.error);
+                        game.name = gameData.name;
+                        game.year = gameData.release_date.date.split(',').pop().trim();
+                        game.imageURL = gameData.header_image;
                     }
                     game.platform = key;
                     games.push(game);
                 }
-        } catch (err) {
-            log(`> Error al cargar games.json\n${err.stack}`, 'red');
-        }
+
         return games.sort((a, b) => a.name.localeCompare(b.name));
     },
 
@@ -182,7 +417,7 @@ module.exports = {
                 user: element.username
             };
         });
-        log('> Caché de cumpleaños actualizado', 'green');
+        consoleLog('> Caché de cumpleaños actualizado', CONSOLE_GREEN);
         return birthdays;
     },
 
@@ -197,7 +432,7 @@ module.exports = {
             user: element.tag,
             character: element.character
         });
-        log('> Caché de baneados actualizado', 'green');
+        consoleLog('> Caché de baneados actualizado', CONSOLE_GREEN);
         return banned;
     },
 
@@ -209,7 +444,7 @@ module.exports = {
         results.forEach(element => {
             sombraBans.push(element.reason);
         });
-        log('> Caché de baneos de Sombra actualizado', 'green');
+        consoleLog('> Caché de baneos de Sombra actualizado', CONSOLE_GREEN);
         return sombraBans;
     },
 
@@ -220,7 +455,7 @@ module.exports = {
             isActive: result.isActive,
             messageId: result.messageId
         };
-        log('> Caché de recolector de reacciones actualizado', 'green');
+        consoleLog('> Caché de recolector de reacciones actualizado', CONSOLE_GREEN);
         return billboardMessageInfo;
     },
 
@@ -231,7 +466,7 @@ module.exports = {
             messageId: result.messageId,
             channelId: result.channelId
         };
-        log('> Caché de mensaje de roles actualizado', 'green');
+        consoleLog('> Caché de mensaje de roles actualizado', CONSOLE_GREEN);
         return rolesMessageInfo;
     },
 
@@ -239,7 +474,7 @@ module.exports = {
     updateIcon: async () => {
         const result = await iconSchema.findById(1, 'name');
         icon = result.name;
-        log('> Caché de ícono actualizado', 'green');
+        consoleLog('> Caché de ícono actualizado', CONSOLE_GREEN);
         return icon;
     },
 
@@ -247,7 +482,7 @@ module.exports = {
     updateMode: async () => {
         const result = await iconSchema.findById(1, 'mode');
         mode = result.mode;
-        log('> Caché de modo actualizado', 'green');
+        consoleLog('> Caché de modo actualizado', CONSOLE_GREEN);
         return mode;
     },
 
@@ -260,29 +495,45 @@ module.exports = {
         const results = await playlistSchema.find({}).sort({ _id: 'asc' });
         playlists = {};
         results.forEach(pl => playlists[pl._id] = { url: pl.url, ownerId: pl.ownerId });
-        log('> Caché de playlists actualizado', 'green');
+        consoleLog('> Caché de playlists actualizado', CONSOLE_GREEN);
         return playlists;
     },
 
-    getStats: () => stats,
-    updateStats: async () => {
-        const statSchema = require('../models/stat-schema');
-        const results = await statSchema.find({}).sort({ days: 'desc', hours: 'desc', minutes: 'desc', seconds: 'desc' });
-        stats = {};
-        results.forEach(element => {
-            stats[element._id] = {
-                days: element.days,
-                hours: element.hours,
-                minutes: element.minutes,
-                seconds: element.seconds
-            };
-        });
-        log('> Caché de estadísticas actualizado', 'green');
-        return stats;
-    },
+    /**
+     *  Gets the stats data stored in cache.
+     * 
+     * @returns All cached stats data.
+     */
+    getStats: async () => stats || await updateStats(),
+    updateStats,
+
+    /**
+     * Gets the timestamps stored in cache.
+     * 
+     * @returns All cached timestamps.
+     */
     getTimestamps: () => timestamps,
-    addTimestamp: (id, timestamp) => (timestamps[id] = timestamp),
-    removeTimestamp: id => (delete timestamps[id]),
+
+    /**
+     * Adds a timestamp of a user to the cache.
+     * 
+     * @param {String} id The ID of the user.
+     * @param {Date} timestamp The timestamp to be added.
+     */
+    addTimestamp: (id, timestamp) => {
+        logToFile(`${MODULE_NAME}.addTimestamp`, `${!timestamps[id] ? 'Adding' : 'Restarting'} timestamp of user with ID ${id}`);
+        timestamps[id] = timestamp;
+    },
+
+    /**
+     * Removes the last timestamp of a user from the cache.
+     * 
+     * @param {String} id The ID of the user.
+     */
+    removeTimestamp: id => {
+        logToFile(`${MODULE_NAME}.removeTimestamp`, `Removing timestamp of user with ID ${id}`);
+        delete timestamps[id];
+    },
 
     getThermalPasteDates: () => thermalPasteDates,
     updateThermalPasteDates: async () => {
@@ -290,7 +541,7 @@ module.exports = {
         const results = await thermalPasteDateSchema.find({});
         thermalPasteDates = {};
         results.forEach(element => thermalPasteDates[element._id] = element.date);
-        log('> Caché de fechas de cambio de pasta térmica actualizado', 'green');
+        consoleLog('> Caché de fechas de cambio de pasta térmica actualizado', CONSOLE_GREEN);
         return thermalPasteDates;
     },
 
@@ -298,19 +549,13 @@ module.exports = {
     addBanResponsible: (id, responsible) => (bansResponsibles[id] = responsible),
     removeBanResponsible: id => (delete bansResponsibles[id]),
 
-    getCrosshairs: () => crosshairs,
-    updateCrosshairs: async () => {
-        const crosshairSchema = require('../models/crosshair-schema');
-        const results = await crosshairSchema.find({}).sort({ id: 'asc' });
-        crosshairs = {};
-        results.forEach(ch => crosshairs[`${ch.id}`] = {
-            name: ch.name,
-            code: ch.code,
-            owner: ch.ownerId
-        });
-        log('> Caché de miras actualizado', 'green');
-        return crosshairs;
-    },
+    /**
+     * Gets the crosshairs data stored in cache.
+     * 
+     * @returns All cached crosshairs data.
+     */
+    getCrosshairs: async () => crosshairs || await updateCrosshairs(),
+    updateCrosshairs,
 
     getSmurfs: () => smurfs,
     updateSmurfs: async () => {
@@ -324,109 +569,62 @@ module.exports = {
             vip: account.vip,
             bannedUntil: account.bannedUntil
         });
-        log('> Caché de smurfs actualizado', 'green');
+        consoleLog('> Caché de smurfs actualizado', CONSOLE_GREEN);
         return smurfs;
     },
 
     getTracksNameExtras: () => tracksNameExtras,
     updateTracksNameExtras: async () => {
-        await fetch(`${githubRawURL}/tracksNameExtras.json`)
+        await fetch(await getGithubRawUrl(`tracksNameExtras.json`))
             .then(res => res.text()).then(data => {
                 tracksNameExtras = JSON.parse(data);
-                log('> tracksNameExtras.json cargado', 'green');
-            }).catch(err => log(`> Error al cargar tracksNameExtras.json\n${err.stack}`, 'red'));
+                consoleLog('> tracksNameExtras.json cargado', CONSOLE_GREEN);
+            }).catch(err => consoleLog(`> Error al cargar tracksNameExtras.json\n${err.stack}`, CONSOLE_RED));
         return tracksNameExtras;
     },
 
     //TEMP SOLUTION
-    getBlacklistedSongs: () => blacklistedSongs,
-    updateBlacklistedSongs: async () => {
-        await fetch(`${githubRawURL}/blacklistedTracks.json`)
-            .then(res => res.text()).then(data => {
-                blacklistedSongs = JSON.parse(data);
-                log('> blacklistedTracks.json cargado', 'green');
-            }).catch(err => log(`> Error al cargar blacklistedTracks.json\n${err.stack}`, 'red'));
-        return blacklistedSongs;
-    },//
+    /**
+     * Gets the blacklisted songs data stored in cache.
+     * 
+     * @returns All cached blacklisted songs data.
+     */
+    getBlacklistedSongs: async () => blacklistedSongs || await updateBlacklistedSongs(),
+    updateBlacklistedSongs,
+    //
 
-    getIds: () => ids,
-    updateIds: async () => {
-        const fileName = !testing ? 'ids.json' : 'testingIds.json';
-        try {
-            let data;
-            if (local)
-                data = fs.readFileSync(`../stormy-data/${fileName}`, 'utf8');
-            else {
-                const res = await fetch(`${githubRawURL}/${fileName}`);
-                data = await res.text();
-            }
-            ids = JSON.parse(data);
-            log(`> ${fileName} cargado`, 'green');
-        } catch (err) {
-            log(`> Error al cargar ${fileName}\n${err.stack}`, 'red')
-        }
-        return ids;
-    },
+    /**
+     * Gets the IDs data stored in cache.
+     * 
+     * @returns All cached IDs data.
+     */
+    getIds: async () => ids || await updateIds(),
+    updateIds,
 
-    getKruMatches: () => kruMatches,
-    updateKruMatches: async () => {
-        const urlBase = 'https://www.vlr.gg';
-        const url = urlBase + '/team/matches/2355/kr-esports/?group=upcoming';
-        try {
-            const { data } = await axios.get(url);
-            const $ = cheerio.load(data);
-            const a = $('.wf-card.fc-flex.m-item');
-            const matches = [];
-            a.each((_, el) => {
-                const split = $(el).children('.m-item-date').text().trim().split(`\t`);
-                const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
-                date.setHours(date.getHours() + 5);
-                const match = {
-                    date,
-                    remaining: $(el).children('.m-item-result.mod-tbd.fc-flex').children(':first').text(),
-                    url: urlBase + el.attribs['href']
-                };
-                const teams = $(el).children('.m-item-team.text-of');
-                teams.each((i, team) => {
-                    const names = $(team).children().get();
-                    const name = $(names[0]).text().trim();
-                    match[`team${i + 1}Name`] = name !== 'TBD' ? name : 'A determinar';
-                    match[`team${i + 1}Tag`] = name !== 'TBD' ? $(names[1]).text().trim() : name;
-                });
-                matches.push(match);
-            });
-            kruMatches = matches;
-        } catch (e) {
-            if (!kruMatches)
-                kruMatches = [];
-            log(`> Error al obtener información de partidos programados de KRÜ\n${e.stack}`, 'red');
-        }
-        return kruMatches;
-    },
+    /**
+     * Gets the Kru completed/upcoming matches data stored in cache.
+     * 
+     * @param {"completed" | "upcoming"} type The type of matches wanted.
+     * @returns All cached Kru completed/upcoming matches data.
+     */
+    getKruMatches: async type => kruMatches[type] || await updateKruMatches(type),
+    updateKruMatches,
 
     getReminders: () => reminders,
     updateReminders: async () => {
         const reminderSchema = require('../models/reminder-schema');
         reminders = await reminderSchema.find({});
-        log('> Caché de recordatorios actualizado', 'green');
+        consoleLog('> Caché de recordatorios actualizado', CONSOLE_GREEN);
         return reminders;
     },
 
     getCharacters: () => characters,
     updateCharacters: async () => {
-        try {
-            let data;
-            if (local)
-                data = fs.readFileSync('../stormy-data/characters.json', 'utf8');
-            else {
-                const res = await fetch(`${githubRawURL}/characters.json`);
-                data = await res.text();
-            }
-            characters = JSON.parse(data);
-            log('> characters.json cargado', 'green');
-        } catch (err) {
-            log(`> Error al cargar characters.json\n${err.stack}`, 'red');
-        }
+        const data = await retrieveDataFromFile(`characters.json`);
+
+        if (data)
+            characters = data;
+
         return characters;
     },
 
@@ -456,19 +654,11 @@ module.exports = {
      * @returns All cached FWC data.
      */
     updateFWCData: async () => {
-        try {
-            let data;
-            if (local)
-                data = fs.readFileSync(`../stormy-data/fwc-2022.json`, 'utf8');
-            else {
-                const res = await fetch(`${githubRawURL}/fwc-2022.json`);
-                data = await res.text();
-            }
-            fwcData = JSON.parse(data);
-            log(`> fwc-2022.json cargado`, 'green');
-        } catch (err) {
-            log(`> Error al cargar fwc-2022.json\n${err.stack}`, 'red');
-        }
+        const data = await retrieveDataFromFile(`fwc-2022.json`);
+
+        if (data)
+            fwcData = data;
+
         return fwcData;
     },
 
@@ -487,7 +677,14 @@ module.exports = {
     updateCollectors: async () => {
         const collectorSchema = require('../models/collector-schema');
         collectors = await collectorSchema.find({});
-        log('> Caché de coleccionistas actualizado', 'green');
+        consoleLog('> Caché de coleccionistas actualizado', CONSOLE_GREEN);
         return collectors;
     },
+
+    /**
+     * Gets the currencies data stored in cache.
+     * 
+     * @returns All cached currencies data.
+     */
+    getCurrencies: () => currencies
 };

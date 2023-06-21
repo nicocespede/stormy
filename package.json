@@ -11,16 +11,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.8.0",
+    "@discord-player/extractor": "^4.1.2",
+    "@discordjs/opus": "^0.9.0",
+    "@distube/ytdl-core": "^4.11.10",
     "axios": "^0.26.1",
     "canvas": "^2.9.1",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0-rc.12",
     "coingecko-api": "^1.0.10",
-    "discord-player": "^5.3.1",
-    "discord.js": "^14.8.0",
+    "discord-player": "^6.1.1",
+    "discord.js": "^14.9.0",
     "dotenv": "^16.0.0",
-    "ffmpeg-static": "^4.4.1",
+    "ffmpeg-static": "^5.1.0",
     "genius-lyrics": "^4.3.6",
     "languagedetect": "^2.0.0",
     "mongoose": "^6.5.3",
@@ -33,7 +35,7 @@
   },
   "overrides": {
     "wokcommands": {
-      "discord.js": "^13.15.0"
+      "discord.js": "^13.15.1"
     }
   }
 }

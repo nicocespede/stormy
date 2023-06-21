@@ -1,15 +1,15 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { getBirthdays, updateBirthdays } = require('../../src/cache');
-const { prefix, githubRawURL } = require('../../src/constants');
+const { getBirthdays, updateBirthdays, getGithubRawUrl } = require('../../src/cache');
+const { PREFIX, CONSOLE_YELLOW } = require('../../src/constants');
 const { addBirthday, deleteBirthday } = require('../../src/mongodb');
-const { log } = require('../../src/util');
+const { consoleLog, getUserTag } = require('../../src/util');
 
 const validateDate = (instance, guild, date) => {
     const ret = {
         valid: false,
         reason: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
             REASON: "Debe haber una fecha luego de la mención.",
-            PREFIX: prefix,
+            PREFIX: PREFIX,
             COMMAND: "cumples agregar",
             ARGUMENTS: "`<@amigo>` `<DD/MM>`"
         })
@@ -99,7 +99,7 @@ module.exports = {
                     const member = members.get(key);
 
                     if (!member) {
-                        log(`> El usuario ${username} ya no está en el servidor.`, 'yellow');
+                        consoleLog(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
                         continue;
                     }
 
@@ -125,7 +125,7 @@ module.exports = {
                     .setDescription(description)
                     .setColor(instance.color)
                     .addFields(fields)
-                    .setThumbnail(`${githubRawURL}/assets/thumbs/birthday.png`)],
+                    .setThumbnail(await getGithubRawUrl('assets/thumbs/birthday.png'))],
                 ephemeral: true
             };
         }
@@ -136,7 +136,7 @@ module.exports = {
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                         REASON: "Debe haber una mención luego del comando.",
-                        PREFIX: prefix,
+                        PREFIX: PREFIX,
                         COMMAND: "cumples agregar",
                         ARGUMENTS: "`<@amigo>` `<DD/MM>`"
                     }),
@@ -166,7 +166,7 @@ module.exports = {
             const messageOrInteraction = message ? message : interaction;
             const reply = await messageOrInteraction.reply({
                 components: [row],
-                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${target.user.tag}** en la fecha **${date}**?\n\u200b`,
+                content: `⚠ ¿Estás seguro de querer agregar el cumpleaños de **${getUserTag(target.user)}** en la fecha **${date}**?\n\u200b`,
                 ephemeral: true
             });
 
@@ -188,7 +188,7 @@ module.exports = {
                         realDate.setFullYear(realDate.getFullYear() + 1);
                     await addBirthday(target.user.id, target.user.username, realDate).catch(console.error);
                     edit.content = '✅ La acción fue completada.';
-                    channel.send({ content: `✅ Se agregó el cumpleaños de **${target.user.tag}** en la fecha ${date}.` });
+                    channel.send({ content: `✅ Se agregó el cumpleaños de **${getUserTag(target.user)}** en la fecha ${date}.` });
                     await updateBirthdays();
                 }
                 message ? await reply.edit(edit) : await interaction.editReply(edit);
@@ -203,7 +203,7 @@ module.exports = {
                 return {
                     content: instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                         REASON: "Debe haber una mención luego del comando.",
-                        PREFIX: prefix,
+                        PREFIX: PREFIX,
                         COMMAND: "cumples borrar",
                         ARGUMENTS: "`<@amigo>`"
                     }),
@@ -226,7 +226,7 @@ module.exports = {
                 const messageOrInteraction = message ? message : interaction;
                 const reply = await messageOrInteraction.reply({
                     components: [row],
-                    content: `⚠ ¿Estás seguro de querer borrar el cumpleaños de **${target.user.tag}**?`,
+                    content: `⚠ ¿Estás seguro de querer borrar el cumpleaños de **${getUserTag(target.user)}**?`,
                     ephemeral: true
                 });
 

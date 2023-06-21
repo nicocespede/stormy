@@ -1,7 +1,7 @@
 const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../src/cache');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
-const { isOwner } = require('../../src/general');
+const { isOwner } = require('../../src/common');
 
 module.exports = {
     category: 'Privados',
@@ -61,7 +61,7 @@ module.exports = {
         type: ApplicationCommandOptionType.Subcommand,
         options: [{
             name: 'comando',
-            description: 'El comando de la cuenta que se quiere borrar.',
+            description: 'El comando de la cuenta que se quiere editar.',
             required: true,
             type: ApplicationCommandOptionType.String
         },

@@ -1,22 +1,20 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
-const { getIds, updateIds, updateLastAction } = require("../../src/cache");
-const { githubRawURL, MusicActions } = require("../../src/constants");
-const { containsAuthor, cleanTitle, handleErrorInMusicChannel, setMusicPlayerMessage } = require("../../src/music");
+const { getIds, updateLastAction, getGithubRawUrl } = require("../../src/cache");
+const { MusicActions } = require("../../src/constants");
+const { getUserTag } = require("../../src/util");
+const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
+const { useMasterPlayer } = require("discord-player");
 
-function orderArgs(array) {
-    var uniqueArray = array.filter(function (item, pos, self) {
-        return self.indexOf(item) == pos;
-    })
-    return uniqueArray.sort(function (a, b) {
-        return a - b;
-    }).reverse();
+const orderArgs = array => {
+    const uniqueArray = array.filter((item, pos, self) => self.indexOf(item) == pos)
+    return uniqueArray.sort((a, b) => a - b).reverse();
 }
 
-function validateArgs(array, queueLength) {
-    var ret = true;
+const validateArgs = (array, queueLength) => {
+    let ret = true;
     for (let i = 0; i < array.length; i++) {
         array[i] = array[i] - 1;
-        var parsed = parseInt(array[i]);
+        const parsed = parseInt(array[i]);
         if (parsed < 0 || parsed >= queueLength || isNaN(parsed)) {
             ret = false;
             break;
@@ -45,61 +43,54 @@ module.exports = {
     expectedArgs: '<números>',
     guildOnly: true,
 
-    callback: async ({ guild, member, user, message, channel, args, client, interaction, instance }) => {
+    callback: async ({ guild, member, user, message, channel, args, interaction, instance }) => {
         const embed = new EmbedBuilder().setColor(instance.color);
         const numbers = message ? args : interaction.options.getString('números').split(' ');
         const reply = { ephemeral: true, fetchReply: true };
 
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
-            reply.content = `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`;
-            return reply;
+            handleErrorEphemeral(reply, embed, `🛑 Hola <@${user.id}>, este comando se puede utilizar solo en los canales de música.`, message, interaction, channel);
+            return;
         }
 
         if (!member.voice.channel) {
-            reply.embeds = [embed.setDescription("🛑 ¡Debes estar en un canal de voz para usar este comando!")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            handleErrorEphemeral(reply, embed, "🛑 ¡Debes estar en un canal de voz para usar este comando!", message, interaction, channel);
             return;
         }
 
         if (guild.members.me.voice.channel && member.voice.channel.id !== guild.members.me.voice.channel.id) {
-            reply.embeds = [embed.setDescription("🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+            handleErrorEphemeral(reply, embed, "🛑 ¡Debes estar en el mismo canal de voz que yo para usar este comando!", message, interaction, channel);
             return;
         }
 
-        const queue = client.player.getQueue(guild.id);
+        const player = useMasterPlayer();
+        const queue = player.nodes.get(guild.id);
 
-        if (!queue || !queue.playing) {
-            reply.embeds = [embed.setDescription("🛑 ¡No hay canciones en la cola!")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+        if (!queue || !queue.node.isPlaying()) {
+            handleErrorEphemeral(reply, embed, "🛑 ¡No hay canciones en la cola!", message, interaction, channel);
             return;
         }
 
-        if (!validateArgs(numbers, queue.tracks.length)) {
-            reply.embeds = [embed.setDescription("🛑 Alguno de los números ingresados es inválido.")
-                .setThumbnail(`${githubRawURL}/assets/thumbs/music/no-entry.png`)];
-            handleErrorInMusicChannel(message, interaction, reply, channel);
+        if (!validateArgs(numbers, queue.getSize())) {
+            handleErrorEphemeral(reply, embed, "🛑 Alguno de los números ingresados es inválido.", message, interaction, channel);
             return;
         }
 
         const ordered = orderArgs(numbers);
         const description = [];
         for (let i = 0; i < ordered.length; i++) {
-            const track = queue.remove(ordered[i]);
+            const track = queue.removeTrack(ordered[i]);
             const filteredTitle = await cleanTitle(track.title);
             description.push(`[${filteredTitle}${!track.url.includes('youtube') || !containsAuthor(track) ? ` | ${track.author}` : ``}](${track.url}) - **${track.duration}**\n`);
         }
 
         reply.embeds = [embed.setDescription('❌ Se quitó de la cola de reproducción:\n\n' + description.reverse().join(''))
-            .setThumbnail(`${githubRawURL}/assets/thumbs/music/delete.png`)];
+            .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/delete.png`))];
         reply.ephemeral = false;
         const replyMessage = message ? await message.reply(reply) : await interaction.reply(reply);
         updateLastAction(MusicActions.REMOVING);
-        setMusicPlayerMessage(queue, queue.current, `❌ ${user.tag} quitó **${ordered.length} ${ordered.length > 1 ? 'canciones' : 'canción'}** de la cola.`);
+        setMusicPlayerMessage(queue, queue.currentTrack, `❌ ${getUserTag(user)} quitó **${ordered.length} ${ordered.length > 1 ? 'canciones' : 'canción'}** de la cola.`);
 
         setTimeout(async () => {
             if (message) message.delete();

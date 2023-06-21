@@ -1,7 +1,7 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { getBanned, updateBanned, getIds, updateIds } = require('../../src/cache');
-const { prefix } = require('../../src/constants');
-const { isOwner } = require('../../src/general');
+const { getBanned, updateBanned, getIds } = require('../../src/cache');
+const { PREFIX } = require('../../src/constants');
+const { isOwner } = require('../../src/common');
 
 module.exports = {
     category: 'Moderación',
@@ -10,7 +10,7 @@ module.exports = {
     options: [
         {
             name: 'indice',
-            description: `El índice otorgado por el comando \`${prefix}baneados\`.`,
+            description: `El índice otorgado por el comando \`${PREFIX}baneados\`.`,
             required: true,
             type: ApplicationCommandOptionType.Integer
         }
@@ -25,7 +25,7 @@ module.exports = {
     callback: async ({ guild, user, message, args, interaction, channel }) => {
         const number = message ? args[0] : interaction.options.getInteger('indice');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
         const isAuthorized = await isOwner(user.id) || banRole.members.has(user.id);
         const index = parseInt(number) - 1;

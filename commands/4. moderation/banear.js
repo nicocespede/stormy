@@ -1,7 +1,8 @@
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
-const { addBanResponsible, getIds, updateIds } = require('../../src/cache');
-const { prefix } = require('../../src/constants');
-const { isOwner } = require('../../src/general');
+const { addBanResponsible, getIds } = require('../../src/cache');
+const { PREFIX } = require('../../src/constants');
+const { isOwner } = require('../../src/common');
+const { getUserTag } = require('../../src/util');
 
 module.exports = {
     category: 'Moderación',
@@ -32,7 +33,7 @@ module.exports = {
         const aux = args.splice(1).join(' ');
         const banReason = message ? (aux === '' ? null : aux) : interaction.options.getString('razón');
         const reply = { custom: true, ephemeral: true };
-        const ids = getIds() || await updateIds();
+        const ids = await getIds();
         const banRole = await guild.roles.fetch(ids.roles.mod).catch(console.error);
         const isAuthorized = await isOwner(user.id) || banRole.members.has(user.id);
         if (!isAuthorized) {
@@ -41,7 +42,7 @@ module.exports = {
         } else if (!target) {
             reply.content = instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
                 REASON: "Debe haber una mención y (opcionalmente) la razón del baneo luego del comando.",
-                PREFIX: prefix,
+                PREFIX: PREFIX,
                 COMMAND: "banear",
                 ARGUMENTS: "`<@amigo>` `[razón]`"
             });
@@ -65,7 +66,7 @@ module.exports = {
             const messageOrInteraction = message ? message : interaction;
             const replyMessage = await messageOrInteraction.reply({
                 components: [row],
-                content: `⚠ ¿Estás seguro de querer banear a **${target.user.tag}**?`,
+                content: `⚠ ¿Estás seguro de querer banear a **${getUserTag(target.user)}**?`,
                 ephemeral: true
             });
 

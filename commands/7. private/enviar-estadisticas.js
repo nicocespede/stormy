@@ -1,6 +1,12 @@
-const { addTimestamp, getTimestamps } = require("../../src/cache");
-const { pushDifference } = require("../../src/general");
+const { ICommand } = require("wokcommands");
+const { getTimestamps } = require("../../src/cache");
+const { pushDifferences } = require("../../src/common");
+const { logToFile, logToFileCommandUsage } = require("../../src/util");
 
+const COMMAND_NAME = 'enviar-estadisticas';
+const MODULE_NAME = `commands.private.${COMMAND_NAME}`;
+
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Envía a la base de datos las estadísticas recolectadas.',
@@ -10,14 +16,15 @@ module.exports = {
     slash: false,
     ownerOnly: true,
 
-    callback: async () => {
+    callback: async ({ user }) => {
+        logToFileCommandUsage(COMMAND_NAME, null, null, user);
+
         const timestamps = getTimestamps();
         if (Object.keys(timestamps).length > 0) {
-            for (const key in timestamps)
-                if (Object.hasOwnProperty.call(timestamps, key)) {
-                    await pushDifference(key);
-                    addTimestamp(key, new Date());
-                }
+            logToFile(`${MODULE_NAME}.callback`, `Pushing all stats and restarting all timestamps`);
+
+            await pushDifferences(true);
+
             return '¡Estadísticas enviadas a la base de datos!';
         }
         return '¡No hay estadísticas para enviar!';
