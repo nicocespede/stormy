@@ -1121,7 +1121,7 @@ module.exports = {
 
         const usersCRUD = ['registrar-coleccionista'];
         if (usersCRUD.includes(subCommand)) {
-            if (!(await isOwner(user.id))) {
+            if (ids.users.stormer !== user.id) {
                 interaction.reply({ content: '⛔ Lo siento, no tenés permiso para usar este comando.', ephemeral: true });
                 return;
             }
