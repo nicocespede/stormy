@@ -1119,41 +1119,36 @@ module.exports = {
         const subCommand = interaction.options.getSubcommand();
         const ids = await getIds();
 
-        const usersCRUD = ['registrar-coleccionista'];
-        if (usersCRUD.includes(subCommand)) {
+        if (subCommand === 'registrar-coleccionista') {
             if (ids.users.stormer !== user.id) {
                 interaction.reply({ content: '⛔ Lo siento, no tenés permiso para usar este comando.', ephemeral: true });
                 return;
             }
 
-            switch (subCommand) {
-                case 'registrar-coleccionista':
-                    await interaction.deferReply();
-                    try {
-                        const target = interaction.options.getMember('usuario');
-                        const membership = interaction.options.getString('membresia');
-                        if (target && membership) {
-                            const targetId = target.user.id;
-                            if (!(await getCollector(targetId))) {
-                                await addAnnouncementsRole(ids.roles.coleccionistas, guild, target);
-                                await addCollector(targetId, membership);
-                                await interaction.editReply({ content: '✅ Coleccionista registrado con éxito.', ephemeral: true });
-                            } else {
-                                await updateCollector({ _id: targetId, membership });
-                                await interaction.editReply({ content: '✅ Coleccionista actualizado con éxito.', ephemeral: true });
-                            }
-
-                            const announcementsChannel = await client.channels.fetch(ids.channels.anuncios);
-                            announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user) });
-
-                            break;
-                        }
-                    } catch (error) {
-                        logToFileError(MODULE_NAME, error);
+            await interaction.deferReply();
+            try {
+                const target = interaction.options.getMember('usuario');
+                const membership = interaction.options.getString('membresia');
+                if (target && membership) {
+                    const targetId = target.user.id;
+                    if (!(await getCollector(targetId))) {
+                        await addAnnouncementsRole(ids.roles.coleccionistas, guild, target);
+                        await addCollector(targetId, membership);
+                        await interaction.editReply({ content: '✅ Coleccionista registrado con éxito.', ephemeral: true });
+                    } else {
+                        await updateCollector({ _id: targetId, membership });
+                        await interaction.editReply({ content: '✅ Coleccionista actualizado con éxito.', ephemeral: true });
                     }
-                    interaction.editReply({ content: '❌ Ocurrió un error al registrar al coleccionista.', ephemeral: true });
-                    break;
+
+                    const announcementsChannel = await client.channels.fetch(ids.channels.anuncios);
+                    announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user) });
+
+                    return;
+                }
+            } catch (error) {
+                logToFileError(MODULE_NAME, error);
             }
+            interaction.editReply({ content: '❌ Ocurrió un error al registrar al coleccionista.', ephemeral: true });
 
             return;
         }
