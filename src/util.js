@@ -96,7 +96,7 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
      * 
      * @param {String} commandName The name of the command used.
      * @param {String} [args] The args of the command used.
-     * @param {CommandInteraction} interaction The interaction of the command.
+     * @param {CommandInteraction} [interaction] The interaction of the command.
      * @param {User} user The user who used the command.
      */
 const logToFileCommandUsage = (commandName, args, interaction, user) => {

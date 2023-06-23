@@ -2,17 +2,18 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const reqObject = { type: Object, required: true };
+const reqString = { type: String, required: true };
 
 const schema = new Schema({
-    _id: { type: String, required: true },
+    _id: reqString,
     achievements: reqObject,
-    trades: { type: Number, required: true },
     lastOpened: reqObject,
+    membership: reqString,
     owned: reqObject,
     repeated: reqObject,
     timeout: { type: Date, required: false }
 });
 
-const name = 'collector';
+const name = 'fwc-collector';
 
 module.exports = mongoose.models[name] || mongoose.model(name, schema);

@@ -1,16 +1,16 @@
 const { ICommand } = require("wokcommands");
-const { Collector } = require("../../src/typedefs");
-const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild } = require("discord.js");
-const { getIds, getFWCData, updateFWCData, getCollectors, updateCollectors, getGithubRawUrl } = require('../../src/cache');
-const { addAnnouncementsRole } = require("../../src/common");
+const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild, Client } = require("discord.js");
+const { getIds, getFWCData, getCollectors, getGithubRawUrl } = require('../../src/cache');
 const { addCollector, updateCollector } = require("../../src/mongodb");
-const { convertTZ, consoleLogError, getUserTag, logToFileError } = require("../../src/util");
+const { convertTZ, consoleLogError, getUserTag, logToFileError, logToFileCommandUsage } = require("../../src/util");
+const { ARGENTINA_LOCALE_STRING } = require("../../src/constants");
+const { addAnnouncementsRole, isOwner } = require("../../src/common");
 
 const COMMAND_NAME = 'mundial';
 const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
 
+const BASE_PRIZE = 5000;
 const PACKAGE_CONTENT = 5;
-const TIMEOUT_HOURS = 12;
 const PREMIUM_PACKAGE_PERCENTAGE_CHANCE = 1;
 const PREMIUM_PACKAGE_MINIMUM_RATING = 90;
 
@@ -29,98 +29,15 @@ const NEXT_ARROW_CUSTOM_ID = 'next-page';
 
 const GROUPS_LETTERS = 'ABCDEFGH';
 
-const stagesData = {
-    G1: { emoji: "1️⃣", label: "Fase 1" },
-    G2: { emoji: "2️⃣", label: "Fase 2" },
-    G3: { emoji: "3️⃣", label: "Fase 3" },
-    P1: { emoji: "4️⃣", label: "Octavos de final" },
-    P2: { emoji: "5️⃣", label: "Cuartos de final" },
-    P3: { emoji: "6️⃣", label: "Semifinales" },
-    P4: { emoji: "7️⃣", label: "Tercer puesto" },
-    P5: { emoji: "8️⃣", label: "Final" }
+const newCollectorMessage = '<@&{ROLE_ID}>\n\n🃏 ¡**{USERNAME}** se unió a los coleccionistas!\n\n💰 El premio acumulado es de **${AMOUNT}**.';
+
+const membershipsData = {
+    free: { label: '⚫ Gratis', price: 0, rate: 8 },
+    bronze: { label: '🟠 Bronce', price: 500, rate: 12 },
+    silver: { label: '⚪ Plata', price: 1000, rate: 10 },
+    gold: { label: '🟡 Oro', price: 1500, rate: 8 }
 };
-const matchesData = {
-    G1: {
-        M1: { emoji: "🇶🇦", label: "QAT 0-2 ECU" },
-        M2: { emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", label: "ENG 6-2 IRN" },
-        M3: { emoji: "🇸🇳", label: "SEN 0-2 NED" },
-        M4: { emoji: "🇺🇸", label: "USA 1-1 WAL" },
-        M5: { emoji: "🇦🇷", label: "ARG 1-2 KSA" },
-        M6: { emoji: "🇩🇰", label: "DEN 0-0 TUN" },
-        M7: { emoji: "🇲🇽", label: "MEX 0-0 POL" },
-        M8: { emoji: "🇫🇷", label: "FRA 4-1 AUS" },
-        M9: { emoji: "🇲🇦", label: "MAR 0-0 CRO" },
-        M10: { emoji: "🇩🇪", label: "GER 1-2 JPN" },
-        M11: { emoji: "🇪🇸", label: "ESP 7-0 CRC" },
-        M12: { emoji: "🇧🇪", label: "BEL 1-0 CAN" },
-        M13: { emoji: "🇨🇭", label: "SUI 1-0 CMR" },
-        M14: { emoji: "🇺🇾", label: "URU 0-0 KOR" },
-        M15: { emoji: "🇵🇹", label: "POR 3-2 GHA" },
-        M16: { emoji: "🇧🇷", label: "BRA 2-0 SRB" }
-    },
-    G2: {
-        M1: { emoji: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", label: "WAL 0-2 IRN" },
-        M2: { emoji: "🇶🇦", label: "QAT 1-3 SEN" },
-        M3: { emoji: "🇳🇱", label: "NED 1-1 ECU" },
-        M4: { emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", label: "ENG 0-0 USA" },
-        M5: { emoji: "🇹🇳", label: "TUN 0-1 AUS" },
-        M6: { emoji: "🇵🇱", label: "POL 2-0 KSA" },
-        M7: { emoji: "🇫🇷", label: "FRA 2-1 DEN" },
-        M8: { emoji: "🇦🇷", label: "ARG 2-0 MEX" },
-        M9: { emoji: "🇯🇵", label: "JPN 0-1 CRC" },
-        M10: { emoji: "🇧🇪", label: "BEL 0-2 MAR" },
-        M11: { emoji: "🇭🇷", label: "CRO 4-1 CAN" },
-        M12: { emoji: "🇪🇸", label: "ESP 1-1 GER" },
-        M13: { emoji: "🇨🇲", label: "CMR 3-3 SRB" },
-        M14: { emoji: "🇰🇷", label: "KOR 2-3 GHA" },
-        M15: { emoji: "🇧🇷", label: "BRA 1-0 SUI" },
-        M16: { emoji: "🇵🇹", label: "POR 2-0 URU" }
-    },
-    G3: {
-        M1: { emoji: "🇳🇱", label: "NED 2-0 QAT" },
-        M2: { emoji: "🇪🇨", label: "ECU 1-2 SEN" },
-        M3: { emoji: "🇮🇷", label: "IRN 0-1 USA" },
-        M4: { emoji: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", label: "WAL 0-3 ENG" },
-        M5: { emoji: "🇹🇳", label: "TUN 1-0 FRA" },
-        M6: { emoji: "🇦🇺", label: "AUS 1-0 DEN" },
-        M7: { emoji: "🇸🇦", label: "KSA 1-2 MEX" },
-        M8: { emoji: "🇵🇱", label: "POL 0-2 ARG" },
-        M9: { emoji: "🇨🇦", label: "CAN 1-2 MAR" },
-        M10: { emoji: "🇭🇷", label: "CRO 0-0 BEL" },
-        M11: { emoji: "🇯🇵", label: "JPN 2-1 ESP" },
-        M12: { emoji: "🇨🇷", label: "CRC 2-4 GER" },
-        M13: { emoji: "🇰🇷", label: "KOR 2-1 POR" },
-        M14: { emoji: "🇬🇭", label: "GHA 0-2 URU" },
-        M15: { emoji: "🇨🇲", label: "CMR 1-0 BRA" },
-        M16: { emoji: "🇷🇸", label: "SRB 2-3 SUI" }
-    },
-    P1: {
-        M1: { emoji: "🇳🇱", label: "NED 3-1 USA" },
-        M2: { emoji: "🇦🇷", label: "ARG 2-1 AUS" },
-        M3: { emoji: "🇫🇷", label: "FRA 3-1 POL" },
-        M4: { emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", label: "ENG 3-0 SEN" },
-        M5: { emoji: "🇯🇵", label: "JPN (1) 1-1 (3) CRO" },
-        M6: { emoji: "🇧🇷", label: "BRA 4-1 KOR" },
-        M7: { emoji: "🇲🇦", label: "MAR (3) 0-0 (0) ESP" },
-        M8: { emoji: "🇵🇹", label: "POR 6-1 SUI" }
-    },
-    P2: {
-        M1: { emoji: "🇭🇷", label: "CRO (4) 1-1 (2) BRA" },
-        M2: { emoji: "🇳🇱", label: "NED (3) 2-2 (4) ARG" },
-        M3: { emoji: "🇲🇦", label: "MAR 1-0 POR" },
-        M4: { emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", label: "ENG 1-2 FRA" }
-    },
-    P3: {
-        M1: { emoji: "🇦🇷", label: "ARG 3-0 CRO" },
-        M2: { emoji: "🇫🇷", label: "FRA 2-0 MAR" }
-    },
-    P4: {
-        M1: { emoji: "🇭🇷", label: "CRO 2-1 MAR" }
-    },
-    P5: {
-        M1: { emoji: "🇦🇷", label: "ARG (4) 3-3 (2) FRA" }
-    }
-};
+
 const achievementsData = {
     "1st-place": {
         check: async owned => { return await hasAllPlayersFromTeam(owned, "ARG") },
@@ -261,16 +178,23 @@ const achievementsData = {
 };
 
 /**
- * Adds a new collector to the database.
+ * Builds the message to be sent to the announcements channel when a new collector is registered.
  * 
- * @param {String} id The ID of the new collector.
- * @returns The new Collector.
+ * @param {User} user The user of the new collector.
+ * @returns The message to be sent to announcements channel.
  */
-const addNewCollector = async id => {
-    /** @type {Collector} */
-    const collector = { _id: id, achievements: [], exchanges: 0, lastOpened: {}, owned: [], repeated: [], timeout: null };
-    await addCollector(collector);
-    return collector;
+const getNewCollectorFinalMessage = async user => {
+    const ids = await getIds();
+    const roleId = ids.roles.coleccionistas;
+    const username = getUserTag(user);
+
+    let amount = BASE_PRIZE;
+    for (const collector of await getCollectors()) {
+        const { price } = membershipsData[collector.membership];
+        amount += price;
+    }
+
+    return newCollectorMessage.replace('{ROLE_ID}', roleId).replace('{USERNAME}', username).replace('{AMOUNT}', amount.toLocaleString(ARGENTINA_LOCALE_STRING));
 };
 
 /**
@@ -283,7 +207,7 @@ const addNewCollector = async id => {
  * @returns The content for a message.
  */
 const getTeamMessageContent = async (teamId, owned, page, totalPages) => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
     const { flag, name, players } = teams[teamId];
     return `${flag} **${name}:** ${getOwnedAmountFromTeam(owned, teamId)}/${players} obtenidas\n\nPágina ${page} | ${totalPages}`;
 };
@@ -308,7 +232,7 @@ const destructureMessageContent = async content => {
  * @returns The team ID.
  */
 const getTeamIdByName = async name => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
     return Object.entries(teams).filter(([_, team]) => team.name === name).map(([id, _]) => id).shift();
 };
 
@@ -328,7 +252,7 @@ const getOwnedAmountFromTeam = (owned, teamId) => owned.filter(c => c.startsWith
  * @returns The collector.
  */
 const getCollector = async id => {
-    const collectors = getCollectors() || await updateCollectors();
+    const collectors = await getCollectors();
     return collectors.find(c => c._id === id);
 };
 
@@ -343,7 +267,7 @@ const getTeamEmbeds = async (owned, teamId) => {
     const ret = [];
     let actualArray = [];
 
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
 
     for (const id of Object.keys(players).filter(id => id.startsWith(teamId))) {
         if (actualArray.length === 10) {
@@ -416,7 +340,7 @@ const getGroupSelectMenu = defaultValue => {
  * @returns A row with the select menu.
  */
 const getTeamSelectMenu = async (group, defaultValue) => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
 
     const teamSelectMenu = new StringSelectMenuBuilder()
         .setCustomId(`${SELECT_MENUS_PREFIX}${TEAM_SELECTOR_CUSTOM_ID}`)
@@ -524,7 +448,7 @@ const generateList = array => {
  * @returns The letter of the group the team belongs to.
  */
 const getGroup = async teamId => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
     const index = Object.keys(teams).indexOf(teamId);
     if (index < 4)
         return 'A';
@@ -552,7 +476,7 @@ const getGroup = async teamId => {
  * @param {String[]} arrayToAdd The elements to be added.
  */
 const addFields = async (fields, fieldName, arrayToAdd) => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
     const list = generateList(arrayToAdd);
     let lastGroup = 'A';
     let actualField = { name: fieldName, value: `**Grupo ${lastGroup}**\n` };
@@ -613,7 +537,7 @@ const getStatsEmbed = async guild => {
     let namesField = { name: 'Coleccionista', value: '', inline: true };
     let statsField = { name: '\u200b', value: '', inline: true };
 
-    const collectors = getCollectors() || await updateCollectors();
+    const collectors = await getCollectors();
     const members = await guild.members.fetch(collectors.map(c => c._id)).catch(console.error);
 
     const totalCards = await getTotalCards();
@@ -653,7 +577,7 @@ const getStatsEmbed = async guild => {
  * @returns The average rating of all owned players.
  */
 const getAverageRating = async owned => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     let amount = 0;
     let sum = 0;
     owned.forEach(c => {
@@ -670,7 +594,7 @@ const getAverageRating = async owned => {
  * @returns The sum of goals of all the owned players.
  */
 const getGoals = async owned => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     let goals = 0;
     owned.forEach(c => goals += players[c].goals ? players[c].goals : 0);
     return goals;
@@ -682,7 +606,7 @@ const getGoals = async owned => {
  * @returns The total sum of goals of all the players.
  */
 const getTotalGoals = async () => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     let goals = 0;
     Object.entries(players).forEach(([_, p]) => goals += p.goals ? p.goals : 0);
     return goals;
@@ -694,7 +618,7 @@ const getTotalGoals = async () => {
  * @param {String[]} array The array of IDs to be sorted.
  */
 const sort = async array => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     const ids = Object.keys(players);
     array.sort((a, b) => ids.indexOf(a) - ids.indexOf(b));
 };
@@ -706,7 +630,7 @@ const sort = async array => {
  * @returns The formatted name of the player.
  */
 const getPlayerName = async id => {
-    const { players, teams } = getFWCData() || await updateFWCData();
+    const { players, teams } = await getFWCData();
     const player = players[id];
     const team = teams[id.substring(0, 3)];
     return `${team.flag} **${player.name}**`;
@@ -719,7 +643,7 @@ const getPlayerName = async id => {
  * @returns The formatted name of the team.
  */
 const getTeamName = async id => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
     const team = teams[id];
     return `${team.flag} **${team.name}**`;
 };
@@ -731,7 +655,7 @@ const getTeamName = async id => {
  * @returns True if the collector owns every scorer, or false if not.
  */
 const hasAllScorers = async owned => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     const filtered = owned.filter(c => players[c].goals);
     return filtered.length === await getTotalScorers();
 };
@@ -742,7 +666,7 @@ const hasAllScorers = async owned => {
  * @returns The total amount of scorers.
  */
 const getTotalScorers = async () => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     const filtered = Object.entries(players).filter(([_, player]) => player.goals);
     return Object.keys(filtered).length;
 };
@@ -764,7 +688,7 @@ const hasPlayer = (id, owned) => owned.includes(id);
  * @returns True if all of the players from the indicated position are owned, or false if not.
  */
 const hasAllPlayersFromPosition = async (owned, position) => {
-    const { achievements, players } = getFWCData() || await updateFWCData();
+    const { achievements, players } = await getFWCData();
     const filtered = owned.filter(c => achievements[position].includes(players[c].position));
     return filtered.length === await getTotalPlayersFromPosition(position);
 };
@@ -776,7 +700,7 @@ const hasAllPlayersFromPosition = async (owned, position) => {
  * @returns The total amount of existing players in that position.
  */
 const getTotalPlayersFromPosition = async position => {
-    const { achievements, players } = getFWCData() || await updateFWCData();
+    const { achievements, players } = await getFWCData();
     const filtered = Object.entries(players).filter(([_, player]) => achievements[position].includes(player.position));
     return Object.keys(filtered).length;
 };
@@ -789,7 +713,7 @@ const getTotalPlayersFromPosition = async position => {
  * @returns True if the collector owns every player of the team, or false if not.
  */
 const hasAllPlayersFromTeam = async (owned, team) => {
-    const { teams } = getFWCData() || await updateFWCData();
+    const { teams } = await getFWCData();
     const filtered = owned.filter(c => c.startsWith(`${team}-`));
     return filtered.length === teams[team].players;
 };
@@ -800,7 +724,7 @@ const hasAllPlayersFromTeam = async (owned, team) => {
  * @returns The total amount of cards.
  */
 const getTotalCards = async () => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     return Object.keys(players).length;
 };
 
@@ -858,7 +782,7 @@ const isPremiumPackage = () => {
  * @returns A collection of players IDs.
  */
 const getRandomPlayersIds = async (amount, premium) => {
-    const { players } = getFWCData() || await updateFWCData();
+    const { players } = await getFWCData();
     const playersIds = !premium ? Object.keys(players)
         : Object.entries(players).filter(([_, player]) => player.rating >= PREMIUM_PACKAGE_MINIMUM_RATING).map(([id, _]) => id);
     const ids = [];
@@ -899,7 +823,7 @@ const getRatingText = rating => {
  * @returns An embed with the not owned player information.
  */
 const getMysteriousPlayerEmbed = async playerId => {
-    const { players, teams } = getFWCData() || await updateFWCData();
+    const { players, teams } = await getFWCData();
     const { goals } = players[playerId];
     const { color, flag } = teams[playerId.split('-')[0]];
 
@@ -930,7 +854,7 @@ const getMysteriousPlayerEmbed = async playerId => {
  * @returns An embed with the player information.
  */
 const getPlayerEmbed = async playerId => {
-    const { players, positions, teams } = getFWCData() || await updateFWCData();
+    const { players, positions, teams } = await getFWCData();
     const { birth, club, goals, name, nationality, picture, position, rating } = players[playerId];
     const { color, emblem, flag } = teams[playerId.split('-')[0]];
 
@@ -957,11 +881,12 @@ const getPlayerEmbed = async playerId => {
  * 
  * @returns Rows with the stages buttons.
  */
-const getMatchesCategoriesButtons = () => {
+const getMatchesCategoriesButtons = async () => {
     const rows = [];
     let row = new ActionRowBuilder();
-    for (const id in stagesData) if (Object.hasOwnProperty.call(stagesData, id)) {
-        const { emoji, label } = stagesData[id];
+    const { stages } = await getFWCData();
+    for (const id in stages) if (Object.hasOwnProperty.call(stages, id)) {
+        const { emoji, label } = stages[id];
         if (row.components.length >= 4) {
             rows.push(row);
             row = new ActionRowBuilder();
@@ -982,10 +907,11 @@ const getMatchesCategoriesButtons = () => {
  * @param {String} stageId The ID of the stage.
  * @returns Rows with the matches buttons.
  */
-const getMatchesButtons = stageId => {
+const getMatchesButtons = async stageId => {
     const rows = [];
     let row = new ActionRowBuilder();
-    const stage = matchesData[stageId];
+    const { matches } = await getFWCData();
+    const stage = matches[stageId];
     for (const matchId in stage) if (Object.hasOwnProperty.call(stage, matchId)) {
         const { emoji, label } = stage[matchId];
         if (row.components.length >= 4) {
@@ -1056,10 +982,28 @@ module.exports = {
         name: 'partidos',
         description: 'Abre el navegador de partidos.',
         type: ApplicationCommandOptionType.Subcommand
+    },
+    {
+        name: 'registrar-coleccionista',
+        description: 'Registrar/actualizar un coleccionista.',
+        type: ApplicationCommandOptionType.Subcommand,
+        options: [{
+            name: 'usuario',
+            description: 'El usuario del coleccionista.',
+            required: true,
+            type: ApplicationCommandOptionType.User
+        }, {
+            name: 'membresia',
+            description: 'La membresía del coleccionista.',
+            required: true,
+            type: ApplicationCommandOptionType.String,
+            choices: Object.entries(membershipsData).map(([key, value]) => ({ name: value.label, value: key }))
+        }]
     }],
     slash: true,
     guildOnly: true,
 
+    /**@param {Client} client*/
     init: client => {
         client.on('interactionCreate', async interaction => {
             // select menus
@@ -1139,7 +1083,7 @@ module.exports = {
                     split = [goTo];
                 } else {
                     interaction.update({
-                        components: getMatchesCategoriesButtons(),
+                        components: await getMatchesCategoriesButtons(),
                         content: '⚽ \u200b **__Partidos de la Copa Mundial Catar 2022__**\n\u200b',
                         files: []
                     });
@@ -1148,9 +1092,10 @@ module.exports = {
             }
 
             if (split.length === 1) {
-                const { label } = stagesData[customId];
+                const { stages } = await getFWCData();
+                const { label } = stages[customId];
                 interaction.update({
-                    components: getMatchesButtons(customId).concat([getBackButton('main')]),
+                    components: await getMatchesButtons(customId).concat([getBackButton('main')]),
                     content: `⚽ \u200b **__${label}__**\n\u200b`,
                     files: []
                 });
@@ -1168,27 +1113,64 @@ module.exports = {
         });
     },
 
-    //callback: async ({ instance, message, args,  }) => {
-    callback: async ({ channel, guild, interaction, member, user }) => {
-        const subCommand = interaction.options.getSubcommand();
+    callback: async ({ channel, client, guild, interaction, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
 
+        const subCommand = interaction.options.getSubcommand();
         const ids = await getIds();
-        if (channel.id !== ids.channels.fwc)
-            return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
+
+        const usersCRUD = ['registrar-coleccionista'];
+        if (usersCRUD.includes(subCommand)) {
+            if (!(await isOwner(user.id))) {
+                interaction.reply({ content: '⛔ Lo siento, no tenés permiso para usar este comando.', ephemeral: true });
+                return;
+            }
+
+            switch (subCommand) {
+                case 'registrar-coleccionista':
+                    await interaction.deferReply();
+                    try {
+                        const target = interaction.options.getMember('usuario');
+                        const membership = interaction.options.getString('membresia');
+                        if (target && membership) {
+                            const targetId = target.user.id;
+                            if (!(await getCollector(targetId))) {
+                                await addAnnouncementsRole(ids.roles.coleccionistas, guild, target);
+                                await addCollector(targetId, membership);
+                                await interaction.editReply({ content: '✅ Coleccionista registrado con éxito.', ephemeral: true });
+                            } else {
+                                await updateCollector({ _id: targetId, membership });
+                                await interaction.editReply({ content: '✅ Coleccionista actualizado con éxito.', ephemeral: true });
+                            }
+
+                            const announcementsChannel = await client.channels.fetch(ids.channels.anuncios);
+                            announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user) });
+
+                            break;
+                        }
+                    } catch (error) {
+                        logToFileError(MODULE_NAME, error);
+                    }
+                    interaction.editReply({ content: '❌ Ocurrió un error al registrar al coleccionista.', ephemeral: true });
+                    break;
+            }
+
+            return;
+        }
 
         const sharedInitialBehaviour = ['ver-perfil', 'abrir-paquete', 'ver-equipos', 'ver-logros'];
         if (sharedInitialBehaviour.includes(subCommand)) {
             // shared behaviour
-            await addAnnouncementsRole(ids.roles.coleccionistas, guild, member);
+            if (channel.id !== ids.channels.fwc)
+                return { content: `🛑 Este comando solo puede ser utilizado en el canal <#${ids.channels.fwc}>.`, custom: true, ephemeral: true };
 
-            let collector = await getCollector(user.id);
-
+            const collector = await getCollector(user.id);
             if (!collector) {
-                collector = await addNewCollector(user.id);
-                await updateCollectors();
+                interaction.reply({ content: '❌ lo siento, ocurrió un error.', ephemeral: true });
+                return;
             }
 
-            const { achievements, owned, repeated, timeout } = collector;
+            const { achievements, membership, owned, repeated, timeout } = collector;
 
             switch (subCommand) {
                 case 'ver-perfil':
@@ -1258,15 +1240,15 @@ module.exports = {
                         allAchievements.push(platinumKey);
                     }
 
+                    const { rate } = membershipsData[membership];
                     await updateCollector({
                         achievements: allAchievements,
                         _id: user.id,
                         lastOpened: { date: now, content: playersIds },
                         owned: newOwned,
                         repeated: newRepeated,
-                        timeout: now.setHours(now.getHours() + TIMEOUT_HOURS)
+                        timeout: now.setHours(now.getHours() + rate)
                     });
-                    await updateCollectors();
 
                     const reply = { content: `**<@${user.id}> - ${!isPremium ? '🧧' : '⭐'} PAQUETE ${!isPremium ? 'NORMAL' : 'PREMIUM'}**\n\n✅ Obtuviste:\n\u200b` };
 
@@ -1295,7 +1277,6 @@ module.exports = {
                         components: [getGroupSelectMenu()],
                         content: `⚽ **Seleccione el grupo que desea ver:**\n\u200b`
                     });
-
                     break;
 
                 case 'ver-logros':
@@ -1307,7 +1288,6 @@ module.exports = {
 
                     for (const embeds of achievementsEmbeds)
                         await interaction.followUp({ embeds: embeds, ephemeral: true });
-
                     break;
             }
 
@@ -1323,7 +1303,7 @@ module.exports = {
 
             case 'partidos':
                 await interaction.reply({
-                    components: getMatchesCategoriesButtons(),
+                    components: await getMatchesCategoriesButtons(),
                     content: '⚽ \u200b **__Partidos de la Copa Mundial Catar 2022__**\n\u200b'
                 });
                 break;

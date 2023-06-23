@@ -1,4 +1,4 @@
-const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, VoiceBasedChannel } = require('discord.js')
+const { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, VoiceBasedChannel, Guild, GuildMember } = require('discord.js')
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
@@ -89,6 +89,13 @@ const lastUpdateToString = (lastUpdate, upperCase) => {
     return `${(!upperCase ? 'el ' : '')}` + lastUpdate;
 };
 
+/**
+ * Adds a role to a member.
+ * 
+ * @param {String} roleId The ID of the role.
+ * @param {Guild} guild The guild.
+ * @param {GuildMember} member The member.
+ */
 const addAnnouncementsRole = async (roleId, guild, member) => {
     try {
         const role = await guild.roles.fetch(roleId);
@@ -874,6 +881,12 @@ module.exports = {
         sendSelectionMenu();
     },
 
+    /**
+     * Determines if a user is an owner of the guild or not.
+     * 
+     * @param {String} id The ID of the user.
+     * @returns True if the user is an owner of the guild, or false if not.
+     */
     isOwner: async id => {
         const ids = await getIds();
         return id === ids.users.stormer || id === ids.users.darkness;

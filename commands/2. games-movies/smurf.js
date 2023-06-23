@@ -1,5 +1,5 @@
 const { ICommand } = require('wokcommands');
-const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require('discord.js');
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
@@ -171,6 +171,7 @@ module.exports = {
     expectedArgs: '<id>',
     slash: 'both',
 
+    /**@param {Client} client*/
     init: client => {
         client.on('interactionCreate', async interaction => {
             if (!interaction.isButton()) return;

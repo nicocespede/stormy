@@ -38,8 +38,35 @@ let musicPlayerData = {};
 
 /**@type {CollectorsData} */
 let collectors;
+
+/**
+ * Retrieves the collectors data from the database.
+ * 
+ * @returns All cached collectors data.
+ */
+const updateCollectors = async () => {
+    const collectorSchema = require('../models/collector-schema');
+    collectors = await collectorSchema.find({});
+    consoleLog('> Caché de coleccionistas actualizado', CONSOLE_GREEN);
+    return collectors;
+}
+
 /** @type {FWCData} */
 let fwcData;
+
+/**
+ * Retrieves the FWC data from the fwc-2022.json file.
+ * 
+ * @returns All cached FWC data.
+ */
+const updateFWCData = async () => {
+    const data = await retrieveDataFromFile(`fwc-2022.json`);
+
+    if (data)
+        fwcData = data;
+
+    return fwcData;
+}
 
 /** @type {TimestampsData}*/
 const timestamps = {};
@@ -646,40 +673,15 @@ module.exports = {
      * 
      * @returns All cached FWC data.
      */
-    getFWCData: () => fwcData,
-
-    /**
-     * Retrieves the FWC data from the fwc-2022.json file.
-     * 
-     * @returns All cached FWC data.
-     */
-    updateFWCData: async () => {
-        const data = await retrieveDataFromFile(`fwc-2022.json`);
-
-        if (data)
-            fwcData = data;
-
-        return fwcData;
-    },
+    getFWCData: async () => fwcData || await updateFWCData(),
 
     /**
      * Gets the collectors data stored in cache.
      * 
      * @returns All cached collectors data.
      */
-    getCollectors: () => collectors,
-
-    /**
-     * Retrieves the collectors data from the database.
-     * 
-     * @returns All cached collectors data.
-     */
-    updateCollectors: async () => {
-        const collectorSchema = require('../models/collector-schema');
-        collectors = await collectorSchema.find({});
-        consoleLog('> Caché de coleccionistas actualizado', CONSOLE_GREEN);
-        return collectors;
-    },
+    getCollectors: async () => collectors || await updateCollectors(),
+    updateCollectors,
 
     /**
      * Gets the currencies data stored in cache.

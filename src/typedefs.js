@@ -6,10 +6,12 @@
  * @typedef {{[key: String]: Team}} TeamsData
  * @typedef {{[key: String]: String}} PositionsData
  * @typedef {{[key: String]: String}} AchievementsData
+ * @typedef {{[stageID: String]: {emoji: String, label: String}}} StagesData
+ * @typedef {{[stageID: String]: {[matchID: String]: {emoji: String, label: String}}}} MatchesData
  * 
- * @typedef {{players: PlayersData, teams: TeamsData, positions: PositionsData, achievements: AchievementsData}} FWCData
+ * @typedef {{players: PlayersData, teams: TeamsData, positions: PositionsData, achievements: AchievementsData, stages: StagesData, matches: MatchesData}} FWCData
  * 
- * @typedef {{_id: String, achievements: String[], trades: Number, lastOpened: {date: Date, content: String[]}, owned: String[], repeated: String[], timeout: Date}} Collector
+ * @typedef {{_id: String, achievements: String[], lastOpened: {date: Date, content: String[]}, membership: String, owned: String[], repeated: String[], timeout: Date}} Collector
  * @typedef {Collector[]} CollectorsData
  * 
  * @typedef {{[key: String]: Date}} TimestampsData

@@ -1,4 +1,4 @@
-const { CONSOLE_GREEN, CONSOLE_YELLOW } = require('../src/constants');
+const { Collector } = require('./typedefs');
 const banSchema = require('../models/ban-schema');
 const birthdaySchema = require('../models/birthday-schema');
 const crosshairSchema = require('../models/crosshair-schema');
@@ -10,8 +10,9 @@ const smurfSchema = require('../models/smurf-schema');
 const statSchema = require('../models/stat-schema');
 const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
 const collectorSchema = require('../models/collector-schema');
+const { CONSOLE_GREEN, CONSOLE_YELLOW } = require('../src/constants');
 const { consoleLog, logToFile } = require('./util');
-const { updateStats, updateCrosshairs } = require('./cache');
+const { updateStats, updateCrosshairs, updateCollectors } = require('./cache');
 
 const MODULE_NAME = 'src.mongodb';
 
@@ -217,12 +218,26 @@ module.exports = {
         consoleLog('> Fecha de cambio de pasta térmica actualizada en la base de datos', CONSOLE_GREEN);
     },
 
-    addCollector: async (_id, achievements, exchanges, lastOpened, owned, repeated, timeout) => {
-        await new collectorSchema({ _id, achievements, exchanges, lastOpened, owned, repeated, timeout }).save();
+    /**
+     * Adds a new collector document to the database.
+     * 
+     * @param {String} id The ID of the collector.
+     * @param {String} membership The membership of the collector.
+     */
+    addCollector: async (id, membership) => {
+        await new collectorSchema({ _id: id, achievements: [], lastOpened: {}, membership, owned: [], repeated: [], timeout: null }).save();
         consoleLog('> Coleccionista agregado a la base de datos', CONSOLE_GREEN);
+        await updateCollectors();
     },
-    updateCollector: async ({ _id, achievements, exchanges, lastOpened, owned, repeated, timeout }) => {
-        await collectorSchema.updateOne({ _id }, { achievements, exchanges, lastOpened, owned, repeated, timeout });
+
+    /**
+     * Updates a single collector document in database.
+     * 
+     * @param {Collector} collector The collector to be updated.
+     */
+    updateCollector: async ({ _id, achievements, lastOpened, membership, owned, repeated, timeout }) => {
+        await collectorSchema.updateOne({ _id }, { achievements, lastOpened, membership, owned, repeated, timeout });
         consoleLog('> Coleccionista actualizado en la base de datos', CONSOLE_GREEN);
+        await updateCollectors();
     }
 };
