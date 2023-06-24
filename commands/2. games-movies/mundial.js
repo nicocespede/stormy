@@ -777,10 +777,7 @@ const getGoalsString = goals => {
  * 
  * @returns True if the package will be premium, or false if not.
  */
-const isPremiumPackage = () => {
-    const random = Math.floor(Math.random() * 99) + 1;
-    return random <= PREMIUM_PACKAGE_PERCENTAGE_CHANCE;
-};
+const isPremiumPackage = () => Math.random() < PREMIUM_PACKAGE_PERCENTAGE_CHANCE / 100;
 
 /**
  * Gets an array of random players IDs.
