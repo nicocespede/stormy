@@ -505,7 +505,12 @@ const addFields = async (fields, fieldName, arrayToAdd) => {
  * @returns An embed with the collector's profile information.
  */
 const getProfileEmbed = async user => {
-    const { achievements, lastOpened, owned, repeated } = await getCollector(user.id);
+    const collector = await getCollector(user.id);
+
+    if (!collector)
+        return new EmbedBuilder().setDescription(`⚠ **${user.username}** no es un coleccionista.`);
+
+    const { achievements, lastOpened, owned, repeated } = collector;
 
     const fields = [{ name: '📊 Media promedio', value: `${await getAverageRating(owned)}`, inline: true },
     { name: '⚽ Goles', value: `${await getGoals(owned)}/${await getTotalGoals()}`, inline: true },
