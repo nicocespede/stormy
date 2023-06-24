@@ -14,6 +14,9 @@
  * @typedef {{_id: String, achievements: String[], lastOpened: {date: Date, content: String[]}, membership: String, owned: String[], repeated: String[], timeout: Date}} Collector
  * @typedef {Collector[]} CollectorsData
  * 
+ * @typedef {{id: Number, senderId: String, sent: String[], counterpartyId: String, received: String[], status: String, creationDate: Date, completionDate: Date}} Trade
+ * @typedef {Trade[]} TradesData
+ * 
  * @typedef {{[key: String]: Date}} TimestampsData
  * 
  * @typedef {{seconds: Number, minutes: Number, hours: Number, days: Number}} Stat

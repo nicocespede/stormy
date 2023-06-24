@@ -1,4 +1,4 @@
-const { CollectorsData, FWCData, BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData } = require("./typedefs");
+const { CollectorsData, TradesData, FWCData, BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData } = require("./typedefs");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
@@ -45,10 +45,25 @@ let collectors;
  * @returns All cached collectors data.
  */
 const updateCollectors = async () => {
-    const collectorSchema = require('../models/collector-schema');
+    const collectorSchema = require('../models/fwc-collector-schema');
     collectors = await collectorSchema.find({});
     consoleLog('> Caché de coleccionistas actualizado', CONSOLE_GREEN);
     return collectors;
+}
+
+/**@type {TradesData} */
+let trades;
+
+/**
+ * Retrieves the trades data from the database.
+ * 
+ * @returns All cached trades data.
+ */
+const updateTrades = async () => {
+    const tradeSchema = require('../models/fwc-trade-schema');
+    trades = await tradeSchema.find({});
+    consoleLog('> Caché de intercambios actualizado', CONSOLE_GREEN);
+    return trades;
 }
 
 /** @type {FWCData} */
@@ -682,6 +697,13 @@ module.exports = {
      */
     getCollectors: async () => collectors || await updateCollectors(),
     updateCollectors,
+
+    /**
+     * Gets the trades data stored in cache.
+     * 
+     * @returns All cached trades data.
+     */
+    getTrades: async () => trades || await updateTrades(),
 
     /**
      * Gets the currencies data stored in cache.

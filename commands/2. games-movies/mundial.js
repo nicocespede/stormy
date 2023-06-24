@@ -4,7 +4,7 @@ const { getIds, getFWCData, getCollectors, getGithubRawUrl } = require('../../sr
 const { addCollector, updateCollector } = require("../../src/mongodb");
 const { convertTZ, consoleLogError, getUserTag, logToFileError, logToFileCommandUsage } = require("../../src/util");
 const { ARGENTINA_LOCALE_STRING } = require("../../src/constants");
-const { addAnnouncementsRole, isOwner } = require("../../src/common");
+const { addAnnouncementsRole } = require("../../src/common");
 
 const COMMAND_NAME = 'mundial';
 const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
@@ -479,20 +479,23 @@ const addFields = async (fields, fieldName, arrayToAdd) => {
     const { teams } = await getFWCData();
     const list = generateList(arrayToAdd);
     let lastGroup = 'A';
-    let actualField = { name: fieldName, value: `**Grupo ${lastGroup}**\n` };
-    for (const line of list.split('\n')) {
+    let currentField = { name: fieldName, value: `\u200b` };
+    if (arrayToAdd.length > 0)
+        currentField.value = `**Grupo ${lastGroup}**\n`;
+
+    for (const line of list.split('\n', arrayToAdd.length)) {
         const teamId = line.substring(2, 5);
         const group = await getGroup(teamId);
         const { flag } = teams[teamId];
         if (group === lastGroup)
-            actualField.value += `${flag} ${line}\n`;
+            currentField.value += `${flag} ${line}\n`;
         else {
-            fields.push(actualField);
+            fields.push(currentField);
             lastGroup = group;
-            actualField = { name: `Grupo ${lastGroup}`, value: `${flag} ${line}\n` };
+            currentField = { name: `Grupo ${lastGroup}`, value: `${flag} ${line}\n` };
         }
     }
-    fields.push(actualField);
+    fields.push(currentField);
 };
 
 /**
@@ -999,7 +1002,18 @@ module.exports = {
             type: ApplicationCommandOptionType.String,
             choices: Object.entries(membershipsData).map(([key, value]) => ({ name: value.label, value: key }))
         }]
-    }],
+    }/*,
+    {
+        name: 'buscar-intercambio',
+        description: 'Busca un intercambio.',
+        type: ApplicationCommandOptionType.Subcommand,
+        options: [{
+            name: 'id',
+            description: 'El ID del jugador que se desea buscar.',
+            required: false,
+            type: ApplicationCommandOptionType.String
+        }]
+    }*/],
     slash: true,
     guildOnly: true,
 
@@ -1125,7 +1139,7 @@ module.exports = {
                 return;
             }
 
-            await interaction.deferReply();
+            await interaction.deferReply({ ephemeral: true });
             try {
                 const target = interaction.options.getMember('usuario');
                 const membership = interaction.options.getString('membresia');
@@ -1134,10 +1148,10 @@ module.exports = {
                     if (!(await getCollector(targetId))) {
                         await addAnnouncementsRole(ids.roles.coleccionistas, guild, target);
                         await addCollector(targetId, membership);
-                        await interaction.editReply({ content: '✅ Coleccionista registrado con éxito.', ephemeral: true });
+                        await interaction.editReply({ content: '✅ Coleccionista registrado con éxito.' });
                     } else {
                         await updateCollector({ _id: targetId, membership });
-                        await interaction.editReply({ content: '✅ Coleccionista actualizado con éxito.', ephemeral: true });
+                        await interaction.editReply({ content: '✅ Coleccionista actualizado con éxito.' });
                     }
 
                     const announcementsChannel = await client.channels.fetch(ids.channels.anuncios);
@@ -1148,7 +1162,7 @@ module.exports = {
             } catch (error) {
                 logToFileError(MODULE_NAME, error);
             }
-            interaction.editReply({ content: '❌ Ocurrió un error al registrar al coleccionista.', ephemeral: true });
+            interaction.editReply({ content: '❌ Ocurrió un error al registrar al coleccionista.' });
 
             return;
         }
@@ -1178,7 +1192,7 @@ module.exports = {
                     try {
                         await interaction.editReply({ embeds: [await getProfileEmbed(targetUser)] });
                     } catch (error) {
-                        consoleLogError(`> Error al enviar mensaje de perfil del coleccionista ${getUserTag(target)}`);
+                        consoleLogError(`> Error al enviar mensaje de perfil del coleccionista ${getUserTag(targetUser)}`);
                         logToFileError(MODULE_NAME, error);
                         await interaction.editReply({ content: '❌ Lo siento, ocurrió un error al generar el mensaje.' });
                     }
