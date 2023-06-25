@@ -546,6 +546,29 @@ const getStatsEmbed = async guild => {
     let statsField = { name: '\u200b', value: '', inline: true };
 
     const collectors = await getCollectors();
+    for (const collector of collectors) {
+        collector.ownedAverageRating = await getAverageRating(collector.owned);
+        collector.ownedGoals = await getGoals(collector.owned);
+    }
+
+    collectors.sort((a, b) => {
+        const owned1Amount = a.owned.length;
+        const owned2Amount = b.owned.length;
+        if (owned1Amount < owned2Amount) return 1;
+        if (owned1Amount > owned2Amount) return -1;
+
+        if (a.ownedAverageRating < b.ownedAverageRating) return 1;
+        if (a.ownedAverageRating > b.ownedAverageRating) return -1;
+
+        if (a.ownedGoals < b.ownedGoals) return 1;
+        if (a.ownedGoals > b.ownedGoals) return -1;
+
+        const owned1AchievementsAmount = a.achievements.length;
+        const owned2AchievementsAmount = b.achievements.length;
+        if (owned1AchievementsAmount < owned2AchievementsAmount) return 1;
+        if (owned1AchievementsAmount > owned2AchievementsAmount) return -1;
+    });
+
     const members = await guild.members.fetch(collectors.map(c => c._id)).catch(console.error);
 
     const totalCards = await getTotalCards();
