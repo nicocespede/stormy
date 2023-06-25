@@ -29,13 +29,13 @@ const NEXT_ARROW_CUSTOM_ID = 'next-page';
 
 const GROUPS_LETTERS = 'ABCDEFGH';
 
-const newCollectorMessage = '<@&{ROLE_ID}>\n\n🃏 ¡**{USERNAME}** se unió a los coleccionistas!\n\n💰 El premio acumulado es de **${AMOUNT}**.';
+const newCollectorMessage = '<@&{ROLE_ID}>\n\n🃏 ¡**{USERNAME}** se unió a los coleccionistas con membresía **{MEMBERSHIP}**!\n\n💰 El premio acumulado es de **${AMOUNT}**.';
 
 const membershipsData = {
-    free: { label: '⚫ Gratis', price: 0, rate: 8 },
-    bronze: { label: '🟠 Bronce', price: 500, rate: 12 },
-    silver: { label: '⚪ Plata', price: 1000, rate: 10 },
-    gold: { label: '🟡 Oro', price: 1500, rate: 8 }
+    free: { color: '⚫', label: 'Gratis', price: 0, rate: 8 },
+    bronze: { color: '🟠', label: 'Bronce', price: 500, rate: 12 },
+    silver: { color: '⚪', label: 'Plata', price: 1000, rate: 10 },
+    gold: { color: '🟡', label: 'Oro', price: 1500, rate: 8 }
 };
 
 const achievementsData = {
@@ -181,9 +181,10 @@ const achievementsData = {
  * Builds the message to be sent to the announcements channel when a new collector is registered.
  * 
  * @param {User} user The user of the new collector.
+ * @param {String} membership The membership of the new collector.
  * @returns The message to be sent to announcements channel.
  */
-const getNewCollectorFinalMessage = async user => {
+const getNewCollectorFinalMessage = async (user, membership) => {
     const ids = await getIds();
     const roleId = ids.roles.coleccionistas;
     const username = getUserTag(user);
@@ -194,7 +195,10 @@ const getNewCollectorFinalMessage = async user => {
         amount += price;
     }
 
-    return newCollectorMessage.replace('{ROLE_ID}', roleId).replace('{USERNAME}', username).replace('{AMOUNT}', amount.toLocaleString(ARGENTINA_LOCALE_STRING));
+    return newCollectorMessage.replace('{ROLE_ID}', roleId)
+        .replace('{USERNAME}', username)
+        .replace('{AMOUNT}', amount.toLocaleString(ARGENTINA_LOCALE_STRING))
+        .replace('{MEMBERSHIP}', getMembershipName(membership));
 };
 
 /**
@@ -499,6 +503,17 @@ const addFields = async (fields, fieldName, arrayToAdd) => {
 };
 
 /**
+ * Builds the display name of a membership.
+ * 
+ * @param {String} membership The ID of the membership.
+ * @returns The display name of the membership.
+ */
+const getMembershipName = membership => {
+    const { color, label } = membershipsData[membership];
+    return `${color} ${label}`;
+};
+
+/**
  * Builds an embed with the information of a collector's profile.
  * 
  * @param {User} user The collector's user.
@@ -510,12 +525,13 @@ const getProfileEmbed = async user => {
     if (!collector)
         return new EmbedBuilder().setDescription(`⚠ **${user.username}** no es un coleccionista.`);
 
-    const { achievements, lastOpened, owned, repeated } = collector;
+    const { achievements, lastOpened, membership, owned, repeated } = collector;
 
-    const fields = [{ name: '📊 Media promedio', value: `${await getAverageRating(owned)}`, inline: true },
+    const fields = [{ name: '💳 Membresía', value: getMembershipName(membership) },
+    { name: '📊 Media promedio', value: `${await getAverageRating(owned)}`, inline: true },
     { name: '⚽ Goles', value: `${await getGoals(owned)}/${await getTotalGoals()}`, inline: true },
     { name: '🏆 Logros', value: `${achievements.length}/${Object.keys(achievementsData).length}`, inline: true },
-    { name: '🧧 Último paquete abierto', value: `${lastOpened.content.join(', ')}` }];
+    { name: '🧧 Último paquete abierto', value: lastOpened ? `${lastOpened.content.join(', ')}` : '*No ha abierto sobre aún*' }];
 
     await addFields(fields, `🃏 Obtenidas: ${owned.length}/${await getTotalCards()}`, owned);
     await addFields(fields, `🔁 Repetidas: ${repeated.length}`, repeated);
@@ -576,19 +592,21 @@ const getStatsEmbed = async guild => {
     const totalAchievements = Object.keys(achievementsData).length;
 
     for (let i = 0; i < collectors.length; i++) {
-        const { _id, achievements, owned, repeated } = collectors[i];
+        const { _id, achievements, membership, owned, repeated } = collectors[i];
+        const { color } = membershipsData[membership];
+        const newName = `**${i + 1}.** ${color} ${members.get(_id).user.username}\n\n`;
         const newStat = `🃏 ${owned.length}/${totalCards} | 🔁 ${repeated.length} | 📊 ${await getAverageRating(owned)} | ⚽ ${await getGoals(owned)}/${totalGoals} | 🏆 ${achievements.length}/${totalAchievements}`;
         const aux = statsField.value + `${newStat}\n\n`;
 
         if (aux.length <= 1024) {
-            namesField.value += `**${i + 1}.** ${members.get(_id).user.username}\n\n`;
+            namesField.value += newName;
             statsField.value += `${newStat}\n\n`;
             continue;
         }
 
         fields.push({ name: '\u200b', value: '\u200b', inline: true }, namesField, statsField);
 
-        namesField = { name: 'Coleccionista (continuación)', value: `*${members.get(_id).user.username}*\n\n`, inline: true };
+        namesField = { name: 'Coleccionista (continuación)', value: newName, inline: true };
         statsField = { name: '\u200b', value: `${newStat}\n\n`, inline: true };
     }
 
@@ -615,7 +633,8 @@ const getAverageRating = async owned => {
         amount++;
         sum += players[c].rating;
     });
-    return Math.round(sum / amount);
+    const rounded = Math.round(sum / amount);
+    return !isNaN(rounded) ? rounded : 0;
 };
 
 /**
@@ -1025,7 +1044,7 @@ module.exports = {
             description: 'La membresía del coleccionista.',
             required: true,
             type: ApplicationCommandOptionType.String,
-            choices: Object.entries(membershipsData).map(([key, value]) => ({ name: value.label, value: key }))
+            choices: Object.entries(membershipsData).map(([key, _]) => ({ name: getMembershipName(key), value: key }))
         }]
     }/*,
     {
@@ -1180,7 +1199,7 @@ module.exports = {
                     }
 
                     const announcementsChannel = await client.channels.fetch(ids.channels.anuncios);
-                    announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user) });
+                    announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user, membership) });
 
                     return;
                 }
