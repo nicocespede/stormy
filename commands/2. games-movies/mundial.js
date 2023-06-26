@@ -2,7 +2,7 @@ const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, EmbedField, User, Guild, Client } = require("discord.js");
 const { getIds, getFWCData, getCollectors, getGithubRawUrl } = require('../../src/cache');
 const { addCollector, updateCollector } = require("../../src/mongodb");
-const { convertTZ, consoleLogError, getUserTag, logToFileError, logToFileCommandUsage } = require("../../src/util");
+const { convertTZ, consoleLogError, getUserTag, logToFileError, logToFileSubCommandUsage } = require("../../src/util");
 const { ARGENTINA_LOCALE_STRING } = require("../../src/constants");
 const { addAnnouncementsRole } = require("../../src/common");
 
@@ -1187,9 +1187,9 @@ module.exports = {
     },
 
     callback: async ({ channel, client, guild, interaction, text, user }) => {
-        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
-
         const subCommand = interaction.options.getSubcommand();
+        logToFileSubCommandUsage(COMMAND_NAME, text, subCommand, interaction, user);
+
         const ids = await getIds();
 
         if (subCommand === 'registrar-coleccionista') {
