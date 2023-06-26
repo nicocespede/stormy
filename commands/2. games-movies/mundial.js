@@ -28,6 +28,7 @@ const PREVIOUS_ARROW_CUSTOM_ID = 'prev-page';
 const NEXT_ARROW_CUSTOM_ID = 'next-page';
 
 const GROUPS_LETTERS = 'ABCDEFGH';
+const FWC_START_DATE = convertTZ('11/20/2022');
 
 const newCollectorMessage = '<@&{ROLE_ID}>\n\n🃏 ¡**{USERNAME}** se unió a los coleccionistas con membresía **{MEMBERSHIP}**!\n\n💰 El premio acumulado es de **${AMOUNT}**.';
 
@@ -895,6 +896,20 @@ const getMysteriousPlayerEmbed = async playerId => {
 };
 
 /**
+ * Calculates the age based on a date and builds a text.
+ * 
+ * @param {String} date The date of birth to calculate the age.
+ * @returns The date of birth followed by the age.
+ */
+const getBirthAndAge = date => {
+    const splitted = date.split('/');
+    const ageDifMs = FWC_START_DATE - convertTZ(`${splitted[1]}/${splitted[0]}/${splitted[2]}`);
+    const ageDate = convertTZ(new Date(ageDifMs));
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    return `${date} (${age} años)`;
+};
+
+/**
  * Builds an embed that contains the player information.
  * 
  * @param {String} playerId The ID of the player.
@@ -906,7 +921,7 @@ const getPlayerEmbed = async playerId => {
     const { color, emblem, flag } = teams[playerId.split('-')[0]];
 
     let fields = [{ name: '#️ID', value: playerId },
-    { name: 'Nacimiento', value: birth, inline: true },
+    { name: 'Nacimiento (edad)', value: getBirthAndAge(birth), inline: true },
     { name: `Nacionalidad${nationality.includes(' ') ? 'es' : ''}`, value: nationality, inline: true }];
 
     fields.push(goals ? { name: 'Goles', value: getGoalsString(goals), inline: true } : { name: '\u200b', value: `\u200b`, inline: true });
