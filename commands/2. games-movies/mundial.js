@@ -1031,7 +1031,7 @@ module.exports = {
         type: ApplicationCommandOptionType.Subcommand
     },
     {
-        name: 'ver-equipos',
+        name: 'ver-equipo',
         description: 'Muestra las tarjetas de cada equipo.',
         type: ApplicationCommandOptionType.Subcommand
     },
@@ -1168,7 +1168,7 @@ module.exports = {
                 const { stages } = await getFWCData();
                 const { label } = stages[customId];
                 interaction.update({
-                    components: await getMatchesButtons(customId).concat([getBackButton('main')]),
+                    components: (await getMatchesButtons(customId)).concat([getBackButton('main')]),
                     content: `⚽ \u200b **__${label}__**\n\u200b`,
                     files: []
                 });
@@ -1226,7 +1226,7 @@ module.exports = {
             return;
         }
 
-        const sharedInitialBehaviour = ['ver-perfil', 'abrir-paquete', 'ver-equipos', 'ver-logros'];
+        const sharedInitialBehaviour = ['ver-perfil', 'abrir-paquete', 'ver-equipo', 'ver-logros'];
         if (sharedInitialBehaviour.includes(subCommand)) {
             // shared behaviour
             if (channel.id !== ids.channels.fwc)
@@ -1338,7 +1338,7 @@ module.exports = {
                         });
                     break;
 
-                case 'ver-equipos':
+                case 'ver-equipo':
                     await interaction.deferReply({ ephemeral: true });
 
                     await interaction.editReply({
