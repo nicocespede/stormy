@@ -30,7 +30,9 @@ const NEXT_ARROW_CUSTOM_ID = 'next-page';
 const GROUPS_LETTERS = 'ABCDEFGH';
 const FWC_START_DATE = convertTZ('11/20/2022');
 
-const newCollectorMessage = '<@&{ROLE_ID}>\n\n🃏 ¡**{USERNAME}** se unió a los coleccionistas con membresía **{MEMBERSHIP}**!\n\n💰 El premio acumulado es de **${AMOUNT}**.';
+const NEW_COLLECTOR_MESSAGE = `se unió a los coleccionistas con membresía`;
+const MEMBERSHIP_UPGRADE_MESSAGE = `actualizó su membresía a`;
+const NEW_COLLECTOR_FINAL_MESSAGE = '<@&{ROLE_ID}>\n\n🃏 ¡**{USERNAME}** {MESSAGE} **{MEMBERSHIP}**!\n\n💰 El premio acumulado es de **${AMOUNT}**.';
 
 const membershipsData = {
     free: { color: '⚫', label: 'Gratis', price: 0, rate: 8 },
@@ -183,9 +185,10 @@ const achievementsData = {
  * 
  * @param {User} user The user of the new collector.
  * @param {String} membership The membership of the new collector.
+ * @param {String} message The message to be sent.
  * @returns The message to be sent to announcements channel.
  */
-const getNewCollectorFinalMessage = async (user, membership) => {
+const getNewCollectorFinalMessage = async (user, membership, message) => {
     const ids = await getIds();
     const roleId = ids.roles.coleccionistas;
     const username = getUserTag(user);
@@ -196,8 +199,9 @@ const getNewCollectorFinalMessage = async (user, membership) => {
         amount += price;
     }
 
-    return newCollectorMessage.replace('{ROLE_ID}', roleId)
+    return NEW_COLLECTOR_FINAL_MESSAGE.replace('{ROLE_ID}', roleId)
         .replace('{USERNAME}', username)
+        .replace('{MESSAGE}', message)
         .replace('{AMOUNT}', amount.toLocaleString(ARGENTINA_LOCALE_STRING))
         .replace('{MEMBERSHIP}', getMembershipName(membership));
 };
@@ -483,15 +487,21 @@ const getGroup = async teamId => {
 const addFields = async (fields, fieldName, arrayToAdd) => {
     const { teams } = await getFWCData();
     const list = generateList(arrayToAdd);
-    let lastGroup = 'A';
+    let lastGroup;
     let currentField = { name: fieldName, value: `\u200b` };
-    if (arrayToAdd.length > 0)
-        currentField.value = `**Grupo ${lastGroup}**\n`;
 
-    for (const line of list.split('\n', arrayToAdd.length)) {
+    const lines = list.split('\n', arrayToAdd.length);
+    if (lines.length > 0) {
+        const firstLine = lines[0];
+        lastGroup = await getGroup(firstLine.substring(2, 5));
+    }
+
+    for (const line of lines) {
         const teamId = line.substring(2, 5);
         const group = await getGroup(teamId);
         const { flag } = teams[teamId];
+        if (currentField.value === '\u200b')
+            currentField.value = `**Grupo ${lastGroup}**\n`;
         if (group === lastGroup)
             currentField.value += `${flag} ${line}\n`;
         else {
@@ -1203,18 +1213,21 @@ module.exports = {
                 const target = interaction.options.getMember('usuario');
                 const membership = interaction.options.getString('membresia');
                 if (target && membership) {
+                    let message;
                     const targetId = target.user.id;
                     if (!(await getCollector(targetId))) {
+                        message = NEW_COLLECTOR_MESSAGE;
                         await addAnnouncementsRole(ids.roles.coleccionistas, guild, target);
                         await addCollector(targetId, membership);
                         await interaction.editReply({ content: '✅ Coleccionista registrado con éxito.' });
                     } else {
+                        message = MEMBERSHIP_UPGRADE_MESSAGE;
                         await updateCollector({ _id: targetId, membership });
                         await interaction.editReply({ content: '✅ Coleccionista actualizado con éxito.' });
                     }
 
                     const announcementsChannel = await client.channels.fetch(ids.channels.anuncios);
-                    announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user, membership) });
+                    announcementsChannel.send({ content: await getNewCollectorFinalMessage(target.user, membership, message) });
 
                     return;
                 }
