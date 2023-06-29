@@ -63,7 +63,7 @@ const achievementsData = {
     "award-best-goal": {
         check: async owned => { return hasPlayer("BRA-9", owned) },
         description: `Consigue al jugador ganador del **Gol del Torneo**: {REPLACEMENT}.`,
-        name: "¡Ay Dibu, qué loco que estás!",
+        name: "¡Vestite nene!",
         replacement: async () => { return await getPlayerName("BRA-9") }
     },
     "award-fair-play": {
