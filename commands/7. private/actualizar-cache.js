@@ -1,11 +1,14 @@
+const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType } = require("discord.js");
 const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../src/cache");
 const { updateMovies, updateGames } = require("../../src/mongodb");
-const { consoleLog } = require("../../src/util");
-const { CONSOLE_RED } = require("../../src/constants");
+const { logToFileError, consoleLogError, logToFileCommandUsage } = require("../../src/util");
+
+const COMMAND_NAME = 'actualizar-cache';
+const MODULE_NAME = 'commands.private.' + COMMAND_NAME;
 
 const choices = [
     { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },
@@ -16,6 +19,7 @@ const choices = [
     { name: '👥 Personajes', value: 'characters' }
 ];
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Actualiza el caché seleccionado.',
@@ -30,7 +34,9 @@ module.exports = {
     slash: true,
     ownerOnly: true,
 
-    callback: async ({ client, interaction }) => {
+    callback: async ({ client, interaction, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         await interaction.deferReply({ ephemeral: true });
         const name = interaction.options.getString('nombre');
         try {
@@ -181,7 +187,8 @@ module.exports = {
 
             await interaction.editReply({ content: '✅ Caché actualizado.' });
         } catch (e) {
-            consoleLog(`Error in actualizar-cache.js:\n${e.stack}`, CONSOLE_RED);
+            logToFileError(MODULE_NAME, e);
+            consoleLogError(`> Error al actualizar cache de '${name}'`);
             await interaction.editReply({ content: '❌ Ocurrió un error.' });
         }
         return;
