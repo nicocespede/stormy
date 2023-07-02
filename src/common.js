@@ -330,6 +330,13 @@ module.exports = {
 
     lastUpdateToString,
 
+    /**
+     * Resizes a text to be applied to an image.
+     * 
+     * @param {Canvas.Canvas} canvas The Canvas instance.
+     * @param {String} text The text to be applied.
+     * @returns The resized text.
+     */
     applyText: (canvas, text) => {
         const context = canvas.getContext('2d');
         // Declare a base size of the font
