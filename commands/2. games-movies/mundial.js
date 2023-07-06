@@ -11,7 +11,7 @@ const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
 
 const BASE_PRIZE = 5000;
 const PACKAGE_CONTENT = 5;
-const PREMIUM_PACKAGE_PERCENTAGE_CHANCE = 1;
+const PREMIUM_PACKAGE_PERCENTAGE_CHANCE = 0.5;
 const PREMIUM_PACKAGE_MINIMUM_RATING = 90;
 
 const FWC_COLOR = [154, 16, 50];
@@ -1292,7 +1292,7 @@ module.exports = {
                     const isPremium = isPremiumPackage();
 
                     const description = !isPremium ? `🔄 **Abriendo paquete de 5 jugadores...**`
-                        : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${PREMIUM_PACKAGE_PERCENTAGE_CHANCE}%.`;
+                        : `⭐ **ABRIENDO PAQUETE PREMIUM** ⭐\n\n¡Estás de suerte! La posibilidad de obtener un paquete premium es del ${PREMIUM_PACKAGE_PERCENTAGE_CHANCE.toLocaleString(ARGENTINA_LOCALE_STRING)}%.`;
                     await interaction.editReply({
                         embeds: [new EmbedBuilder()
                             .setDescription(description)
