@@ -1340,7 +1340,7 @@ module.exports = {
                     for (const id of playersIds) {
                         embeds.push(await getPlayerEmbed(id));
                         reply.embeds = embeds;
-                        await new Promise(res => setTimeout(res, 1000 * 3.5));
+                        await new Promise(res => setTimeout(res, 1000 * 3.75));
                         await interaction.editReply(reply);
                     }
 
