@@ -3,7 +3,7 @@ const { getIds, updateLastAction, getGithubRawUrl } = require("../../src/cache")
 const { MusicActions } = require("../../src/constants");
 const { getUserTag } = require("../../src/util");
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
-const { useMasterPlayer } = require("discord-player");
+const { useMainPlayer } = require("discord-player");
 
 const orderArgs = array => {
     const uniqueArray = array.filter((item, pos, self) => self.indexOf(item) == pos)
@@ -64,7 +64,7 @@ module.exports = {
             return;
         }
 
-        const player = useMasterPlayer();
+        const player = useMainPlayer();
         const queue = player.nodes.get(guild.id);
 
         if (!queue || !queue.node.isPlaying()) {

@@ -69,6 +69,8 @@ client.on('ready', async () => {
         }
     });
 
+    await player.extractors.loadDefault();
+
     player.events.on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
