@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discord-player/extractor": "^4.1.2",
+    "@discord-player/extractor": "^4.4.1",
     "@discordjs/opus": "^0.9.0",
     "@distube/ytdl-core": "^4.11.10",
     "axios": "^0.26.1",
@@ -19,7 +19,7 @@
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0-rc.12",
     "coingecko-api": "^1.0.10",
-    "discord-player": "^6.1.1",
+    "discord-player": "^6.6.2",
     "discord.js": "^14.9.0",
     "dotenv": "^16.0.0",
     "ffmpeg-static": "^5.1.0",

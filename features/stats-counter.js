@@ -112,7 +112,7 @@ module.exports = client => {
             } else if (oldMember) {
                 const { id, user } = oldMember;
                 const tag = getUserTag(user);
-                logToFile(moduleName, `${tag} left the voice channel ${oldChannel.name}`);
+                logToFile(moduleName, `${tag} left the voice channel ${oldChannel ? oldChannel.name : '?????'}`);
 
                 await pushDifference(id, tag);
             }
