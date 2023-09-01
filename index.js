@@ -69,6 +69,8 @@ client.on('ready', async () => {
         }
     });
 
+    await player.extractors.loadDefault();
+
     player.events.on('connection', (queue) => {
         queue.dispatcher.voiceConnection.on('stateChange', (oldState, newState) => {
             const oldNetworking = Reflect.get(oldState, 'networking');
