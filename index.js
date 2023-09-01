@@ -69,9 +69,23 @@ client.on('ready', async () => {
         }
     });
 
-    await player.extractors.loadDefault();
+    player.events.on('connection', (queue) => {
+        queue.dispatcher.voiceConnection.on('stateChange', (oldState, newState) => {
+            const oldNetworking = Reflect.get(oldState, 'networking');
+            const newNetworking = Reflect.get(newState, 'networking');
 
-    player.events.on('playerStart', async (queue, track) => {
+            const networkStateChangeHandler = (_, newNetworkState) => {
+                const newUdp = Reflect.get(newNetworkState, 'udp');
+                if (newUdp)
+                    clearInterval(newUdp.keepAliveInterval);
+            }
+
+            if (oldNetworking)
+                oldNetworking.off('stateChange', networkStateChangeHandler);
+            if (newNetworking)
+                newNetworking.on('stateChange', networkStateChangeHandler);
+        });
+    }).on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
             updateLastAction(MusicActions.STARTING_TRACK);
