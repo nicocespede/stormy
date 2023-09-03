@@ -1,9 +1,13 @@
+const { ICommand } = require("wokcommands");
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
 const { color, PREFIX } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
-const { splitEmbedDescription } = require('../../src/util');
+const { splitEmbedDescription, logToFileError, consoleLogError } = require('../../src/util');
+
+const COMMAND_NAME = 'juegos';
+const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
 
 const buttonsPrefix = 'games-';
 const maxIdlingTime = 10;
@@ -50,6 +54,7 @@ const getSelectionMenu = (game, nowShowing) => {
     };
 };
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Responde con los links de descarga de algunos juegos crackeados.',
@@ -142,12 +147,12 @@ module.exports = {
                     const prefix = customId.split('-')[0];
                     const { label } = data[prefix];
                     const title = `${name} (${year}) ${version} -${label ? ` ${label}` : ''} ${customId.replace(prefix, '').replace('-', '')} (${server}${chunks.length > 1 ? ` ${counter++}` : ''})`;
-                    
+
                     const thumbnailsData = {
                         steam: await getGithubRawUrl('assets/thumbs/games/steam.png'),
                         others: await getGithubRawUrl('assets/thumbs/games/control.png')
                     };
-                    
+
                     for (const c of chunks)
                         embeds.push(new EmbedBuilder()
                             .setTitle(title)
@@ -192,7 +197,14 @@ module.exports = {
                 let { collectors, versionsMessages } = usersData[interaction.user.id];
 
                 let versionsMessage = versionsMessages[`${platform}-${id}`];
-                versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
+                try {
+                    versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
+                } catch (error) {
+                    consoleLogError('> Error al editar mensaje de versiones del juego "' + name + '", creando mensaje nuevo...');
+                    logToFileError(MODULE_NAME, error);
+                    versionsMessage = await channel.send(msg);
+                }
+
                 updateVersionsMessage(interaction.user.id, `${platform}-${id}`, versionsMessage);
 
                 let collector = collectors[`${platform}-${id}`];
@@ -237,7 +249,9 @@ module.exports = {
         });
     },
 
-    callback: async ({ message, args, interaction, user, instance, guild, member }) => {
+    callback: async ({ message, args, interaction, user, instance, guild, member, text }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
 
