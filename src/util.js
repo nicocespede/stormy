@@ -1,5 +1,5 @@
 const { User, CommandInteraction } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, emojis } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -226,5 +226,13 @@ module.exports = {
      */
     formatNumber: (value, maximumFractionDigits, currency) => value.toLocaleString(ARGENTINA_LOCALE_STRING, { currency, style: 'currency', maximumFractionDigits }),
 
-    getUserTag
+    getUserTag,
+
+    /**
+     * Generates a message starting with the warning emoji.
+     * 
+     * @param {String} text The text of the message.
+     * @returns The warning message.
+     */
+    getWarningMessage: text => emojis.WARNING + ' ' + text
 };

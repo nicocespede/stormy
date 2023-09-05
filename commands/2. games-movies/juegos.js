@@ -4,7 +4,7 @@ const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
 const { color, PREFIX } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
-const { splitEmbedDescription, logToFileError, consoleLogError } = require('../../src/util');
+const { splitEmbedDescription, logToFileError, consoleLogError, logToFileCommandUsage } = require('../../src/util');
 
 const COMMAND_NAME = 'juegos';
 const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;

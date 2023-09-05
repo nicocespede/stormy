@@ -16,11 +16,16 @@ module.exports = {
 
     EMBED_DESCRIPTION_MAX_LENGTH: 4096,
     EMBED_FIELD_VALUE_MAX_LENGTH: 1024,
+    MEMBER_NICKNAME_MAX_LENGTH: 32,
 
     CONSOLE_BLUE: 'BLUE',
     CONSOLE_GREEN: 'GREEN',
     CONSOLE_RED: 'RED',
     CONSOLE_YELLOW: 'YELLOW',
+
+    emojis: {
+        WARNING: ':warning:'
+    },
 
     MusicActions: {
         ADDING: 'ADDING',

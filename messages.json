@@ -371,7 +371,7 @@
         }
     },
     "CUSTOM_SYNTAX_ERROR": {
-        "spanish": "⚠ **¡Uso incorrecto!** {REASON} Usá **\"{PREFIX}{COMMAND} {ARGUMENTS}\"**."
+        "spanish": "**¡Uso incorrecto!** {REASON} Usá **\"{PREFIX}{COMMAND} {ARGUMENTS}\"**."
     },
     "REMINDERS": {
         "EVERYONE": {
