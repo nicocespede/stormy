@@ -3,9 +3,9 @@ const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelTy
 const HenrikDevValorantAPI = require("unofficial-valorant-api");
 const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
-const { PREFIX, color, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
-const { isOwner } = require('../../src/common');
-const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError } = require('../../src/util');
+const { PREFIX, color, ARGENTINA_LOCALE_STRING, emojis } = require('../../src/constants');
+const { isOwner, getErrorEmbed } = require('../../src/common');
+const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getDenialEmbed } = require('../../src/util');
 
 const MODULE_NAME = "games-movies.smurf";
 
@@ -228,14 +228,14 @@ module.exports = {
 
         if (!id) {
             if (channel.type === ChannelType.DM) {
-                reply.content = '⚠ Este comando solo se puede utilizar en un servidor.';
+                reply.embeds = [getWarningEmbed(`Este comando solo se puede utilizar en un servidor.`)];
                 return reply;
             }
 
             const smurfRole = await guild.roles.fetch(ids.roles.smurf).catch(console.error);
             const isAuthorized = await isOwner(user.id) || smurfRole.members.has(user.id);
             if (!isAuthorized) {
-                reply.content = `😂 Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`;
+                reply.embeds = [getSimpleEmbed(`😂 Hola <@${user.id}>, ¿para qué me rompes los huevos si vos no vas a smurfear? Pedazo de horrible.`)];
                 reply.ephemeral = false;
                 return reply;
             }
@@ -245,11 +245,11 @@ module.exports = {
 
             try {
                 await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, guild, user.id)] });
-                reply.content = `✅ Hola <@${user.id}>, ¡revisá tus mensajes privados!`;
+                reply.embeds = [getSuccessEmbed(`Hola <@${user.id}>, ¡revisá tus mensajes privados!`)];
             } catch (error) {
                 consoleLogError(`> Error al enviar cuentas smurfs`);
                 logToFileError(MODULE_NAME, error);
-                reply.content = `❌ Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`;
+                reply.embeds = [await getErrorEmbed(`Lo siento <@${user.id}>, no pude enviarte el mensaje directo. :disappointed:`)];
             }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             return;
@@ -262,17 +262,17 @@ module.exports = {
         const isAuthorized = await isOwner(user.id) || smurfRole.members.has(user.id);
         const smurfs = getSmurfs() || await updateSmurfs();
         if (channel.type !== ChannelType.DM)
-            reply.content = '⚠ Este comando solo se puede utilizar por mensajes directos.';
+            reply.embeds = [getWarningEmbed(`Este comando solo se puede utilizar por mensajes directos.`)];
         else if (!isAuthorized)
-            reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
+            reply.embeds = [getDenialEmbed(`Hola <@${user.id}>, no estás autorizado para usar este comando.`)];
         else if (!Object.keys(smurfs).includes(id.toLowerCase()))
-            reply.content = `⚠ Hola <@${user.id}>, la cuenta indicada no existe.`;
+            reply.embeds = [getWarningEmbed(`Hola <@${user.id}>, la cuenta indicada no existe.`)];
         else {
             const vipRole = await defaultGuild.roles.fetch(ids.roles.vip).catch(console.error);
             const isVip = await isOwner(user.id) || vipRole.members.has(user.id);
             const account = smurfs[id.toLowerCase()];
             if (account.vip && !isVip)
-                reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar esta cuenta.`;
+                reply.embeds = [getDenialEmbed(`Hola <@${user.id}>, no estás autorizado para usar esta cuenta.`)];
             else {
                 const accInfo = account.name.split('#');
                 const mmr = await ValorantAPI.getMMR({
@@ -281,6 +281,7 @@ module.exports = {
                     tag: accInfo[1],
                     version: 'v1'
                 }).catch(console.error);
+
                 if (mmr.error) {
                     consoleLogError(`> Error al obtener datos de la cuenta ${account.name}`);
                     logToFile(MODULE_NAME, `Error: ValorantAPIError fetching ${account.name}\n` + JSON.stringify(mmr.error));
@@ -296,7 +297,7 @@ module.exports = {
                     reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
                 if (account.bannedUntil)
-                    reply.embeds[0].setDescription(`⚠ ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ⚠`);
+                    reply.embeds[0].setDescription(emojis.WARNING + ` ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ` + emojis.WARNING);
                 else if (user.id !== ids.users.stormer)
                     reply.components = [getRow('report')];
                 reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },

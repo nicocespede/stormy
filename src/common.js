@@ -7,7 +7,7 @@ const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, 
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
 const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, EMBED_FIELD_VALUE_MAX_LENGTH } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -886,5 +886,13 @@ module.exports = {
     isOwner: async id => {
         const ids = await getIds();
         return id === ids.users.stormer || id === ids.users.darkness;
-    }
+    },
+
+    /**
+     * Generates an embed with an error message as description.
+     * 
+     * @param {String} description The description.
+     * @returns An embed with an error message.
+     */
+    getErrorEmbed: async description => getSimpleEmbed(getErrorMessage(description)).setImage(await getGithubRawUrl(`assets/system-down.jpeg`))
 }

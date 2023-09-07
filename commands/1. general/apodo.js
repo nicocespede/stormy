@@ -1,9 +1,9 @@
 const { ICommand } = require("wokcommands");
-const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
-const { PREFIX, color, MEMBER_NICKNAME_MAX_LENGTH } = require('../../src/constants');
+const { ApplicationCommandOptionType } = require('discord.js');
+const { PREFIX, MEMBER_NICKNAME_MAX_LENGTH } = require('../../src/constants');
 const { getIds } = require('../../src/cache');
-const { isOwner } = require('../../src/common');
-const { getUserTag, getWarningMessage, logToFileError, consoleLogError, logToFileCommandUsage } = require('../../src/util');
+const { isOwner, getErrorEmbed } = require('../../src/common');
+const { getUserTag, logToFileError, consoleLogError, logToFileCommandUsage, getSuccessEmbed, getWarningEmbed } = require('../../src/util');
 
 const COMMAND_NAME = 'apodo';
 const MODULE_NAME = 'commands.general.' + COMMAND_NAME;
@@ -16,33 +16,17 @@ const MODULE_NAME = 'commands.general.' + COMMAND_NAME;
  * @param {String} newNickname The new nickname of the user.
  * @returns An embed with the information of the nickname change.
  */
-const getSuccessEmbed = (tag, oldNickname, newNickname) => {
+const buildSuccessEmbed = (tag, oldNickname, newNickname) => {
     if (newNickname.length === 0)
-        return getEmbed(`✅ Apodo de **${tag}** reseteado correctamente.`);
+        return getSuccessEmbed(`Apodo de **${tag}** reseteado correctamente.`);
 
-    return getEmbed(`✅ Apodo de **${tag}** cambiado correctamente.`)
+    return getSuccessEmbed(`Apodo de **${tag}** cambiado correctamente.`)
         .setFields([
             { name: 'Apodo viejo', value: oldNickname, inline: true },
             { name: '\u200b', value: '→', inline: true },
             { name: 'Apodo nuevo', value: newNickname, inline: true }
         ]);
 };
-
-/**
- * Generates an embed with a warning message as description.
- * 
- * @param {String} description The description.
- * @returns An embed with a warning message.
- */
-const getWarningEmbed = description => getEmbed(getWarningMessage(description));
-
-/**
- * Generates an embed and sets a description to it.
- * 
- * @param {String} description The description.
- * @returns An embed with a pre-set description.
- */
-const getEmbed = description => (new EmbedBuilder()).setDescription(description).setColor(color);
 
 /**@type {ICommand}*/
 module.exports = {
@@ -96,16 +80,16 @@ module.exports = {
             else {
                 const oldNickname = target.nickname ? target.nickname : target.user.username;
                 await target.setNickname(newNickname);
-                reply.embeds = [getSuccessEmbed(getUserTag(target.user), oldNickname, newNickname)];
+                reply.embeds = [buildSuccessEmbed(getUserTag(target.user), oldNickname, newNickname)];
                 reply.ephemeral = false;
             }
         } catch (error) {
             if (error.message === 'Missing Permissions' && target.id === ids.users.stormer)
-                reply.embeds = [getEmbed('❌ Lo siento, Discord no me permite cambiarle el apodo al dueño del servidor.')];
+                reply.embeds = [getWarningEmbed('Lo siento, Discord no me permite cambiarle el apodo al dueño del servidor.')];
             else {
                 consoleLogError('> Error al cambiar apodo de ' + getUserTag(target.user));
                 logToFileError(MODULE_NAME, error);
-                reply.embeds = [getEmbed(`❌ Lo siento, no se pudo cambiar el apodo.`)];
+                reply.embeds = [await getErrorEmbed(`Lo siento, no se pudo cambiar el apodo.`)];
             }
         }
         return reply;

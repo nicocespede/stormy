@@ -1,5 +1,5 @@
-const { User, CommandInteraction } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, emojis } = require('./constants');
+const { User, CommandInteraction, EmbedBuilder } = require('discord.js');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, emojis, color } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -89,7 +89,7 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
         if (error)
             consoleLog(`> Error al escribir log:\n${error.stack}`);
     });
-}
+};
 
 /**
      * Logs to a file the usage of a command.
@@ -102,7 +102,7 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
 const logToFileCommandUsage = (commandName, args, interaction, user) => {
     const prefix = interaction ? '/' : PREFIX;
     logToFile(`${commandName}.callback`, `${getUserTag(user)} used ${prefix}${commandName}${args ? ` [${args}]` : ''}`);
-}
+};
 
 /**
  * Gets the tag of a user.
@@ -115,7 +115,47 @@ const getUserTag = user => {
         return user.username;
 
     return user.tag;
-}
+};
+
+/**
+ * Generates a message starting with the success emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The success message.
+ */
+const getSuccessMessage = text => '✅ ' + text;
+
+/**
+ * Generates a message starting with the warning emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The warning message.
+ */
+const getWarningMessage = text => emojis.WARNING + ' ' + text;
+
+/**
+ * Generates a message starting with the denial emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The denial message.
+ */
+const getDenialMessage = text => '⛔ ' + text;
+
+/**
+ * Generates a message starting with the error emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The error message.
+ */
+const getErrorMessage = text => '❌ ' + text;
+
+/**
+ * Generates an embed and sets a description to it.
+ * 
+ * @param {String} description The description.
+ * @returns An embed with a pre-set description.
+ */
+const getSimpleEmbed = description => (new EmbedBuilder()).setDescription(description).setColor(color);
 
 module.exports = {
     convertTZ,
@@ -228,11 +268,34 @@ module.exports = {
 
     getUserTag,
 
+    getSuccessMessage,
+    getWarningMessage,
+    getDenialMessage,
+    getErrorMessage,
+
+    getSimpleEmbed,
+
     /**
-     * Generates a message starting with the warning emoji.
+     * Generates an embed with a success message as description.
      * 
-     * @param {String} text The text of the message.
-     * @returns The warning message.
+     * @param {String} description The description.
+     * @returns An embed with a success message.
      */
-    getWarningMessage: text => emojis.WARNING + ' ' + text
+    getSuccessEmbed: description => getSimpleEmbed(getSuccessMessage(description)),
+
+    /**
+     * Generates an embed with a warning message as description.
+     * 
+     * @param {String} description The description.
+     * @returns An embed with a warning message.
+     */
+    getWarningEmbed: description => getSimpleEmbed(getWarningMessage(description)),
+
+    /**
+     * Generates an embed with a denial message as description.
+     * 
+     * @param {String} description The description.
+     * @returns An embed with a denial message.
+     */
+    getDenialEmbed: description => getSimpleEmbed(getDenialMessage(description))
 };

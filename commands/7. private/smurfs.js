@@ -1,8 +1,14 @@
+const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../src/cache');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
-const { isOwner } = require('../../src/common');
+const { isOwner, getErrorEmbed } = require('../../src/common');
+const { logToFileCommandUsage, getDenialEmbed, getWarningEmbed, consoleLogError, logToFileError, getSuccessEmbed } = require("../../src/util");
 
+const COMMAND_NAME = 'smurfs';
+const MODULE_NAME = 'commands.private.' + COMMAND_NAME;
+
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Administra las cuentas smurf de Valorant.',
@@ -82,22 +88,30 @@ module.exports = {
             description: 'El nombre de la cuenta.',
             type: ApplicationCommandOptionType.String,
             required: false
+        },
+        {
+            name: 'vip',
+            description: 'Si es para usuarios VIP o no.',
+            required: false,
+            type: ApplicationCommandOptionType.Boolean
         }]
     }],
     slash: true,
 
-    callback: async ({ user, interaction }) => {
-        const subCommand = interaction.options.getSubcommand();
+    callback: async ({ interaction, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+        
         await interaction.deferReply({ ephemeral: true });
-
+        
         const reply = { ephemeral: true };
-
+        
         if (!(await isOwner(user.id))) {
-            reply.content = `Hola <@${user.id}>, no tenés autorización para usar este comando.`;
+            reply.embeds = [getDenialEmbed(`Hola <@${user.id}>, no tenés autorización para usar este comando.`)];
             interaction.editReply(reply);
             return;
         }
-
+        
+        const subCommand = interaction.options.getSubcommand();
         if (subCommand === 'agregar') {
             const accountCommand = interaction.options.getString('comando').toLowerCase();
             const accountName = interaction.options.getString('nombre');
@@ -107,13 +121,18 @@ module.exports = {
 
             const smurfs = getSmurfs() || await updateSmurfs();
             if (Object.keys(smurfs).includes(accountCommand))
-                reply.content = `⚠ Ya hay una cuenta vinculada a ese comando.`;
+                reply.embeds = [getWarningEmbed(`Ya hay una cuenta vinculada a ese comando.`)];
             else
-                await addSmurf(accountCommand, accountName, accountUser, accountPassword, isVip).then(async () => {
+                try {
+                    await addSmurf(accountCommand, accountName, accountUser, accountPassword, isVip);
                     await updateSmurfs();
-                    reply.content = `Se agregó la cuenta **${accountName}**.`;
+                    reply.embeds = [getSuccessEmbed(`Se agregó la cuenta **${accountName}**.`)];
                     reply.ephemeral = false;
-                }).catch(console.error);
+                } catch (error) {
+                    consoleLogError('> Error al agregar cuenta smurf');
+                    logToFileError(MODULE_NAME, error);
+                    reply.embeds = [await getErrorEmbed(`Error al guardar la cuenta.`)];
+                }
             interaction.editReply(reply);
             return;
         }
@@ -123,13 +142,18 @@ module.exports = {
 
             const smurfs = getSmurfs() || await updateSmurfs();
             if (!Object.keys(smurfs).includes(accountCommand))
-                reply.content = `⚠ La cuenta que intentás borrar no existe.`;
+                reply.embeds = [getWarningEmbed(`La cuenta que intentás borrar no existe.`)];
             else
-                await deleteSmurf(accountCommand).then(async () => {
+                try {
+                    await deleteSmurf(accountCommand);
                     await updateSmurfs();
-                    reply.content = `✅ La cuenta fue borrada de manera exitosa.`;
+                    reply.embeds = [getSuccessEmbed(`La cuenta fue borrada de manera exitosa.`)];
                     reply.ephemeral = false;
-                }).catch(console.error);
+                } catch (error) {
+                    consoleLogError('> Error al borrar cuenta smurf');
+                    logToFileError(MODULE_NAME, error);
+                    reply.embeds = [await getErrorEmbed(`Error al eliminar la cuenta.`)];
+                }
             interaction.editReply(reply);
             return;
         }
@@ -138,7 +162,7 @@ module.exports = {
 
         const smurfs = getSmurfs() || await updateSmurfs();
         if (!Object.keys(smurfs).includes(accountCommand)) {
-            reply.content = `⚠ La cuenta que intentás actualizar no existe.`;
+            reply.embeds = [getWarningEmbed(`La cuenta que intentás actualizar no existe.`)];
             interaction.editReply(reply);
             return;
         }
@@ -159,7 +183,7 @@ module.exports = {
                         time = parseInt(secondSplit[0]);
                         type = secondSplit[1].toLowerCase();
                     } catch {
-                        reply.content = `⚠ **¡Formato de tiempo inválido!** _Ejemplo de formato: "1d 2h 3m" donde 'd' = días, 'h' =  horas y 'm' = minutos._`;
+                        reply.embeds = [getWarningEmbed(`**¡Formato de tiempo inválido!** _Ejemplo de formato: "1d 2h 3m" donde 'd' = días, 'h' =  horas y 'm' = minutos._`)];
                         interaction.editReply(reply);
                         return;
                     }
@@ -169,7 +193,7 @@ module.exports = {
                     else if (type === 'd')
                         totalTime += time * 60 * 24;
                     else if (type !== 'm') {
-                        reply.content = `⚠ Por favor usá **"m"**, **"h"** o **"d"** para **minutos**, **horas** y **días** respectivamente.`;
+                        reply.embeds = [getWarningEmbed(`Por favor usá **"m"**, **"h"** o **"d"** para **minutos**, **horas** y **días** respectivamente.`)];
                         interaction.editReply(reply);
                         return;
                     } else
@@ -187,7 +211,7 @@ module.exports = {
                 const dateMatch = dateArg.match(/^(?:(?:31(\/|-)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/);
 
                 if (!dateMatch) {
-                    reply.content = `⚠ La fecha es inválida.`;
+                    reply.embeds = [getWarningEmbed(`La fecha es inválida.`)];
                     interaction.editReply(reply);
                     return;
                 }
@@ -196,7 +220,7 @@ module.exports = {
                     const timeMatch = timeArg.match(/^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/);
 
                     if (!timeMatch) {
-                        reply.content = `⚠ La hora es inválida.`;
+                        reply.embeds = [getWarningEmbed(`La hora es inválida.`)];
                         interaction.editReply(reply);
                         return;
                     }
@@ -207,7 +231,7 @@ module.exports = {
                 date.setHours(date.getHours() + 3);
 
                 if (date < new Date()) {
-                    reply.content = '⚠ La fecha introducida ya pasó.';
+                    reply.embeds = [getWarningEmbed(`La fecha introducida ya pasó.`)];
                     interaction.editReply(reply);
                     return;
                 }
@@ -224,15 +248,19 @@ module.exports = {
         if (argPassword)
             update.password = argPassword;
 
+        const argVip = interaction.options.getBoolean('vip');
+        if (argVip !== null)
+            update.vip = argVip;
+
         if (Object.keys(update).length === 0) {
-            reply.content = `⚠ No ingresaste datos para modificar.`;
+            reply.embeds = [getWarningEmbed(`No ingresaste datos para modificar.`)];
             interaction.editReply(reply);
             return;
         }
 
         await updateSmurf(accountCommand, update).catch(console.error);
         await updateSmurfs();
-        reply.content = `✅ La cuenta fue actualizada de manera exitosa.`;
+        reply.embeds = [getSuccessEmbed(`La cuenta fue actualizada de manera exitosa.`)];
         reply.ephemeral = false;
         interaction.editReply(reply);
     }
