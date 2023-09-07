@@ -72,17 +72,15 @@ const getEmbed = async (color, guild, userId) => {
     const auxArray = [];
     for (const command in smurfs) if (Object.hasOwnProperty.call(smurfs, command)) {
         const { bannedUntil, name, vip } = smurfs[command];
-        if (!vip || isVip) {
-            const obj = { bannedUntil, command, name };
-            const accInfo = name.split('#');
-            obj['mmr'] = await ValorantAPI.getMMR({
-                name: accInfo[0],
-                region: 'na',
-                tag: accInfo[1],
-                version: 'v1'
-            }).catch(console.error);
-            auxArray.push(obj);
-        }
+        const obj = { bannedUntil, command, name, vip };
+        const accInfo = name.split('#');
+        obj.mmr = await ValorantAPI.getMMR({
+            name: accInfo[0],
+            region: 'na',
+            tag: accInfo[1],
+            version: 'v1'
+        }).catch(console.error);
+        auxArray.push(obj);
     }
 
     auxArray.sort((a, b) => {
@@ -97,15 +95,15 @@ const getEmbed = async (color, guild, userId) => {
     let errorsCounter = 0;
     let description = `Hola <@${userId}>, `;
     for (const account of auxArray) {
-        const { bannedUntil, command, mmr, name } = account;
+        const { command, mmr, name } = account;
         if (!mmr.error) {
-            accountsField.value += `${bannedUntil ? '⛔ ' : ''}${!mmr.data.name && !mmr.data.tag ? name : `${mmr.data.name}#${mmr.data.tag}`}\n\n`;
+            accountsField.value += `${getAccountName(account, !mmr.data.name && !mmr.data.tag ? name : `${mmr.data.name}#${mmr.data.tag}`)}\n\n`;
             ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
         } else {
             errorsCounter++;
             consoleLogError(`> Error al obtener datos de la cuenta ${name}`);
             logToFile(MODULE_NAME + `.getEmbed`, `Error: ValorantAPIError fetching ${name}\n` + JSON.stringify(mmr.error));
-            accountsField.value += `${bannedUntil ? '⛔ ' : ''}${name}\n\n`;
+            accountsField.value += `${getAccountName(account, name)}\n\n`;
             ranksField.value += `???\n\n`;
         }
         commandsField.value += `${command}\n\n`;
@@ -120,6 +118,18 @@ const getEmbed = async (color, guild, userId) => {
         .setFooter({ text: `Actualizado por última vez el ${convertTZ(new Date()).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}` })
         .setThumbnail(await getGithubRawUrl(`assets/thumbs/games/valorant.png`))
         .setTitle(`**Cuentas smurf**`);
+};
+
+const getAccountName = (account, name) => {
+    let emojis = '';
+    const { bannedUntil, vip } = account;
+    if (!name)
+        name = account.name;
+    if (vip)
+        emojis += '💎';
+    if (bannedUntil)
+        emojis += '⛔';
+    return emojis.length > 0 ? emojis + ' ' + name : name;
 };
 
 const getRow = type => {
@@ -262,7 +272,7 @@ module.exports = {
             const isVip = await isOwner(user.id) || vipRole.members.has(user.id);
             const account = smurfs[id.toLowerCase()];
             if (account.vip && !isVip)
-                reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar este comando.`;
+                reply.content = `⚠ Hola <@${user.id}>, no estás autorizado para usar esta cuenta.`;
             else {
                 const accInfo = account.name.split('#');
                 const mmr = await ValorantAPI.getMMR({
