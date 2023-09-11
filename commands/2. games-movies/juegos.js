@@ -2,7 +2,7 @@ const { ICommand } = require("wokcommands");
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
-const { color, PREFIX } = require('../../src/constants');
+const { color, PREFIX, EMBED_TWO_COLUMNS_ROW_MAX_LENGTH } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
 const { splitEmbedDescription, logToFileError, consoleLogError, logToFileCommandUsage } = require('../../src/util');
 
@@ -272,7 +272,7 @@ module.exports = {
                 const newGame = `** ${i + 1}.** ${name}\n\n`;
                 gamesField.value += newGame;
                 updatesField.value += `*${lastUpdateToString(date, true)}*\n\n`;
-                if (ctx.measureText(newGame).width >= 229)
+                if (ctx.measureText(newGame).width > EMBED_TWO_COLUMNS_ROW_MAX_LENGTH)
                     updatesField.value += `\n`;
             }
             reply.embeds = [new EmbedBuilder()
