@@ -4,7 +4,7 @@ const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
 const { color, PREFIX } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
-const { splitEmbedDescription, logToFileError, consoleLogError, logToFileCommandUsage } = require('../../src/util');
+const { splitEmbedDescription, logToFileError, consoleLogError, logToFileCommandUsage, getWarningMessage } = require('../../src/util');
 
 const COMMAND_NAME = 'juegos';
 const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
@@ -50,7 +50,7 @@ const getSelectionMenu = (game, nowShowing) => {
     const { imageURL, name, version, year } = game;
     return {
         components: getRows(game),
-        content: `**${name} (${year}) ${version}**\n\n⚠ Por favor seleccioná lo que querés ver.\n\u200b`,
+        content: `**${name} (${year}) ${version}**\n\n${getWarningMessage('Por favor seleccioná lo que querés ver.')}\n\u200b`,
         ephemeral: true,
         files: [imageURL]
     };
@@ -201,8 +201,8 @@ module.exports = {
                     files: []
                 };
 
-                initUserData(interaction.user.id);
-                let { collectors, versionsMessages } = usersData[interaction.user.id];
+                initUserData(id);
+                let { collectors, versionsMessages } = usersData[id];
 
                 let versionsMessage = versionsMessages[`${platform}-${id}`];
                 try {
@@ -213,19 +213,19 @@ module.exports = {
                     versionsMessage = await channel.send(msg);
                 }
 
-                updateVersionsMessage(interaction.user.id, `${platform}-${id}`, versionsMessage);
+                updateVersionsMessage(id, `${platform}-${id}`, versionsMessage);
 
                 let collector = collectors[`${platform}-${id}`];
                 if (collector)
                     collector.stop();
 
                 collector = versionsMessage.createMessageComponentCollector({ idle: 1000 * 60 * maxIdlingTime });
-                updateCollector(interaction.user.id, `${platform}-${id}`, collector);
+                updateCollector(id, `${platform}-${id}`, collector);
 
                 collector.on('collect', async btnInt => {
                     if (!btnInt) return;
 
-                    if (interaction.user.id !== btnInt.user.id) {
+                    if (id !== btnInt.user.id) {
                         btnInt.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
                         return;
                     }
@@ -247,7 +247,7 @@ module.exports = {
                 collector.on('end', (_, reason) => {
                     if (reason === 'idle') {
                         versionsMessage.delete();
-                        deleteGameData(interaction.user.id, `${platform}-${id}`);
+                        deleteGameData(id, `${platform}-${id}`);
                         interaction.editReply(getSelectionMenu(game, ''));
                     }
                 });
