@@ -1,5 +1,5 @@
 const { ICommand } = require("wokcommands");
-const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
 const { color, PREFIX } = require('../../src/constants');
@@ -73,6 +73,7 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
+    /**@param {Client} client*/
     init: client => {
         const usersData = {};
 
@@ -81,7 +82,12 @@ module.exports = {
                 usersData[userId] = { collectors: {}, versionsMessages: {} };
         };
 
-        const deleteGameData = (userId, gameId) => delete (usersData[userId])[gameId];
+        const deleteGameData = (userId, gameId) => {
+            if ((usersData[userId]).collectors[gameId])
+                delete (usersData[userId]).collectors[gameId];
+            if ((usersData[userId]).versionsMessages[gameId])
+                delete (usersData[userId]).versionsMessages[gameId];
+        };
 
         const updateCollector = (userId, gameId, collector) => usersData[userId].collectors[gameId] = collector;
         const updateVersionsMessage = (userId, gameId, versionsMessage) => usersData[userId].versionsMessages[gameId] = versionsMessage;
@@ -241,7 +247,6 @@ module.exports = {
                 collector.on('end', (_, reason) => {
                     if (reason === 'idle') {
                         versionsMessage.delete();
-                        versionsMessage = null;
                         deleteGameData(interaction.user.id, `${platform}-${id}`);
                         interaction.editReply(getSelectionMenu(game, ''));
                     }
