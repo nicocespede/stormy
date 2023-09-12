@@ -241,6 +241,7 @@ module.exports = {
                 collector.on('end', (_, reason) => {
                     if (reason === 'idle') {
                         versionsMessage.delete();
+                        versionsMessage = null;
                         deleteGameData(interaction.user.id, `${platform}-${id}`);
                         interaction.editReply(getSelectionMenu(game, ''));
                     }
