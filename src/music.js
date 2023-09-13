@@ -1,5 +1,5 @@
 const { Queue } = require("@discord-player/utils");
-const { QueryType, useMainPlayer, Track, Player } = require("discord-player");
+const { QueryType, useMasterPlayer, Track, Player } = require("discord-player");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, BaseMessageOptions, Message, CommandInteraction, TextChannel, Guild } = require("discord.js");
 const Genius = require("genius-lyrics");
 const GeniusClient = new Genius.Client();
@@ -653,7 +653,7 @@ const generateTracksArray = (rawTracksArray, player, membersCollection) => {
 module.exports = {
     setNewVoiceChannel: (guild, channel) => {
         updateLastAction(MusicActions.CHANGING_CHANNEL);
-        const player = useMainPlayer();
+        const player = useMasterPlayer();
         const queue = player.nodes.get(guild.id);
         if (queue)
             setMusicPlayerMessage(queue, queue.currentTrack, `🔃 Bot movido al canal de voz **${channel.name}**.`);
@@ -669,7 +669,7 @@ module.exports = {
 
     leaveEmptyChannel: guild => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
-        const player = useMainPlayer();
+        const player = useMasterPlayer();
         const queue = player.nodes.get(guild.id);
         if (queue) {
             if (!queue.deleted)
@@ -681,7 +681,7 @@ module.exports = {
 
     emergencyShutdown: async guildId => {
         updateLastAction(MusicActions.RESTARTING);
-        const player = useMainPlayer();
+        const player = useMasterPlayer();
         const queue = player.nodes.get(guildId);
         if (queue) {
             consoleLog('> Guardando cola de reproducción actual', CONSOLE_YELLOW);
@@ -736,7 +736,7 @@ module.exports = {
                         .concat(tracks.map(({ requestedBy }) => requestedBy)))];
                     const members = await guild.members.fetch(membersIds);
 
-                    const player = useMainPlayer();
+                    const player = useMasterPlayer();
                     var res = await player.search(current.url, {
                         requestedBy: members.get(current.requestedBy),
                         searchEngine: QueryType.AUTO
