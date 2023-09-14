@@ -59,6 +59,12 @@ const generateBirthdayImage = async user => {
     return new AttachmentBuilder(canvas.toBuffer());
 };
 
+/**
+ * Gets the day of the year.
+ * 
+ * @param {Date} today The today date.
+ * @returns The day of the year which is in range [1, 365/366] depending on leap year or not.
+ */
 const getDayOfTheYear = today => {
     const startOfYear = convertTZ(new Date(today.getFullYear(), 0, 0));
     const diff = today - startOfYear;
