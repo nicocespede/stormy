@@ -59,6 +59,12 @@ const generateBirthdayImage = async user => {
     return new AttachmentBuilder(canvas.toBuffer());
 };
 
+const getDayOfTheYear = today => {
+    const startOfYear = convertTZ(new Date(today.getFullYear(), 0, 0));
+    const diff = today - startOfYear;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+};
+
 /** @param {Client} client */
 module.exports = async client => {
     const ids = await getIds();
@@ -142,6 +148,11 @@ module.exports = async client => {
             const month = convertedToday.getMonth() + 1;
             let msg;
             let emojis = [];
+            if (getDayOfTheYear(convertedToday) === 256) {
+                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz día del programador** a todos los programadores del servidor! 💻🧠`;
+                emojis = ['💻', '🧠', '🤓'];
+            }
+
             if (date === 1 && month === 1) {
                 msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz año nuevo** a todos los miembros del servidor! 🥂🌠`;
                 emojis = ['🥂', '🌠', '🎆'];
