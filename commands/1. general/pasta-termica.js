@@ -1,8 +1,13 @@
+const { ICommand } = require("wokcommands");
 const { getThermalPasteDates, updateThermalPasteDates } = require('../../src/cache');
-const { convertTZ } = require('../../src/util');
+const { convertTZ, logToFileCommandUsage, consoleLogError, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getWarningMessage } = require('../../src/util');
 const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { PREFIX, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../src/mongodb');
+const { getErrorEmbed } = require("../../src/common");
+
+const COMMAND_NAME = 'pasta-termica';
+const MODULE_NAME = 'commands.general.' + COMMAND_NAME;
 
 const validateDate = date => {
     const today = convertTZ(new Date());
@@ -32,7 +37,7 @@ const timeToString = (years, weeks, days) => {
         ret += (ret !== '' ? ', ' : '') + weeks + ` semana${weeks > 1 ? 's' : ''}`;
     if (days !== 0)
         ret += (ret !== '' ? ', ' : '') + days + ` día${days > 1 ? 's' : ''}`;
-    return ret;
+    return ret.length === 0 ? '0 días' : ret;
 };
 
 const secondsToFull = (seconds) => {
@@ -47,6 +52,7 @@ const secondsToFull = (seconds) => {
     return { years, weeks, days };
 };
 
+/** @type {ICommand}*/
 module.exports = {
     category: 'General',
     description: 'Recuerda o guarda/modifica la última fecha en que el usuario cambió su pasta térmica.',
@@ -65,7 +71,9 @@ module.exports = {
         }
     ],
 
-    callback: async ({ message, args, interaction, channel, user }) => {
+    callback: async ({ message, args, interaction, channel, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         const reply = { custom: true, ephemeral: true };
         const date = message ? args[0] : interaction.options.getString('fecha');
 
@@ -73,17 +81,18 @@ module.exports = {
             const dates = getThermalPasteDates() || await updateThermalPasteDates();
             const userDate = dates[user.id];
             if (!dates[user.id])
-                reply.content = `Hola <@${user.id}>, no tenés registrada la última vez que cambiaste la pasta térmica, usá **"${PREFIX}pasta-termica <DD/MM/AAAA>"** para hacerlo.`;
+                reply.embeds = [getWarningEmbed(`Hola <@${user.id}>, no tenés registrada la última vez que cambiaste la pasta térmica, usá **"${PREFIX}pasta-termica <DD/MM/AAAA>"** para hacerlo.`)];
             else {
                 const totalTime = Math.abs(new Date() - userDate) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
-                reply.content = `Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${convertTZ(userDate).toLocaleDateString(ARGENTINA_LOCALE_STRING)}**).`;
+                reply.embeds = [getSimpleEmbed(`🗓️ Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${convertTZ(userDate).toLocaleDateString(ARGENTINA_LOCALE_STRING)}**).`)];
             }
             return reply;
         }
 
-        if (!validateDate(date).valid) {
-            reply.content = validateDate(date).reason;
+        const { reason, valid } = validateDate(date);
+        if (!valid) {
+            reply.embeds = [getWarningEmbed(reason)];
             return reply;
         }
 
@@ -100,7 +109,7 @@ module.exports = {
         const messageOrInteraction = message ? message : interaction;
         const replyMessage = await messageOrInteraction.reply({
             components: [row],
-            content: `¿Estás seguro de querer guardar la fecha **${date}** cómo tu último cambio de pasta térmica?`,
+            content: getWarningMessage(`¿Estás seguro de querer guardar la fecha **${date}** cómo tu último cambio de pasta térmica?`),
             ephemeral: true
         });
 
@@ -109,22 +118,30 @@ module.exports = {
         const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
         collector.on('end', async collection => {
-            const edit = { components: [] };
+            const edit = { components: [], content: null };
             if (!collection.first())
-                edit.content = '⌛ La acción expiró.';
+                edit.embeds = [getSimpleEmbed('⌛ La acción expiró.')];
             else if (collection.first().customId === 'add_no')
-                edit.content = '❌ La acción fue cancelada.';
+                edit.embeds = [getSimpleEmbed('❌ La acción fue cancelada.')]
             else {
                 const dates = getThermalPasteDates() || await updateThermalPasteDates();
-                const msg = {};
                 const split = date.split('/');
                 const utcDate = new Date(`${split[2]}-${split[1]}-${split[0]}T03:00Z`);
-                !dates[user.id] ? await addThermalPasteDate(user.id, utcDate).then(async () => msg.content = `Se agregó la fecha **${date}** como tu último cambio de pasta térmica.`).catch(console.error)
-                    : await updateThermalPasteDate(user.id, utcDate).then(async () => msg.content = `Se actualizó tu fecha del último cambio de pasta térmica a **${date}**.`).catch(console.error);
-                edit.content = '✅ La acción fue completada.';
-                channel.send(msg);
-                updateThermalPasteDates();
 
+                try {
+                    if (!dates[user.id]) {
+                        await addThermalPasteDate(user.id, utcDate);
+                        edit.embeds = [getSuccessEmbed(`Se agregó la fecha **${date}** como tu último cambio de pasta térmica.`)];
+                    } else {
+                        await updateThermalPasteDate(user.id, utcDate);
+                        edit.embeds = [getSuccessEmbed(`Se actualizó tu fecha del último cambio de pasta térmica a **${date}**.`)];
+                    }
+                } catch (error) {
+                    consoleLogError('> Error al guardar fecha de cambio de pasta térmica.');
+                    logToFileError(MODULE_NAME, error);
+                    edit.embeds = [await getErrorEmbed('Lo siento, ocurrió un error al guardar fecha de cambio de pasta térmica.')];
+                }
+                updateThermalPasteDates();
             }
             message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
         });
