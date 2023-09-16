@@ -137,7 +137,7 @@ module.exports = {
                         edit.embeds = [getSuccessEmbed(`Se actualizó tu fecha del último cambio de pasta térmica a **${date}**.`)];
                     }
                 } catch (error) {
-                    consoleLogError('> Error al guardar fecha de cambio de pasta térmica.');
+                    consoleLogError('> Error al guardar fecha de cambio de pasta térmica');
                     logToFileError(MODULE_NAME, error);
                     edit.embeds = [await getErrorEmbed('Lo siento, ocurrió un error al guardar fecha de cambio de pasta térmica.')];
                 }

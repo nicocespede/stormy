@@ -281,7 +281,7 @@ module.exports = {
      * @param {String} description The description.
      * @returns An embed with a success message.
      */
-    getSuccessEmbed: description => getSimpleEmbed(getSuccessMessage(description)),
+    getSuccessEmbed: description => getSimpleEmbed(getSuccessMessage(description)).setColor([119, 178, 85]),
 
     /**
      * Generates an embed with a warning message as description.
@@ -289,7 +289,7 @@ module.exports = {
      * @param {String} description The description.
      * @returns An embed with a warning message.
      */
-    getWarningEmbed: description => getSimpleEmbed(getWarningMessage(description)),
+    getWarningEmbed: description => getSimpleEmbed(getWarningMessage(description)).setColor([255, 204, 77]),
 
     /**
      * Generates an embed with a denial message as description.
@@ -297,5 +297,5 @@ module.exports = {
      * @param {String} description The description.
      * @returns An embed with a denial message.
      */
-    getDenialEmbed: description => getSimpleEmbed(getDenialMessage(description))
+    getDenialEmbed: description => getSimpleEmbed(getDenialMessage(description)).setColor([190, 25, 49])
 };

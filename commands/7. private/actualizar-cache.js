@@ -5,7 +5,8 @@ const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, up
     updateBlacklistedSongs//
 } = require("../../src/cache");
 const { updateMovies, updateGames } = require("../../src/mongodb");
-const { logToFileError, consoleLogError, logToFileCommandUsage } = require("../../src/util");
+const { logToFileError, consoleLogError, logToFileCommandUsage, getSuccessEmbed } = require("../../src/util");
+const { getErrorEmbed } = require("../../src/common");
 
 const COMMAND_NAME = 'actualizar-cache';
 const MODULE_NAME = 'commands.private.' + COMMAND_NAME;
@@ -171,9 +172,12 @@ module.exports = {
                         }
                         await updateGames(dbUpdate);
                     }
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    if (content.length > 0)
-                        channel.send(content).catch(console.error);
+
+                    const channel = await client.channels.fetch(ids.channels.anuncios);
+                    if (!channel)
+                        consoleLogError('> Error al obtener canal de anuncios');
+                    else if (content.length > 0)
+                        channel.send(content);
                 }
             } else if (name === 'tracks-name-extras')
                 await updateTracksNameExtras();
@@ -185,12 +189,11 @@ module.exports = {
             else if (name === 'characters')
                 await updateCharacters();
 
-            await interaction.editReply({ content: '✅ Caché actualizado.' });
+            await interaction.editReply({ embeds: [getSuccessEmbed('Caché actualizado.')] });
         } catch (e) {
             logToFileError(MODULE_NAME, e);
             consoleLogError(`> Error al actualizar cache de '${name}'`);
-            await interaction.editReply({ content: '❌ Ocurrió un error.' });
+            await interaction.editReply({ embeds: [await getErrorEmbed('Ocurrió un error.')] });
         }
-        return;
     }
 }

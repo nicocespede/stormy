@@ -894,5 +894,5 @@ module.exports = {
      * @param {String} description The description.
      * @returns An embed with an error message.
      */
-    getErrorEmbed: async description => getSimpleEmbed(getErrorMessage(description)).setImage(await getGithubRawUrl(`assets/system-down.jpeg`))
+    getErrorEmbed: async description => getSimpleEmbed(getErrorMessage(description)).setImage(await getGithubRawUrl(`assets/system-down.jpeg`)).setColor([221, 46, 68])
 }
