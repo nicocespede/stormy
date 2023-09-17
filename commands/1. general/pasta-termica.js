@@ -85,7 +85,7 @@ module.exports = {
             else {
                 const totalTime = Math.abs(new Date() - userDate) / 1000;
                 const { years, weeks, days } = secondsToFull(totalTime);
-                reply.embeds = [getSimpleEmbed(`🗓️ Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace **${timeToString(years, weeks, days)}** (**${convertTZ(userDate).toLocaleDateString(ARGENTINA_LOCALE_STRING)}**).`)];
+                reply.embeds = [getSimpleEmbed(`🗓️ Hola <@${user.id}>, la última vez que cambiaste la pasta térmica fue hace:\n\n**${timeToString(years, weeks, days)}** (**${convertTZ(userDate).toLocaleDateString(ARGENTINA_LOCALE_STRING)}**).`)];
             }
             return reply;
         }
