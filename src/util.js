@@ -1,4 +1,5 @@
-const { User, CommandInteraction, EmbedBuilder } = require('discord.js');
+const { default: WOKCommands } = require('wokcommands');
+const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
 const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, emojis, color } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -297,5 +298,24 @@ module.exports = {
      * @param {String} description The description.
      * @returns An embed with a denial message.
      */
-    getDenialEmbed: description => getSimpleEmbed(getDenialMessage(description)).setColor([190, 25, 49])
+    getDenialEmbed: description => getSimpleEmbed(getDenialMessage(description)).setColor([190, 25, 49]),
+
+    /**
+     * Builds the custom syntax error message.
+     * 
+     * @param {WOKCommands} instance The WOKCommands instance.
+     * @param {Guild} guild The guild.
+     * @param {String} reason The reason.
+     * @param {String} command The name of the command.
+     * @param {String} arguments The arguments the command needs.
+     * @returns The custom syntax error message.
+     */
+    getSyntaxErrorMessage: (instance, guild, reason, command, arguments) => {
+        return instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+            REASON: reason,
+            PREFIX: PREFIX,
+            COMMAND: command,
+            ARGUMENTS: arguments
+        })
+    }
 };
