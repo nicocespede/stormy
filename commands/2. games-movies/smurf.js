@@ -241,7 +241,7 @@ module.exports = {
                 return reply;
             }
 
-            const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo los rangos actualizados de las cuentas...` })
+            const deferringMessage = message ? await message.reply({ embeds: [getSimpleEmbed(`⌛ Por favor esperá mientras obtengo los rangos actualizados de las cuentas...`)] })
                 : await interaction.deferReply({ ephemeral: true });
 
             try {
@@ -257,7 +257,7 @@ module.exports = {
         }
 
         const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const deferringMessage = message ? await message.reply({ content: `Por favor esperá mientras obtengo la información de la cuenta...` })
+        const deferringMessage = message ? await message.reply({ embeds: getSimpleEmbed(`⌛ Por favor esperá mientras obtengo la información de la cuenta...`) })
             : await interaction.deferReply({ ephemeral: true });
         const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
         const isAuthorized = await isOwner(user.id) || smurfRole.members.has(user.id);
@@ -301,10 +301,10 @@ module.exports = {
                     reply.embeds[0].setDescription(emojis.WARNING + ` ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ` + emojis.WARNING);
                 else if (user.id !== ids.users.stormer)
                     reply.components = [getRow('report')];
-                reply.embeds[0].addFields([{ name: 'Nombre de usuario:', value: account.user, inline: true },
-                { name: 'Contraseña:', value: account.password, inline: true }])
-                    .setThumbnail(`attachment://rank.png`);
-                reply.content = null;
+                reply.embeds[0].addFields([
+                    { name: 'Nombre de usuario:', value: account.user, inline: true },
+                    { name: 'Contraseña:', value: account.password, inline: true }
+                ]).setThumbnail(`attachment://rank.png`);
             }
         }
         message ? deferringMessage.edit(reply) : interaction.editReply(reply);
