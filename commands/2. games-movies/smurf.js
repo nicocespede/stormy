@@ -257,7 +257,7 @@ module.exports = {
         }
 
         const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
-        const deferringMessage = message ? await message.reply({ embeds: getSimpleEmbed(`⌛ Por favor esperá mientras obtengo la información de la cuenta...`) })
+        const deferringMessage = message ? await message.reply({ embeds: [getSimpleEmbed(`⌛ Por favor esperá mientras obtengo la información de la cuenta...`)] })
             : await interaction.deferReply({ ephemeral: true });
         const smurfRole = await defaultGuild.roles.fetch(ids.roles.smurf).catch(console.error);
         const isAuthorized = await isOwner(user.id) || smurfRole.members.has(user.id);
