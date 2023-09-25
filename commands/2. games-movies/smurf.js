@@ -63,11 +63,7 @@ const getRankColor = rank => {
     }
 };
 
-const getEmbed = async (color, guild, userId) => {
-    const ids = await getIds();
-    const vipRole = await guild.roles.fetch(ids.roles.vip).catch(console.error);
-    const isVip = await isOwner(userId) || vipRole.members.has(userId);
-
+const getEmbed = async (color, userId) => {
     const smurfs = getSmurfs() || await updateSmurfs();
     const auxArray = [];
     for (const command in smurfs) if (Object.hasOwnProperty.call(smurfs, command)) {
@@ -210,11 +206,10 @@ module.exports = {
             }
 
             if (customId === 'update-smurfs') {
-                const defaultGuild = await client.guilds.fetch(ids.guilds.default).catch(console.error);
                 await interaction.update({ components: [getRow('updating')] });
                 interaction.message.edit({
                     components: [getRow('update')],
-                    embeds: [await getEmbed(color, defaultGuild, interaction.user.id)]
+                    embeds: [await getEmbed(color, interaction.user.id)]
                 });
             }
         });
@@ -245,7 +240,7 @@ module.exports = {
                 : await interaction.deferReply({ ephemeral: true });
 
             try {
-                await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, guild, user.id)] });
+                await member.send({ components: [getRow('update')], embeds: [await getEmbed(instance.color, user.id)] });
                 reply.embeds = [getSuccessEmbed(`Hola <@${user.id}>, ¡revisá tus mensajes privados!`)];
             } catch (error) {
                 consoleLogError(`> Error al enviar cuentas smurfs`);
