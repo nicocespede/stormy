@@ -10,8 +10,8 @@ module.exports = {
 
     slash: true,
 
-    callback: async ({ interaction, text, user }) => {
-        logToFileCommandUsage('reiniciar', text, interaction, user);
+    callback: async ({ interaction, user }) => {
+        logToFileCommandUsage('reiniciar', null, interaction, user);
 
         if (!(await isOwner(user.id)))
             return { embeds: [getDenialEmbed('Lo siento, no estás autorizado para usar este comando.')], custom: true, ephemeral: true };

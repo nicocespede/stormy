@@ -13,8 +13,8 @@ module.exports = {
     maxArgs: 0,
     slash: 'both',
 
-    callback: async ({ instance, interaction, text, user }) => {
-        logToFileCommandUsage('sombra', text, interaction, user);
+    callback: async ({ instance, interaction, user }) => {
+        logToFileCommandUsage('sombra', null, interaction, user);
 
         const bans = getSombraBans() || await updateSombraBans();
         let description = `**Sombra#9370** fue baneado ${bans.length} veces. A continuación la lista de las razones:\n\n`;
