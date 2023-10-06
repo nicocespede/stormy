@@ -52,19 +52,16 @@ module.exports = {
         const { module, name } = oldCommandsData[cmd];
         const { aliases, expectedArgs, slash } = require(`${commandsPath}${module}/${name}.js`);
 
-        let builtInCommands = '';
+        let slashCommands = '';
         let regularCommands = '';
         for (const alias of getAliases(name, aliases)) {
             const args = buildArgs(expectedArgs);
-            if (slash === 'both') {
-                builtInCommands += `/${alias} ${args}\n`;
+            if (slash)
+                slashCommands += `/${alias} ${args}\n`;
+            if (slash === 'both' || !slash)
                 regularCommands += `${prefix}${alias} ${args}\n`;
-            } else if (!slash)
-                regularCommands += `${prefix}${alias} ${args}\n`;
-            else
-                builtInCommands += `/${alias} ${args}\n`;
         }
 
-        return { custom: true, embeds: [getWarningEmbed(`**Este comando ya no está disponible**, por favor utilizá alguna de las siguientes variantes:\n\n${builtInCommands}${regularCommands}`)] };
+        return { custom: true, embeds: [getWarningEmbed(`**Este comando ya no está disponible**, por favor utilizá alguna de las siguientes variantes:\n\n${slashCommands}${regularCommands}`)] };
     }
 }
