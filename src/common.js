@@ -7,7 +7,7 @@ const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, 
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
 const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, EMBED_FIELD_VALUE_MAX_LENGTH } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getWarningMessage } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -771,7 +771,7 @@ module.exports = {
             filteredName = !elementYear ? packageName.replace(/[:|?]/g, '').replace(/ /g, '%20')
                 : elementName.replace(/[:|?]/g, '').replace(/ /g, '%20');
 
-            reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n⚠ Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.\n\u200b`;
+            reply.content = `**${!elementYear ? packageName : elementName} (${elementYear || packageYear})**\n\n${getWarningMessage('Por favor seleccioná la versión que querés ver, esta acción expirará luego de 5 minutos de inactividad.')}\n\u200b`;
             reply.components = [getVersionsRow()];
             reply.files = [await getGithubRawUrl(`assets/${collectionId}/${filteredName}.jpg`)];
 
