@@ -7,7 +7,7 @@ const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, 
     getDownloadsData, updateDownloadsData, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
 const { relativeSpecialDays, PREFIX, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, EMBED_FIELD_VALUE_MAX_LENGTH } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateFilters, updateChoices, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getWarningMessage } = require('./util');
+const { convertTZ, consoleLog, splitEmbedDescription, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getWarningMessage, getSuccessMessage } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -676,7 +676,7 @@ module.exports = {
 
             reply.components = [getRow(id)];
             emoji = await getNewEmoji();
-            reply.content = `${emoji} ${title}\n⚠ Podés navegar libremente por las páginas, luego de 5 minutos de inactividad esta acción expirará.\n\u200b`;
+            reply.content = `${emoji} ${title}\n${getWarningMessage('Podés navegar libremente por las páginas, luego de 5 minutos de inactividad esta acción expirará.')}\n\u200b`;
             reply.embeds = [embeds[pages[id]]];
             reply.files = [];
 
@@ -705,7 +705,7 @@ module.exports = {
             finalCollector.on('end', async _ => {
                 reply.components = [];
                 emoji = await getNewEmoji();
-                reply.content = `${emoji} ${title}\n✅ Esta acción **se completó**, para volver a elegir filtros usá **${PREFIX}${collectionId}**.\n\u200b`;
+                reply.content = `${emoji} ${title}\n${getSuccessMessage(`Esta acción **se completó**, para volver a elegir filtros usá **${PREFIX}${collectionId}**.`)}\n\u200b`;
                 message ? await replyMessage.edit(reply) : await interaction.editReply(reply);
             });
         };
@@ -721,7 +721,7 @@ module.exports = {
         const reply = { ephemeral: true };
 
         if (isNaN(index) || index < 0 || index >= movies.length) {
-            reply.content = `⚠ El número ingresado es inválido.`;
+            reply.content = getWarningMessage(`El número ingresado es inválido.`);
             message ? await message.reply(reply) : await interaction.editReply(reply);
             return;
         }
