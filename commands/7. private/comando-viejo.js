@@ -4,6 +4,7 @@ const { logToFileCommandUsage, getWarningEmbed } = require('../../src/util');
 const commandsPath = '../../commands/';
 const oldCommandsData = {
     dolar: { module: '5. prices', name: 'usd' },
+    dólar: { module: '5. prices', name: 'usd' },
     recordatorio: { module: '1. general', name: 'boquear' }
 };
 
@@ -15,7 +16,7 @@ const oldCommandsData = {
  * @returns The full list of aliases.
  */
 const getAliases = (name, aliases) => {
-    if (name !== 'dolar' && aliases)
+    if (name !== 'dolar' && name !== 'dólar' && aliases)
         return [name].concat(aliases);
 
     return [name];
