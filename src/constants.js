@@ -23,10 +23,6 @@ module.exports = {
     CONSOLE_RED: 'RED',
     CONSOLE_YELLOW: 'YELLOW',
 
-    emojis: {
-        WARNING: ':warning:'
-    },
-
     MusicActions: {
         ADDING: 'ADDING',
         ADDING_NEXT: 'ADDING_NEXT',

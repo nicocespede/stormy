@@ -5,7 +5,7 @@ const ValorantAPI = new HenrikDevValorantAPI();
 const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX, color, ARGENTINA_LOCALE_STRING, emojis } = require('../../src/constants');
 const { isOwner, getErrorEmbed } = require('../../src/common');
-const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getDenialEmbed } = require('../../src/util');
+const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getDenialEmbed, getWarningMessage } = require('../../src/util');
 
 const MODULE_NAME = "games-movies.smurf";
 
@@ -293,7 +293,7 @@ module.exports = {
                     reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
                 if (account.bannedUntil)
-                    reply.embeds[0].setDescription(emojis.WARNING + ` ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ` + emojis.WARNING);
+                    reply.embeds[0].setDescription(getWarningMessage(`ESTA CUENTA ESTÁ BANEADA HASTA EL **${convertTZ(account.bannedUntil).toLocaleDateString(ARGENTINA_LOCALE_STRING)}** ⚠️`));
                 else if (user.id !== ids.users.stormer)
                     reply.components = [getRow('report')];
                 reply.embeds[0].addFields([

@@ -1,6 +1,6 @@
 const { ICommand } = require("wokcommands");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { logToFileCommandUsage } = require("../../src/util");
+const { logToFileCommandUsage, getWarningMessage } = require("../../src/util");
 
 /** @type {ICommand}*/
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
                 .setStyle(ButtonStyle.Link)
                 .setURL('https://www.watch2gether.com/rooms/nckg-le03mozzfc19nz7uuf?lang=es'));
 
-        const reply = { components: [row], content: '⚠ Presioná el botón para dirigirte a la sala:' };
+        const reply = { components: [row], content: getWarningMessage('Presioná el botón para dirigirte a la sala:') };
 
         if (interaction)
             await interaction.deferReply();

@@ -1,6 +1,6 @@
 const { default: WOKCommands } = require('wokcommands');
 const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, emojis, color } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -27,7 +27,7 @@ const appendZeroToLength = (value, length) => `${value}`.padStart(length, '0');
  * Get date as text.
  * 
  * @param {Date} now Now date.
- * @returns Date as text. Sample: "2018-12-03, 07:32:13".
+ * @returns Date as text. Example: "2018-12-03, 07:32:13".
  */
 const getDateAsText = now => {
     const nowText = appendZeroToLength(now.getFullYear(), 4) + '-'
@@ -132,7 +132,7 @@ const getSuccessMessage = text => '✅ ' + text;
  * @param {String} text The text of the message.
  * @returns The warning message.
  */
-const getWarningMessage = text => emojis.WARNING + ' ' + text;
+const getWarningMessage = text => '⚠️ ' + text;
 
 /**
  * Generates a message starting with the denial emoji.
