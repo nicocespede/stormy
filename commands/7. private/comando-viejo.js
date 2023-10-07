@@ -16,7 +16,7 @@ const oldCommandsData = {
  * @returns The full list of aliases.
  */
 const getAliases = (name, aliases) => {
-    if (name !== 'dolar' && name !== 'dólar' && aliases)
+    if (name !== 'usd' && aliases)
         return [name].concat(aliases);
 
     return [name];
