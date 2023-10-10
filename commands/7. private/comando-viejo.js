@@ -1,11 +1,17 @@
 const { ICommand } = require('wokcommands');
 const { logToFileCommandUsage, getWarningEmbed } = require('../../src/util');
 
+const MODULE_NAME_GENERAL = '1. general';
+const MODULE_NAME_GAMES_N_MOVIES = '2. games-movies';
+const MODULE_NAME_PRICES = '5. prices';
+
 const commandsPath = '../../commands/';
 const oldCommandsData = {
-    dolar: { module: '5. prices', name: 'usd' },
-    dólar: { module: '5. prices', name: 'usd' },
-    recordatorio: { module: '1. general', name: 'boquear' }
+    db: { module: MODULE_NAME_GAMES_N_MOVIES, name: 'sagas' },
+    dolar: { module: MODULE_NAME_PRICES, name: 'usd' },
+    dólar: { module: MODULE_NAME_PRICES, name: 'usd' },
+    recordatorio: { module: MODULE_NAME_GENERAL, name: 'boquear' },
+    ucm: { module: MODULE_NAME_GAMES_N_MOVIES, name: 'sagas' }
 };
 
 /**
