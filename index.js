@@ -131,7 +131,7 @@ client.on('ready', async () => {
         collector.stop();
     }).on('emptyQueue', async queue => {
         const { action: lastAction } = getLastAction();
-        const queueEnded = queue.channel.members.size > 1 && lastAction !== MusicActions.ADDING
+        const queueEnded = queue.channel.members.size > 1
             && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
