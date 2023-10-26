@@ -1,9 +1,6 @@
 #! /bin/bash
-#git config --global user.name "usename"
-#git config --global user.password "access token"
-#git clone https://github.com/nicocespede/stormy.git
-#cd bot
-git fetch
-git pull
-npm install --save --omit=dev
-node index.js
+#sh scripts/clone.sh
+#sh scripts/clone-branch.sh
+#sh scripts/ffmpeg.sh
+#sh scripts/switch-branch.sh
+sh scripts/startup.sh

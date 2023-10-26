@@ -1,5 +1,5 @@
 const { Queue } = require("@discord-player/utils");
-const { QueryType, useMainPlayer, Track, Player } = require("discord-player");
+const { QueryType, useMainPlayer, Track, Player, GuildQueue } = require("discord-player");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, BaseMessageOptions, Message, CommandInteraction, TextChannel, Guild } = require("discord.js");
 const Genius = require("genius-lyrics");
 const GeniusClient = new Genius.Client();
@@ -59,6 +59,13 @@ const splitLyrics = lyrics => {
     return ret;
 };
 
+/**
+ * Manages the music player embed.
+ * 
+ * @param {GuildQueue} queue The actual queue.
+ * @param {Track} track The actual track.
+ * @param {String} lastAction The last action applied to the player.
+ */
 const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
     const getControlsRows = type => {
