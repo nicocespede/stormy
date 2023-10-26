@@ -149,11 +149,13 @@ client.on('ready', async () => {
         if (!queue.deleted)
             queue.delete();
     }).on('error', async (queue, error) => {
-        consoleLog(`Error in Player.events.on('error'):\n${error.stack}`, CONSOLE_RED);
+        consoleLogError('> Error en el reproductor de música');
+        logToFileError(moduleName, error);
+
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
-                embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
+                embeds: [(await getErrorEmbed(`❌ **${error.name}**:\n\n${error.message}`))
                     .setThumbnail(await getGithubRawUrl('assets/thumbs/broken-robot.png'))]
             });
         if (!queue.deleted)

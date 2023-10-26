@@ -668,8 +668,9 @@ module.exports = {
 
     setKicked: () => {
         updateLastAction(MusicActions.BEING_KICKED);
-        const { collector } = getMusicPlayerData('player');
-        collector.stop();
+        const musicPlayerData = getMusicPlayerData('player');
+        if (musicPlayerData && musicPlayerData.collector)
+            musicPlayerData.collector.stop();
     },
 
     containsAuthor,
