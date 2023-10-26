@@ -5,7 +5,7 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
-const { consoleLog, logToFile, getUserTag } = require('./src/util');
+const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError } = require('./src/util');
 const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
@@ -71,6 +71,11 @@ client.on('ready', async () => {
 
     await player.extractors.loadDefault();
 
+    player.on('error', error => {
+        consoleLogError('> Error en el reproductor de música');
+        logToFileError(moduleName, error);
+    });
+
     player.events.on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
@@ -126,7 +131,7 @@ client.on('ready', async () => {
         collector.stop();
     }).on('emptyQueue', async queue => {
         const { action: lastAction } = getLastAction();
-        const queueEnded = queue.channel.members.size > 1
+        const queueEnded = queue.channel.members.size > 1 && lastAction !== MusicActions.ADDING
             && lastAction !== MusicActions.LEAVING_EMPTY_CHANNEL && lastAction !== MusicActions.STOPPING
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
@@ -135,7 +140,7 @@ client.on('ready', async () => {
             collector.stop();
         }
     }).on('playerError', async (queue, error) => {
-        consoleLog(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`Error in Player.events.on('playerError'):\n${error.stack}`, CONSOLE_RED);
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -144,7 +149,7 @@ client.on('ready', async () => {
         if (!queue.deleted)
             queue.delete();
     }).on('error', async (queue, error) => {
-        consoleLog(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`Error in Player.events.on('error'):\n${error.stack}`, CONSOLE_RED);
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,

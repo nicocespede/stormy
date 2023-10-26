@@ -1,5 +1,5 @@
 const { ICommand } = require("wokcommands");
-const { QueryType, useMasterPlayer } = require('discord-player');
+const { QueryType, useMainPlayer } = require('discord-player');
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { updateLastAction, getPlaylists, updatePlaylists, getIds, addSongInQueue, getGithubRawUrl, removeSongInQueue,
     //TEMP SOLUTION
@@ -65,7 +65,7 @@ module.exports = {
         if (Object.keys(blacklistedSongs).includes(song))
             song = blacklistedSongs[song];//
 
-        const player = useMasterPlayer();
+        const player = useMainPlayer();
         const res = await player.search(song, {
             requestedBy: member,
             searchEngine: QueryType.AUTO
