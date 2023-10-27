@@ -1,7 +1,7 @@
 const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData, MusicPlayerData } = require("./typedefs");
 const { Message, InteractionCollector } = require("discord.js");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
-const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
+const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError, convertToUTCFromLocal } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -245,8 +245,7 @@ const updateKruMatches = async type => {
         const matches = [];
         a.each((_, el) => {
             const split = $(el).children('.m-item-date').text().trim().split(`\t`);
-            const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
-            date.setHours(date.getHours() - 2);
+            const date = convertToUTCFromLocal(new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`));
 
             const match = {
                 date,
@@ -638,7 +637,7 @@ module.exports = {
     /**
      * Retrieves a music player item from a key.
      * 
-     * @param {String} key The key to be retrieved.
+     * @param {"player" | "queue" | "lyrics"} key The key to be retrieved.
      * @returns The music player item.
      */
     getMusicPlayerData: key => musicPlayerData[key],
@@ -646,7 +645,7 @@ module.exports = {
     /**
      * Creates a new music player item.
      * 
-     * @param {String} key The key to be created.
+     * @param {"player" | "queue" | "lyrics"} key The key to be created.
      * @param {Message} message The message to be set.
      * @param {InteractionCollector} collector The collector to be set.
      * @param {Number} [page] The page number to be set.
@@ -656,14 +655,14 @@ module.exports = {
     /**
      * Deletes a music player item from a key.
      * 
-     * @param {String} key The key of the item to be deleted.
+     * @param {"player" | "queue" | "lyrics"} key The key of the item to be deleted.
      */
     clearMusicPlayerData: key => delete musicPlayerData[key],
 
     /**
      * Updates the page number of a music player item.
      * 
-     * @param {String} key The key of the item to be updated.
+     * @param {"player" | "queue" | "lyrics"} key The key of the item to be updated.
      * @param {Number} page The page number to be set.
      */
     updatePage: (key, page) => musicPlayerData[key].page = page,

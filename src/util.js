@@ -1,6 +1,6 @@
 const { default: WOKCommands } = require('wokcommands');
 const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, ARGENTINA_HOURS_OFFSET } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -317,5 +317,28 @@ module.exports = {
             COMMAND: command,
             ARGUMENTS: arguments
         })
+    },
+
+    /**
+     * Converts a date from the local timezone to UTC.
+     * 
+     * @param {Date} date The date to convert.
+     * @returns The converted date.
+     */
+    convertToUTCFromLocal: date => {
+        const offset = date.getTimezoneOffset() / 60;
+        date.setHours(date.getHours() + offset);
+        return date;
+    },
+
+    /**
+     * Converts a date from Buenos Aires timezone to UTC.
+     * 
+     * @param {Date} date The date to convert.
+     * @returns The converted date.
+     */
+    convertToUTCFromArgentina: date => {
+        date.setHours(date.getHours() + ARGENTINA_HOURS_OFFSET);
+        return date;
     }
 };

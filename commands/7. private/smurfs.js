@@ -3,7 +3,7 @@ const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../src/cache');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
 const { isOwner, getErrorEmbed } = require('../../src/common');
-const { logToFileCommandUsage, getDenialEmbed, getWarningEmbed, consoleLogError, logToFileError, getSuccessEmbed } = require("../../src/util");
+const { logToFileCommandUsage, getDenialEmbed, getWarningEmbed, consoleLogError, logToFileError, getSuccessEmbed, convertToUTCFromArgentina } = require("../../src/util");
 
 const COMMAND_NAME = 'smurfs';
 const MODULE_NAME = 'commands.private.' + COMMAND_NAME;
@@ -100,17 +100,17 @@ module.exports = {
 
     callback: async ({ interaction, text, user }) => {
         logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
-        
+
         await interaction.deferReply({ ephemeral: true });
-        
+
         const reply = { ephemeral: true };
-        
+
         if (!(await isOwner(user.id))) {
             reply.embeds = [getDenialEmbed(`Hola <@${user.id}>, no tenés autorización para usar este comando.`)];
             interaction.editReply(reply);
             return;
         }
-        
+
         const subCommand = interaction.options.getSubcommand();
         if (subCommand === 'agregar') {
             const accountCommand = interaction.options.getString('comando').toLowerCase();
@@ -227,8 +227,7 @@ module.exports = {
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
-                date = new Date(`${split[2]}-${split[1]}-${split[0]}T${timeArg ? (timeArg.length < 5 ? `0${timeArg}` : timeArg) : '00:00'}Z`);
-                date.setHours(date.getHours() + 3);
+                date = convertToUTCFromArgentina(new Date(`${split[2]}-${split[1]}-${split[0]}T${timeArg ? (timeArg.length < 5 ? `0${timeArg}` : timeArg) : '00:00'}Z`));
 
                 if (date < new Date()) {
                     reply.embeds = [getWarningEmbed(`La fecha introducida ya pasó.`)];

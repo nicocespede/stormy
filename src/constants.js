@@ -11,6 +11,7 @@ module.exports = {
 
     ARGENTINA_TZ_STRING: 'America/Argentina/Buenos_Aires',
     ARGENTINA_LOCALE_STRING: 'es-AR',
+    ARGENTINA_HOURS_OFFSET: 3,
 
     color: [4, 134, 164],
 
