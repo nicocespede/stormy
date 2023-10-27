@@ -1,4 +1,5 @@
-const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData } = require("./typedefs");
+const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData, MusicPlayerData } = require("./typedefs");
+const { Message, InteractionCollector } = require("discord.js");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
 const fetch = require('node-fetch');
@@ -34,8 +35,10 @@ var tracksNameExtras;
 let reminders;
 let characters;
 let songsInQueue = {};
-let musicPlayerData = {};
 let fwcData;
+
+/** @type {MusicPlayerData}*/
+let musicPlayerData = {};
 
 /** @type {TimestampsData}*/
 const timestamps = {};
@@ -632,9 +635,37 @@ module.exports = {
     },
     removeSongInQueue: url => delete songsInQueue[url],
 
+    /**
+     * Retrieves a music player item from a key.
+     * 
+     * @param {String} key The key to be retrieved.
+     * @returns The music player item.
+     */
     getMusicPlayerData: key => musicPlayerData[key],
-    setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector: collector, message: message, page: page },
+
+    /**
+     * Creates a new music player item.
+     * 
+     * @param {String} key The key to be created.
+     * @param {Message} message The message to be set.
+     * @param {InteractionCollector} collector The collector to be set.
+     * @param {Number} [page] The page number to be set.
+     */
+    setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector, message, page },
+
+    /**
+     * Deletes a music player item from a key.
+     * 
+     * @param {String} key The key of the item to be deleted.
+     */
     clearMusicPlayerData: key => delete musicPlayerData[key],
+
+    /**
+     * Updates the page number of a music player item.
+     * 
+     * @param {String} key The key of the item to be updated.
+     * @param {Number} page The page number to be set.
+     */
     updatePage: (key, page) => musicPlayerData[key].page = page,
 
     getFWCData: () => fwcData,

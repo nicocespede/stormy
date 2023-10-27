@@ -1,3 +1,5 @@
+const { InteractionCollector, Message } = require("discord.js");
+
 /** 
  * @typedef {{birth: String, club: String, goals?: Number, name: String, nationality: String, picture: String, position: String, rating: Number }} Player
  * @typedef {{color: Number[], emblem: String, flag: String, name: String, players: Number}} Team
@@ -38,6 +40,9 @@
  * 
  * @typedef {{date: Date, remaining?: String, score?: String, team1Name: String, team1Tag: String, team2Name: String, team2Tag: String, url: String}} ValorantMatch
  * @typedef {{completed: ValorantMatch[], upcoming: ValorantMatch[]}} ValorantMatchesData
+ * 
+ * @typedef { {collector: InteractionCollector, message: Message, page: Number?} } MusicPlayerItem
+ * @typedef { {[key: String]: MusicPlayerItem} } MusicPlayerData
  */
 
 exports.unused = {};

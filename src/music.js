@@ -657,6 +657,15 @@ const generateTracksArray = (rawTracksArray, player, membersCollection) => {
     return ret;
 };
 
+/**
+ * Stops the music player collector, if exists.
+ */
+const stopMusicPlayerCollector = () => {
+    const musicPlayerData = getMusicPlayerData('player');
+    if (musicPlayerData && musicPlayerData.collector)
+        musicPlayerData.collector.stop();
+};
+
 module.exports = {
     setNewVoiceChannel: (guild, channel) => {
         updateLastAction(MusicActions.CHANGING_CHANNEL);
@@ -668,9 +677,7 @@ module.exports = {
 
     setKicked: () => {
         updateLastAction(MusicActions.BEING_KICKED);
-        const musicPlayerData = getMusicPlayerData('player');
-        if (musicPlayerData && musicPlayerData.collector)
-            musicPlayerData.collector.stop();
+        stopMusicPlayerCollector();
     },
 
     containsAuthor,
@@ -682,8 +689,7 @@ module.exports = {
         if (queue) {
             if (!queue.deleted)
                 queue.delete();
-            const { collector } = getMusicPlayerData('player');
-            collector.stop();
+            stopMusicPlayerCollector();
         }
     },
 
@@ -693,8 +699,7 @@ module.exports = {
         const queue = player.nodes.get(guildId);
         if (queue) {
             consoleLog('> Guardando cola de reproducción actual', CONSOLE_YELLOW);
-            const { collector } = getMusicPlayerData('player');
-            collector.stop();
+            stopMusicPlayerCollector();
 
             const previousTracks = { tracks: JSON.stringify(queue.history.tracks.data), strategy: queue.history.tracks.strategy };
             const currenTrack = queue.history.currentTrack;
@@ -799,5 +804,7 @@ module.exports = {
 
     createQueue,
 
-    connectToVoiceChannel
+    connectToVoiceChannel,
+
+    stopMusicPlayerCollector
 }

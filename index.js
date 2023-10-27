@@ -6,7 +6,7 @@ const { Player } = require('discord-player');
 const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError } = require('./src/util');
-const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
+const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage, stopMusicPlayerCollector } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const MODULE_NAME = 'index';
@@ -127,8 +127,7 @@ client.on('ready', async () => {
         }
     }).on('emptyChannel', _ => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
-        const { collector } = getMusicPlayerData('player');
-        collector.stop();
+        stopMusicPlayerCollector();
     }).on('emptyQueue', async queue => {
         const { action: lastAction } = getLastAction();
         const queueEnded = queue.channel.members.size > 1
@@ -136,8 +135,7 @@ client.on('ready', async () => {
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
             updateLastAction(MusicActions.ENDING);
-            const { collector } = getMusicPlayerData('player');
-            collector.stop();
+            stopMusicPlayerCollector();
         }
     }).on('playerError', async (queue, error) => {
         consoleLog(`Error in Player.events.on('playerError'):\n${error.stack}`, CONSOLE_RED);
