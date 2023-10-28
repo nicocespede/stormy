@@ -7,7 +7,7 @@ const { getIds, getMovies, updateMovies, getFilters, updateFilters: updateFilter
 const { PREFIX, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
 const { updateFilters, updateChoices } = require('../../src/mongodb');
 const { splitEmbedDescription, getWarningMessage, getSuccessMessage, logToFileCommandUsage, getWarningEmbed } = require('../../src/util');
-const { addAnnouncementsRole } = require('../../src/common');
+const { addAnnouncementsRole, lastUpdateToString } = require('../../src/common');
 
 const sagasData = [
     //boys: 'The Boys',
