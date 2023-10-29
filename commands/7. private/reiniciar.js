@@ -13,10 +13,14 @@ module.exports = {
     callback: async ({ interaction, user }) => {
         logToFileCommandUsage('reiniciar', null, interaction, user);
 
-        if (!(await isOwner(user.id)))
-            return { embeds: [getDenialEmbed('Lo siento, no estás autorizado para usar este comando.')], custom: true, ephemeral: true };
+        interaction.deferReply({ ephemeral: true });
 
-        await interaction.reply({ embeds: [getSimpleEmbed('🔄 Comenzando reinicio, ¡adiós!')], ephemeral: true });
+        if (!(await isOwner(user.id))) {
+            interaction.editReply({ embeds: [getDenialEmbed('Lo siento, no estás autorizado para usar este comando.')], ephemeral: true });
+            return;
+        }
+
+        await interaction.editReply({ embeds: [getSimpleEmbed('🔄 Comenzando reinicio, ¡adiós!')], ephemeral: true });
         process.emit(!DEV_ENV ? 'SIGTERM' : 'SIGINT');
     }
 }
