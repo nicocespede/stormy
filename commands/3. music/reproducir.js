@@ -112,7 +112,8 @@ module.exports = {
                 if (message)
                     deferringMessage.delete();
                 removeSongInQueue(res.tracks[0].url);
-                queue.delete();
+                if (!queue.deleted)
+                    queue.delete();
                 consoleLogError(`> Error al iniciar reproducción de música, URL: [${res.tracks[0].url}]`);
                 logToFileError(MODULE_NAME, e);
                 handleError(reply, embed, '❌ Error al iniciar reproductor de música.\n\n_Intenta usar la URL directa de la canción, o una URL diferente._', message, interaction, channel);
