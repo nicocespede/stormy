@@ -243,7 +243,7 @@ const sendChronologySettingMessage = async (channel, collectionId, guild, instan
 
             if (status !== 'CONFIRMED') {
                 emoji = await getNewEmoji();
-                const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${PREFIX}db**.\n\u200b`, components: [] };
+                const edit = { content: `${emoji} ${title}\n${status === 'CANCELLED' ? '❌ Esta acción **fue cancelada**' : '⌛ Esta acción **expiró**'}, para volver a elegir filtros usá **${PREFIX}sagas ${collectionId}**.\n\u200b`, components: [] };
                 message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                 return;
             }
