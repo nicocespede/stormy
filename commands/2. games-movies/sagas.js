@@ -1,13 +1,16 @@
-const { ICommand } = require('wokcommands');
-const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ICommand, default: WOKCommands } = require('wokcommands');
+const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel, Guild, CommandInteraction, GuildMember, Message } = require('discord.js');
 const Canvas = require('canvas');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 const { getIds, getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology, getDownloadsData, updateDownloadsData, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
 const { updateFilters, updateChoices } = require('../../src/mongodb');
-const { splitEmbedDescription, getWarningMessage, getSuccessMessage, logToFileCommandUsage, getWarningEmbed } = require('../../src/util');
+const { splitEmbedDescription, getWarningMessage, getSuccessMessage, logToFileCommandUsage, getWarningEmbed, consoleLogError, logToFileError } = require('../../src/util');
 const { addAnnouncementsRole, lastUpdateToString } = require('../../src/common');
+
+const COMMAND_NAME = 'sagas';
+const MODULE_NAME = 'games-movies.' + COMMAND_NAME;
 
 const sagasData = [
     { collectionId: 'db', name: 'Dragon Ball', roleId: 'anunciosDb', value: 'db' },
@@ -23,6 +26,17 @@ const getValidFilters = async collectionId => {
     return [...new Set(filters)];
 };
 
+/**
+ * Builds and sends the message which contains the settings for the selected saga.
+ * 
+ * @param {TextChannel} channel The channel where the command was used.
+ * @param {String} collectionId The ID of the selected collection.
+ * @param {Guild} guild The guild where the command was used.
+ * @param {WOKCommands} instance The WOKCommands instance.
+ * @param {CommandInteraction} interaction The interaction.
+ * @param {GuildMember} member The member who used the command.
+ * @param {Message} message The message sent to use the command.
+ */
 const sendChronologySettingMessage = async (channel, collectionId, guild, instance, interaction, member, message) => {
     const collectionsData = {
         db: { emoji: 'dragon_ball', thumb: 'dragon-ball', title: 'Universo de Dragon Ball' },
@@ -178,45 +192,50 @@ const sendChronologySettingMessage = async (channel, collectionId, guild, instan
         const extraMessages = [];
 
         collector.on('collect', async i => {
-            const update = {};
+            try {
+                const update = {};
 
-            if (i.customId === 'all') {
-                selectedFilters = !selectedFilters.includes('all') ? [i.customId] : [];
-                update.components = getFiltersRows(selectedFilters).concat([secondaryRow]);
-                await i.update(update);
-                return;
-            }
-
-            if (i.customId === 'confirm') {
-                i.deferUpdate();
-                if (selectedFilters.length === 0) {
-                    extraMessages.push(await channel.send('⛔ ¡Debes seleccionar algún filtro para confirmar!'));
+                if (i.customId === 'all') {
+                    selectedFilters = !selectedFilters.includes('all') ? [i.customId] : [];
+                    update.components = getFiltersRows(selectedFilters).concat([secondaryRow]);
+                    await i.update(update);
                     return;
                 }
 
-                status = 'CONFIRMED';
-                collector.stop();
-                return;
-            }
+                if (i.customId === 'confirm') {
+                    i.deferUpdate();
+                    if (selectedFilters.length === 0) {
+                        extraMessages.push(await channel.send('⛔ ¡Debes seleccionar algún filtro para confirmar!'));
+                        return;
+                    }
 
-            if (i.customId === 'cancel') {
-                status = 'CANCELLED';
-                i.deferUpdate();
-                collector.stop();
-                return;
-            }
+                    status = 'CONFIRMED';
+                    collector.stop();
+                    return;
+                }
 
-            if (selectedFilters.includes('all'))
-                selectedFilters = [];
-            if (selectedFilters.includes(i.customId))
-                selectedFilters.splice(selectedFilters.indexOf(i.customId), 1);
-            else {
-                selectedFilters.push(i.customId);
-                if (selectedFilters.length === validFilters.length)
-                    selectedFilters = ['all'];
+                if (i.customId === 'cancel') {
+                    status = 'CANCELLED';
+                    await i.deferUpdate();
+                    collector.stop();
+                    return;
+                }
+
+                if (selectedFilters.includes('all'))
+                    selectedFilters = [];
+                if (selectedFilters.includes(i.customId))
+                    selectedFilters.splice(selectedFilters.indexOf(i.customId), 1);
+                else {
+                    selectedFilters.push(i.customId);
+                    if (selectedFilters.length === validFilters.length)
+                        selectedFilters = ['all'];
+                }
+                update.components = getFiltersRows(selectedFilters).concat([secondaryRow]);
+                await i.update(update);
+            } catch (error) {
+                consoleLogError(`> Error al utilizar botón en la selección de filtros de '${collectionId}'`);
+                logToFileError(MODULE_NAME, error);
             }
-            update.components = getFiltersRows(selectedFilters).concat([secondaryRow]);
-            await i.update(update);
         });
 
         collector.on('end', async _ => {
