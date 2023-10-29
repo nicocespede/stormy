@@ -101,6 +101,14 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         return rows;
     };
 
+    /**
+     * Builds an embed from an event.
+     * 
+     * @param {String} event The event triggered.
+     * @param {GuildQueue} queue The current queue.
+     * @param {String} lastAction The last action applied to the player.
+     * @returns An embed containing the information related to the event.
+     */
     const getEmbed = async (event, queue, lastAction) => {
         await updateExtraMessages(queue);
 
@@ -119,16 +127,21 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
                 const progressBar = queue.node.createProgressBar();
                 const timestamp = queue.node.getTimestamp(true);
-                const splittedDescription = [
-                    `${progressBar}\n`,
-                    `**Progreso:** ${timestamp.progress}%`,
-                    `**Volumen:** ${queue.node.volume}%`,
-                    `**Agregada por:** ${getUserTag(requestedBy)}`
-                ];
+
+                const splittedDescription = [`${progressBar}\n`];
+
+                if (timestamp)
+                    splittedDescription.push(`**Progreso:** ${timestamp.progress}%`);
+
+                splittedDescription.push(`**Volumen:** ${queue.node.volume}%`);
+                splittedDescription.push(`**Agregada por:** ${getUserTag(requestedBy)}`);
+
                 if (playlist)
                     splittedDescription.push(`**Lista de reproducción:** [${playlist.title}](${playlist.url})`);
+
                 if (lastAction)
                     splittedDescription.push(`\n**Última acción:**\n\n${lastAction}`);
+
                 description = splittedDescription.join('\n');
 
                 const thumbs = {
