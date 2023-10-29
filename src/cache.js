@@ -1,4 +1,4 @@
-const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData, MusicPlayerData } = require("./typedefs");
+const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData, MusicPlayerData, CollectorMessagesData } = require("./typedefs");
 const { Message, InteractionCollector } = require("discord.js");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
 const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError, convertToUTCFromLocal } = require('./util');
@@ -23,7 +23,6 @@ var birthdays;
 let banned;
 var sombraBans;
 let billboardMessageInfo;
-var rolesMessageInfo;
 let icon;
 let mode;
 let lastAction;
@@ -36,6 +35,27 @@ let reminders;
 let characters;
 let songsInQueue = {};
 let fwcData;
+
+/** @type {CollectorMessagesData}*/
+let collectorMessages;
+
+/**
+ * Retrieves the collector messages data from the database.
+ * 
+ * @returns All cached collector messages data.
+ */
+const updateCollectorMessages = async () => {
+    collectorMessages = {};
+    const results = await collectorMessageSchema.find({});
+    for (const result of results)
+        collectorMessages[result._id] = {
+            channelId: result.channelId,
+            isActive: result.isActive,
+            messageId: result.messageId
+        }
+    consoleLog('> Caché de recolectores de reacciones actualizado', CONSOLE_GREEN);
+    return collectorMessages;
+}
 
 /** @type {MusicPlayerData}*/
 let musicPlayerData = {};
@@ -439,12 +459,19 @@ module.exports = {
         const sombraBanSchema = require('../models/sombraBan-schema');
         const results = await sombraBanSchema.find({});
         sombraBans = [];
-        results.forEach(element => {
-            sombraBans.push(element.reason);
-        });
+        results.forEach(element => sombraBans.push(element.reason));
         consoleLog('> Caché de baneos de Sombra actualizado', CONSOLE_GREEN);
         return sombraBans;
     },
+
+    /**
+     * Gets the data of a collector message.
+     * 
+     * @param {String} key The collector message key to get.
+     * @returns The collector message data.
+     */
+    getCollectorMessages: async () => collectorMessages || await updateCollectorMessages(),
+    updateCollectorMessages,
 
     getBillboardMessageInfo: () => billboardMessageInfo,
     updateBillboardMessageInfo: async () => {
@@ -455,17 +482,6 @@ module.exports = {
         };
         consoleLog('> Caché de recolector de reacciones actualizado', CONSOLE_GREEN);
         return billboardMessageInfo;
-    },
-
-    getRolesMessageInfo: () => rolesMessageInfo,
-    updateRolesMessageInfo: async () => {
-        const result = await collectorMessageSchema.findById('roles_message');
-        rolesMessageInfo = {
-            messageId: result.messageId,
-            channelId: result.channelId
-        };
-        consoleLog('> Caché de mensaje de roles actualizado', CONSOLE_GREEN);
-        return rolesMessageInfo;
     },
 
     getIcon: () => icon,

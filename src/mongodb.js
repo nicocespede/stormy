@@ -100,9 +100,30 @@ module.exports = {
         consoleLog('> Mensaje de recolector actualizado en la base de datos', CONSOLE_GREEN);
     },
 
-    updateRolesMessage: async (channelId, messageId) => {
-        await collectorMessageSchema.updateOne({ _id: 'roles_message' }, { channelId: channelId, messageId: messageId });
+    /**
+     * Adds a new collector message document to the database.
+     * 
+     * @param {String} id The ID of the collector.
+     * @param {String} channelId The ID of the text channel.
+     * @param {String} messageId The ID of the message.
+     */
+    addRolesMessage: async (id, channelId, messageId) => {
+        await new collectorMessageSchema({ _id: id, channelId, messageId, isActive: true }).save();
+        consoleLog('> Mensaje de roles agregado en la base de datos', CONSOLE_GREEN);
+        logToFile(`${MODULE_NAME}.addRolesMessage`, `Adding collector message '${id}' record to the database`);
+    },
+
+    /**
+     * Updates a collector message document in database.
+     * 
+     * @param {String} id The ID of the collector.
+     * @param {String} channelId The ID of the text channel.
+     * @param {String} messageId The ID of the message.
+     */
+    updateRolesMessage: async (id, channelId, messageId) => {
+        await collectorMessageSchema.updateOne({ _id: id }, { channelId: channelId, messageId: messageId });
         consoleLog('> Mensaje de roles actualizado en la base de datos', CONSOLE_GREEN);
+        logToFile(`${MODULE_NAME}.updateRolesMessage`, `Updating collector message '${id}' in database`);
     },
 
     updateMovies: async (id, movies) => {
@@ -188,6 +209,11 @@ module.exports = {
         await updateStats();
     },
 
+    /**
+     * Updates many stats documents in database.
+     * 
+     * @param {Object[]} updates The updates to be done.
+     */
     updateManyStats: async updates => {
         const operations = updates.map(({ filter, update }) => ({ updateOne: { filter, update, upsert: true } }));
         const result = await statSchema.bulkWrite(operations);

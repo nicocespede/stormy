@@ -41,8 +41,11 @@ const { InteractionCollector, Message } = require("discord.js");
  * @typedef {{date: Date, remaining?: String, score?: String, team1Name: String, team1Tag: String, team2Name: String, team2Tag: String, url: String}} ValorantMatch
  * @typedef {{completed: ValorantMatch[], upcoming: ValorantMatch[]}} ValorantMatchesData
  * 
- * @typedef { {collector: InteractionCollector, message: Message, page: Number?} } MusicPlayerItem
- * @typedef { {[key: String]: MusicPlayerItem} } MusicPlayerData
+ * @typedef {{collector: InteractionCollector, message: Message, page: Number?}} MusicPlayerItem
+ * @typedef {{[key: String]: MusicPlayerItem}} MusicPlayerData
+ * 
+ * @typedef {{messageId: String, channelId: String, isActive: Boolean }} CollectorMessage
+ * @typedef {{[key: String]: CollectorMessage}} CollectorMessagesData
  */
 
 exports.unused = {};

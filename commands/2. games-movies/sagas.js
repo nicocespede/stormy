@@ -10,9 +10,9 @@ const { splitEmbedDescription, getWarningMessage, getSuccessMessage, logToFileCo
 const { addAnnouncementsRole, lastUpdateToString } = require('../../src/common');
 
 const sagasData = [
-    //boys: 'The Boys',
     { collectionId: 'db', name: 'Dragon Ball', roleId: 'anunciosDb', value: 'db' },
-    { collectionId: 'mcu', name: 'Universo Cinematográfico de Marvel', roleId: 'anunciosUcm', value: 'ucm' }//,
+    { collectionId: 'mcu', name: 'Universo Cinematográfico de Marvel', roleId: 'anunciosUcm', value: 'ucm' },
+    { collectionId: 'the-boys', name: 'The Boys', roleId: 'anunciosBoys', value: 'the-boys' }//,
     //tfs: 'Transformers'
 ];
 
@@ -26,7 +26,8 @@ const getValidFilters = async collectionId => {
 const sendChronologySettingMessage = async (channel, collectionId, guild, instance, interaction, member, message) => {
     const collectionsData = {
         db: { emoji: 'dragon_ball', thumb: 'dragon-ball', title: 'Universo de Dragon Ball' },
-        mcu: { cmd: 'ucm', emoji: 'mcuCharacters', thumb: 'mcu-logo', title: 'Universo Cinematográfico de Marvel' }
+        mcu: { cmd: 'ucm', emoji: 'mcuCharacters', thumb: 'mcu-logo', title: 'Universo Cinematográfico de Marvel' },
+        'the-boys': { emoji: 'the_boys', thumb: 'the-boys', title: 'The Boys' }
     };
     const collection = collectionsData[collectionId];
 

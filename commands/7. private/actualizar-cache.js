@@ -81,7 +81,7 @@ module.exports = {
                     }
                 };
 
-                const chronologiesIds = ['mcu', 'db']
+                const chronologiesIds = ['mcu', 'db', 'the-boys']
                 for (const id of chronologiesIds)
                     await checkForUpdates(id);
 
@@ -103,7 +103,8 @@ module.exports = {
                     const ids = await getIds();
                     const collectionsData = {
                         'db': { emoji: 'dragon_ball', role: 'anunciosDb', title: 'Universo de Dragon Ball' },
-                        'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' }
+                        'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' },
+                        'the-boys': { emoji: 'the_boys', role: 'anunciosBoys', title: 'The Boys' }
                     };
 
                     const getMessagePart = async id => {

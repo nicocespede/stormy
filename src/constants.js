@@ -48,6 +48,11 @@ module.exports = {
         AFA: 'afa'
     },
 
+    RolesMessagesData: [
+        { name: 'Acceso', value: 'access-roles' },
+        { name: 'Notificaciones', value: 'notifications-roles' }
+    ],
+
     categorySettings: [
         {
             name: 'General',

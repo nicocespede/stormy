@@ -1,19 +1,27 @@
+const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType } = require("discord.js");
-const { updateRolesMessageInfo } = require("../../src/cache");
-const { updateRolesMessage } = require("../../src/mongodb");
+const { getCollectorMessages, updateCollectorMessages } = require("../../src/cache");
+const { addRolesMessage, updateRolesMessage } = require("../../src/mongodb");
+const { getSuccessEmbed, logToFileCommandUsage } = require('../../src/util');
+const { RolesMessagesData } = require('../../src/constants');
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Envía el mensaje para los roles.',
-    aliases: ['roles-msg'],
 
-    slash: 'both',
+    slash: true,
     ownerOnly: true,
     guildOnly: true,
 
-    minArgs: 2,
-    expectedArgs: '<canal> <mensaje>',
     options: [
+        {
+            name: 'tipo',
+            description: 'El tipo de roles que tendrá el mensaje.',
+            required: true,
+            type: ApplicationCommandOptionType.String,
+            choices: RolesMessagesData
+        },
         {
             name: 'canal',
             description: 'El canal al que se envía el mensaje.',
@@ -28,18 +36,24 @@ module.exports = {
         }
     ],
 
-    callback: async ({ message, interaction, args }) => {
-        args.shift();
+    callback: async ({ interaction, text, user }) => {
+        logToFileCommandUsage('mensaje-roles', text, interaction, user);
 
-        const text = args.join(' ');
+        const type = interaction.options.getString('tipo');
+        const channel = interaction.options.getChannel('canal');
+        const message = interaction.options.getString('mensaje');
 
-        let channel = message ? message.mentions.channels.first() : interaction.options.getChannel('canal');
+        const sentMessage = await channel.send(message);
 
-        const sentMessage = await channel.send(text);
+        const collectorMessages = await getCollectorMessages();
 
-        await updateRolesMessage(channel.id, sentMessage.id).then(async _ => await updateRolesMessageInfo());
+        if (!collectorMessages[type])
+            await addRolesMessage(type, channel.id, sentMessage.id);
+        else
+            await updateRolesMessage(type, channel.id, sentMessage.id);
 
-        if (interaction)
-            return { custom: true, content: 'Mensaje enviado.', ephemeral: true };
+        await updateCollectorMessages();
+
+        return { custom: true, embeds: [getSuccessEmbed('Mensaje enviado.')], ephemeral: true };
     }
 }
