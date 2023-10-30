@@ -13,7 +13,7 @@ module.exports = {
     callback: async ({ interaction, user }) => {
         logToFileCommandUsage('reiniciar', null, interaction, user);
 
-        interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
 
         if (!(await isOwner(user.id))) {
             interaction.editReply({ embeds: [getDenialEmbed('Lo siento, no estás autorizado para usar este comando.')], ephemeral: true });
