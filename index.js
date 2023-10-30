@@ -74,7 +74,7 @@ client.on('ready', async () => {
     player.on('error', error => {
         consoleLogError('> Error en el reproductor de música');
         logToFileError(moduleName, error);
-    });
+    })/*.on('debug', message => logToFile(moduleName, message))*/;
 
     player.events.on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
@@ -158,7 +158,7 @@ client.on('ready', async () => {
             });
         if (!queue.deleted)
             queue.delete();
-    });
+    })/*.on('debug', (_, message) => logToFile(moduleName, message))*/;
     logToFile(moduleName, `Discord-player instance initialized successfully`);
 
     playInterruptedQueue(client);
