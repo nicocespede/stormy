@@ -1,15 +1,17 @@
+const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType } = require("discord.js");
 const { updateIcon: updateIconCache, getIds, getMode, updateMode: updateModeCache, getGithubRawUrl } = require("../../src/cache");
 const { Mode, CONSOLE_GREEN } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
-const { consoleLog } = require("../../src/util");
+const { consoleLog, logToFileCommandUsage, getDenialEmbed, getWarningEmbed } = require("../../src/util");
 
 const choices = [
     { name: '🤟🏼 KRÜ', value: Mode.KRU },
     { name: '🇦🇷 Selección', value: Mode.AFA }
 ];
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Activa/desactiva un modo.',
@@ -25,11 +27,13 @@ module.exports = {
     slash: true,
     guildOnly: true,
 
-    callback: async ({ client, user, guild, interaction }) => {
+    callback: async ({ client, guild, interaction, text, user }) => {
+        logToFileCommandUsage('modo', text, interaction, user);
+
         if (!(await isOwner(user.id)))
             return {
-                content: `⚠ Lo siento <@${user.id}>, este comando solo puede ser utilizado por los **Dueños de casa**.`,
                 custom: true,
+                embeds: [getDenialEmbed(`Lo siento <@${user.id}>, este comando solo puede ser utilizado por los **Dueños de casa**.`)],
                 ephemeral: true
             };
 
@@ -44,8 +48,8 @@ module.exports = {
 
         if (actualMode !== Mode.NORMAL && actualMode !== mode)
             return {
-                content: `⚠ Primero debés desactivar el modo actual.`,
                 custom: true,
+                embeds: [getWarningEmbed(`Primero debés desactivar el modo actual.`)],
                 ephemeral: true
             };
 
@@ -60,10 +64,9 @@ module.exports = {
             await updateGuildName(client);
             if (roleName) {
                 const role = await guild.roles.fetch(ids.roles[roleName]).catch(console.error);
-                role.members.each(async member => {
-                    if (member.id !== ids.users.stormer)
+                for (const [id, member] of role.members)
+                    if (id !== ids.users.stormer)
                         await member.setNickname(``).catch(console.error);
-                });
             }
             interaction.editReply({ content: `Modo **${name}** desactivado... ${off || ''}` }).catch(console.error);
             return;
@@ -80,12 +83,10 @@ module.exports = {
         consoleLog('> Nombre de usuario actualizado', CONSOLE_GREEN);
         if (roleName) {
             const role = await guild.roles.fetch(ids.roles[roleName]).catch(console.error);
-            role.members.each(async member => {
-                if (member.id !== ids.users.stormer)
-                    await member.setNickname(`${name} ${member.user.username}`).catch(console.error);
-            });
+            for (const [id, member] of role.members)
+                if (id !== ids.users.stormer)
+                    await member.setNickname(`${name} ${member.user.displayName}`).catch(console.error);
         }
         interaction.editReply({ content: `Modo **${name}** activado... ${on}` }).catch(console.error);
-        return;
     }
 }

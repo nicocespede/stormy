@@ -3,7 +3,7 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
+const { getIds, getLastAction, updateLastAction, getSongsInQueue, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
 const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError } = require('./src/util');
 const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage, stopMusicPlayerCollector } = require('./src/music');
