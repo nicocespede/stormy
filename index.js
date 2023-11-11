@@ -169,10 +169,6 @@ client.on('ready', async () => {
     logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | CODE BRANCH: ${codeBranch} | CONTENT BRANCH: ${contentBranch}`);
 });
 
-const moment = require('moment-timezone');
-const timeZone = moment.tz.guess();
-console.log(timeZone);
-
 client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
 
 client.login(process.env.TOKEN);
