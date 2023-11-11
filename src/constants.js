@@ -9,10 +9,9 @@ module.exports = {
 
     LOCAL_ENV: ENVIRONMENT === 'LOCAL',
 
-    ARGENTINA_TZ_STRING: 'America/Argentina/Buenos_Aires',
+    ARGENTINA_TZ_STRING: 'America/Buenos_Aires',
     ARGENTINA_LOCALE_STRING: 'es-AR',
     ARGENTINA_HOURS_OFFSET: 3,
-    GERMANY_HOURS_OFFSET: -1,
 
     color: [4, 134, 164],
 
