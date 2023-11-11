@@ -6,7 +6,7 @@ const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue, getGithubRawUrl } = require("./cache");
 const { MusicActions, color, CONSOLE_YELLOW, CONSOLE_RED, EMBED_DESCRIPTION_MAX_LENGTH } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile, getUserTag } = require("./util");
+const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile, getUserTag, getWarningMessage } = require("./util");
 
 const MODULE_NAME = 'src.music';
 
@@ -196,12 +196,12 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 break;
 
             case 'kicked':
-                description = "⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!";
+                description = getWarningMessage("Fui desconectado del canal de voz, 👋 ¡adiós!");
                 thumbnail = `disconnected`;
                 break;
 
             case 'restarting':
-                description = `⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`;
+                description = getWarningMessage(`Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`);
                 thumbnail = `restart`;
                 break;
 
