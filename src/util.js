@@ -1,6 +1,6 @@
 const { default: WOKCommands } = require('wokcommands');
 const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, ARGENTINA_HOURS_OFFSET } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, ARGENTINA_HOURS_OFFSET, GERMANY_HOURS_OFFSET } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -339,6 +339,17 @@ module.exports = {
      */
     convertToUTCFromArgentina: date => {
         date.setHours(date.getHours() + ARGENTINA_HOURS_OFFSET);
+        return date;
+    },
+
+    /**
+     * Converts a date from Germany timezone to UTC.
+     * 
+     * @param {Date} date The date to convert.
+     * @returns The converted date.
+     */
+    convertToUTCFromGermany: date => {
+        date.setHours(date.getHours() + GERMANY_HOURS_OFFSET);
         return date;
     }
 };
