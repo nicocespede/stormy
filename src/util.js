@@ -1,5 +1,6 @@
 const { default: WOKCommands } = require('wokcommands');
 const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
+const { DateTime } = require("luxon");
 const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, ARGENTINA_HOURS_OFFSET } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -349,12 +350,16 @@ module.exports = {
      * @returns The UTC Date.
      */
     getUTCDate: string => {
-        const date = new Date(string);
+        let date;
+        
+        const tzString = process.env.TIMEZONE_STRING;
+        if (!tzString)
+            date = DateTime.fromISO(string, { zone: 'UTC' });
+        else {
+            date = DateTime.fromISO(string, { zone: tzString });
+            date = date.setZone('UTC');
+        }
 
-        const offset = process.env.TZ_OFFSET;
-        if (offset)
-            date.setHours(date.getHours() + parseInt(offset) - (date.getTimezoneOffset() / 60));
-
-        return date;
+        return new Date(date.year, date.month, date.daysInMonth, date.hour, date.minute, date.second);
     }
 };
