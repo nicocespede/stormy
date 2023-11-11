@@ -353,7 +353,7 @@ module.exports = {
 
         const offset = process.env.TZ_OFFSET;
         if (offset)
-            date.setHours(date.getHours() + parseInt(offset) + date.getTimezoneOffset());
+            date.setHours(date.getHours() + parseInt(offset) + (date.getTimezoneOffset() / 60));
 
         return date;
     }
