@@ -1,5 +1,6 @@
 const { default: WOKCommands } = require('wokcommands');
 const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
+const moment = require('moment-timezone');
 const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, ARGENTINA_HOURS_OFFSET } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -349,12 +350,13 @@ module.exports = {
      * @returns The UTC Date.
      */
     getUTCDate: string => {
-        const date = new Date(string);
+        const tzString = process.env.TIMEZONE_STRING;
 
-        const offset = process.env.TZ_OFFSET;
-        if (offset)
-            date.setHours(date.getHours() + parseInt(offset) - (date.getTimezoneOffset() / 60));
+        if (tzString) {
+            const momentScrapped = moment.tz(string, tzString);
+            return momentScrapped.clone().tz(moment.tz.guess()).toDate();
+        }
 
-        return date;
+        return new Date(string);
     }
 };
