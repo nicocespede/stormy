@@ -2,8 +2,9 @@ const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
 const { updateReminders, getReminders, getGithubRawUrl } = require('../../src/cache');
 const reminderSchema = require('../../models/reminder-schema');
-const { CONSOLE_GREEN, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
-const { convertTZ, consoleLog, logToFileSubCommandUsage, convertToUTCFromArgentina } = require('../../src/util');
+const { CONSOLE_GREEN } = require('../../src/constants');
+const { convertTZ, consoleLog, logToFileSubCommandUsage, getUTCDateFromArgentina, getWarningEmbed, getSuccessEmbed, buildStyledUnixTimestamp } = require('../../src/util');
+const { getErrorEmbed } = require('../../src/common');
 
 /**@type {ICommand}*/
 module.exports = {
@@ -60,7 +61,7 @@ module.exports = {
                 let description = `Hola <@${user.id}>, tus recordatorios guardados son:\n\n`;
                 for (let i = 0; i < filtered.length; i++) {
                     const { date, description: desc } = filtered[i];
-                    description += `**${i + 1}.** ${desc}: **${convertTZ(date).toLocaleString(ARGENTINA_LOCALE_STRING, { dateStyle: 'short', timeStyle: 'short' })}**\n\n`;
+                    description += `**${i + 1}.** ${desc}: **${buildStyledUnixTimestamp(convertTZ(date), 'f')}**\n\n`;
                 }
 
                 interaction.reply({
@@ -73,7 +74,7 @@ module.exports = {
                 });
                 return;
             } else
-                return { custom: true, ephemeral: true, content: '⚠ No tenés ningún recordatorio guardado.' }
+                return { custom: true, embeds: [getWarningEmbed('No tenés ningún recordatorio guardado.')], ephemeral: true };
         } else if (subCommand === 'agregar') {
             const description = interaction.options.getString('descripcion');
             const arg = interaction.options.getString('tiempo-o-fecha');
@@ -93,7 +94,7 @@ module.exports = {
                         time = parseInt(secondSplit[0]);
                         type = secondSplit[1].toLowerCase();
                     } catch {
-                        reply.content = `⚠ **¡Formato de tiempo inválido!** _Ejemplo de formato: "1d 2h 3m" donde 'd' = días, 'h' =  horas y 'm' = minutos._`;
+                        reply.embeds = [getWarningEmbed(`**¡Formato de tiempo inválido!** _Ejemplo de formato: "1d 2h 3m" donde 'd' = días, 'h' =  horas y 'm' = minutos._`)];
                         return reply;
                     }
 
@@ -102,7 +103,7 @@ module.exports = {
                     else if (type === 'd')
                         totalTime += time * 60 * 24;
                     else if (type !== 'm') {
-                        reply.content = `⚠ Por favor usá **"m"**, **"h"** o **"d"** para **minutos**, **horas** y **días** respectivamente.`;
+                        reply.embeds = [getWarningEmbed(`Por favor usá **"m"**, **"h"** o **"d"** para **minutos**, **horas** y **días** respectivamente.`)];
                         return reply;
                     } else
                         totalTime += time;
@@ -113,7 +114,7 @@ module.exports = {
             } else {
                 const splittedArg = arg.split(' ');
                 if (splittedArg.length !== 2) {
-                    reply.content = `⚠ **¡Formato de fecha inválido!** Formatos válidos: _DD/MM/AAAA HH:MM_ o _DD-MM-AAAA HH:MM_.`;
+                    reply.embeds = [getWarningEmbed(`**¡Formato de fecha inválido!** Formatos válidos: _DD/MM/AAAA HH:MM_ o _DD-MM-AAAA HH:MM_.`)];
                     return reply;
                 }
 
@@ -121,21 +122,21 @@ module.exports = {
                 const timeMatch = splittedArg[1].match(/^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/);
 
                 if (!dateMatch) {
-                    reply.content = `⚠ La fecha es inválida.`;
+                    reply.embeds = [getWarningEmbed(`La fecha es inválida.`)];
                     return reply;
                 }
 
                 if (!timeMatch) {
-                    reply.content = `⚠ La hora es inválida.`;
+                    reply.embeds = [getWarningEmbed(`La hora es inválida.`)];
                     return reply;
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
                 const hour = timeMatch[0];
-                date = convertToUTCFromArgentina(new Date(`${split[2].padStart(4, '20')}-${split[1]}-${split[0]}T${hour.padStart(5, '0')}Z`));
+                date = getUTCDateFromArgentina(`${split[2].padStart(4, '20')}-${split[1]}-${split[0]}T${hour.padStart(5, '0')}`);
 
                 if (date < new Date()) {
-                    reply.content = '⚠ La fecha introducida ya pasó.';
+                    reply.embeds = [getWarningEmbed('La fecha introducida ya pasó.')];
                     return reply;
                 }
             }
@@ -145,7 +146,7 @@ module.exports = {
             updateReminders();
 
             const convertedDate = convertTZ(date);
-            reply.content = `✅ Tu recordatorio para el **${convertedDate.toLocaleDateString(ARGENTINA_LOCALE_STRING)}** a las **${convertedDate.toLocaleTimeString(ARGENTINA_LOCALE_STRING, { timeStyle: 'short' })}** fue guardado satisfactoriamente.`;
+            reply.embeds = [getSuccessEmbed(`Tu recordatorio para el **${buildStyledUnixTimestamp(convertedDate, 'F')}** fue guardado satisfactoriamente.`)];
             return reply;
 
         } else if (subCommand === 'borrar') {
@@ -154,21 +155,21 @@ module.exports = {
             const filtered = reminders.filter(r => r.userId === user.id);
 
             if (filtered.length === 0)
-                return { content: `⚠ No tenés recordatorios guardados.`, custom: true, ephemeral: true };
+                return { custom: true, embeds: [getWarningEmbed(`No tenés recordatorios guardados.`)], ephemeral: true };
 
             const index = id - 1;
 
             if (index < 0 || index >= filtered.length)
-                return { custom: true, ephemeral: true, content: '⚠ El ID es inválido.' }
+                return { custom: true, embeds: [getWarningEmbed('El ID es inválido.')], ephemeral: true }
 
             const selected = filtered[id - 1];
             const deletion = await reminderSchema.deleteOne({ _id: selected._id }).catch(console.error);
             if (deletion.deletedCount > 0) {
                 consoleLog(`> Recordatorio eliminado de la base de datos`, CONSOLE_GREEN);
                 updateReminders();
-                return { content: `✅ Recordatorio borrado satisfactoriamente.`, custom: true, ephemeral: true };
+                return { custom: true, embeds: [getSuccessEmbed(`Recordatorio borrado satisfactoriamente.`)], ephemeral: true };
             }
-            return { content: `❌ Lo siento, algo salió mal.`, custom: true, ephemeral: true };
+            return { custom: true, embeds: [await getErrorEmbed(`Lo siento, algo salió mal.`)], ephemeral: true };
         }
     }
 }

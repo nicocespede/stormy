@@ -2,11 +2,10 @@ const { ChannelType, Client, VoiceBasedChannel } = require('discord.js');
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const Canvas = require('canvas');
-const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getChronology, updateChronology,
-    getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
+const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
 const { relativeSpecialDays, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateManyStats } = require('./mongodb');
-const { convertTZ, consoleLog, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage } = require('./util');
+const { convertTZ, consoleLog, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getUTCDateFromArgentina, buildStyledUnixTimestamp } = require('./util');
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
 Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
@@ -79,15 +78,17 @@ const getMembersStatus = async channel => {
     return { size, valid, invalid };
 };
 
-const lastUpdateToString = (lastUpdate, upperCase) => {
-    const date = convertTZ(new Date(`${lastUpdate.substring(6, 10)}-${lastUpdate.substring(3, 5)}-${lastUpdate.substring(0, 2)}T03:00Z`));
-    const today = convertTZ(new Date());
-    if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear())
-        if (date.getDate() === today.getDate())
-            return !upperCase ? 'hoy' : 'Hoy';
-        else if (date.getDate() === today.getDate() - 1)
-            return !upperCase ? 'ayer' : 'Ayer';
-    return `${(!upperCase ? 'el ' : '')}` + lastUpdate;
+/**
+ * Converts a date string to a colloquial string.
+ * 
+ * @param {String} lastUpdate The last update date string.
+ * @param {Boolean} upperCase If the first letter has to be upper case or not.
+ * @returns The last update formatted date.
+ */
+const lastUpdateToString = lastUpdate => {
+    const splitted = lastUpdate.split('/');
+    const date = getUTCDateFromArgentina(`${splitted[2]}-${splitted[1]}-${splitted[0]}`);
+    return buildStyledUnixTimestamp(date);
 };
 
 const addAnnouncementsRole = async (id, guild, member) => {
