@@ -3,10 +3,10 @@ const WOKCommands = require('wokcommands');
 const path = require('path');
 require('dotenv').config();
 const { Player } = require('discord-player');
-const { getIds, getLastAction, updateLastAction, getSongsInQueue, getMusicPlayerData, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
-const { checkBansCorrelativity, startStatsCounters, countMembers } = require('./src/common');
-const { consoleLog, logToFile, getUserTag } = require('./src/util');
-const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage } = require('./src/music');
+const { getIds, getLastAction, updateLastAction, getSongsInQueue, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
+const { checkBansCorrelativity, startStatsCounters, countMembers, getErrorEmbed } = require('./src/common');
+const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError } = require('./src/util');
+const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage, stopMusicPlayerCollector } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
 const MODULE_NAME = 'index';
@@ -69,6 +69,13 @@ client.on('ready', async () => {
         }
     });
 
+    await player.extractors.loadDefault();
+
+    player.on('error', error => {
+        consoleLogError('> Error en el reproductor de música');
+        logToFileError(moduleName, error);
+    })/*.on('debug', message => logToFile(moduleName, message))*/;
+
     player.events.on('playerStart', async (queue, track) => {
         const { action: lastAction, user } = getLastAction();
         if (lastAction === MusicActions.CHANGING_CHANNEL)
@@ -120,8 +127,7 @@ client.on('ready', async () => {
         }
     }).on('emptyChannel', _ => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
-        const { collector } = getMusicPlayerData('player');
-        collector.stop();
+        stopMusicPlayerCollector();
     }).on('emptyQueue', async queue => {
         const { action: lastAction } = getLastAction();
         const queueEnded = queue.channel.members.size > 1
@@ -129,11 +135,10 @@ client.on('ready', async () => {
             && lastAction !== MusicActions.BEING_KICKED && lastAction !== MusicActions.RESTARTING;
         if (queueEnded) {
             updateLastAction(MusicActions.ENDING);
-            const { collector } = getMusicPlayerData('player');
-            collector.stop();
+            stopMusicPlayerCollector();
         }
     }).on('playerError', async (queue, error) => {
-        consoleLog(`Error in Player.on('playerError'):\n${error.stack}`, CONSOLE_RED);
+        consoleLog(`Error in Player.events.on('playerError'):\n${error.stack}`, CONSOLE_RED);
         queue.metadata.send({
             content: `<@${ids.users.stormer}>`,
             embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
@@ -142,16 +147,18 @@ client.on('ready', async () => {
         if (!queue.deleted)
             queue.delete();
     }).on('error', async (queue, error) => {
-        consoleLog(`Error in Player.on('error'):\n${error.stack}`, CONSOLE_RED);
+        consoleLogError('> Error en el reproductor de música');
+        logToFileError(moduleName, error);
+
         if (error.message !== 'write EPIPE')
             queue.metadata.send({
                 content: `<@${ids.users.stormer}>`,
-                embeds: [musicEmbed.setDescription(`❌ **${error.name}**:\n\n${error.message}`)
+                embeds: [(await getErrorEmbed(`❌ **${error.name}**:\n\n${error.message}`))
                     .setThumbnail(await getGithubRawUrl('assets/thumbs/broken-robot.png'))]
             });
         if (!queue.deleted)
             queue.delete();
-    });
+    })/*.on('debug', (_, message) => logToFile(moduleName, message))*/;
     logToFile(moduleName, `Discord-player instance initialized successfully`);
 
     playInterruptedQueue(client);

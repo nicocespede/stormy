@@ -1,4 +1,4 @@
-const { AttachmentBuilder } = require('discord.js');
+const { AttachmentBuilder, User, Client } = require('discord.js');
 const Canvas = require('canvas');
 const { getIds, updateBirthdays, timeouts, getGithubRawUrl } = require('../src/cache');
 const { applyText, isOwner } = require('../src/common');
@@ -8,6 +8,12 @@ const { relativeSpecialDays, CONSOLE_YELLOW } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
 const birthdaySchema = require('../models/birthday-schema');
 
+/**
+ * Generates the birthday greeting image for a user.
+ * 
+ * @param {User} user The user to generate the image.
+ * @returns The birthday greeting image
+ */
 const generateBirthdayImage = async user => {
     const canvas = Canvas.createCanvas(1170, 720);
     const context = canvas.getContext('2d');
@@ -19,23 +25,25 @@ const generateBirthdayImage = async user => {
     context.strokeStyle = '#151515';
     context.lineWidth = 2;
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
+
+    const { username } = user;
     // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, user.username);
+    context.font = applyText(canvas, username);
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
-    const usernameWidth = context.measureText(user.username).width;
+    const usernameWidth = context.measureText(username).width;
     if (await isOwner(user.id)) {
         const crownWidth = 60;
         const gapWidth = 5;
         const crown = await Canvas.loadImage('./assets/crown.png');
         // Actually fill the text with a solid color
-        context.fillText(user.username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
-        context.strokeText(user.username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
+        context.fillText(username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
+        context.strokeText(username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
         context.drawImage(crown, (background.width / 2) - ((usernameWidth + crownWidth + gapWidth) / 2), canvas.height / (6 / 5) - 74, crownWidth, 64);
     } else {
         // Actually fill the text with a solid color
-        context.fillText(user.username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
-        context.strokeText(user.username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
+        context.fillText(username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
+        context.strokeText(username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
     }
     // Pick up the pen
     context.beginPath();
@@ -51,6 +59,19 @@ const generateBirthdayImage = async user => {
     return new AttachmentBuilder(canvas.toBuffer());
 };
 
+/**
+ * Gets the day of the year.
+ * 
+ * @param {Date} today The today date.
+ * @returns The day of the year which is in range [1, 365/366] depending on leap year or not.
+ */
+const getDayOfTheYear = today => {
+    const startOfYear = convertTZ(new Date(today.getFullYear(), 0, 0));
+    const diff = today - startOfYear;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+};
+
+/** @param {Client} client */
 module.exports = async client => {
     const ids = await getIds();
     const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
@@ -73,7 +94,11 @@ module.exports = async client => {
                 const member = members.get(_id);
 
                 if (!member) {
-                    consoleLog(`> El usuario ${username} ya no está en el servidor.`, CONSOLE_YELLOW);
+                    if (today.getDate() !== date.getDate()) {
+                        consoleLog(`> El usuario ${username} ya no está en el servidor, omitiendo saludo de cumpleaños`, CONSOLE_YELLOW);
+                        await updateBirthday(_id, date.setYear(date.getFullYear() + 1)).catch(console.error);
+                        await updateBirthdays();
+                    }
                     continue;
                 }
 
@@ -106,7 +131,10 @@ module.exports = async client => {
                 const member2 = members.get(id2);
 
                 if (!member1 || !member2) {
-                    consoleLog(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor.`, CONSOLE_YELLOW);
+                    if (today.getDate() !== date.getDate()) {
+                        consoleLog(`> El usuario con ID ${!member1 ? id1 : id2} ya no está en el servidor, omitiendo saludo de aniversario`, CONSOLE_YELLOW);
+                        await updateAnniversary(id1, id2, date.setYear(date.getFullYear() + 1)).catch(console.error);
+                    }
                     continue;
                 }
 
@@ -116,7 +144,7 @@ module.exports = async client => {
                     await m.react(emoji);
                     await new Promise(res => setTimeout(res, 1000 * 0.5));
                 }
-                await updateAnniversary(anniversary.id1, anniversary.id2, date.setYear(date.getFullYear() + 1)).catch(console.error);
+                await updateAnniversary(id1, id2, date.setYear(date.getFullYear() + 1)).catch(console.error);
             }
         }
 
@@ -126,6 +154,11 @@ module.exports = async client => {
             const month = convertedToday.getMonth() + 1;
             let msg;
             let emojis = [];
+            if (getDayOfTheYear(convertedToday) === 256) {
+                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz día del programador** a todos los programadores del servidor! 💻🧠`;
+                emojis = ['💻', '🧠', '🤓'];
+            }
+
             if (date === 1 && month === 1) {
                 msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz año nuevo** a todos los miembros del servidor! 🥂🌠`;
                 emojis = ['🥂', '🌠', '🎆'];

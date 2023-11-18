@@ -34,8 +34,12 @@ module.exports = {
 
         if (!isNaN(totalTime)) {
             const { days, hours, minutes, seconds } = secondsToFull(totalTime);
-            const member = await guild.members.fetch(id);
-            await updateStat(id, days, hours, minutes, seconds, member ? getUserTag(member.user) : id);
+            try {
+                const member = await guild.members.fetch(id);
+                await updateStat(id, days, hours, minutes, seconds, getUserTag(member.user));
+            } catch (error) {
+                await updateStat(id, days, hours, minutes, seconds, id);
+            }
         }
 
         return '¡Tiempo restado!';

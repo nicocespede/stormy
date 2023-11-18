@@ -1,6 +1,7 @@
-const { CollectorsData, TradesData, FWCData, BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData } = require("./typedefs");
+const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData, MusicPlayerData, CollectorMessagesData } = require("./typedefs");
+const { Message, InteractionCollector } = require("discord.js");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
-const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError } = require('./util');
+const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError, getUTCDateFromLocal } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -22,7 +23,6 @@ var birthdays;
 let banned;
 var sombraBans;
 let billboardMessageInfo;
-var rolesMessageInfo;
 let icon;
 let mode;
 let lastAction;
@@ -34,54 +34,31 @@ var tracksNameExtras;
 let reminders;
 let characters;
 let songsInQueue = {};
-let musicPlayerData = {};
-
-/**@type {CollectorsData} */
-let collectors;
-
-/**
- * Retrieves the collectors data from the database.
- * 
- * @returns All cached collectors data.
- */
-const updateCollectors = async () => {
-    const collectorSchema = require('../models/fwc-collector-schema');
-    collectors = await collectorSchema.find({});
-    consoleLog('> Caché de coleccionistas actualizado', CONSOLE_GREEN);
-    return collectors;
-}
-
-/**@type {TradesData} */
-let trades;
-
-/**
- * Retrieves the trades data from the database.
- * 
- * @returns All cached trades data.
- */
-const updateTrades = async () => {
-    const tradeSchema = require('../models/fwc-trade-schema');
-    trades = await tradeSchema.find({});
-    consoleLog('> Caché de intercambios actualizado', CONSOLE_GREEN);
-    return trades;
-}
-
-/** @type {FWCData} */
 let fwcData;
 
+/** @type {CollectorMessagesData}*/
+let collectorMessages;
+
 /**
- * Retrieves the FWC data from the fwc-2022.json file.
+ * Retrieves the collector messages data from the database.
  * 
- * @returns All cached FWC data.
+ * @returns All cached collector messages data.
  */
-const updateFWCData = async () => {
-    const data = await retrieveDataFromFile(`fwc-2022.json`);
-
-    if (data)
-        fwcData = data;
-
-    return fwcData;
+const updateCollectorMessages = async () => {
+    collectorMessages = {};
+    const results = await collectorMessageSchema.find({});
+    for (const result of results)
+        collectorMessages[result._id] = {
+            channelId: result.channelId,
+            isActive: result.isActive,
+            messageId: result.messageId
+        }
+    consoleLog('> Caché de recolectores de reacciones actualizado', CONSOLE_GREEN);
+    return collectorMessages;
 }
+
+/** @type {MusicPlayerData}*/
+let musicPlayerData = {};
 
 /** @type {TimestampsData}*/
 const timestamps = {};
@@ -288,8 +265,7 @@ const updateKruMatches = async type => {
         const matches = [];
         a.each((_, el) => {
             const split = $(el).children('.m-item-date').text().trim().split(`\t`);
-            const date = new Date(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}Z`);
-            date.setHours(date.getHours() - 2);
+            const date = getUTCDateFromLocal(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}`);
 
             const match = {
                 date,
@@ -483,12 +459,19 @@ module.exports = {
         const sombraBanSchema = require('../models/sombraBan-schema');
         const results = await sombraBanSchema.find({});
         sombraBans = [];
-        results.forEach(element => {
-            sombraBans.push(element.reason);
-        });
+        results.forEach(element => sombraBans.push(element.reason));
         consoleLog('> Caché de baneos de Sombra actualizado', CONSOLE_GREEN);
         return sombraBans;
     },
+
+    /**
+     * Gets the data of a collector message.
+     * 
+     * @param {String} key The collector message key to get.
+     * @returns The collector message data.
+     */
+    getCollectorMessages: async () => collectorMessages || await updateCollectorMessages(),
+    updateCollectorMessages,
 
     getBillboardMessageInfo: () => billboardMessageInfo,
     updateBillboardMessageInfo: async () => {
@@ -499,17 +482,6 @@ module.exports = {
         };
         consoleLog('> Caché de recolector de reacciones actualizado', CONSOLE_GREEN);
         return billboardMessageInfo;
-    },
-
-    getRolesMessageInfo: () => rolesMessageInfo,
-    updateRolesMessageInfo: async () => {
-        const result = await collectorMessageSchema.findById('roles_message');
-        rolesMessageInfo = {
-            messageId: result.messageId,
-            channelId: result.channelId
-        };
-        consoleLog('> Caché de mensaje de roles actualizado', CONSOLE_GREEN);
-        return rolesMessageInfo;
     },
 
     getIcon: () => icon,
@@ -678,32 +650,49 @@ module.exports = {
     },
     removeSongInQueue: url => delete songsInQueue[url],
 
+    /**
+     * Retrieves a music player item from a key.
+     * 
+     * @param {"player" | "queue" | "lyrics"} key The key to be retrieved.
+     * @returns The music player item.
+     */
     getMusicPlayerData: key => musicPlayerData[key],
-    setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector: collector, message: message, page: page },
+
+    /**
+     * Creates a new music player item.
+     * 
+     * @param {"player" | "queue" | "lyrics"} key The key to be created.
+     * @param {Message} message The message to be set.
+     * @param {InteractionCollector} collector The collector to be set.
+     * @param {Number} [page] The page number to be set.
+     */
+    setMusicPlayerData: (key, message, collector, page) => musicPlayerData[key] = { collector, message, page },
+
+    /**
+     * Deletes a music player item from a key.
+     * 
+     * @param {"player" | "queue" | "lyrics"} key The key of the item to be deleted.
+     */
     clearMusicPlayerData: key => delete musicPlayerData[key],
+
+    /**
+     * Updates the page number of a music player item.
+     * 
+     * @param {"player" | "queue" | "lyrics"} key The key of the item to be updated.
+     * @param {Number} page The page number to be set.
+     */
     updatePage: (key, page) => musicPlayerData[key].page = page,
 
-    /**
-     * Gets the FWC data (players, teams, positions and achievements) stored in cache.
-     * 
-     * @returns All cached FWC data.
-     */
-    getFWCData: async () => fwcData || await updateFWCData(),
+    getFWCData: () => fwcData,
 
-    /**
-     * Gets the collectors data stored in cache.
-     * 
-     * @returns All cached collectors data.
-     */
-    getCollectors: async () => collectors || await updateCollectors(),
-    updateCollectors,
+    updateFWCData: async () => {
+        const data = await retrieveDataFromFile(`fwc-2022.json`);
 
-    /**
-     * Gets the trades data stored in cache.
-     * 
-     * @returns All cached trades data.
-     */
-    getTrades: async () => trades || await updateTrades(),
+        if (data)
+            fwcData = data;
+
+        return fwcData;
+    },
 
     /**
      * Gets the currencies data stored in cache.

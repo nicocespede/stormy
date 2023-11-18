@@ -3,7 +3,8 @@ const { EmbedBuilder } = require('discord.js');
 const { ARGENTINA_TZ_STRING, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { getCurrencies } = require('../../src/cache');
 const { getCurrencyData, USD_CODE, ARS_CODE, getUSDollarPrices, getEuroPrices } = require('../../src/currencies');
-const { logToFileCommandUsage, formatNumber } = require('../../src/util');
+const { logToFileCommandUsage, formatNumber, getSimpleEmbed } = require('../../src/util');
+const { getErrorEmbed } = require('../../src/common');
 
 const availableCurrencies = Object.keys(getCurrencies());
 availableCurrencies.splice(availableCurrencies.indexOf('usd'), 1);
@@ -22,7 +23,7 @@ module.exports = {
 
         logToFileCommandUsage(cmd, null, null, user);
 
-        const reply = { content: '⏳ Procesando acción...' };
+        const reply = { embeds: [getSimpleEmbed('⏳ Procesando acción...')] };
         const deferringMessage = await message.reply(reply);
 
         const { color, imageURL, lastUpdated, name, price } = await getCurrencyData(cmd);
@@ -51,7 +52,7 @@ module.exports = {
                 const dollarData = await getUSDollarPrices();
 
                 if (!dollarData) {
-                    reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+                    reply.embeds = [await getErrorEmbed(`Lo siento <@${user.id}>, pero algo salió mal.`)];
                     deferringMessage.edit(reply);
                     return;
                 }
@@ -70,7 +71,7 @@ module.exports = {
                 const euroData = await getEuroPrices();
 
                 if (!euroData) {
-                    reply.content = `❌ Lo siento <@${user.id}>, pero algo salió mal.`;
+                    reply.embeds = [await getErrorEmbed(`Lo siento <@${user.id}>, pero algo salió mal.`)];
                     deferringMessage.edit(reply);
                     return;
                 }
@@ -84,13 +85,11 @@ module.exports = {
                 .setFooter({ text: 'Información obtenida de DolarHoy.' })
         }
 
-        reply.content = null;
         reply.embeds = [embed.setTitle(name)
             .setDescription(description)
             .setColor(color || instance.color)
             .setThumbnail(imageURL)];
 
         deferringMessage.edit(reply);
-        return;
     }
 }

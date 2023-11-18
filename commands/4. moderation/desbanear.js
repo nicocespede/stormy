@@ -1,8 +1,14 @@
+const { ICommand } = require("wokcommands");
 const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { getBanned, updateBanned, getIds } = require('../../src/cache');
 const { PREFIX } = require('../../src/constants');
-const { isOwner } = require('../../src/common');
+const { isOwner, getErrorEmbed } = require('../../src/common');
+const { logToFileCommandUsage, getWarningEmbed, getDenialEmbed, getWarningMessage, getSuccessEmbed, consoleLogError, logToFileError, getSimpleEmbed, getUserTag } = require('../../src/util');
 
+const COMMAND_NAME = 'desbanear';
+const MODULE_NAME = 'commands.moderation.' + COMMAND_NAME;
+
+/**@type {ICommand}*/
 module.exports = {
     category: 'Moderación',
     description: 'Quita el baneo a un usuario (sólo para usuarios autorizados).',
@@ -22,7 +28,9 @@ module.exports = {
     minArgs: 1,
     maxArgs: 1,
 
-    callback: async ({ guild, user, message, args, interaction, channel }) => {
+    callback: async ({ args, channel, guild, interaction, message, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         const number = message ? args[0] : interaction.options.getInteger('indice');
         const reply = { custom: true, ephemeral: true };
         const ids = await getIds();
@@ -31,16 +39,16 @@ module.exports = {
         const index = parseInt(number) - 1;
         const bans = getBanned() || await updateBanned();
         if (!isAuthorized) {
-            reply.content = `⚠ Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`;
+            reply.embeds = [getDenialEmbed(`Lo siento <@${user.id}>, no tenés autorización para desbanear usuarios.`)];
             return reply;
         } else if (index < 0 || index >= Object.keys(bans).length || isNaN(index)) {
-            reply.content = `⚠ El índice ingresado es inválido.`;
+            reply.embeds = [getWarningEmbed(`El índice ingresado es inválido.`)];
             return reply;
         } else {
             const id = Object.keys(bans)[index];
             const ban = bans[id];
-            if (user.id != ban.responsible && ban.responsible != "Desconocido") {
-                reply.content = `⚠ Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`;
+            if (user.id !== ban.responsible && ban.responsible !== "Desconocido") {
+                reply.embeds = [getDenialEmbed(`Hola <@${user.id}>, no tenés permitido desbanear a este usuario ya que fue baneado por otra persona.`)];
                 return reply;
             } else {
                 const row = new ActionRowBuilder()
@@ -53,30 +61,30 @@ module.exports = {
                         .setLabel('Cancelar')
                         .setStyle(ButtonStyle.Danger));
 
-                const messageOrInteraction = message ? message : interaction;
-                const replyMessage = await messageOrInteraction.reply({
-                    components: [row],
-                    content: `⚠ ¿Estás seguro de querer desbanear a **${ban.user}**?`,
-                    ephemeral: true
-                });
+                reply.components = [row];
+                reply.content = getWarningMessage(`¿Estás seguro de querer desbanear a **${getUserTag(ban.user)}**?`);
 
-                const filter = (btnInt) => {
-                    return user.id === btnInt.user.id;
-                }
+                const replyMessage = message ? await message.reply(reply) : interaction.reply(reply);
+
+                const filter = btnInt => user.id === btnInt.user.id;
 
                 const collector = channel.createMessageComponentCollector({ filter, max: 1, time: 1000 * 15 });
 
                 collector.on('end', async collection => {
-                    const edit = { components: [] };
+                    const edit = { components: [], content: null };
                     if (!collection.first())
-                        edit.content = '⌛ La acción expiró.';
-                    else if (collection.first().customId === 'unban_yes')
-                        await guild.members.unban(id).then(async () => {
-                            edit.content = '✅ La acción fue completada.';
-                            channel.send({ content: `Hola <@${user.id}>, el usuario fue desbaneado correctamente.` });
-                        }).catch(console.error);
+                        edit.embeds = [getSimpleEmbed('⌛ La acción expiró.')];
+                    else if (collection.first().customId === 'unban_no')
+                        edit.embeds = [getSimpleEmbed('❌ La acción fue cancelada.')];
                     else
-                        edit.content = '❌ La acción fue cancelada.';
+                        try {
+                            await guild.members.unban(id);
+                            edit.embeds = [getSuccessEmbed(`Hola <@${user.id}>, el usuario fue desbaneado correctamente.`)];
+                        } catch (error) {
+                            consoleLogError(`> Error al desbanear a ${getUserTag(ban.user)}`);
+                            logToFileError(MODULE_NAME, error);
+                            edit.embeds = [await getErrorEmbed('Lo siento, ocurrió un error al desbanear al usuario.')];
+                        }
                     message ? await replyMessage.edit(edit) : await interaction.editReply(edit);
                 });
             }

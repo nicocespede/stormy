@@ -1,11 +1,16 @@
+const { ICommand } = require("wokcommands");
 const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { CONSOLE_RED } = require('../../src/constants');
 const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { getIds, getGithubRawUrl } = require('../../src/cache');
 const { splitLyrics, handleErrorEphemeral } = require('../../src/music');
-const { consoleLog } = require('../../src/util');
+const { consoleLogError, logToFileError, logToFileCommandUsage, getWarningEmbed, getSimpleEmbed } = require('../../src/util');
+const { getErrorEmbed } = require("../../src/common");
 
+const COMMAND_NAME = 'letra';
+const MODULE_NAME = 'commands.music.' + COMMAND_NAME;
+
+/**@type {ICommand}*/
 module.exports = {
     category: 'Música',
     description: 'Muestra la letra de la canción ingresada.',
@@ -24,10 +29,11 @@ module.exports = {
     expectedArgs: '[canción]',
     guildOnly: true,
 
-    callback: async ({ user, message, channel, interaction, text, instance }) => {
-        const messageOrInteraction = message ? message : interaction;
+    callback: async ({ channel, instance, interaction, message, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         const song = message ? text : interaction.options.getString('canción');
-        const reply = { ephemeral: true };
+        const reply = { ephemeral: true, fetchReply: true };
 
         const ids = await getIds();
         if (!ids.channels.musica.includes(channel.id)) {
@@ -35,10 +41,22 @@ module.exports = {
             return;
         }
 
+        if (interaction)
+            await interaction.deferReply(reply);
+
         try {
             const searches = await Client.songs.search(song);
 
             const firstSong = searches[0];
+
+            if (!firstSong) {
+                reply.embeds = [getWarningEmbed('¡No se encontraron resultados de letras para la canción ingresada!')
+                    .setColor(instance.color)
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
+                message ? await message.reply(reply) : await interaction.editReply(reply);
+                return;
+            }
+
             let lyrics = await firstSong.lyrics();
             lyrics = lyrics.replace(/[[]/g, '**[').replace(/[\]]/g, ']**');
 
@@ -46,10 +64,8 @@ module.exports = {
 
             const chunks = splitLyrics(lyrics);
             for (const chunk of chunks)
-                embeds.push(new EmbedBuilder()
-                    .setDescription(chunk)
-                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/genius.png`))
-                    .setColor(instance.color));
+                embeds.push(getSimpleEmbed(chunk)
+                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/genius.png`)));
             embeds[embeds.length - 1].setFooter({ text: 'Letra obtenida de genius.com' });
 
             const getRow = () => {
@@ -71,12 +87,13 @@ module.exports = {
 
                 return row;
             };
+
             let page = 0;
 
             reply.components = embeds.length > 1 ? [getRow()] : [];
             reply.embeds = [embeds[page]];
 
-            const targetMessage = await messageOrInteraction.reply(reply);
+            const targetMessage = message ? await message.reply(reply) : await interaction.editReply(reply);
 
             if (embeds.length > 1) {
                 const filter = btnInt => user.id === btnInt.user.id;
@@ -100,28 +117,21 @@ module.exports = {
                         message.delete();
                     } else
                         interaction.editReply({
-                            components: [], embeds: [new EmbedBuilder()
-                                .setDescription('⌛ Esta acción expiró...')
-                                .setColor(instance.color)
+                            components: [], embeds: [getSimpleEmbed('⌛ Esta acción expiró...')
                                 .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/hourglass-sand-top.png`))]
                         });
                 });
             }
         } catch (error) {
-            const embed = new EmbedBuilder().setColor(instance.color);
-            const notFoundErrors = ['No result was found', "Cannot read properties of undefined (reading 'lyrics')"];
-            const notFound = notFoundErrors.includes(error.message);
-            if (notFound)
-                reply.embeds = [embed.setDescription(`🛑 ¡No se encontraron resultados de letras para la canción ingresada!`)
-                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
-            else {
-                consoleLog(error, CONSOLE_RED);
-                reply.embeds = [embed.setDescription(`🛑 ¡Lo siento, ocurrió un error!`)
-                    .setThumbnail(await getGithubRawUrl(`assets/thumbs/music/no-entry.png`))];
-            }
-            await messageOrInteraction.reply(reply);
-        }
+            consoleLogError('> Error al enviar mensaje de letra de canción');
+            logToFileError(MODULE_NAME, error);
 
-        return;
+            const errorReply = { embeds: [await getErrorEmbed('¡Lo siento, ocurrió un error!')] };
+            try {
+                message ? await message.reply(reply) : await interaction.editReply(reply);
+            } catch (error) {
+                await channel.send(errorReply);
+            }
+        }
     }
 }

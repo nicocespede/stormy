@@ -1,11 +1,15 @@
+const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType } = require("discord.js");
 const { getDownloadsData, updateDownloadsData, updateGames: updateGamesCache, updateTracksNameExtras, getIds, updateIds, updateCharacters,
     //TEMP SOLUTION
     updateBlacklistedSongs//
 } = require("../../src/cache");
 const { updateMovies, updateGames } = require("../../src/mongodb");
-const { consoleLog } = require("../../src/util");
-const { CONSOLE_RED } = require("../../src/constants");
+const { logToFileError, consoleLogError, logToFileCommandUsage, getSuccessEmbed } = require("../../src/util");
+const { getErrorEmbed } = require("../../src/common");
+
+const COMMAND_NAME = 'actualizar-cache';
+const MODULE_NAME = 'commands.private.' + COMMAND_NAME;
 
 const choices = [
     { name: '🎵 Extras de nombres de pistas', value: 'tracks-name-extras' },
@@ -16,6 +20,7 @@ const choices = [
     { name: '👥 Personajes', value: 'characters' }
 ];
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Actualiza el caché seleccionado.',
@@ -30,7 +35,9 @@ module.exports = {
     slash: true,
     ownerOnly: true,
 
-    callback: async ({ client, interaction }) => {
+    callback: async ({ client, interaction, text, user }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         await interaction.deferReply({ ephemeral: true });
         const name = interaction.options.getString('nombre');
         try {
@@ -74,7 +81,7 @@ module.exports = {
                     }
                 };
 
-                const chronologiesIds = ['mcu', 'db']
+                const chronologiesIds = ['mcu', 'db', 'the-boys']
                 for (const id of chronologiesIds)
                     await checkForUpdates(id);
 
@@ -96,7 +103,8 @@ module.exports = {
                     const ids = await getIds();
                     const collectionsData = {
                         'db': { emoji: 'dragon_ball', role: 'anunciosDb', title: 'Universo de Dragon Ball' },
-                        'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' }
+                        'mcu': { emoji: 'marvel', role: 'anunciosUcm', title: 'Universo Cinematográfico de Marvel' },
+                        'the-boys': { emoji: 'the_boys', role: 'anunciosBoys', title: 'The Boys' }
                     };
 
                     const getMessagePart = async id => {
@@ -165,9 +173,12 @@ module.exports = {
                         }
                         await updateGames(dbUpdate);
                     }
-                    const channel = await client.channels.fetch(ids.channels.anuncios).catch(console.error);
-                    if (content.length > 0)
-                        channel.send(content).catch(console.error);
+
+                    const channel = await client.channels.fetch(ids.channels.anuncios);
+                    if (!channel)
+                        consoleLogError('> Error al obtener canal de anuncios');
+                    else if (content.length > 0)
+                        channel.send(content);
                 }
             } else if (name === 'tracks-name-extras')
                 await updateTracksNameExtras();
@@ -179,11 +190,11 @@ module.exports = {
             else if (name === 'characters')
                 await updateCharacters();
 
-            await interaction.editReply({ content: '✅ Caché actualizado.' });
+            await interaction.editReply({ embeds: [getSuccessEmbed('Caché actualizado.')] });
         } catch (e) {
-            consoleLog(`Error in actualizar-cache.js:\n${e.stack}`, CONSOLE_RED);
-            await interaction.editReply({ content: '❌ Ocurrió un error.' });
+            logToFileError(MODULE_NAME, e);
+            consoleLogError(`> Error al actualizar cache de '${name}'`);
+            await interaction.editReply({ embeds: [await getErrorEmbed('Ocurrió un error.')] });
         }
-        return;
     }
 }

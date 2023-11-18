@@ -1,12 +1,12 @@
 const { Queue } = require("@discord-player/utils");
-const { QueryType, useMasterPlayer, Track, Player } = require("discord-player");
+const { QueryType, useMainPlayer, Track, Player, GuildQueue } = require("discord-player");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, BaseMessageOptions, Message, CommandInteraction, TextChannel, Guild } = require("discord.js");
 const Genius = require("genius-lyrics");
 const GeniusClient = new Genius.Client();
 const { updateLastAction, getTracksNameExtras, updateTracksNameExtras, getMusicPlayerData, setMusicPlayerData, clearMusicPlayerData, getSongsInQueue, removeSongInQueue, getLastAction, updatePage, addSongInQueue, getGithubRawUrl } = require("./cache");
 const { MusicActions, color, CONSOLE_YELLOW, CONSOLE_RED, EMBED_DESCRIPTION_MAX_LENGTH } = require("./constants");
 const { addQueue } = require("./mongodb");
-const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile, getUserTag } = require("./util");
+const { consoleLog, logToFileFunctionTriggered, logToFileError, logToFile, getUserTag, getWarningMessage } = require("./util");
 
 const MODULE_NAME = 'src.music';
 
@@ -59,6 +59,13 @@ const splitLyrics = lyrics => {
     return ret;
 };
 
+/**
+ * Manages the music player embed.
+ * 
+ * @param {GuildQueue} queue The actual queue.
+ * @param {Track} track The actual track.
+ * @param {String} lastAction The last action applied to the player.
+ */
 const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
     const getControlsRows = type => {
@@ -94,6 +101,14 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
         return rows;
     };
 
+    /**
+     * Builds an embed from an event.
+     * 
+     * @param {String} event The event triggered.
+     * @param {GuildQueue} queue The current queue.
+     * @param {String} lastAction The last action applied to the player.
+     * @returns An embed containing the information related to the event.
+     */
     const getEmbed = async (event, queue, lastAction) => {
         await updateExtraMessages(queue);
 
@@ -112,16 +127,21 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
 
                 const progressBar = queue.node.createProgressBar();
                 const timestamp = queue.node.getTimestamp(true);
-                const splittedDescription = [
-                    `${progressBar}\n`,
-                    `**Progreso:** ${timestamp.progress}%`,
-                    `**Volumen:** ${queue.node.volume}%`,
-                    `**Agregada por:** ${getUserTag(requestedBy)}`
-                ];
+
+                const splittedDescription = [`${progressBar}\n`];
+
+                if (timestamp)
+                    splittedDescription.push(`**Progreso:** ${timestamp.progress}%`);
+
+                splittedDescription.push(`**Volumen:** ${queue.node.volume}%`);
+                splittedDescription.push(`**Agregada por:** ${getUserTag(requestedBy)}`);
+
                 if (playlist)
                     splittedDescription.push(`**Lista de reproducción:** [${playlist.title}](${playlist.url})`);
+
                 if (lastAction)
                     splittedDescription.push(`\n**Última acción:**\n\n${lastAction}`);
+
                 description = splittedDescription.join('\n');
 
                 const thumbs = {
@@ -176,12 +196,12 @@ const setMusicPlayerMessage = async (queue, track, lastAction) => {
                 break;
 
             case 'kicked':
-                description = "⚠️ Fui desconectado del canal de voz, 👋 ¡adiós!";
+                description = getWarningMessage("Fui desconectado del canal de voz, 👋 ¡adiós!");
                 thumbnail = `disconnected`;
                 break;
 
             case 'restarting':
-                description = `⚠ Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`;
+                description = getWarningMessage(`Lo siento, tengo que reiniciarme 👋 ¡ya vuelvo!`);
                 thumbnail = `restart`;
                 break;
 
@@ -650,10 +670,19 @@ const generateTracksArray = (rawTracksArray, player, membersCollection) => {
     return ret;
 };
 
+/**
+ * Stops the music player collector, if exists.
+ */
+const stopMusicPlayerCollector = () => {
+    const musicPlayerData = getMusicPlayerData('player');
+    if (musicPlayerData && musicPlayerData.collector)
+        musicPlayerData.collector.stop();
+};
+
 module.exports = {
     setNewVoiceChannel: (guild, channel) => {
         updateLastAction(MusicActions.CHANGING_CHANNEL);
-        const player = useMasterPlayer();
+        const player = useMainPlayer();
         const queue = player.nodes.get(guild.id);
         if (queue)
             setMusicPlayerMessage(queue, queue.currentTrack, `🔃 Bot movido al canal de voz **${channel.name}**.`);
@@ -661,32 +690,29 @@ module.exports = {
 
     setKicked: () => {
         updateLastAction(MusicActions.BEING_KICKED);
-        const { collector } = getMusicPlayerData('player');
-        collector.stop();
+        stopMusicPlayerCollector();
     },
 
     containsAuthor,
 
     leaveEmptyChannel: guild => {
         updateLastAction(MusicActions.LEAVING_EMPTY_CHANNEL);
-        const player = useMasterPlayer();
+        const player = useMainPlayer();
         const queue = player.nodes.get(guild.id);
         if (queue) {
             if (!queue.deleted)
                 queue.delete();
-            const { collector } = getMusicPlayerData('player');
-            collector.stop();
+            stopMusicPlayerCollector();
         }
     },
 
     emergencyShutdown: async guildId => {
         updateLastAction(MusicActions.RESTARTING);
-        const player = useMasterPlayer();
+        const player = useMainPlayer();
         const queue = player.nodes.get(guildId);
         if (queue) {
             consoleLog('> Guardando cola de reproducción actual', CONSOLE_YELLOW);
-            const { collector } = getMusicPlayerData('player');
-            collector.stop();
+            stopMusicPlayerCollector();
 
             const previousTracks = { tracks: JSON.stringify(queue.history.tracks.data), strategy: queue.history.tracks.strategy };
             const currenTrack = queue.history.currentTrack;
@@ -736,7 +762,7 @@ module.exports = {
                         .concat(tracks.map(({ requestedBy }) => requestedBy)))];
                     const members = await guild.members.fetch(membersIds);
 
-                    const player = useMasterPlayer();
+                    const player = useMainPlayer();
                     var res = await player.search(current.url, {
                         requestedBy: members.get(current.requestedBy),
                         searchEngine: QueryType.AUTO
@@ -791,5 +817,7 @@ module.exports = {
 
     createQueue,
 
-    connectToVoiceChannel
+    connectToVoiceChannel,
+
+    stopMusicPlayerCollector
 }

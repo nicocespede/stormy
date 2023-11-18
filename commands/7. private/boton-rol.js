@@ -1,21 +1,29 @@
-const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle } = require("discord.js");
-const { getRolesMessageInfo, updateRolesMessageInfo } = require("../../src/cache");
+const { ICommand } = require('wokcommands');
+const { ButtonBuilder, ActionRowBuilder, ApplicationCommandOptionType, ButtonStyle, Client } = require("discord.js");
+const { getCollectorMessages } = require("../../src/cache");
+const { RolesMessagesData } = require('../../src/constants');
+const { logToFileCommandUsage, getWarningEmbed, getSuccessEmbed } = require('../../src/util');
 
 const buttonStyles = ['primary', 'secondary', 'success', 'danger'];
 const prefix = 'button-roles-';
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Agrega un botón al mensaje de roles.',
-    aliases: ['role-btn'],
 
-    slash: 'both',
+    slash: true,
     ownerOnly: true,
     guildOnly: true,
 
-    minArgs: 4,
-    expectedArgs: '<rol> <emoji> <estilo> <etiqueta> <texto>',
     options: [
+        {
+            name: 'tipo',
+            description: 'El tipo del mensaje al que se añadirá el botón.',
+            required: true,
+            type: ApplicationCommandOptionType.String,
+            choices: RolesMessagesData
+        },
         {
             name: 'rol',
             description: 'El rol para el botón.',
@@ -49,6 +57,7 @@ module.exports = {
         }
     ],
 
+    /**@param {Client} client*/
     init: client => {
         client.on('interactionCreate', interaction => {
             if (!interaction.isButton()) return;
@@ -71,16 +80,15 @@ module.exports = {
         });
     },
 
-    callback: async ({ guild, message, interaction, args }) => {
-        args.shift();
+    callback: async ({ guild, interaction, text, user }) => {
+        logToFileCommandUsage('boton-rol', text, interaction, user);
 
-        let role = message ? message.mentions.roles.first() : interaction.options.getRole('rol');
+        const role = interaction.options.getRole('rol');
+        const emoji = interaction.options.getString('emoji');
 
-        const emoji = args.shift();
-
-        let buttonStyle = args.shift() || 'primary';
+        let buttonStyle = interaction.options.getString('estilo') || 'primary';
         if (!buttonStyles.includes(buttonStyle.toLowerCase()))
-            return `Estilo de botón desconocido. Los estilos válidos son: _"${buttonStyles.join('", "')}"_.`;
+            return { custom: true, embeds: [getWarningEmbed(`Estilo de botón desconocido. Los estilos válidos son: _"${buttonStyles.join('", "')}"_.`)], ephemeral: true };
 
         switch (buttonStyle) {
             case 'primary':
@@ -97,21 +105,22 @@ module.exports = {
                 break;
         }
 
-        const buttonLabel = args.shift();
+        const buttonLabel = interaction.options.getString('etiqueta');
+        const messageText = interaction.options.getString('texto');
+        const type = interaction.options.getString('tipo');
 
-        const text = args.join(' ');
+        const collectorMessages = await getCollectorMessages();
+        const data = collectorMessages[type];
 
-        const data = getRolesMessageInfo() || await updateRolesMessageInfo();
+        if (!data)
+            return { custom: true, embeds: [getWarningEmbed(`El botón con ID '${type}' no existe.`)], ephemeral: true };
 
-        const channelId = data.channelId;
-        const messageId = data.messageId;
+        const { channelId, messageId } = data;
         const channel = guild.channels.cache.get(channelId);
         const roleMessage = await channel.messages.fetch({ message: messageId });
 
         const rows = [];
-        roleMessage.components.forEach(c => {
-            rows.push(ActionRowBuilder.from(c));
-        });
+        roleMessage.components.forEach(c => rows.push(ActionRowBuilder.from(c)));
 
         const button = new ButtonBuilder()
             .setLabel(buttonLabel)
@@ -124,7 +133,7 @@ module.exports = {
         for (const row of rows) {
             if (row.components.length < 5) {
                 row.addComponents(button);
-                content += `\n${text}`;
+                content += `\n${messageText}`;
                 added = true;
                 break;
             }
@@ -132,14 +141,14 @@ module.exports = {
 
         if (!added) {
             if (rows.length >= 5)
-                return { custom: true, ephemeral: true, content: 'No puedo agregar más botones a este mensaje.' };
+                return { custom: true, ephemeral: true, embeds: [getWarningEmbed('No puedo agregar más botones a este mensaje.')] };
 
-            content += `\n${rows.length === 0 ? '\n' : ''}${text}`;
+            content += `\n${rows.length === 0 ? '\n' : ''}${messageText}`;
             rows.push(new ActionRowBuilder().addComponents(button));
         }
 
         roleMessage.edit({ content: content, components: rows });
 
-        return { custom: true, ephemeral: true, content: 'Botón agregado al mensaje de roles.' };
+        return { custom: true, ephemeral: true, embeds: [getSuccessEmbed('Botón agregado al mensaje de roles.')] };
     }
 }

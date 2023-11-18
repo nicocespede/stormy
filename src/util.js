@@ -1,5 +1,7 @@
-const { User, CommandInteraction } = require('discord.js');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH } = require('./constants');
+const { default: WOKCommands } = require('wokcommands');
+const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
+const moment = require('moment-timezone');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color } = require('./constants');
 const chalk = require('chalk');
 const fs = require('fs');
 chalk.level = 1;
@@ -26,7 +28,7 @@ const appendZeroToLength = (value, length) => `${value}`.padStart(length, '0');
  * Get date as text.
  * 
  * @param {Date} now Now date.
- * @returns Date as text. Sample: "2018-12-03, 07:32:13".
+ * @returns Date as text. Example: "2018-12-03, 07:32:13".
  */
 const getDateAsText = now => {
     const nowText = appendZeroToLength(now.getFullYear(), 4) + '-'
@@ -89,7 +91,7 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
         if (error)
             consoleLog(`> Error al escribir log:\n${error.stack}`);
     });
-}
+};
 
 /**
      * Logs to a file the usage of a command.
@@ -102,7 +104,7 @@ const logToFile = (moduleName, string, delimiter = '\n') => {
 const logToFileCommandUsage = (commandName, args, interaction, user) => {
     const prefix = interaction ? '/' : PREFIX;
     logToFile(`${commandName}.callback`, `${getUserTag(user)} used ${prefix}${commandName}${args ? ` [${args}]` : ''}`);
-}
+};
 
 /**
  * Gets the tag of a user.
@@ -115,7 +117,47 @@ const getUserTag = user => {
         return user.username;
 
     return user.tag;
-}
+};
+
+/**
+ * Generates a message starting with the success emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The success message.
+ */
+const getSuccessMessage = text => '✅ ' + text;
+
+/**
+ * Generates a message starting with the warning emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The warning message.
+ */
+const getWarningMessage = text => '⚠️ ' + text;
+
+/**
+ * Generates a message starting with the denial emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The denial message.
+ */
+const getDenialMessage = text => '⛔ ' + text;
+
+/**
+ * Generates a message starting with the error emoji.
+ * 
+ * @param {String} text The text of the message.
+ * @returns The error message.
+ */
+const getErrorMessage = text => '❌ ' + text;
+
+/**
+ * Generates an embed and sets a description to it.
+ * 
+ * @param {String} description The description.
+ * @returns An embed with a pre-set description.
+ */
+const getSimpleEmbed = description => (new EmbedBuilder()).setDescription(description).setColor(color);
 
 module.exports = {
     convertTZ,
@@ -226,5 +268,90 @@ module.exports = {
      */
     formatNumber: (value, maximumFractionDigits, currency) => value.toLocaleString(ARGENTINA_LOCALE_STRING, { currency, style: 'currency', maximumFractionDigits }),
 
-    getUserTag
+    getUserTag,
+
+    getSuccessMessage,
+    getWarningMessage,
+    getDenialMessage,
+    getErrorMessage,
+
+    getSimpleEmbed,
+
+    /**
+     * Generates an embed with a success message as description.
+     * 
+     * @param {String} description The description.
+     * @returns An embed with a success message.
+     */
+    getSuccessEmbed: description => getSimpleEmbed(getSuccessMessage(description)).setColor([119, 178, 85]),
+
+    /**
+     * Generates an embed with a warning message as description.
+     * 
+     * @param {String} description The description.
+     * @returns An embed with a warning message.
+     */
+    getWarningEmbed: description => getSimpleEmbed(getWarningMessage(description)).setColor([255, 204, 77]),
+
+    /**
+     * Generates an embed with a denial message as description.
+     * 
+     * @param {String} description The description.
+     * @returns An embed with a denial message.
+     */
+    getDenialEmbed: description => getSimpleEmbed(getDenialMessage(description)).setColor([190, 25, 49]),
+
+    /**
+     * Builds the custom syntax error message.
+     * 
+     * @param {WOKCommands} instance The WOKCommands instance.
+     * @param {Guild} guild The guild.
+     * @param {String} reason The reason.
+     * @param {String} command The name of the command.
+     * @param {String} arguments The arguments the command needs.
+     * @returns The custom syntax error message.
+     */
+    getSyntaxErrorMessage: (instance, guild, reason, command, arguments) => {
+        return instance.messageHandler.get(guild, 'CUSTOM_SYNTAX_ERROR', {
+            REASON: reason,
+            PREFIX: PREFIX,
+            COMMAND: command,
+            ARGUMENTS: arguments
+        })
+    },
+
+    /**
+     * Converts a date string to an UTC Date.
+     * This should be used when the date string is from a different timezone than the system's.
+     * 
+     * @param {String} string The date string.
+     * @returns The UTC Date.
+     */
+    getUTCDateFromLocal: string => {
+        const tzString = process.env.TIMEZONE_STRING;
+
+        if (tzString) {
+            const date = moment.tz(string, tzString);
+            return date.clone().tz(moment.tz.guess()).toDate();
+        }
+
+        return new Date(string);
+    },
+
+    /**
+     * Converts an Argentinian date string to an UTC Date.
+     * 
+     * @param {String} string The date string.
+     * @returns The UTC Date.
+     */
+    getUTCDateFromArgentina: string => moment.tz(string, ARGENTINA_TZ_STRING).toDate(),
+
+    /**
+     * Builds the styled UNIX timestamp from a date.
+     * 
+     * @param {Date} date The date to get the timestamp from.
+     * @param {"t" | "T" | "d" | "D" | "f" | "F" | "R"} style The style for the timestamp: "t"=Short Time, "T"=Long Time, "d"=Short Date, "D"=Long Date, "f"=Short Date/Time, "F"=Long Date/Time, "R"=Relative Time
+     * @returns The styled UNIX timestamp.
+     */
+    buildStyledUnixTimestamp: (date, style) => `<t:${date.getTime() / 1000}:${style || 'R'}>`
 };

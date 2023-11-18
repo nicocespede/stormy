@@ -9,13 +9,14 @@ module.exports = {
 
     LOCAL_ENV: ENVIRONMENT === 'LOCAL',
 
-    ARGENTINA_TZ_STRING: 'America/Argentina/Buenos_Aires',
+    ARGENTINA_TZ_STRING: 'America/Buenos_Aires',
     ARGENTINA_LOCALE_STRING: 'es-AR',
 
     color: [4, 134, 164],
 
     EMBED_DESCRIPTION_MAX_LENGTH: 4096,
     EMBED_FIELD_VALUE_MAX_LENGTH: 1024,
+    MEMBER_NICKNAME_MAX_LENGTH: 32,
 
     CONSOLE_BLUE: 'BLUE',
     CONSOLE_GREEN: 'GREEN',
@@ -45,6 +46,11 @@ module.exports = {
         KRU: 'kru',
         AFA: 'afa'
     },
+
+    RolesMessagesData: [
+        { name: 'Acceso', value: 'access-roles' },
+        { name: 'Notificaciones', value: 'notifications-roles' }
+    ],
 
     categorySettings: [
         {

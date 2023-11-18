@@ -1,9 +1,15 @@
-const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ICommand } = require("wokcommands");
+const { EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require('discord.js');
 const { createCanvas } = require('canvas');
 const { getGames, updateGames, getIds, getGithubRawUrl } = require('../../src/cache');
-const { color, PREFIX, EMBED_DESCRIPTION_MAX_LENGTH } = require('../../src/constants');
+const { color, PREFIX } = require('../../src/constants');
 const { lastUpdateToString, addAnnouncementsRole } = require('../../src/common');
-const { splitLines } = require('../../src/util');
+const { splitEmbedDescription, logToFileError, consoleLogError, logToFileCommandUsage, getWarningMessage } = require('../../src/util');
+
+const COMMAND_NAME = 'juegos';
+const MODULE_NAME = 'commands.games-movies.' + COMMAND_NAME;
+
+const EMBED_ROW_MAX_LENGTH = 238;
 
 const buttonsPrefix = 'games-';
 const maxIdlingTime = 10;
@@ -44,12 +50,13 @@ const getSelectionMenu = (game, nowShowing) => {
     const { imageURL, name, version, year } = game;
     return {
         components: getRows(game),
-        content: `**${name} (${year}) ${version}**\n\n⚠ Por favor seleccioná lo que querés ver.\n\u200b`,
+        content: `**${name} (${year}) ${version}**\n\n${getWarningMessage('Por favor seleccioná lo que querés ver.')}\n\u200b`,
         ephemeral: true,
         files: [imageURL]
     };
 };
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Juegos/Películas',
     description: 'Responde con los links de descarga de algunos juegos crackeados.',
@@ -66,6 +73,7 @@ module.exports = {
     expectedArgs: '[numero]',
     slash: 'both',
 
+    /**@param {Client} client*/
     init: client => {
         const usersData = {};
 
@@ -74,7 +82,12 @@ module.exports = {
                 usersData[userId] = { collectors: {}, versionsMessages: {} };
         };
 
-        const deleteGameData = (userId, gameId) => delete (usersData[userId])[gameId];
+        const deleteGameData = (userId, gameId) => {
+            if ((usersData[userId]).collectors[gameId])
+                delete (usersData[userId]).collectors[gameId];
+            if ((usersData[userId]).versionsMessages[gameId])
+                delete (usersData[userId]).versionsMessages[gameId];
+        };
 
         const updateCollector = (userId, gameId, collector) => usersData[userId].collectors[gameId] = collector;
         const updateVersionsMessage = (userId, gameId, versionsMessage) => usersData[userId].versionsMessages[gameId] = versionsMessage;
@@ -137,7 +150,7 @@ module.exports = {
                     const dataString = customId !== 'instructions' ? `**Cantidad de archivos:** ${element.files}` : '';
                     const passwordString = customId !== 'instructions' && element.password ? `**Contraseña:** ${element.password}` : '';
                     const description = `${dataString}\n**Actualizado por última vez:** ${lastUpdateToString(lastUpdate, false)}.\n\n${element[server].join('\n')}\n\n${passwordString}`;
-                    const chunks = splitLines(description, EMBED_DESCRIPTION_MAX_LENGTH);
+                    const chunks = splitEmbedDescription(description);
                     let counter = 1;
                     const prefix = customId.split('-')[0];
                     const { label } = data[prefix];
@@ -188,24 +201,31 @@ module.exports = {
                     files: []
                 };
 
-                initUserData(interaction.user.id);
-                let { collectors, versionsMessages } = usersData[interaction.user.id];
+                initUserData(id);
+                let { collectors, versionsMessages } = usersData[id];
 
                 let versionsMessage = versionsMessages[`${platform}-${id}`];
-                versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
-                updateVersionsMessage(interaction.user.id, `${platform}-${id}`, versionsMessage);
+                try {
+                    versionsMessage = !versionsMessage ? await channel.send(msg) : await versionsMessage.edit(msg);
+                } catch (error) {
+                    consoleLogError('> Error al editar mensaje de versiones del juego "' + name + '", creando mensaje nuevo...');
+                    logToFileError(MODULE_NAME, error);
+                    versionsMessage = await channel.send(msg);
+                }
+
+                updateVersionsMessage(id, `${platform}-${id}`, versionsMessage);
 
                 let collector = collectors[`${platform}-${id}`];
                 if (collector)
                     collector.stop();
 
                 collector = versionsMessage.createMessageComponentCollector({ idle: 1000 * 60 * maxIdlingTime });
-                updateCollector(interaction.user.id, `${platform}-${id}`, collector);
+                updateCollector(id, `${platform}-${id}`, collector);
 
                 collector.on('collect', async btnInt => {
                     if (!btnInt) return;
 
-                    if (interaction.user.id !== btnInt.user.id) {
+                    if (id !== btnInt.user.id) {
                         btnInt.reply({ content: `¡Estos botones no son para vos! 😡`, ephemeral: true });
                         return;
                     }
@@ -227,7 +247,7 @@ module.exports = {
                 collector.on('end', (_, reason) => {
                     if (reason === 'idle') {
                         versionsMessage.delete();
-                        deleteGameData(interaction.user.id, `${platform}-${id}`);
+                        deleteGameData(id, `${platform}-${id}`);
                         interaction.editReply(getSelectionMenu(game, ''));
                     }
                 });
@@ -237,7 +257,9 @@ module.exports = {
         });
     },
 
-    callback: async ({ message, args, interaction, user, instance, guild, member }) => {
+    callback: async ({ message, args, interaction, user, instance, guild, member, text }) => {
+        logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
+
         const replyMessage = message ? await message.reply({ content: 'Procesando acción...' }) : await interaction.deferReply({ ephemeral: true });
         const number = message ? args[0] : interaction.options.getInteger('numero');
 
@@ -258,7 +280,7 @@ module.exports = {
                 const newGame = `** ${i + 1}.** ${name}\n\n`;
                 gamesField.value += newGame;
                 updatesField.value += `*${lastUpdateToString(date, true)}*\n\n`;
-                if (ctx.measureText(newGame).width >= 229)
+                if (ctx.measureText(newGame).width > EMBED_ROW_MAX_LENGTH)
                     updatesField.value += `\n`;
             }
             reply.embeds = [new EmbedBuilder()

@@ -3,7 +3,7 @@ const { updateLastAction, getIds, getGithubRawUrl } = require("../../src/cache")
 const { MusicActions } = require("../../src/constants");
 const { getUserTag } = require("../../src/util");
 const { containsAuthor, cleanTitle, setMusicPlayerMessage, handleErrorEphemeral } = require("../../src/music");
-const { useMasterPlayer } = require("discord-player");
+const { useMainPlayer } = require("discord-player");
 
 module.exports = {
     category: 'Música',
@@ -53,7 +53,7 @@ module.exports = {
             return;
         }
 
-        const player = useMasterPlayer();
+        const player = useMainPlayer();
         const queue = player.nodes.get(guild.id);
 
         if (!queue || !queue.node.isPlaying()) {
