@@ -353,5 +353,5 @@ module.exports = {
      * @param {"t" | "T" | "d" | "D" | "f" | "F" | "R"} style The style for the timestamp: "t"=Short Time, "T"=Long Time, "d"=Short Date, "D"=Long Date, "f"=Short Date/Time, "F"=Long Date/Time, "R"=Relative Time
      * @returns The styled UNIX timestamp.
      */
-    buildStyledUnixTimestamp: (date, style) => `<t:${date.getTime() / 1000}:${style || 'R'}>`
+    buildStyledUnixTimestamp: (date, style) => `<t:${Math.round(date.getTime() / 1000)}:${style || 'R'}>`
 };

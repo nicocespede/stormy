@@ -1,6 +1,6 @@
 const { ICommand } = require("wokcommands");
 const { getThermalPasteDates, updateThermalPasteDates } = require('../../src/cache');
-const { convertTZ, logToFileCommandUsage, consoleLogError, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getWarningMessage, buildStyledUnixTimestamp } = require('../../src/util');
+const { convertTZ, logToFileCommandUsage, consoleLogError, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getWarningMessage, buildStyledUnixTimestamp, getUTCDateFromArgentina } = require('../../src/util');
 const { ActionRowBuilder, ButtonBuilder, ApplicationCommandOptionType, ButtonStyle } = require('discord.js');
 const { PREFIX } = require('../../src/constants');
 const { addThermalPasteDate, updateThermalPasteDate } = require('../../src/mongodb');
@@ -100,7 +100,7 @@ module.exports = {
             else {
                 const dates = getThermalPasteDates() || await updateThermalPasteDates();
                 const split = date.split('/');
-                const utcDate = new Date(`${split[2]}-${split[1]}-${split[0]}T03:00Z`);
+                const utcDate = getUTCDateFromArgentina(`${split[2]}-${split[1]}-${split[0]}`);
 
                 try {
                     if (!dates[user.id]) {

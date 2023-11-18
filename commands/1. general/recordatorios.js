@@ -61,7 +61,7 @@ module.exports = {
                 let description = `Hola <@${user.id}>, tus recordatorios guardados son:\n\n`;
                 for (let i = 0; i < filtered.length; i++) {
                     const { date, description: desc } = filtered[i];
-                    description += `**${i + 1}.** ${desc}: **${buildStyledUnixTimestamp(convertTZ(date), 'f')}**\n\n`;
+                    description += `**${i + 1}.** ${desc}: **${buildStyledUnixTimestamp(date, 'f')}**\n\n`;
                 }
 
                 interaction.reply({
@@ -145,8 +145,7 @@ module.exports = {
             consoleLog('> Recordatorio agregado a la base de datos', CONSOLE_GREEN);
             updateReminders();
 
-            const convertedDate = convertTZ(date);
-            reply.embeds = [getSuccessEmbed(`Tu recordatorio para el **${buildStyledUnixTimestamp(convertedDate, 'F')}** fue guardado satisfactoriamente.`)];
+            reply.embeds = [getSuccessEmbed(`Tu recordatorio para el **${buildStyledUnixTimestamp(date, 'F')}** fue guardado satisfactoriamente.`)];
             return reply;
 
         } else if (subCommand === 'borrar') {
