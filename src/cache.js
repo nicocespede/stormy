@@ -1,7 +1,7 @@
 const { BlacklistedSongsData, RawCurrenciesData, IDsData, StatsData, TimestampsData, CrosshairsData, ValorantMatchesData, MusicPlayerData, CollectorMessagesData } = require("./typedefs");
 const { Message, InteractionCollector } = require("discord.js");
 const { DEV_ENV, LOCAL_ENV, CONSOLE_GREEN, CONSOLE_RED } = require('./constants');
-const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError, getUTCDate } = require('./util');
+const { convertTime, consoleLog, logToFile, logToFileError, consoleLogError, getUTCDateFromLocal } = require('./util');
 const fetch = require('node-fetch');
 const SteamAPI = require('steamapi');
 const steam = new SteamAPI(process.env.STEAM_API_KEY);
@@ -265,7 +265,7 @@ const updateKruMatches = async type => {
         const matches = [];
         a.each((_, el) => {
             const split = $(el).children('.m-item-date').text().trim().split(`\t`);
-            const date = getUTCDate(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}`);
+            const date = getUTCDateFromLocal(`${split.shift().replace(/\//g, '-')}T${convertTime(split.pop())}`);
 
             const match = {
                 date,

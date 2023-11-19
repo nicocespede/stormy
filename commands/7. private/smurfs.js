@@ -3,7 +3,7 @@ const { ApplicationCommandOptionType } = require('discord.js');
 const { getSmurfs, updateSmurfs } = require('../../src/cache');
 const { addSmurf, deleteSmurf, updateSmurf } = require('../../src/mongodb');
 const { isOwner, getErrorEmbed } = require('../../src/common');
-const { logToFileCommandUsage, getDenialEmbed, getWarningEmbed, consoleLogError, logToFileError, getSuccessEmbed, convertToUTCFromArgentina } = require("../../src/util");
+const { logToFileCommandUsage, getDenialEmbed, getWarningEmbed, consoleLogError, logToFileError, getSuccessEmbed, getUTCDateFromArgentina } = require("../../src/util");
 
 const COMMAND_NAME = 'smurfs';
 const MODULE_NAME = 'commands.private.' + COMMAND_NAME;
@@ -227,7 +227,7 @@ module.exports = {
                 }
 
                 const split = dateMatch[0].split(/[\-\.\/]/);
-                date = convertToUTCFromArgentina(new Date(`${split[2]}-${split[1]}-${split[0]}T${timeArg ? (timeArg.length < 5 ? `0${timeArg}` : timeArg) : '00:00'}Z`));
+                date = getUTCDateFromArgentina(`${split[2]}-${split[1]}-${split[0]}T${timeArg ? (timeArg.length < 5 ? `0${timeArg}` : timeArg) : '00:00'}`);
 
                 if (date < new Date()) {
                     reply.embeds = [getWarningEmbed(`La fecha introducida ya pasó.`)];
