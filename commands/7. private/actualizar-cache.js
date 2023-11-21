@@ -35,11 +35,19 @@ module.exports = {
     slash: true,
     ownerOnly: true,
 
-    callback: async ({ client, interaction, text, user }) => {
+    callback: async ({ channel, client, interaction, text, user }) => {
         logToFileCommandUsage(COMMAND_NAME, text, interaction, user);
 
-        await interaction.deferReply({ ephemeral: true });
         const name = interaction.options.getString('nombre');
+
+        try {
+            await interaction.deferReply({ ephemeral: true });
+        } catch (error) {
+            logToFileError(MODULE_NAME, error);
+            consoleLogError(`> Error al actualizar cache de '${name}'`);
+            return channel.send({ custom: true, embeds: [await getErrorEmbed('Ocurrió un error.')], ephemeral: true });
+        }
+
         try {
             if (name === 'games-and-movies') {
                 const moviesAndGamesSchema = require('../../models/moviesAndGames-schema');
