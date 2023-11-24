@@ -1,13 +1,17 @@
 const { ICommand } = require('wokcommands');
 const { AttachmentBuilder, EmbedBuilder, ApplicationCommandOptionType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Client } = require('discord.js');
-const HenrikDevValorantAPI = require("unofficial-valorant-api");
-const ValorantAPI = new HenrikDevValorantAPI();
+const { APIResponse } = require("unofficial-valorant-api");
+const UnofficialValorantAPI = require("unofficial-valorant-api");
+const ValorantAPI = new UnofficialValorantAPI();
 const { getSmurfs, updateSmurfs, getIds, getGithubRawUrl } = require('../../src/cache');
-const { PREFIX, color, ARGENTINA_LOCALE_STRING, emojis } = require('../../src/constants');
+const { PREFIX, color, ARGENTINA_LOCALE_STRING } = require('../../src/constants');
 const { isOwner, getErrorEmbed } = require('../../src/common');
 const { convertTZ, logToFileCommandUsage, consoleLogError, logToFile, logToFileError, getSuccessEmbed, getSimpleEmbed, getWarningEmbed, getDenialEmbed, getWarningMessage } = require('../../src/util');
 
 const MODULE_NAME = "games-movies.smurf";
+
+const MMR_VERSION = 'v2';
+const REGION = 'latam';
 
 const translateRank = rank => {
     if (!rank)
@@ -70,12 +74,7 @@ const getEmbed = async (color, userId) => {
         const { bannedUntil, name, vip } = smurfs[command];
         const obj = { bannedUntil, command, name, vip };
         const accInfo = name.split('#');
-        obj.mmr = await ValorantAPI.getMMR({
-            name: accInfo[0],
-            region: 'na',
-            tag: accInfo[1],
-            version: 'v1'
-        }).catch(console.error);
+        obj.mmr = await getMMR(accInfo[0], accInfo[1]);
         auxArray.push(obj);
     }
 
@@ -92,13 +91,14 @@ const getEmbed = async (color, userId) => {
     let description = `Hola <@${userId}>, `;
     for (const account of auxArray) {
         const { command, mmr, name } = account;
-        if (!mmr.error) {
+        if (mmr && !mmr.error) {
             accountsField.value += `${getAccountName(account, !mmr.data.name && !mmr.data.tag ? name : `${mmr.data.name}#${mmr.data.tag}`)}\n\n`;
-            ranksField.value += `${translateRank(mmr.data.currenttierpatched)}\n\n`;
+            ranksField.value += `${translateRank(mmr.data.current_data.currenttierpatched)}\n\n`;
         } else {
             errorsCounter++;
             consoleLogError(`> Error al obtener datos de la cuenta ${name}`);
-            logToFile(MODULE_NAME + `.getEmbed`, `Error: ValorantAPIError fetching ${name}\n` + JSON.stringify(mmr.error));
+            if (mmr)
+                logToFile(MODULE_NAME + `.getEmbed`, `Error: ValorantAPIError fetching ${name}\n` + JSON.stringify(mmr.error));
             accountsField.value += `${getAccountName(account, name)}\n\n`;
             ranksField.value += `???\n\n`;
         }
@@ -160,6 +160,27 @@ const getRow = type => {
         .setLabel(label)
         .setStyle(style)
         .setDisabled(disabled));
+};
+
+/**
+ * Gets the MMR data of an account from the API.
+ * 
+ * @param {String} name The name of the account.
+ * @param {String} tag The tag of the account.
+ * @returns {Promise<APIResponse | null>} The API Response containing the MMR data of the account
+ */
+const getMMR = async (name, tag) => {
+    try {
+        return await ValorantAPI.getMMR({
+            version: MMR_VERSION,
+            region: REGION,
+            name,
+            tag
+        });
+    } catch (error) {
+        logToFileError(MODULE_NAME, error);
+        return null;
+    }
 };
 
 /**@type {ICommand}*/
@@ -271,25 +292,21 @@ module.exports = {
                 reply.embeds = [getDenialEmbed(`Hola <@${user.id}>, no estás autorizado para usar esta cuenta.`)];
             else {
                 const accInfo = account.name.split('#');
-                const mmr = await ValorantAPI.getMMR({
-                    name: accInfo[0],
-                    region: 'na',
-                    tag: accInfo[1],
-                    version: 'v1'
-                }).catch(console.error);
+                const mmr = await getMMR(accInfo[0], accInfo[1]);
 
-                if (mmr.error) {
+                if (!mmr || mmr.error) {
                     consoleLogError(`> Error al obtener datos de la cuenta ${account.name}`);
-                    logToFile(MODULE_NAME, `Error: ValorantAPIError fetching ${account.name}\n` + JSON.stringify(mmr.error));
+                    if (mmr)
+                        logToFile(MODULE_NAME, `Error: ValorantAPIError fetching ${account.name}\n` + JSON.stringify(mmr.error));
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(account.name)
                         .setColor(getRankColor(null))];
                     reply.files = [new AttachmentBuilder(await getGithubRawUrl(`assets/thumbs/games/unranked.png`), { name: 'rank.png' })];
                 } else {
-                    const thumb = !mmr.data.images ? await getGithubRawUrl(`assets/thumbs/games/unranked.png`) : mmr.data.images.large;
+                    const thumb = !mmr.data.current_data.images ? await getGithubRawUrl(`assets/thumbs/games/unranked.png`) : mmr.data.current_data.images.large;
                     reply.embeds = [new EmbedBuilder()
                         .setTitle(`**${!mmr.data.name && !mmr.data.tag ? account.name : `${mmr.data.name}#${mmr.data.tag}`}**`)
-                        .setColor(getRankColor(mmr.data.currenttierpatched))];
+                        .setColor(getRankColor(mmr.data.current_data.currenttierpatched))];
                     reply.files = [new AttachmentBuilder(thumb, { name: 'rank.png' })];
                 }
                 if (account.bannedUntil)

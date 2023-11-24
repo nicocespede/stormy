@@ -1,7 +1,7 @@
 const { ICommand } = require("wokcommands");
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
-const HenrikDevValorantAPI = require("unofficial-valorant-api");
-const ValorantAPI = new HenrikDevValorantAPI();
+const UnofficialValorantAPI = require("unofficial-valorant-api");
+const ValorantAPI = new UnofficialValorantAPI();
 const { getCrosshairs, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
@@ -91,7 +91,6 @@ module.exports = {
                 .setThumbnail(await getGithubRawUrl('assets/thumbs/games/valorant.png'))];
             reply.ephemeral = true;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
         } else if (subCommand === 'agregar') {
             const code = message ? args.pop() : interaction.options.getString('codigo');
             const name = message ? args.join(' ') : interaction.options.getString('nombre');
@@ -117,7 +116,6 @@ module.exports = {
             }
 
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
         } else if (subCommand === 'borrar' || subCommand === 'eliminar') {
             const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
 
@@ -147,7 +145,6 @@ module.exports = {
                     reply.content = `❌ Lo siento, se produjo un error al borrar la mira.`;
                 }
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
         } else if (subCommand === 'ver') {
             const crosshairs = await getCrosshairs();
             const id = message ? parseInt(args[0]) : interaction.options.getInteger('id');
@@ -171,7 +168,7 @@ module.exports = {
                 const { code, name, owner: ownerId } = crosshairs[id];
                 const member = await guild.members.fetch(ownerId);
                 const owner = ` de ${member ? member.user.username : `usuario desconocido`}`;
-                const crosshairData = await ValorantAPI.getCrosshair({ code: code }).catch(console.error);
+                const crosshairData = await ValorantAPI.getCrosshair({ code }).catch(console.error);
 
                 if (message) reply.content = null;
                 reply.embeds = [new EmbedBuilder()
@@ -183,12 +180,10 @@ module.exports = {
                 reply.ephemeral = true;
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             }
-            return;
         } else {
             reply.content = 'Comando inválido, los comandos válidos son: _listar, agregar, borrar, eliminar, ver_';
             reply.ephemeral = true;
             message ? deferringMessage.edit(reply) : interaction.editReply(reply);
-            return;
         }
     }
 }
