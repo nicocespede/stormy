@@ -5,7 +5,7 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const { getIds, getLastAction, updateLastAction, getSongsInQueue, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { checkBansCorrelativity, startStatsCounters, countMembers, getErrorEmbed } = require('./src/common');
-const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError, registerFonts } = require('./src/util');
+const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError, registerFonts, formatRateLimit } = require('./src/util');
 const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage, stopMusicPlayerCollector } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
@@ -171,6 +171,9 @@ client.on('ready', async () => {
     logToFile(moduleName, `LOGGED IN SUCCESFULLY - ENV: ${ENVIRONMENT} | CODE BRANCH: ${codeBranch} | CONTENT BRANCH: ${contentBranch}`);
 });
 
-client.rest.on('rateLimited', data => consoleLog(`> Se recibió un límite de tarifa:\n${JSON.stringify(data)}`, CONSOLE_YELLOW));
+client.rest.on('rateLimited', data => {
+    consoleLog(`> Se recibió un límite de tarifa`, CONSOLE_YELLOW);
+    logToFile(`${MODULE_NAME}.rateLimitedListener`, formatRateLimit(data));
+});
 
 client.login(process.env.TOKEN);

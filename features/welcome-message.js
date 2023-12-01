@@ -65,21 +65,22 @@ const generateAfaWelcomeImage = async user => {
     const canvas = createCanvas(1170, 720);
     const context = canvas.getContext('2d');
     const background = await loadImage(await getGithubRawUrl(`assets/welcome${await getImageType()}2.png`));
-    const avatarWidth = 250;
+    const avatarWidth = 89;
     const avatarHeight = avatarWidth;
-    const avatarX = 450;
-    const avatarY = 275;
+    const avatarX = (canvas.width / 2) - (avatarWidth / 2);
+    const avatarY = 263;
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
     const username = getUserTag(user).toUpperCase();
     // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, username, AFA_FONT_NAME);
+    context.font = `16px ${AFA_FONT_NAME}`;
     // Select the style that will be used to fill the text in
     context.fillStyle = '#000000';
 
     // Actually fill the text with a solid color
-    const usernameY = canvas.height / (1.875);
-    context.fillText(username, 725, usernameY);
+    const usernameX = (canvas.width / 2) - (context.measureText(username).width / 2);
+    const usernameY = 224;
+    context.fillText(username, usernameX, usernameY);
 
     // Pick up the pen
     context.beginPath();

@@ -1,5 +1,5 @@
 const { default: WOKCommands } = require('wokcommands');
-const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
+const { User, CommandInteraction, EmbedBuilder, Guild, RateLimitData } = require('discord.js');
 const moment = require('moment-timezone');
 const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, Fonts } = require('./constants');
 const chalk = require('chalk');
@@ -356,11 +356,30 @@ module.exports = {
      */
     buildStyledUnixTimestamp: (date, style) => `<t:${Math.round(date.getTime() / 1000)}:${style || 'R'}>`,
 
+    /**
+     * Registers the custom fonts in the system.
+     */
     registerFonts: () => {
         for (const [family, fonts] of Object.entries(Fonts))
             for (const font of fonts) {
                 registerFont(`./assets/fonts/${font}`, { family });
                 consoleLog(`> Fuente ${font} registrada`, CONSOLE_GREEN);
             }
+    },
+
+    /**
+     * Formats the rate limit data.
+     * 
+     * @param {RateLimitData} data The rate limit data.
+     * @returns The formatted rate limit data string.
+     */
+    formatRateLimit: data => {
+        let formatted = 'You got rate limited: {\n';
+
+        for (const key in data) if (Object.hasOwnProperty.call(data, key))
+            formatted += `${' '.repeat(62)}${key}: ${data[key]}\n`;
+
+        formatted += ' '.repeat(52) + '}';
+        return formatted;
     }
 };
