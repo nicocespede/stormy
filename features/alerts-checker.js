@@ -1,5 +1,5 @@
 const { AttachmentBuilder, User, Client } = require('discord.js');
-const Canvas = require('canvas');
+const { createCanvas, loadImage } = require('canvas');
 const { getIds, updateBirthdays, timeouts, getGithubRawUrl } = require('../src/cache');
 const { applyText, isOwner } = require('../src/common');
 const { consoleLog, convertTZ } = require('../src/util');
@@ -8,6 +8,8 @@ const { relativeSpecialDays, CONSOLE_YELLOW } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
 const birthdaySchema = require('../models/birthday-schema');
 
+const FONT_NAME = 'Titillium Web bold';
+
 /**
  * Generates the birthday greeting image for a user.
  * 
@@ -15,9 +17,9 @@ const birthdaySchema = require('../models/birthday-schema');
  * @returns The birthday greeting image
  */
 const generateBirthdayImage = async user => {
-    const canvas = Canvas.createCanvas(1170, 720);
+    const canvas = createCanvas(1170, 720);
     const context = canvas.getContext('2d');
-    const background = await Canvas.loadImage(await getGithubRawUrl('assets/happy-bday.png'));
+    const background = await loadImage(await getGithubRawUrl('assets/happy-bday.png'));
     const avatarWidth = 300;
     const avatarHeight = avatarWidth;
     const avatarX = (background.width / 2) - (avatarWidth / 2);
@@ -28,14 +30,14 @@ const generateBirthdayImage = async user => {
 
     const { username } = user;
     // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, username);
+    context.font = applyText(canvas, username, FONT_NAME);
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
     const usernameWidth = context.measureText(username).width;
     if (await isOwner(user.id)) {
         const crownWidth = 60;
         const gapWidth = 5;
-        const crown = await Canvas.loadImage('./assets/crown.png');
+        const crown = await loadImage(await getGithubRawUrl('assets/crown.png'));
         // Actually fill the text with a solid color
         context.fillText(username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
         context.strokeText(username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
@@ -53,7 +55,7 @@ const generateBirthdayImage = async user => {
     context.closePath();
     // Clip off the region you drew on
     context.clip();
-    const avatar = await Canvas.loadImage(user.displayAvatarURL().replace('.webp', '.jpg'));
+    const avatar = await loadImage(user.displayAvatarURL().replace('.webp', '.jpg'));
     // Draw a shape onto the main canvas
     context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
     return new AttachmentBuilder(canvas.toBuffer());

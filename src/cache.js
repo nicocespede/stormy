@@ -24,7 +24,6 @@ let banned;
 var sombraBans;
 let billboardMessageInfo;
 let icon;
-let mode;
 let lastAction;
 let playlists;
 var thermalPasteDates;
@@ -35,6 +34,21 @@ let reminders;
 let characters;
 let songsInQueue = {};
 let fwcData;
+
+/**@type {String} */
+let mode;
+
+/**
+ * Retrieves the server mode data from the database.
+ * 
+ * @returns All cached server mode data.
+ */
+const updateMode = async () => {
+    const result = await iconSchema.findById(1, 'mode');
+    mode = result.mode;
+    consoleLog('> Caché de modo actualizado', CONSOLE_GREEN);
+    return mode;
+};
 
 /** @type {CollectorMessagesData}*/
 let collectorMessages;
@@ -492,13 +506,13 @@ module.exports = {
         return icon;
     },
 
-    getMode: () => mode,
-    updateMode: async () => {
-        const result = await iconSchema.findById(1, 'mode');
-        mode = result.mode;
-        consoleLog('> Caché de modo actualizado', CONSOLE_GREEN);
-        return mode;
-    },
+    /**
+     *  Gets the server mode data stored in cache.
+     * 
+     * @returns The cached server mode data.
+     */
+    getMode: async () => mode || await updateMode(),
+    updateMode,
 
     getLastAction: () => lastAction,
     updateLastAction: (action, user) => lastAction = { action: action, user: user },

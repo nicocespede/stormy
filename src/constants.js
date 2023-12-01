@@ -23,6 +23,11 @@ module.exports = {
     CONSOLE_RED: 'RED',
     CONSOLE_YELLOW: 'YELLOW',
 
+    Fonts: {
+        'ADIDAS Qatar 2022': ['ADIDASQatar2022-Regular.otf'],
+        'Titillium Web': ['TitilliumWeb-Bold.ttf', 'TitilliumWeb-Regular.ttf']
+    },
+
     MusicActions: {
         ADDING: 'ADDING',
         ADDING_NEXT: 'ADDING_NEXT',

@@ -1,8 +1,6 @@
 const { ICommand, default: WOKCommands } = require('wokcommands');
 const { ApplicationCommandOptionType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel, Guild, CommandInteraction, GuildMember, Message } = require('discord.js');
-const Canvas = require('canvas');
-Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
-Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
+const { createCanvas } = require('canvas');
 const { getIds, getMovies, updateMovies, getFilters, updateFilters: updateFiltersCache, getChronology, updateChronology, getDownloadsData, updateDownloadsData, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX, EMBED_FIELD_VALUE_MAX_LENGTH } = require('../../src/constants');
 const { updateFilters, updateChoices } = require('../../src/mongodb');
@@ -283,7 +281,7 @@ const sendChronologySettingMessage = async (channel, collectionId, guild, instan
     };
 
     const sendList = async () => {
-        const canvas = Canvas.createCanvas(200, 200);
+        const canvas = createCanvas(200, 200);
         const ctx = canvas.getContext('2d');
         const embeds = [];
         const pages = {};

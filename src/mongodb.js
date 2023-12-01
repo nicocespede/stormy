@@ -10,7 +10,7 @@ const smurfSchema = require('../models/smurf-schema');
 const statSchema = require('../models/stat-schema');
 const thermalPasteDateSchema = require('../models/thermalPasteDate-schema');
 const { consoleLog, logToFile } = require('./util');
-const { updateStats, updateCrosshairs } = require('./cache');
+const { updateStats, updateCrosshairs, updateMode: updateModeCache } = require('./cache');
 
 const MODULE_NAME = 'src.mongodb';
 
@@ -28,6 +28,7 @@ module.exports = {
 
     updateMode: async mode => {
         await iconSchema.updateOne({ _id: 1 }, { mode });
+        await updateModeCache();
         consoleLog('> Modo actualizado en la base de datos', CONSOLE_GREEN);
     },
 

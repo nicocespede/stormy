@@ -5,7 +5,7 @@ require('dotenv').config();
 const { Player } = require('discord-player');
 const { getIds, getLastAction, updateLastAction, getSongsInQueue, getCurrentCodeBranchName, getGithubRawUrl, getCurrentContentBranchName, loadMandatoryCache } = require('./src/cache');
 const { checkBansCorrelativity, startStatsCounters, countMembers, getErrorEmbed } = require('./src/common');
-const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError } = require('./src/util');
+const { consoleLog, logToFile, getUserTag, consoleLogError, logToFileError, registerFonts } = require('./src/util');
 const { containsAuthor, playInterruptedQueue, cleanTitle, setMusicPlayerMessage, stopMusicPlayerCollector } = require('./src/music');
 const { PREFIX, MusicActions, categorySettings, color, ENVIRONMENT, CONSOLE_GREEN, CONSOLE_YELLOW, CONSOLE_RED } = require('./src/constants');
 
@@ -31,6 +31,8 @@ client.on('ready', async () => {
     logToFile(null, `-`.repeat(40) + '[ NEW START ]' + `-`.repeat(40));
 
     await loadMandatoryCache();
+
+    registerFonts();
 
     client.user.setPresence({ activities: [{ name: `${PREFIX}ayuda`, type: ActivityType.Listening }] });
     logToFile(moduleName, `Setting bot presence succesfully`);

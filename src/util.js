@@ -1,10 +1,11 @@
 const { default: WOKCommands } = require('wokcommands');
 const { User, CommandInteraction, EmbedBuilder, Guild } = require('discord.js');
 const moment = require('moment-timezone');
-const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color } = require('./constants');
+const { CONSOLE_GREEN, CONSOLE_YELLOW, ARGENTINA_TZ_STRING, CONSOLE_RED, CONSOLE_BLUE, PREFIX, ARGENTINA_LOCALE_STRING, EMBED_DESCRIPTION_MAX_LENGTH, color, Fonts } = require('./constants');
 const chalk = require('chalk');
-const fs = require('fs');
 chalk.level = 1;
+const fs = require('fs');
+const { registerFont } = require('canvas');
 
 /**
  * Converts a date to a timezone.
@@ -353,5 +354,13 @@ module.exports = {
      * @param {"t" | "T" | "d" | "D" | "f" | "F" | "R"} style The style for the timestamp: "t"=Short Time, "T"=Long Time, "d"=Short Date, "D"=Long Date, "f"=Short Date/Time, "F"=Long Date/Time, "R"=Relative Time
      * @returns The styled UNIX timestamp.
      */
-    buildStyledUnixTimestamp: (date, style) => `<t:${Math.round(date.getTime() / 1000)}:${style || 'R'}>`
+    buildStyledUnixTimestamp: (date, style) => `<t:${Math.round(date.getTime() / 1000)}:${style || 'R'}>`,
+
+    registerFonts: () => {
+        for (const [family, fonts] of Object.entries(Fonts))
+            for (const font of fonts) {
+                registerFont(`./assets/fonts/${font}`, { family });
+                consoleLog(`> Fuente ${font} registrada`, CONSOLE_GREEN);
+            }
+    }
 };

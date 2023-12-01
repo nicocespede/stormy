@@ -1,6 +1,6 @@
 const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType } = require("discord.js");
-const { updateIcon: updateIconCache, getIds, getMode, updateMode: updateModeCache, getGithubRawUrl } = require("../../src/cache");
+const { updateIcon: updateIconCache, getIds, getMode, getGithubRawUrl } = require("../../src/cache");
 const { Mode, CONSOLE_GREEN } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
@@ -43,7 +43,7 @@ module.exports = {
             kru: { guildname: 'NCKG 🤟🏼', name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
         };
 
-        const actualMode = getMode() || await updateModeCache();
+        const actualMode = await getMode();
         const mode = interaction.options.getString('modo');
 
         if (actualMode !== Mode.NORMAL && actualMode !== mode)
@@ -58,7 +58,6 @@ module.exports = {
 
         if (actualMode === mode) {
             await updateMode(Mode.NORMAL);
-            await updateModeCache();
             await updateIcon(guild);
             await client.user.setUsername('StormY').catch(console.error);
             await updateGuildName(client);
@@ -74,7 +73,6 @@ module.exports = {
 
         const newIcon = `kgprime-${mode}`;
         await updateMode(mode);
-        await updateModeCache();
         await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
         await updateIconString(newIcon).catch(console.error);
         await updateIconCache();

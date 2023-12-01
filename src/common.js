@@ -1,20 +1,18 @@
 const { ChannelType, Client, VoiceBasedChannel } = require('discord.js');
 const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
-const Canvas = require('canvas');
-const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getMode, updateMode, removeTimestamp, getGithubRawUrl } = require('./cache');
+const { Canvas } = require('canvas');
+const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getMode, removeTimestamp, getGithubRawUrl } = require('./cache');
 const { relativeSpecialDays, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getUTCDateFromArgentina, buildStyledUnixTimestamp } = require('./util');
-Canvas.registerFont('./assets/fonts/TitilliumWeb-Regular.ttf', { family: 'Titillium Web' });
-Canvas.registerFont('./assets/fonts/TitilliumWeb-Bold.ttf', { family: 'Titillium Web bold' });
 
 const MODULE_NAME = 'src.common';
 
 const getImageType = async () => {
-    const mode = getMode() || await updateMode();
+    const mode = await getMode();
     if (mode === Mode.AFA)
-        return '-afa'
+        return '-afa';
 
     const today = convertTZ(new Date());
     const date = today.getDate();
@@ -326,17 +324,18 @@ module.exports = {
     /**
      * Resizes a text to be applied to an image.
      * 
-     * @param {Canvas.Canvas} canvas The Canvas instance.
+     * @param {Canvas} canvas The Canvas instance.
      * @param {String} text The text to be applied.
+     * @param {String} font The name of the font wanted.
      * @returns The resized text.
      */
-    applyText: (canvas, text) => {
+    applyText: (canvas, text, font) => {
         const context = canvas.getContext('2d');
         // Declare a base size of the font
         let fontSize = 100;
         do {
             // Assign the font to the context and decrement it so it can be measured again
-            context.font = `${fontSize -= 10}px Titillium Web bold`;
+            context.font = `${fontSize -= 10}px ${font}`;
             // Compare pixel width of the text to the canvas minus the approximate avatar size
         } while (context.measureText(text).width > canvas.width - 765);
         // Return the result to use in the actual canvas

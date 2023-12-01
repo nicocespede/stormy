@@ -1,6 +1,9 @@
 const { ApplicationCommandOptionType } = require("discord.js");
+const { ICommand } = require("wokcommands");
 const { addBanResponsible } = require("../../src/cache");
+const { logToFileSubCommandUsage } = require("../../src/util");
 
+/**@type {ICommand}*/
 module.exports = {
     category: 'Privados',
     description: 'Simula eventos.',
@@ -33,27 +36,36 @@ module.exports = {
     ownerOnly: true,
     testOnly: true,
 
-    callback: ({ client, guild, interaction, member }) => {
+    callback: ({ client, guild, interaction, member, text }) => {
         const subCommand = interaction.options.getSubcommand();
+        logToFileSubCommandUsage('simular', text, subCommand, interaction, member.user);
+
+        let content = '';
 
         switch (subCommand) {
             case 'baneo':
                 const reason = interaction.options.getString('razon');
                 client.emit('guildBanAdd', { user: member.user, reason: reason, guild: guild });
                 addBanResponsible(user.id, user.id);
-                return '¡Baneo simulado!';
+                content = '¡Baneo simulado!';
+                break;
 
             case 'desbaneo':
                 client.emit('guildBanRemove', { user: user, guild: guild });
-                return '¡Desbaneo simulado!';
+                content = '¡Desbaneo simulado!';
+                break;
 
             case 'entrada':
                 client.emit('guildMemberAdd', member);
-                return '¡Entrada simulada!';
+                content = '¡Entrada simulada!';
+                break;
 
             case 'salida':
                 client.emit('guildMemberRemove', member);
-                return '¡Salida simulada!';
+                content = '¡Salida simulada!';
+                break;
         }
+
+        return { content, custom: true, ephemeral: true }
     }
 }
