@@ -72,15 +72,19 @@ const getEmbed = async (color, userId) => {
     const auxArray = [];
     for (const command in smurfs) if (Object.hasOwnProperty.call(smurfs, command)) {
         const { bannedUntil, name, vip } = smurfs[command];
-        const obj = { bannedUntil, command, name, vip };
         const accInfo = name.split('#');
-        obj.mmr = await getMMR(accInfo[0], accInfo[1]);
-        auxArray.push(obj);
+        auxArray.push({
+            bannedUntil,
+            command,
+            mmr: await getMMR(accInfo[0], accInfo[1]),
+            name,
+            vip
+        });
     }
 
     auxArray.sort((a, b) => {
-        const mmr1 = !a.mmr.error ? (a.mmr.data.currenttier || 0) : -1;
-        const mmr2 = !b.mmr.error ? (b.mmr.data.currenttier || 0) : -1;
+        const mmr1 = !a.mmr.error ? (a.mmr.data.current_data.currenttier || 0) : -1;
+        const mmr2 = !b.mmr.error ? (b.mmr.data.current_data.currenttier || 0) : -1;
         return mmr1 - mmr2;
     });
 
