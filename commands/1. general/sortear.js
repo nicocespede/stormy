@@ -1,5 +1,5 @@
 const { ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { convertTZ } = require("../../src/util");
+const { convertTZ, getWarningMessage } = require("../../src/util");
 const { ARGENTINA_LOCALE_STRING } = require("../../src/constants");
 
 const title = '🎲 __**Sorteo**__\n';
@@ -41,21 +41,21 @@ const statesData = {
     cancelled: { description: `${title}\n❌ Este sorteo fue **cancelado**.` },
     'collecting-elements': {
         buttons: ['stop-collecting'],
-        description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **se agregará como un elemento nuevo** al sorteo.\n\u200b`
+        description: `${title}\n${getWarningMessage('**Cada mensaje** que envíes en este canal **se agregará como un elemento nuevo** al sorteo.')}\n\u200b`
     },
     completed: { description: title },
     'deleting-elements': {
         buttons: ['stop-collecting'],
-        description: `${title}\n⚠ **Cada mensaje** que envíes en este canal **eliminará del sorteo al elemento** que coincida.\n\u200b`
+        description: `${title}\n${getWarningMessage('**Cada mensaje** que envíes en este canal **eliminará del sorteo al elemento** que coincida.')}\n\u200b`
     },
     expired: { description: `${title}\n⌛ Este sorteo **expiró**.\n` },
     ready: {
         buttons: ['add-elements', 'delete-elements', 'clear-elements', 'exit-draw', 'draw'],
-        description: `${title}\n⚠ Utilice los **botones** para **agregar** o **quitar** elementos.`
+        description: `${title}\n${getWarningMessage('Utilice los **botones** para **agregar** o **quitar** elementos.')}`
     },
     start: {
         buttons: ['add-elements', 'exit-draw'],
-        description: `${title}\n⚠ Utilice los **botones** para **agregar** o **quitar** elementos.\n\u200b`
+        description: `${title}\n${getWarningMessage('Utilice los **botones** para **agregar** o **quitar** elementos.')}\n\u200b`
     }
 };
 
@@ -181,7 +181,7 @@ module.exports = {
             }
 
             if (elements.length <= winnersAmount) {
-                btnInt.reply({ content: `⚠ Debe haber al menos **${winnersAmount + 1} elementos** para realizar el sorteo.`, ephemeral: true })
+                btnInt.reply({ content: getWarningMessage(`Debe haber al menos **${winnersAmount + 1} elementos** para realizar el sorteo.`), ephemeral: true })
                 return;
             }
 
