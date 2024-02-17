@@ -3,7 +3,7 @@ const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const { Canvas } = require('canvas');
 const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getMode, removeTimestamp, getGithubRawUrl } = require('./cache');
-const { relativeSpecialDays, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN } = require('./constants');
+const { relativeSpecialDays, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, DEV_ENV } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getUTCDateFromArgentina, buildStyledUnixTimestamp } = require('./util');
 
@@ -297,6 +297,10 @@ module.exports = {
         const date = today.getDate();
         const month = today.getMonth() + 1;
         let newGuildName = 'NCKG';
+
+        if (DEV_ENV)
+            newGuildName += ' TEST';
+
         switch (month) {
             case 1:
                 newGuildName += ' 🥂';
