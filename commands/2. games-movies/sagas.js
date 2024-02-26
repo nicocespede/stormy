@@ -547,7 +547,7 @@ const sendChronologyElement = async (channel, collectionId, instance, interactio
 
         const secondFilter = btnInt => member.user.id === btnInt.user.id;
 
-        finalCollector = versionsMessage.createMessageComponentCollector({ filter: secondFilter, idle: 1000 * 60 * 5 });
+        finalCollector = versionsMessage.createMessageComponentCollector({ filter: secondFilter, idle: 1000 * 60 * 10 });
 
         finalCollector.on('collect', async btnInt => {
             if (!btnInt) return;
