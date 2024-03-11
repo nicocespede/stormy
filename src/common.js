@@ -284,7 +284,7 @@ module.exports = {
 
     updateIcon: async guild => {
         const actualIcon = getIcon() || await updateIcon();
-        const newIcon = `kgprime${await getImageType()}`;
+        const newIcon = !DEV_ENV ? `kgprime${await getImageType()}` : 'test';
         if (actualIcon !== newIcon) {
             await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
