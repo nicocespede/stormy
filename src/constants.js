@@ -90,7 +90,7 @@ module.exports = {
     ],
 
     relativeSpecialDays: {
-        easter: 9
+        easter: 0
     },
 
     quiz: [{

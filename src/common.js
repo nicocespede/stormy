@@ -23,8 +23,12 @@ const getImageType = async () => {
         case 2:
             return `-love`;
         case 4:
+            if (date === 1)
+                return '-fools';
             return date <= relativeSpecialDays.easter ? `-easter` : '';
         case 12:
+            if (date === 28)
+                return '-fools';
             return date >= 26 ? `-newyear` : `-xmas`;
         default:
             return ``;
