@@ -381,5 +381,7 @@ module.exports = {
 
         formatted += ' '.repeat(52) + '}';
         return formatted;
-    }
+    },
+
+    debugCategoryIsLogged: () => process.env.LOG_DEBUG === 'TRUE'
 };
