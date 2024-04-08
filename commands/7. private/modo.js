@@ -53,7 +53,7 @@ module.exports = {
                 ephemeral: true
             };
 
-        interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
         const { guildname, name, role: roleName, on, off, username } = modesData[mode];
 
         if (actualMode === mode) {
