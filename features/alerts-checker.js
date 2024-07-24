@@ -29,24 +29,15 @@ const generateBirthdayImage = async user => {
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
     const { username } = user;
+    const finalUsername = (await isOwner(user.id)) ? '👑' + username : username;
     // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, username, FONT_NAME);
+    context.font = applyText(canvas, finalUsername, FONT_NAME);
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
-    const usernameWidth = context.measureText(username).width;
-    if (await isOwner(user.id)) {
-        const crownWidth = 60;
-        const gapWidth = 5;
-        const crown = await loadImage(await getGithubRawUrl('assets/crown.png'));
-        // Actually fill the text with a solid color
-        context.fillText(username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
-        context.strokeText(username, (background.width / 2) - ((usernameWidth - gapWidth - crownWidth) / 2), canvas.height / (6 / 5) - 10);
-        context.drawImage(crown, (background.width / 2) - ((usernameWidth + crownWidth + gapWidth) / 2), canvas.height / (6 / 5) - 74, crownWidth, 64);
-    } else {
-        // Actually fill the text with a solid color
-        context.fillText(username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
-        context.strokeText(username, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
-    }
+    const usernameWidth = context.measureText(finalUsername).width;
+    // Actually fill the text with a solid color
+    context.fillText(finalUsername, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
+    context.strokeText(finalUsername, (background.width / 2) - (usernameWidth / 2), canvas.height / (6 / 5) - 10);
     // Pick up the pen
     context.beginPath();
     // Start the arc to form a circle

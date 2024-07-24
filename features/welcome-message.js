@@ -23,7 +23,7 @@ const generateWelcomeImage = async user => {
     const background = await loadImage(await getGithubRawUrl(`assets/welcome${await getImageType()}.png`));
     const avatarWidth = 250;
     const avatarHeight = avatarWidth;
-    const avatarX = 450;
+    const avatarX = (canvas.width / 2) - (canvas.width / 4);
     const avatarY = 275;
     context.strokeStyle = '#151515';
     context.lineWidth = 2;
@@ -36,15 +36,16 @@ const generateWelcomeImage = async user => {
     context.fillStyle = '#ffffff';
 
     // Actually fill the text with a solid color
+    const usernameX = (canvas.width / 2);
     const usernameY = canvas.height / (discriminator !== '0' ? 1.875 : 1.75);
-    context.fillText(username, 725, usernameY);
-    context.strokeText(username, 725, usernameY);
+    context.fillText(username, usernameX, usernameY);
+    context.strokeText(username, usernameX, usernameY);
     if (discriminator !== '0') {
         // Slightly smaller text placed above the member's display name
         context.font = `75px ${FONT_NAME}`;
         context.fillStyle = '#ffffff';
-        context.fillText(`#${discriminator}`, 725, 460);
-        context.strokeText(`#${discriminator}`, 725, 460);
+        context.fillText(`#${discriminator}`, usernameX, 460);
+        context.strokeText(`#${discriminator}`, usernameX, 460);
     }
 
     // Pick up the pen

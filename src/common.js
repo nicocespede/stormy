@@ -3,7 +3,7 @@ const LanguageDetect = require('languagedetect');
 const lngDetector = new LanguageDetect();
 const { Canvas } = require('canvas');
 const { getStats, getTimestamps, getIds, getBanned, updateBanned, addTimestamp, getIcon, updateIcon, getMode, removeTimestamp, getGithubRawUrl } = require('./cache');
-const { relativeSpecialDays, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, DEV_ENV } = require('./constants');
+const { relativeSpecialDays, Mode, CONSOLE_YELLOW, CONSOLE_RED, CONSOLE_BLUE, CONSOLE_GREEN, DEV_ENV, ICON_BASE_NAME, GUILD_NAME } = require('./constants');
 const { updateIconString, deleteBan, addStat, updateStat, updateManyStats } = require('./mongodb');
 const { convertTZ, consoleLog, logToFile, logToFileFunctionTriggered, logToFileError, getUserTag, getSimpleEmbed, getErrorMessage, getUTCDateFromArgentina, buildStyledUnixTimestamp } = require('./util');
 
@@ -288,7 +288,7 @@ module.exports = {
 
     updateIcon: async guild => {
         const actualIcon = getIcon() || await updateIcon();
-        const newIcon = !DEV_ENV ? `kgprime${await getImageType()}` : 'test';
+        const newIcon = !DEV_ENV ? ICON_BASE_NAME + (await getImageType()) : 'test';
         if (actualIcon !== newIcon) {
             await guild.setIcon(await getGithubRawUrl(`assets/icons/${newIcon}.png`)).catch(console.error);
             await updateIconString(newIcon).catch(console.error);
@@ -300,7 +300,7 @@ module.exports = {
         const today = convertTZ(new Date());
         const date = today.getDate();
         const month = today.getMonth() + 1;
-        let newGuildName = 'NCKG';
+        let newGuildName = GUILD_NAME;
 
         if (DEV_ENV)
             newGuildName += ' TEST';
@@ -356,7 +356,7 @@ module.exports = {
 
     isOwner: async id => {
         const ids = await getIds();
-        return id === ids.users.stormer || id === ids.users.darkness;
+        return id === ids.users.stormer;
     },
 
     /**
