@@ -1,7 +1,7 @@
 const { ICommand } = require("wokcommands");
-const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
+const { ApplicationCommandOptionType, EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const UnofficialValorantAPI = require("unofficial-valorant-api");
-const ValorantAPI = new UnofficialValorantAPI();
+const ValorantAPI = new UnofficialValorantAPI(process.env.VALORANT_API_KEY);
 const { getCrosshairs, getGithubRawUrl } = require('../../src/cache');
 const { PREFIX } = require('../../src/constants');
 const { addCrosshair, deleteCrosshair } = require('../../src/mongodb');
@@ -175,8 +175,9 @@ module.exports = {
                     .setTitle(name + owner)
                     .setDescription(`Código de importación de la mira:\n\n` + code)
                     .setColor(instance.color)
-                    .setImage(crosshairData.url)
+                    .setImage('attachment://crosshair.png')
                     .setThumbnail(await getGithubRawUrl('assets/thumbs/games/valorant.png'))];
+                reply.files = [new AttachmentBuilder(crosshairData.data, { name: 'crosshair.png' })];
                 reply.ephemeral = true;
                 message ? deferringMessage.edit(reply) : interaction.editReply(reply);
             }
