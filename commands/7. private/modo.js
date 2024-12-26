@@ -1,7 +1,7 @@
 const { ICommand } = require('wokcommands');
 const { ApplicationCommandOptionType } = require("discord.js");
 const { updateIcon: updateIconCache, getIds, getMode, getGithubRawUrl } = require("../../src/cache");
-const { Mode, CONSOLE_GREEN } = require("../../src/constants");
+const { Mode, CONSOLE_GREEN, GUILD_NAME } = require("../../src/constants");
 const { updateIcon, isOwner, updateGuildName } = require("../../src/common");
 const { updateIconString, updateMode } = require("../../src/mongodb");
 const { consoleLog, logToFileCommandUsage, getDenialEmbed, getWarningEmbed } = require("../../src/util");
@@ -39,8 +39,8 @@ module.exports = {
 
         const ids = await getIds();
         const modesData = {
-            afa: { guildname: 'NCKG ⭐⭐⭐', name: 'Selección', username: 'AFA StormY ⭐⭐⭐', on: '¡VAMOS CARAJO! 🇦🇷' },
-            kru: { guildname: 'NCKG 🤟🏼', name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
+            afa: { guildname: `${GUILD_NAME} ⭐⭐⭐`, name: 'Selección', username: 'AFA StormY ⭐⭐⭐', on: '¡VAMOS CARAJO! 🇦🇷' },
+            kru: { guildname: `${GUILD_NAME} 🤟🏼`, name: 'KRÜ', role: 'kru', on: `¡Vamos KRÜ! <:kru:${ids.emojis.kru}>`, off: '¡GG!', username: 'KRÜ StormY 🤟🏼' }
         };
 
         const actualMode = await getMode();

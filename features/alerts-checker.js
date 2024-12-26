@@ -4,7 +4,7 @@ const { getIds, updateBirthdays, timeouts, getGithubRawUrl } = require('../src/c
 const { applyText, isOwner } = require('../src/common');
 const { consoleLog, convertTZ } = require('../src/util');
 const { updateBirthday, updateAnniversary } = require('../src/mongodb');
-const { relativeSpecialDays, CONSOLE_YELLOW } = require('../src/constants');
+const { relativeSpecialDays, CONSOLE_YELLOW, GUILD_NAME } = require('../src/constants');
 const anniversarySchema = require('../models/anniversary-schema');
 const birthdaySchema = require('../models/birthday-schema');
 
@@ -148,21 +148,21 @@ module.exports = async client => {
             let msg;
             let emojis = [];
             if (getDayOfTheYear(convertedToday) === 256) {
-                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz día del programador** a todos los programadores del servidor! 💻🧠`;
+                msg = `@everyone\n\n¡Desde **${GUILD_NAME}** les deseamos un muy **felíz día del programador** a todos los programadores del servidor! 💻🧠`;
                 emojis = ['💻', '🧠', '🤓'];
             }
 
             if (date === 1 && month === 1) {
-                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un muy **felíz año nuevo** a todos los miembros del servidor! 🥂🌠`;
+                msg = `@everyone\n\n¡Desde **${GUILD_NAME}** les deseamos un muy **felíz año nuevo** a todos los miembros del servidor! 🥂🌠`;
                 emojis = ['🥂', '🌠', '🎆'];
             } else if (date === 14 && month === 2) {
-                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean un **felíz día de los enamorados** a todas las parejas del servidor! 💘😍`;
+                msg = `@everyone\n\n¡Desde **${GUILD_NAME}** les deseamos un **felíz día de los enamorados** a todas las parejas del servidor! 💘😍`;
                 emojis = ['💘', '😍', '💏'];
             } else if (date === relativeSpecialDays.easter && month === 4) {
-                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean unas **felices pascuas** a todos los miembros del servidor! 🐇🥚`;
+                msg = `@everyone\n\n¡Desde **${GUILD_NAME}** les deseamos unas **felices pascuas** a todos los miembros del servidor! 🐇🥚`;
                 emojis = ['🐰', '🥚'];
             } else if (date === 25 && month === 12) {
-                msg = `@everyone\n\n¡Los dueños de **NCKG** les desean una **muy felíz navidad** a todos los miembros del servidor! 🎅🏻🎄`;
+                msg = `@everyone\n\n¡Desde **${GUILD_NAME}** les deseamos una **muy felíz navidad** a todos los miembros del servidor! 🎅🏻🎄`;
                 emojis = ['🎅🏻', '🎄', '🎁'];
             }
 
